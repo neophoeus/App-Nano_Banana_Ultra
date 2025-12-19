@@ -1,0 +1,5 @@
+{
+  "name": "Nano Banana Ultra dev",
+  "description": "A professional-grade image generator utilizing Google's Gemini 3 Pro model (gemini-3-pro-image-preview) with customizable aspect ratios, styles, and high-resolution output (up to 4K). It also supports advanced editing features such as inpainting, outpainting, cropping, and various precision tools for refining details and enhancing image composition.",
+  "requestFramePermissions": []
+}
