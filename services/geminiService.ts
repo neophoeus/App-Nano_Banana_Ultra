@@ -1,5 +1,4 @@
 
-
 import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
 import { AspectRatio, ImageSize, ImageStyle, GenerateOptions } from "../types";
 
@@ -71,7 +70,12 @@ export const enhancePromptWithGemini = async (currentPrompt: string, lang: strin
 export const generateRandomPrompt = async (lang: string = 'en'): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
-  const themes = ['Cyberpunk City', 'Fantasy Landscape', 'Sci-Fi Portrait', 'Abstract Fluid Art', 'Macro Nature', 'Retro Poster Design', 'Surrealist Dream', 'Architectural Marvel'];
+  const themes = [
+    'Cyberpunk City', 'Fantasy Landscape', 'Sci-Fi Portrait', 'Abstract Fluid Art', 'Macro Nature', 'Retro Poster Design', 'Surrealist Dream', 'Architectural Marvel',
+    'Steampunk Invention', 'Noir Detective Scene', 'Isometric Room', 'Pixel Art Game Level', 'Renaissance Oil Painting', 'Vaporwave Statue', 'Gothic Cathedral',
+    'Ukiyo-e Wave', 'Origami Animal', 'Neon Tokyo Street', 'Post-Apocalyptic Ruin', 'Double Exposure Portrait', 'Knolling Photography', 'Bioluminescent Forest',
+    'Minimalist Vector Icon', 'Claymation Character', 'Space Nebula', 'Underwater Coral Reef', 'Cinematic Movie Still', 'Vintage Botanical Illustration'
+  ];
   const randomTheme = themes[Math.floor(Math.random() * themes.length)];
 
   const systemInstruction = `You are a creative image prompt generator.

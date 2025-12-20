@@ -12,7 +12,7 @@ interface ImageUploaderProps {
   maxImages?: number;
   limitWarningMsg?: string; // New prop for custom limit message
   safeLimit?: number; // Visual indicator for "safe" amount of images
-  onLaunchDoodle?: () => void; // New prop to trigger doodle board
+  onLaunchSketch?: () => void; // Renamed prop to trigger sketch pad
   onRemove?: (index: number) => void; // Add this prop
 }
 
@@ -26,7 +26,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   maxImages = 5,
   limitWarningMsg,
   safeLimit,
-  onLaunchDoodle,
+  onLaunchSketch,
   onRemove
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -114,14 +114,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       <div className="flex justify-between items-end">
          <div className="flex items-center gap-2">
              <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{label}</label>
-             {onLaunchDoodle && (
+             {onLaunchSketch && (
                  <button 
-                    onClick={onLaunchDoodle}
+                    onClick={onLaunchSketch}
                     disabled={disabled}
                     className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-[9px] font-bold border border-amber-200 dark:border-amber-500/30 transition-all"
-                    title={t('doodleTitle')}
+                    title={t('sketchTitle')}
                  >
-                    <span className="text-[10px]">✏️</span> {t('btnDoodle')}
+                    <span className="text-[10px]">✏️</span> {t('btnSketch')}
                  </button>
              )}
          </div>

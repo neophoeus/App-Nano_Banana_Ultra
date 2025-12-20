@@ -14,7 +14,7 @@ import BatchSelector from './components/BatchSelector';
 import LanguageSelector from './components/LanguageSelector';
 import GlobalLogConsole from './components/GlobalLogConsole';
 import ThemeToggle from './components/ThemeToggle';
-import DoodleBoard from './components/DoodleBoard';
+import SketchPad from './components/SketchPad';
 import { Language, getTranslation, SUPPORTED_LANGUAGES } from './utils/translations';
 import { ASPECT_RATIOS } from './constants';
 
@@ -35,8 +35,8 @@ const App: React.FC = () => {
   // Reference Images (Remix Functionality)
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   
-  // Doodle Board State
-  const [isDoodleOpen, setIsDoodleOpen] = useState(false);
+  // Sketch Pad State (Renamed from Doodle Board)
+  const [isSketchPadOpen, setIsSketchPadOpen] = useState(false);
   const [hasSketch, setHasSketch] = useState(false); // Track if a sketch is present
   const [showSketchReplaceConfirm, setShowSketchReplaceConfirm] = useState(false);
   
@@ -232,18 +232,18 @@ const App: React.FC = () => {
     showNotification(t('notificationAddedToRef'), 'info');
   };
 
-  // --- Doodle / Reference Logic ---
+  // --- Sketch Pad / Reference Logic ---
 
-  const handleOpenDoodle = () => {
+  const handleOpenSketchPad = () => {
       // If we already have a sketch in references, warn user
       if (hasSketch && referenceImages.length > 0) {
           setShowSketchReplaceConfirm(true);
       } else {
-          setIsDoodleOpen(true);
+          setIsSketchPadOpen(true);
       }
   };
 
-  const handleDoodleSave = (base64: string) => {
+  const handleSketchPadSave = (base64: string) => {
       let newRefs = [...referenceImages];
       
       if (hasSketch && newRefs.length > 0) {
@@ -261,7 +261,7 @@ const App: React.FC = () => {
       }
       
       setReferenceImages(newRefs);
-      setIsDoodleOpen(false);
+      setIsSketchPadOpen(false);
       showNotification(t('notificationAddedToRef'), 'info');
   };
 
@@ -668,11 +668,11 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Doodle Board Modal */}
-      {isDoodleOpen && (
-          <DoodleBoard 
-              onSave={handleDoodleSave}
-              onClose={() => setIsDoodleOpen(false)}
+      {/* Sketch Pad Modal (Renamed from Doodle Board) */}
+      {isSketchPadOpen && (
+          <SketchPad 
+              onSave={handleSketchPadSave}
+              onClose={() => setIsSketchPadOpen(false)}
               currentLanguage={currentLang}
           />
       )}
@@ -682,10 +682,10 @@ const App: React.FC = () => {
         <div className="fixed inset-0 z-[210] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.1s_ease-out]" onClick={() => setShowSketchReplaceConfirm(false)}>
             <div className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-gray-700 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden p-6 text-center transform scale-100" onClick={e => e.stopPropagation()}>
                 <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
-                    {t('doodleReplaceTitle')}
+                    {t('sketchReplaceTitle')}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
-                    {t('doodleReplaceMsg')}
+                    {t('sketchReplaceMsg')}
                 </p>
                 
                 <div className="flex gap-3">
@@ -698,11 +698,11 @@ const App: React.FC = () => {
                     <button 
                         onClick={() => {
                             setShowSketchReplaceConfirm(false);
-                            setIsDoodleOpen(true);
+                            setIsSketchPadOpen(true);
                         }}
                         className="flex-1 py-2.5 px-4 rounded-xl text-sm font-bold text-white shadow-lg transition-all bg-amber-500 hover:bg-amber-600 shadow-amber-500/30"
                     >
-                        {t('doodleReplaceConfirm')}
+                        {t('sketchReplaceConfirm')}
                     </button>
                 </div>
             </div>
@@ -860,7 +860,7 @@ const App: React.FC = () => {
                       maxImages={9}
                       safeLimit={5}
                       limitWarningMsg={t('errorMaxRefs')}
-                      onLaunchDoodle={handleOpenDoodle}
+                      onLaunchSketch={handleOpenSketchPad}
                       onRemove={handleRemoveReference}
                     />
                 </div>

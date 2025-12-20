@@ -1,11 +1,10 @@
 
-
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Language, getTranslation } from '../utils/translations';
 import { ASPECT_RATIOS } from '../constants';
 import { AspectRatio } from '../types';
 
-interface DoodleBoardProps {
+interface SketchPadProps {
   onSave: (base64: string) => void;
   onClose: () => void;
   currentLanguage?: Language;
@@ -13,7 +12,7 @@ interface DoodleBoardProps {
 
 type ToolType = 'pen' | 'eraser' | 'pan';
 
-const DoodleBoard: React.FC<DoodleBoardProps> = ({ onSave, onClose, currentLanguage = 'en' }) => {
+const SketchPad: React.FC<SketchPadProps> = ({ onSave, onClose, currentLanguage = 'en' }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -419,7 +418,7 @@ const DoodleBoard: React.FC<DoodleBoardProps> = ({ onSave, onClose, currentLangu
                     onClick={triggerUse}
                     className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-white text-xs font-bold rounded-xl shadow-lg shadow-amber-500/20 transition-all hover:scale-105 active:scale-95"
                 >
-                    {t('doodleUse')}
+                    {t('sketchUse')}
                 </button>
                 <button 
                     onClick={triggerClose}
@@ -556,7 +555,7 @@ const DoodleBoard: React.FC<DoodleBoardProps> = ({ onSave, onClose, currentLangu
                 <button 
                     onClick={handleClear}
                     className="p-3 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded-xl transition-colors"
-                    title={t('doodleClear')}
+                    title={t('sketchClear')}
                 >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                 </button>
@@ -592,19 +591,19 @@ const DoodleBoard: React.FC<DoodleBoardProps> = ({ onSave, onClose, currentLangu
              <div className="fixed inset-0 z-[2600] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.1s_ease-out]" onClick={() => setConfirmAction(null)}>
                  <div className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-gray-700 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden p-6 text-center transform scale-100" onClick={e => e.stopPropagation()}>
                      <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
-                         {confirmAction === 'close' ? t('doodleExitTitle') : 
-                          confirmAction === 'use_blank' ? t('doodleBlankWarn') : 
-                          confirmAction === 'change_ratio' ? t('doodleRatioWarnTitle') :
-                          t('doodleUse') + '?'}
+                         {confirmAction === 'close' ? t('sketchExitTitle') : 
+                          confirmAction === 'use_blank' ? t('sketchBlankWarn') : 
+                          confirmAction === 'change_ratio' ? t('sketchRatioWarnTitle') :
+                          t('sketchUse') + '?'}
                      </h3>
                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
                          {confirmAction === 'close' 
-                             ? t('doodleExitMsg') 
+                             ? t('sketchExitMsg') 
                              : confirmAction === 'use_blank' 
-                                 ? t('doodleBlankMsg') 
+                                 ? t('sketchBlankMsg') 
                                  : confirmAction === 'change_ratio'
-                                    ? t('doodleRatioWarnMsg')
-                                    : t('doodleLeaveWarning')
+                                    ? t('sketchRatioWarnMsg')
+                                    : t('sketchLeaveWarning')
                          }
                      </p>
                      
@@ -613,16 +612,16 @@ const DoodleBoard: React.FC<DoodleBoardProps> = ({ onSave, onClose, currentLangu
                              onClick={() => setConfirmAction(null)}
                              className="flex-1 py-2.5 px-4 rounded-xl text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                          >
-                             {confirmAction === 'use_blank' ? t('doodleEmptyKeep') : t('clearHistoryCancel')}
+                             {confirmAction === 'use_blank' ? t('sketchEmptyKeep') : t('clearHistoryCancel')}
                          </button>
                          <button 
                              onClick={handleConfirm}
                              className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold text-white shadow-lg transition-all ${confirmAction === 'close' || confirmAction === 'use_blank' || confirmAction === 'change_ratio' ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30' : 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/30'}`}
                          >
-                             {confirmAction === 'close' ? t('doodleExitConfirm') : 
-                              confirmAction === 'use_blank' ? t('doodleEmptyClose') : 
-                              confirmAction === 'change_ratio' ? t('doodleRatioChange') :
-                              t('doodleUse')}
+                             {confirmAction === 'close' ? t('sketchExitConfirm') : 
+                              confirmAction === 'use_blank' ? t('sketchEmptyClose') : 
+                              confirmAction === 'change_ratio' ? t('sketchRatioChange') :
+                              t('sketchUse')}
                          </button>
                      </div>
                  </div>
@@ -632,4 +631,4 @@ const DoodleBoard: React.FC<DoodleBoardProps> = ({ onSave, onClose, currentLangu
   );
 };
 
-export default DoodleBoard;
+export default SketchPad;

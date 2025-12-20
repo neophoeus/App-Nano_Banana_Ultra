@@ -1,12 +1,12 @@
 <div align="center">
-<img width="1200" alt="Nano-Banana-Ultra-UI" src="https://private-user-images.githubusercontent.com/8891621/528510689-7f5593f7-a7cc-4201-b35a-ac9b822b958f.jpg?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NjYxMzE0NzIsIm5iZiI6MTc2NjEzMTE3MiwicGF0aCI6Ii84ODkxNjIxLzUyODUxMDY4OS03ZjU1OTNmNy1hN2NjLTQyMDEtYjM1YS1hYzliODIyYjk1OGYuanBnP1gtQW16LUFsZ29yaXRobT1BV1M0LUhNQUMtU0hBMjU2JlgtQW16LUNyZWRlbnRpYWw9QUtJQVZDT0RZTFNBNTNQUUs0WkElMkYyMDI1MTIxOSUyRnVzLWVhc3QtMSUyRnMzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNTEyMTlUMDc1OTMyWiZYLUFtei1FeHBpcmVzPTMwMCZYLUFtei1TaWduYXR1cmU9YzA1YTVlYThhNjcwYjNhYjM0MWMzM2ZkOGNmZDgwMjM4YTRhMThlZGYwMjhkMDA0MjM1ZDU1YWRmYWU2NDcwNyZYLUFtei1TaWduZWRIZWFkZXJzPWhvc3QifQ.wsSrQxvVWaicw1JHHlTT3L80pdOUzM99CC-tpbrPf-M" />
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your Google AI Studio app
+# Run and deploy your AI Studio app
 
 This contains everything you need to run your app locally.
 
-View your app in Google AI Studio: https://ai.studio/apps/drive/1nMK-jgZE97rkzctEiEXr0WFISdsAXdoV
+View your app in AI Studio: https://ai.studio/apps/drive/1nMK-jgZE97rkzctEiEXr0WFISdsAXdoV
 
 ## Run Locally
 
