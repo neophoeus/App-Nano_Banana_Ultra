@@ -2,19 +2,44 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# Nano Banana Ultra - v2.0 Release 🚀
 
-This contains everything you need to run your app locally.
+This is the newly rewritten version (v2.0) of Nano Banana Ultra, featuring significant architectural and UI improvements.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1nMK-jgZE97rkzctEiEXr0WFISdsAXdoV
+> [!NOTE]
+> The previous `v1.0` codebase has been archived and is available under the `v1.0-legacy` tag on GitHub for reference.
 
-## Run Locally
+## 🛠️ Run Locally
 
-**Prerequisites:**  Node.js
+**Prerequisites:** Node.js (v18+ recommended)
 
+1. **Install dependencies:**
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   ```bash
+   npm install
+   ```
+
+2. **Environment Setup:**
+   - Copy the `.env.example` file and rename it to `.env.local`
+   - Fill in your Gemini API key in the newly created `.env.local` file:
+
+     ```env
+     GEMINI_API_KEY=your_api_key_here
+     ```
+
+   *(Note: `.env.local` is ignored by Git to keep your API key safe).*
+
+3. **Run the app (Development Mode):**
+
+   ```bash
+   npm run dev
+   ```
+
+4. **Build for Production:**
+
+   ```bash
+   npm run build
+   ```
+
+---
+*Built with React, Vite, and TailwindCSS. Powered by Google Gemini.*
