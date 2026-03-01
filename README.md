@@ -13,6 +13,7 @@
 - **圖生圖 / 風格轉換 (Image-to-Image & Style Transfer)**：上傳參考圖片，結合提示詞或內建風格，生成全新面貌的作品。
 - **局部修改 (Inpainting)**：使用內建編輯器塗抹圖片特定區域，精準替換或修改細節。
 - **智慧提示詞 (Smart Prompt Tools)**：包含「幫我寫 (Smart Rewrite)」與「驚喜一下 (Surprise Me)」功能，自動優化繪圖提示詞。
+- **雙軌參考圖架構 (Dual Reference Trays)**：支援人物與物品獨立配置，並支援 HTML5 原生拖放 (Drag & Drop) 排序功能讓您輕鬆更動提示詞陣列。
 - **手繪塗鴉板 (Sketch Pad)**：直接在畫布上勾勒草圖，作為生成的參考依據。
 - **批次生成 (Batch Generation)**：一次生成多張圖片，節省等待時間。
 - **豐富風格庫 (Rich Style Library)**：內建超過 40 種以上的影像風格 (如：賽博龐克、水彩、像素風、3D渲染等)。
@@ -65,6 +66,7 @@ This is the newly rewritten version (v2.0) of the Nano Banana Ultra image genera
 - **Image-to-Image & Style Transfer**: Upload reference images and combine them with prompts or built-in styles to create entirely new artworks.
 - **Inpainting Editor**: Use the built-in editor to mask specific areas of an image for precise modification or detail replacement.
 - **Smart Prompt Tools**: Includes "Smart Rewrite" and "Surprise Me" features to automatically optimize your drawing prompts using AI.
+- **Dual Reference Trays**: Independently configure Characters and Objects schemas, equipped with native HTML5 Drag and Drop ordering for prompt structure matching.
 - **Sketch Pad**: Draw rough sketches directly on the canvas to use as a structural reference for image generation.
 - **Batch Generation**: Generate multiple images simultaneously to save waiting time.
 - **Rich Style Library**: Comes with over 40 built-in image styles (e.g., Cyberpunk, Watercolor, Pixel Art, 3D Render, etc.).
