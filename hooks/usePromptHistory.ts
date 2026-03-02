@@ -36,9 +36,9 @@ export const PROMPT_TEMPLATES: PromptTemplate[] = [
     { id: 'poster', label: 'Poster', labelKey: 'tplPoster', icon: '🎬', prompt: 'A cinematic movie poster design with dramatic composition, bold typography area, atmospheric lighting, and a compelling visual narrative.' },
 ];
 
-// --- F3: LocalStorage Prompt History ---
+// --- F3: LocalStorage & Backend Prompt History ---
 
-function loadHistory(): PromptHistoryItem[] {
+function loadHistoryFallback(): PromptHistoryItem[] {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
         return raw ? JSON.parse(raw) : [];
@@ -47,17 +47,68 @@ function loadHistory(): PromptHistoryItem[] {
     }
 }
 
-function persistHistory(items: PromptHistoryItem[]): void {
+function persistHistoryFallback(items: PromptHistoryItem[]): void {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch { /* storage full or disabled */ }
 }
 
 export function usePromptHistory() {
-    const [history, setHistory] = useState<PromptHistoryItem[]>(loadHistory);
+    const [history, setHistory] = useState<PromptHistoryItem[]>([]);
+    const [isLoaded, setIsLoaded] = useState(false);
 
-    // Sync with localStorage whenever history changes
-    useEffect(() => { persistHistory(history); }, [history]);
+    // Initial Load: Try Backend first, fallback to localStorage
+    useEffect(() => {
+        let mounted = true;
+        fetch('/api/load-prompts')
+            .then(res => {
+                if (!res.ok) throw new Error('API load failed');
+                return res.json();
+            })
+            .then(data => {
+                if (mounted) {
+                    // If backend is empty but localStorage has data (migration scenario)
+                    const fallbackData = loadHistoryFallback();
+                    if (data.length === 0 && fallbackData.length > 0) {
+                        setHistory(fallbackData);
+                        // Save the migrated data to backend
+                        fetch('/api/save-prompts', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(fallbackData),
+                        }).catch(() => { });
+                    } else {
+                        setHistory(Array.isArray(data) ? data : []);
+                    }
+                    setIsLoaded(true);
+                }
+            })
+            .catch(err => {
+                console.warn('Failed to load prompts from backend, using localStorage fallback:', err);
+                if (mounted) {
+                    setHistory(loadHistoryFallback());
+                    setIsLoaded(true);
+                }
+            });
+
+        return () => { mounted = false; };
+    }, []);
+
+    // Sync with backend & localStorage whenever history changes (after initial load)
+    useEffect(() => {
+        if (!isLoaded) return; // Don't wipe backend on first render before load finishes
+
+        persistHistoryFallback(history);
+
+        fetch('/api/save-prompts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(history),
+        }).catch(err => {
+            console.error('Failed to sync prompt history to backend:', err);
+        });
+
+    }, [history, isLoaded]);
 
     const addPrompt = useCallback((text: string) => {
         if (!text || text.trim().length < 5) return; // Ignore very short prompts

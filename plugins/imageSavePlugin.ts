@@ -117,6 +117,58 @@ export function imageSavePlugin(outputDir?: string): Plugin {
                 }
             });
 
+            // --- Prompt History Endpoints ---
+
+            // F3 (Permanent): Save prompt history
+            server.middlewares.use('/api/save-prompts', (req, res) => {
+                if (req.method !== 'POST') {
+                    res.writeHead(405, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: false, error: 'Method not allowed' }));
+                    return;
+                }
+
+                let body = '';
+                req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+                req.on('end', () => {
+                    try {
+                        const historyData = JSON.parse(body);
+                        const promptsPath = path.join(resolvedDir, 'prompt_history.json');
+                        fs.writeFileSync(promptsPath, JSON.stringify(historyData, null, 2), 'utf-8');
+
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ success: true }));
+                    } catch (err: any) {
+                        res.writeHead(500, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ success: false, error: err.message }));
+                    }
+                });
+            });
+
+            // F3 (Permanent): Load prompt history
+            server.middlewares.use('/api/load-prompts', (req, res) => {
+                if (req.method !== 'GET') {
+                    res.writeHead(405, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: false, error: 'Method not allowed' }));
+                    return;
+                }
+
+                try {
+                    const promptsPath = path.join(resolvedDir, 'prompt_history.json');
+                    if (fs.existsSync(promptsPath)) {
+                        const data = fs.readFileSync(promptsPath, 'utf-8');
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(data);
+                    } else {
+                        // Return empty array if file does not exist yet
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify([]));
+                    }
+                } catch (err: any) {
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: false, error: err.message }));
+                }
+            });
+
             console.log(`\n  🍌 Image auto-save enabled → ${resolvedDir}\n`);
         }
     };

@@ -885,7 +885,7 @@ const App: React.FC = () => {
                 <aside
                     className={`
                bg-white dark:bg-[#0a0c10] border-r border-gray-200 dark:border-gray-800 overflow-y-auto scrollbar-thin
-               transition-all duration-300 ease-in-out z-40
+               transition-all duration-300 ease-in-out z-[100]
                fixed lg:relative top-0
                ${isSidebarOpen ? 'w-[340px] translate-x-0' : 'w-0 -translate-x-full lg:translate-x-0 lg:w-0 opacity-0'}
             `}
