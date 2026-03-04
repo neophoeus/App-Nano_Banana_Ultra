@@ -1,4 +1,4 @@
-# Nano Banana Ultra - v2.1 Release 🚀
+# Nano Banana Ultra - v2.2 Release 🚀
 
 *(English follows below)*
 
@@ -14,7 +14,7 @@
 - **智慧檔名系統 (Smart File Naming)**：產生的圖片在存檔時，會自動擷取生成該圖片的 AI 模型名稱作為檔名標籤 (例如：`gemini-3-pro-image-preview-gen_...png`)，便於後續管理與分類。
 - **手繪塗鴉板 (Sketch Pad)**：直接在畫布上勾勒草圖，作為生成的參考依據。
 - **智慧提示詞 (Smart Prompt Tools)**：包含「幫我寫 (Smart Rewrite)」與「驚喜一下 (Surprise Me)」功能，自動優化繪圖提示詞。
-- **永久歷史紀錄 (Permanent Prompt History)**：您的提示詞歷史將自動儲存在本機硬碟中，即使清除瀏覽器快取也不會遺失！
+- **永久歷史紀錄 (Permanent Prompt History)**：您的提示詞歷史將自動儲存在本機硬碟中，最高支援 **9,999** 筆超大容量，並採用智慧 UI 渲染，確保流暢不卡頓！
 - **批次生成 (Batch Generation)**：一次生成多張圖片，節省等待時間。
 - **豐富風格庫 (Rich Style Library)**：內建超過 40 種以上的影像風格 (如：賽博龐克、水彩、像素風、3D渲染等)。
 - **多國語系與深色模式 (I18n & Dark Mode)**：支援多語言介面切換，並可依喜好切換深/淺色主題。
@@ -54,9 +54,9 @@
 
 ---
 
-# Nano Banana Ultra - v2.1 Release 🚀
+# Nano Banana Ultra - v2.2 Release 🚀
 
-This is the newly rewritten version (v2.0) of the Nano Banana Ultra image generation application. Built on the React ecosystem, it integrates the Google Gemini API to help users generate or edit high-quality images quickly.
+This is the newly rewritten version (v2.2) of the Nano Banana Ultra image generation application. Built on the React ecosystem, it integrates the Google Gemini API to help users generate or edit high-quality images quickly.
 
 ## ✨ Features
 
@@ -68,7 +68,7 @@ This is the newly rewritten version (v2.0) of the Nano Banana Ultra image genera
 - **Smart File Naming**: Auto-saving now embeds the generating model's name directly into the filename (e.g., `gemini-3-pro-image-preview-gen_...png`) for easy sorting and management.
 - **Sketch Pad**: Draw rough sketches directly on the canvas to use as a structural reference for image generation.
 - **Smart Prompt Tools**: Includes "Smart Rewrite" and "Surprise Me" features to automatically optimize your drawing prompts using AI.
-- **Permanent Prompt History**: Your prompt history is now automatically saved securely to your local disk, meaning it will never be lost even if you clear your browser cache!
+- **Permanent Prompt History**: Your prompt history is now automatically saved securely to your local disk, supporting a massive **9,999** record capacity with smart UI rendering to prevent lag.
 - **Batch Generation**: Generate multiple images simultaneously to save waiting time.
 - **Rich Style Library**: Comes with over 40 built-in image styles (e.g., Cyberpunk, Watercolor, Pixel Art, 3D Render, etc.).
 - **I18n & Dark Mode**: Supports multiple interface languages and allows toggling between Light and Dark themes based on your preference.

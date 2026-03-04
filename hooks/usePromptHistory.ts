@@ -5,7 +5,8 @@
 import { useState, useCallback, useEffect } from 'react';
 
 const STORAGE_KEY = 'nbu_prompt_history';
-const MAX_HISTORY = 30;
+export const MAX_HISTORY = 9999;
+export const MAX_DISPLAY_HISTORY = 30;
 
 export interface PromptHistoryItem {
     text: string;

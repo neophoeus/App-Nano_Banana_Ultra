@@ -21,7 +21,7 @@ import { ASPECT_RATIOS, MODEL_CAPABILITIES } from './constants';
 import { saveImageToLocal, generateThumbnail, loadFullImage } from './utils/imageSaveUtils';
 import { useImageGeneration } from './hooks/useImageGeneration';
 import { usePromptTools } from './hooks/usePromptTools';
-import { usePromptHistory, PROMPT_TEMPLATES } from './hooks/usePromptHistory';
+import { usePromptHistory, PROMPT_TEMPLATES, MAX_DISPLAY_HISTORY } from './hooks/usePromptHistory';
 
 const App: React.FC = () => {
     const [apiKeyReady, setApiKeyReady] = useState(false);
@@ -1011,7 +1011,7 @@ const App: React.FC = () => {
                                     ))}
                                     {showPromptDropdown === 'history' && (
                                         <>
-                                            {promptHistory.map((item, i) => (
+                                            {promptHistory.slice(0, MAX_DISPLAY_HISTORY).map((item, i) => (
                                                 <div key={i} className="flex items-center border-b border-gray-100 dark:border-gray-800 last:border-b-0">
                                                     <button
                                                         onClick={() => { setPrompt(item.text); setShowPromptDropdown(null); }}
