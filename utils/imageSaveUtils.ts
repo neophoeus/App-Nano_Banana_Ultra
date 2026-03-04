@@ -44,41 +44,44 @@ export async function saveImageToLocal(
  * Generate a small thumbnail from a full-resolution data URL.
  * Returns a compressed JPEG data URL suitable for in-memory history.
  */
-export function generateThumbnail(dataUrl: string): Promise<string> {
-    return new Promise((resolve) => {
+export const generateThumbnail = (dataUrl: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_DIM = 200; // Lowered from 300 to 200 to save memory in history state
+
             let w = img.width;
             let h = img.height;
-
-            // Scale down to fit within THUMBNAIL_MAX_DIM
-            if (w > THUMBNAIL_MAX_DIM || h > THUMBNAIL_MAX_DIM) {
-                if (w > h) {
-                    h = Math.round((h * THUMBNAIL_MAX_DIM) / w);
-                    w = THUMBNAIL_MAX_DIM;
-                } else {
-                    w = Math.round((w * THUMBNAIL_MAX_DIM) / h);
-                    h = THUMBNAIL_MAX_DIM;
+            if (w > h) {
+                if (w > MAX_DIM) {
+                    h = Math.round((h *= MAX_DIM / w));
+                    w = MAX_DIM;
+                }
+            } else {
+                if (h > MAX_DIM) {
+                    w = Math.round((w *= MAX_DIM / h));
+                    h = MAX_DIM;
                 }
             }
 
-            const canvas = document.createElement('canvas');
             canvas.width = w;
             canvas.height = h;
             const ctx = canvas.getContext('2d');
             if (ctx) {
                 ctx.drawImage(img, 0, 0, w, h);
-                // Use JPEG at 70% quality for small file size
-                resolve(canvas.toDataURL('image/jpeg', 0.7));
+                // Lower quality to 0.5 to drastically reduce base64 size for local storage cache
+                resolve(canvas.toDataURL('image/jpeg', 0.5));
             } else {
-                // Fallback: return original (should never happen)
                 resolve(dataUrl);
             }
         };
-        img.onerror = () => resolve(dataUrl); // Fallback on error
+        img.onerror = () => {
+            reject(new Error("Failed to generate thumbnail"));
+        };
         img.src = dataUrl;
     });
-}
+};
 /**
  * Fetch a full-resolution image from the local filesystem via the server endpoint.
  * Returns a base64 data URL.

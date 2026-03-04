@@ -386,13 +386,13 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         const dx = clientX - pointerStart.x;
         const dy = clientY - pointerStart.y;
 
-        if (interactionState === 'panning_viewport') {
+        if (interactionState === 'panning_viewport' && stateStart && 'zoom' in stateStart) {
             setViewport({
                 ...stateStart,
                 x: stateStart.x + dx,
                 y: stateStart.y + dy
             });
-        } else if (interactionState === 'moving_image') {
+        } else if (interactionState === 'moving_image' && stateStart && 'scale' in stateStart) {
             setImgTransform({
                 ...stateStart,
                 x: stateStart.x + (dx / viewport.zoom),

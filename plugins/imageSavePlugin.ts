@@ -49,7 +49,9 @@ export function imageSavePlugin(outputDir?: string): Plugin {
                         }
 
                         const buffer = Buffer.from(match[2], 'base64');
-                        const filePath = path.join(resolvedDir, filename);
+                        // Prevent directory traversal attacks
+                        const safeFilename = path.basename(filename);
+                        const filePath = path.join(resolvedDir, safeFilename);
 
                         fs.writeFileSync(filePath, buffer);
 

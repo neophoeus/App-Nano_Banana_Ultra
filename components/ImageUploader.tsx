@@ -15,6 +15,7 @@ interface ImageUploaderProps {
   onLaunchSketch?: () => void; // Renamed prop to trigger sketch pad
   onRemove?: (index: number) => void; // Add this prop
   prefixTag?: string; // e.g. "Obj", "Char"
+  hideHeader?: boolean; // Hide the label+count header row
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({
@@ -29,7 +30,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   safeLimit,
   onLaunchSketch,
   onRemove,
-  prefixTag
+  prefixTag,
+  hideHeader
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -142,31 +144,33 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   };
 
   return (
-    <div className="space-y-2">
-      {/* Header */}
-      <div className="flex justify-between items-end">
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{label}</label>
-          {onLaunchSketch && (
-            <button
-              onClick={onLaunchSketch}
-              disabled={disabled}
-              className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-[9px] font-bold border border-amber-200 dark:border-amber-500/30 transition-all"
-              title={t('sketchTitle')}
-            >
-              <span className="text-[10px]">✏️</span> {t('btnSketch')}
-            </button>
-          )}
+    <div className="space-y-1.5 relative">
+      {/* Header — hidden when hideHeader is true */}
+      {!hideHeader && (
+        <div className="flex justify-between items-end">
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{label}</label>
+            {onLaunchSketch && (
+              <button
+                onClick={onLaunchSketch}
+                disabled={disabled}
+                className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-[9px] font-bold border border-amber-200 dark:border-amber-500/30 transition-all"
+                title={t('sketchTitle')}
+              >
+                <span className="text-[10px]">✏️</span> {t('btnSketch')}
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {safeLimit && (
+              <span className="text-[9px] text-emerald-600 dark:text-emerald-500/80 font-mono hidden sm:inline-block">
+                {t('safeLimitTip').replace('{0}', safeLimit.toString())}
+              </span>
+            )}
+            <span className={`text-[10px] ${images.length >= maxImages ? 'text-red-500 dark:text-red-400' : 'text-gray-500'}`}>{images.length} / {maxImages}</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          {safeLimit && (
-            <span className="text-[9px] text-emerald-600 dark:text-emerald-500/80 font-mono hidden sm:inline-block">
-              {t('safeLimitTip').replace('{0}', safeLimit.toString())}
-            </span>
-          )}
-          <span className={`text-[10px] ${images.length >= maxImages ? 'text-red-500 dark:text-red-400' : 'text-gray-500'}`}>{images.length} / {maxImages}</span>
-        </div>
-      </div>
+      )}
 
       {/* Grid Display */}
       <div
@@ -239,7 +243,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           className={`
-            border-2 border-dashed rounded-xl p-4 transition-all flex flex-col items-center justify-center gap-2 min-h-[100px]
+            border-2 border-dashed rounded-xl p-3 transition-all flex flex-col items-center justify-center gap-1.5 min-h-[60px]
             ${disabled ? 'opacity-50 cursor-not-allowed border-gray-300 dark:border-gray-800' : 'cursor-pointer'}
             ${isDragging
               ? 'border-yellow-500 bg-yellow-500/10'
@@ -247,14 +251,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             }
           `}
         >
-          <div className={`p-2 rounded-full ${isDragging ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'}`}>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className={`p-1.5 rounded-full ${isDragging ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'}`}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
           <div className="text-center">
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300">{label}</p>
-            <p className="text-[10px] text-gray-400 dark:text-gray-600 mt-0.5">{t('dragDrop')}</p>
+            <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300">{label}</p>
           </div>
         </div>
       )}

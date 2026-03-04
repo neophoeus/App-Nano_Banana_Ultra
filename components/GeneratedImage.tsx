@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Button from './Button';
 import HexagonHUD from './HexagonHUD';
-import { AspectRatio, ImageSize, ImageStyle } from '../types';
+import { AspectRatio, ImageSize, ImageStyle, ImageModel } from '../types';
 import { Language, getTranslation } from '../utils/translations';
 
 interface GeneratedImageProps {
@@ -14,6 +14,7 @@ interface GeneratedImageProps {
         aspectRatio: AspectRatio;
         size: ImageSize;
         style: ImageStyle;
+        model: ImageModel;
         batchSize?: number;
     };
     generationMode?: string;

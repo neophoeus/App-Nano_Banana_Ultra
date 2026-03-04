@@ -14,14 +14,14 @@ interface BatchSelectorProps {
 const BatchSelector: React.FC<BatchSelectorProps> = ({ batchSize, onSelect, disabled, label = "Image Count", currentLanguage = 'en' as Language }) => {
   const t = (key: string) => getTranslation(currentLanguage, key);
   return (
-    <div className={`space-y-2 transition-opacity ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
+    <div className={`flex flex-col gap-2 h-full transition-opacity ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
       <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex justify-between items-center">
         {label}
         <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${batchSize > 1 ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 shadow-sm border border-amber-500/30' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>
           {t('qtyX').replace('{0}', String(batchSize))}
         </span>
       </label>
-      <div className="flex bg-gray-100 dark:bg-gray-900/50 p-1 rounded-xl border border-gray-200 dark:border-gray-800 gap-1">
+      <div className="flex bg-gray-100 dark:bg-gray-900/50 p-1 rounded-xl border border-gray-200 dark:border-gray-800 gap-1 mt-auto">
         {[1, 2, 4].map((size) => (
           <button
             key={size}

@@ -1,7 +1,5 @@
 import { useState, useCallback, Dispatch, SetStateAction } from 'react';
-import { generateImageWithGemini } from '../services/geminiService';
-import { AspectRatio, ImageSize, ImageStyle, ImageModel, GeneratedImage as GeneratedImageType, GenerateOptions } from '../types';
-import { saveImageToLocal, generateThumbnail } from '../utils/imageSaveUtils';
+import { AspectRatio, ImageSize, ImageStyle, ImageModel, GeneratedImage as GeneratedImageType } from '../types';
 
 
 
@@ -36,25 +34,6 @@ interface UseImageGenerationReturn extends GenerationState {
     getActiveImageUrl: () => string;
     handleClearResults: () => void;
     handleClearHistory: () => void;
-    performGeneration: (
-        targetPrompt: string,
-        targetRatio: AspectRatio | undefined,
-        targetSize: ImageSize,
-        targetStyle: ImageStyle,
-        editingInput?: string,
-        customBatchSize?: number,
-        customSize?: ImageSize,
-        explicitMode?: string,
-        extraRefImages?: string[],
-        currentBatchSize?: number,
-        referenceImages?: string[],
-        t?: (key: string) => string,
-        handleApiKeyConnect?: () => Promise<void>,
-        apiKeyReady?: boolean,
-        isEditing?: boolean,
-        setIsEditing?: (v: boolean) => void,
-        setEditingImageSource?: (v: string | null) => void,
-    ) => Promise<void>;
 }
 
 /**
@@ -124,7 +103,5 @@ export function useImageGeneration(): UseImageGenerationReturn {
         getActiveImageUrl,
         handleClearResults,
         handleClearHistory,
-        // performGeneration is kept in App.tsx due to its cross-cutting nature
-        performGeneration: async () => { /* stub — actual implementation in App.tsx */ },
     };
 }

@@ -73,7 +73,7 @@ const RatioSelector: React.FC<RatioSelectorProps> = ({
           </button>
         )}
       </label>
-      <div className={`grid grid-cols-5 gap-2 transition-opacity ${disabled ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+      <div className={`grid grid-cols-7 gap-1.5 transition-opacity ${disabled ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
         {ASPECT_RATIOS.map((ratio) => {
           const isSupported = !supportedRatios || supportedRatios.includes(ratio.value);
           const isDisabled = disabled || !isSupported;
@@ -84,7 +84,7 @@ const RatioSelector: React.FC<RatioSelectorProps> = ({
               onClick={() => onSelect(ratio.value)}
               disabled={isDisabled}
               className={`
-                flex flex-col items-center justify-center p-1 rounded-lg border text-[10px] transition-all relative overflow-hidden group h-[60px]
+                flex flex-col items-center justify-center p-1 rounded-lg border text-[10px] transition-all relative overflow-hidden group h-[50px]
                 ${selectedRatio === ratio.value
                   ? 'bg-amber-500/10 border-amber-500 text-amber-600 dark:text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
                   : 'bg-white dark:bg-gray-900/40 border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-800 dark:hover:text-gray-200'
@@ -93,7 +93,7 @@ const RatioSelector: React.FC<RatioSelectorProps> = ({
               `}
               title={!isSupported ? t('unsupportedModel') : getRatioLabel(ratio.label)}
             >
-              <div className={`w-full h-8 mb-1 flex items-center justify-center`}>
+              <div className={`w-full h-6 mb-0.5 flex items-center justify-center`}>
                 <div
                   className={`border rounded-[1px] transition-all ${ratio.value === selectedRatio ? 'border-amber-400 bg-amber-400/80' : 'border-gray-400 dark:border-gray-600 bg-gray-200 dark:bg-gray-500/20 group-hover:border-gray-500 dark:group-hover:border-gray-400'}`}
                   style={getIconStyle(ratio.value)}

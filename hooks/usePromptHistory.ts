@@ -2,7 +2,7 @@
  * F3: Prompt History — Persists successful prompts in localStorage.
  * F6: Prompt Templates — Built-in templates for common scenarios.
  */
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 const STORAGE_KEY = 'nbu_prompt_history';
 export const MAX_HISTORY = 9999;
@@ -19,22 +19,23 @@ export interface PromptTemplate {
     label: string;      // short display name
     labelKey: string;    // i18n key (fall back to label)
     prompt: string;
+    promptKey?: string;
     icon: string;
 }
 
 export const PROMPT_TEMPLATES: PromptTemplate[] = [
-    { id: 'portrait', label: 'Portrait', labelKey: 'tplPortrait', icon: '👤', prompt: 'A professional studio portrait with soft lighting, shallow depth of field, and natural skin texture. Eye-level perspective, warm tones.' },
-    { id: 'landscape', label: 'Landscape', labelKey: 'tplLandscape', icon: '🏔️', prompt: 'A breathtaking panoramic landscape at golden hour with dramatic clouds, rich natural colors, and a sense of depth and scale.' },
-    { id: 'product', label: 'Product', labelKey: 'tplProduct', icon: '📦', prompt: 'A sleek product photography shot on a clean background with studio lighting, precise reflections, and premium feel.' },
-    { id: 'animal', label: 'Animal', labelKey: 'tplAnimal', icon: '🐾', prompt: 'A stunning wildlife photograph capturing an animal in its natural habitat, with sharp detail and beautiful bokeh background.' },
-    { id: 'food', label: 'Food', labelKey: 'tplFood', icon: '🍽️', prompt: 'Appetizing food photography with warm overhead lighting, careful plating, steam or motion captured, and rustic table setting.' },
-    { id: 'interior', label: 'Interior', labelKey: 'tplInterior', icon: '🏠', prompt: 'A modern interior design render with natural lighting streaming through windows, clean lines, curated décor, and warm atmosphere.' },
-    { id: 'character', label: 'Character', labelKey: 'tplCharacter', icon: '⚔️', prompt: 'A detailed fantasy character concept art with intricate armor/clothing design, dynamic pose, and rich background environment.' },
-    { id: 'scifi', label: 'Sci-Fi', labelKey: 'tplSciFi', icon: '🚀', prompt: 'A futuristic sci-fi scene with advanced technology, neon lighting, volumetric fog, and a cinematic composition suggesting a larger narrative.' },
-    { id: 'abstract', label: 'Abstract', labelKey: 'tplAbstract', icon: '🎨', prompt: 'An abstract artwork with bold colors, dynamic shapes, flowing gradients, and a strong sense of movement and emotional depth.' },
-    { id: 'architecture', label: 'Architecture', labelKey: 'tplArchitecture', icon: '🏛️', prompt: 'A stunning architectural photograph emphasizing geometric patterns, leading lines, dramatic perspective, and interplay of light and shadow.' },
-    { id: 'underwater', label: 'Underwater', labelKey: 'tplUnderwater', icon: '🐠', prompt: 'A mesmerizing underwater scene with vibrant coral reefs, tropical fish, light rays penetrating the water, and crystal blue clarity.' },
-    { id: 'poster', label: 'Poster', labelKey: 'tplPoster', icon: '🎬', prompt: 'A cinematic movie poster design with dramatic composition, bold typography area, atmospheric lighting, and a compelling visual narrative.' },
+    { id: 'portrait', label: 'Portrait', labelKey: 'tplPortrait', promptKey: 'tplPromptPortrait', icon: '👤', prompt: 'A professional studio portrait with soft lighting, shallow depth of field, and natural skin texture. Eye-level perspective, warm tones.' },
+    { id: 'landscape', label: 'Landscape', labelKey: 'tplLandscape', promptKey: 'tplPromptLandscape', icon: '🏔️', prompt: 'A breathtaking panoramic landscape at golden hour with dramatic clouds, rich natural colors, and a sense of depth and scale.' },
+    { id: 'product', label: 'Product', labelKey: 'tplProduct', promptKey: 'tplPromptProduct', icon: '📦', prompt: 'A sleek product photography shot on a clean background with studio lighting, precise reflections, and premium feel.' },
+    { id: 'animal', label: 'Animal', labelKey: 'tplAnimal', promptKey: 'tplPromptAnimal', icon: '🐾', prompt: 'A stunning wildlife photograph capturing an animal in its natural habitat, with sharp detail and beautiful bokeh background.' },
+    { id: 'food', label: 'Food', labelKey: 'tplFood', promptKey: 'tplPromptFood', icon: '🍽️', prompt: 'Appetizing food photography with warm overhead lighting, careful plating, steam or motion captured, and rustic table setting.' },
+    { id: 'interior', label: 'Interior', labelKey: 'tplInterior', promptKey: 'tplPromptInterior', icon: '🏠', prompt: 'A modern interior design render with natural lighting streaming through windows, clean lines, curated décor, and warm atmosphere.' },
+    { id: 'character', label: 'Character', labelKey: 'tplCharacter', promptKey: 'tplPromptCharacter', icon: '⚔️', prompt: 'A detailed fantasy character concept art with intricate armor/clothing design, dynamic pose, and rich background environment.' },
+    { id: 'scifi', label: 'Sci-Fi', labelKey: 'tplSciFi', promptKey: 'tplPromptSciFi', icon: '🚀', prompt: 'A futuristic sci-fi scene with advanced technology, neon lighting, volumetric fog, and a cinematic composition suggesting a larger narrative.' },
+    { id: 'abstract', label: 'Abstract', labelKey: 'tplAbstract', promptKey: 'tplPromptAbstract', icon: '🎨', prompt: 'An abstract artwork with bold colors, dynamic shapes, flowing gradients, and a strong sense of movement and emotional depth.' },
+    { id: 'architecture', label: 'Architecture', labelKey: 'tplArchitecture', promptKey: 'tplPromptArchitecture', icon: '🏛️', prompt: 'A stunning architectural photograph emphasizing geometric patterns, leading lines, dramatic perspective, and interplay of light and shadow.' },
+    { id: 'underwater', label: 'Underwater', labelKey: 'tplUnderwater', promptKey: 'tplPromptUnderwater', icon: '🐠', prompt: 'A mesmerizing underwater scene with vibrant coral reefs, tropical fish, light rays penetrating the water, and crystal blue clarity.' },
+    { id: 'poster', label: 'Poster', labelKey: 'tplPoster', promptKey: 'tplPromptPoster', icon: '🎬', prompt: 'A cinematic movie poster design with dramatic composition, bold typography area, atmospheric lighting, and a compelling visual narrative.' },
 ];
 
 // --- F3: LocalStorage & Backend Prompt History ---
@@ -95,20 +96,30 @@ export function usePromptHistory() {
         return () => { mounted = false; };
     }, []);
 
+    const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
     // Sync with backend & localStorage whenever history changes (after initial load)
     useEffect(() => {
         if (!isLoaded) return; // Don't wipe backend on first render before load finishes
 
         persistHistoryFallback(history);
 
-        fetch('/api/save-prompts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(history),
-        }).catch(err => {
-            console.error('Failed to sync prompt history to backend:', err);
-        });
+        // Debounce backend saves to avoid spamming the endpoint when rapidly adding/removing prompts
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
 
+        saveTimeoutRef.current = setTimeout(() => {
+            fetch('/api/save-prompts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(history),
+            }).catch(err => {
+                console.error('Failed to sync prompt history to backend:', err);
+            });
+        }, 2000);
+
+        return () => {
+            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+        };
     }, [history, isLoaded]);
 
     const addPrompt = useCallback((text: string) => {

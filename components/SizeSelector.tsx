@@ -20,7 +20,7 @@ interface SizeSelectorProps {
 const SizeSelector: React.FC<SizeSelectorProps> = ({ selectedSize, onSelect, label = "Resolution", disabled, isLocked, onLockToggle, supportedSizes, currentLanguage = 'en' as Language }) => {
   const t = (key: string) => getTranslation(currentLanguage, key);
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2 h-full">
       <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
         {label}
         {onLockToggle && (
@@ -29,7 +29,7 @@ const SizeSelector: React.FC<SizeSelectorProps> = ({ selectedSize, onSelect, lab
           </button>
         )}
       </label>
-      <div className={`flex bg-gray-100 dark:bg-gray-900/50 p-1 rounded-xl border border-gray-200 dark:border-gray-800 gap-1 transition-opacity ${disabled ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+      <div className={`flex bg-gray-100 dark:bg-gray-900/50 p-1 rounded-xl border border-gray-200 dark:border-gray-800 gap-1 mt-auto transition-opacity ${disabled ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
         {IMAGE_SIZES.map((size) => {
           const isSupported = !supportedSizes || supportedSizes.includes(size);
           const isDisabled = disabled || !isSupported;
@@ -40,7 +40,7 @@ const SizeSelector: React.FC<SizeSelectorProps> = ({ selectedSize, onSelect, lab
               onClick={() => onSelect(size)}
               disabled={isDisabled}
               className={`
-                flex-1 py-1 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 relative overflow-hidden group
+                flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 relative overflow-hidden group
                 ${selectedSize === size
                   ? 'bg-white dark:bg-gray-800 text-amber-600 dark:text-amber-400 shadow-md dark:shadow-lg border border-gray-200 dark:border-amber-500/50 shadow-black/5 dark:shadow-amber-500/10'
                   : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800/50'
