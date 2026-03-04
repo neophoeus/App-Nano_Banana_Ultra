@@ -1,6 +1,9 @@
 # Nano Banana Ultra - v2.3 Release 🚀
 
-*(English follows below)*
+<details open>
+<summary><b>🇹🇼 繁體中文 (Traditional Chinese)</b></summary>
+
+<br>
 
 這是全新改版 (v2.0) 的 Nano Banana Ultra 影像生成應用程式。此專案基於前端 React 生態系建立，並直接串接 Google Gemini API 來協助使用者快速產生或編輯高品質的圖片。
 
@@ -52,9 +55,14 @@
    npm run build
    ```
 
+</details>
+
 ---
 
-# Nano Banana Ultra - v2.3 Release 🚀
+<details>
+<summary><b>🇬🇧 English version</b></summary>
+
+<br>
 
 This is the newly rewritten version (v2.3) of the Nano Banana Ultra image generation application. Built on the React ecosystem, it integrates the Google Gemini API to help users generate or edit high-quality images quickly.
 
@@ -105,6 +113,8 @@ This is the newly rewritten version (v2.3) of the Nano Banana Ultra image genera
    ```bash
    npm run build
    ```
+
+</details>
 
 ---
 *Built with React, Vite, and TailwindCSS. Powered by Google Gemini.*
