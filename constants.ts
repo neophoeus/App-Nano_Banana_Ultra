@@ -38,9 +38,16 @@ export const MODEL_CAPABILITIES: Record<ImageModel, { supportedSizes: ImageSize[
   'gemini-2.5-flash-image': {
     supportedSizes: [], // Doesn't accept size explicitly
     supportedRatios: ['1:1', '16:9', '9:16', '4:3', '3:4', '2:3', '3:2', '21:9', '4:5', '5:4'],
-    maxObjects: 3, // For 2.5 flash, we just share the pool between objects & characters up to 3
-    maxCharacters: 3
+    maxObjects: 3, // 2.5 flash supports up to 3 total input images, no character references
+    maxCharacters: 0
   }
+};
+
+// Editor-specific limits: fewer refs = more precise edits
+export const EDITOR_MAX_REFS: Record<ImageModel, { maxObjects: number, maxCharacters: number }> = {
+  'gemini-3.1-flash-image-preview': { maxObjects: 3, maxCharacters: 2 },
+  'gemini-3-pro-image-preview': { maxObjects: 3, maxCharacters: 2 },
+  'gemini-2.5-flash-image': { maxObjects: 1, maxCharacters: 0 },
 };
 
 export const STYLE_CATEGORIES: { id: ImageStyleCategory; label: string }[] = [

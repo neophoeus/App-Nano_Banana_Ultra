@@ -1,18 +1,18 @@
-# Nano Banana Ultra - v2.3 Release 🚀
+# Nano Banana Ultra - v2.4 Release 🚀
 
 <details open>
 <summary><b>🇧 English version</b></summary>
 
 <br>
 
-This is the newly rewritten version (v2.3) of the Nano Banana Ultra image generation application. Built on the React ecosystem, it integrates the Google Gemini API to help users generate or edit high-quality images quickly.
+This is the newly rewritten version (v2.4) of the Nano Banana Ultra image generation application. Built on the React ecosystem, it integrates the Google Gemini API to help users generate or edit high-quality images quickly.
 
 ## ✨ Features
 
 - **Text-to-Image**: Generate beautiful images quickly by entering text prompts.
 - **Image-to-Image & Style Transfer**: Upload reference images and combine them with prompts or built-in styles to create entirely new artworks.
 - **Advanced Model Selection**: Switch freely between the latest Gemini image models (Gemini 3.1 Flash, Gemini 3.0 Pro, Gemini 2.5 Flash). The UI smartly adapts and locks unsupported features based on your selection (e.g. tracking specific ratio limits or max object counts).
-- **Interactive Image Editor**: Built-in powerful canvas editor supporting Inpainting and Outpainting! Zoom, pan, and mask specific areas of an image using the brush tool for precise modification, resizing, or detail replacement.
+- **Interactive Image Editor**: Built-in powerful canvas editor supporting Inpainting and Outpainting! Zoom, pan, and mask specific areas of an image using the brush tool for precise modification. Features a dedicated UI layout and optimized reference image limits specialized for editing tasks.
 - **Dual Reference Trays**: Independently configure Characters and Objects schemas, equipped with native HTML5 Drag and Drop ordering for prompt structure matching.
 - **Smart File Naming**: Auto-saving now embeds the generating model's name directly into the filename (e.g., `gemini-3-pro-image-preview-gen_...png`) for easy sorting and management.
 - **Sketch Pad**: Draw rough sketches directly on the canvas to use as a structural reference for image generation.
@@ -64,14 +64,14 @@ This is the newly rewritten version (v2.3) of the Nano Banana Ultra image genera
 
 <br>
 
-這是全新改版 (v2.0) 的 Nano Banana Ultra 影像生成應用程式。此專案基於前端 React 生態系建立，並直接串接 Google Gemini API 來協助使用者快速產生或編輯高品質的圖片。
+這是全新改版 (v2.4) 的 Nano Banana Ultra 影像生成應用程式。此專案基於前端 React 生態系建立，並直接串接 Google Gemini API 來協助使用者快速產生或編輯高品質的圖片。
 
 ## ✨ 核心功能 (Features)
 
 - **文字生圖 (Text-to-Image)**：輸入提示詞 (Prompt)，快速生成精美圖片。
 - **圖生圖 / 風格轉換 (Image-to-Image & Style Transfer)**：上傳參考圖片，結合提示詞或內建風格，生成全新面貌的作品。
 - **模型自由切換 (Advanced Model Selection)**：支援最新 Gemini Imagen 視覺模型 (包含 Gemini 3.1 Flash, Gemini 3.0 Pro, Gemini 2.5 Flash 等)，並會根據所選模型動態開關介面功能 (例如各模型支援的參考圖數量上限與輸出比例限制)。
-- **專業影像編輯器 (Interactive Image Editor)**：內建強大的畫布編輯器，支援局部修改 (Inpainting) 與畫面外擴 (Outpainting)！您可以在畫布上自由縮放原圖、使用筆刷塗抹遮罩，精準替換或擴充指定區域的細節。
+- **專業影像編輯器 (Interactive Image Editor)**：內建強大的畫布編輯器，支援局部修改 (Inpainting) 與畫面外擴 (Outpainting)！您可以在畫布上自由縮放原圖、使用筆刷塗抹遮罩，精準替換或擴充指定區域的細節。擁有專屬的最佳化操作介面與精準的參考圖數量控制設計。
 - **雙軌參考圖架構 (Dual Reference Trays)**：支援人物與物品獨立配置，並支援 HTML5 原生拖放 (Drag & Drop) 排序功能讓您輕鬆更動提示詞陣列。
 - **智慧檔名系統 (Smart File Naming)**：產生的圖片在存檔時，會自動擷取生成該圖片的 AI 模型名稱作為檔名標籤 (例如：`gemini-3-pro-image-preview-gen_...png`)，便於後續管理與分類。
 - **手繪塗鴉板 (Sketch Pad)**：直接在畫布上勾勒草圖，作為生成的參考依據。

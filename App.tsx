@@ -309,6 +309,7 @@ const App: React.FC = () => {
         if (hasSketch && objectImages.length > 0) {
             setShowSketchReplaceConfirm(true);
         } else {
+            setIsSidebarOpen(false); // Auto-close sidebar
             setIsSketchPadOpen(true);
         }
     };
@@ -332,6 +333,7 @@ const App: React.FC = () => {
 
         setObjectImages(newRefs);
         setIsSketchPadOpen(false);
+        setIsSidebarOpen(true); // Auto-open sidebar when sketchpad closes
         showNotification(t('notificationAddedToRef'), 'info');
     };
 
@@ -391,6 +393,7 @@ const App: React.FC = () => {
 
                 setEditingImageSource(finalResult);
                 // setPrompt(""); // Don't clear main prompt, just don't bring it in (editor has its own prompt state)
+                setIsSidebarOpen(false); // Auto-close sidebar
                 setIsEditing(true);
                 setError(null); // Clear any previous errors when starting new edit
 
@@ -485,6 +488,7 @@ const App: React.FC = () => {
         if (activeUrl) {
             console.log("Opening Editor with active URL:", activeUrl);
             setEditingImageSource(activeUrl);
+            setIsSidebarOpen(false); // Auto-close sidebar
             setIsEditing(true);
             setError(null);
         } else {
@@ -616,7 +620,10 @@ const App: React.FC = () => {
             {isSketchPadOpen && (
                 <SketchPad
                     onSave={handleSketchPadSave}
-                    onClose={() => setIsSketchPadOpen(false)}
+                    onClose={() => {
+                        setIsSketchPadOpen(false);
+                        setIsSidebarOpen(true); // Auto-open sidebar when sketchpad closes
+                    }}
                     currentLanguage={currentLang}
                     imageModel={imageModel}
                     onModelChange={setImageModel}
@@ -644,6 +651,7 @@ const App: React.FC = () => {
                             <button
                                 onClick={() => {
                                     setShowSketchReplaceConfirm(false);
+                                    setIsSidebarOpen(false); // Auto-close sidebar
                                     setIsSketchPadOpen(true);
                                 }}
                                 className="flex-1 py-2.5 px-4 rounded-xl text-sm font-bold text-white shadow-lg transition-all bg-amber-500 hover:bg-amber-600 shadow-amber-500/30"
@@ -673,6 +681,7 @@ const App: React.FC = () => {
                     onCancel={() => {
                         setIsEditing(false);
                         setEditingImageSource(null);
+                        setIsSidebarOpen(true); // Auto-open sidebar when editor closes
                     }}
                     isGenerating={isGenerating}
                     currentLanguage={currentLang}

@@ -8,7 +8,7 @@ import ImageUploader from './ImageUploader';
 import ModelSelector from './ModelSelector';
 import { ImageSize, AspectRatio, ImageModel } from '../types';
 import { Language, getTranslation, translations } from '../utils/translations';
-import { ASPECT_RATIOS, MODEL_CAPABILITIES } from '../constants';
+import { ASPECT_RATIOS, MODEL_CAPABILITIES, EDITOR_MAX_REFS } from '../constants';
 
 interface ImageEditorProps {
     initialImageUrl: string;
@@ -867,35 +867,61 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                 )}
                             </div>
                         </div>
-                        <BatchSelector batchSize={batchSize} onSelect={setBatchSize} label={t('batchSize')} />
-                        <SizeSelector selectedSize={size} onSelect={setSize} label={t('resolution')} supportedSizes={MODEL_CAPABILITIES[imageModel].supportedSizes} currentLanguage={currentLanguage} />
+                        <div className="flex gap-3 items-stretch">
+                            <div className="flex-[3]">
+                                <SizeSelector selectedSize={size} onSelect={setSize} label={t('resolution')} supportedSizes={MODEL_CAPABILITIES[imageModel].supportedSizes} currentLanguage={currentLanguage} />
+                            </div>
+                            <div className="flex-[2]">
+                                <BatchSelector batchSize={batchSize} onSelect={setBatchSize} label={t('batchSize')} />
+                            </div>
+                        </div>
                         <RatioSelector selectedRatio={ratio} onSelect={setRatio} label={t('aspectRatio')} currentLanguage={currentLanguage} disabled={mode === 'inpaint'} supportedRatios={MODEL_CAPABILITIES[imageModel].supportedRatios} />
                         <div className="h-px bg-gray-200 dark:bg-gray-800 my-4" />
                         <ModelSelector selectedModel={imageModel} onSelect={onModelChange} langDict={translations[currentLanguage]} currentLanguage={currentLanguage} />
-                        <ImageUploader
-                            images={objectImages}
-                            onImagesChange={setObjectImages}
-                            maxImages={MODEL_CAPABILITIES[imageModel].maxObjects}
-                            safeLimit={Math.floor(MODEL_CAPABILITIES[imageModel].maxObjects / 2)}
-                            label={t('objectRefs')}
-                            currentLanguage={currentLanguage}
-                            onWarning={(msg) => showToast(msg, 'error')}
-                            limitWarningMsg={t('errorMaxRefs')}
-                            prefixTag="Obj"
-                        />
-                        {(MODEL_CAPABILITIES[imageModel].maxCharacters > 0) && (
-                            <ImageUploader
-                                images={characterImages}
-                                onImagesChange={setCharacterImages}
-                                maxImages={MODEL_CAPABILITIES[imageModel].maxCharacters}
-                                safeLimit={Math.floor(MODEL_CAPABILITIES[imageModel].maxCharacters / 2)}
-                                label={t('characterRefs')}
-                                currentLanguage={currentLanguage}
-                                onWarning={(msg) => showToast(msg, 'error')}
-                                limitWarningMsg={t('errorMaxRefs')}
-                                prefixTag="Char"
-                            />
-                        )}
+                        {/* Reference Images — unified header like main sidebar */}
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('references') || 'References'}</label>
+                                <div className="flex items-center gap-2 text-[10px] text-gray-500 dark:text-gray-400">
+                                    <span className={objectImages.length >= EDITOR_MAX_REFS[imageModel].maxObjects ? 'text-red-500' : ''}>
+                                        {t('objLabel') || 'Obj'} {objectImages.length}/{EDITOR_MAX_REFS[imageModel].maxObjects}
+                                    </span>
+                                    {EDITOR_MAX_REFS[imageModel].maxCharacters > 0 && (
+                                        <span className={characterImages.length >= EDITOR_MAX_REFS[imageModel].maxCharacters ? 'text-red-500' : ''}>
+                                            {t('charLabel') || 'Char'} {characterImages.length}/{EDITOR_MAX_REFS[imageModel].maxCharacters}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <ImageUploader
+                                    images={objectImages}
+                                    onImagesChange={setObjectImages}
+                                    maxImages={EDITOR_MAX_REFS[imageModel].maxObjects}
+                                    safeLimit={Math.floor(EDITOR_MAX_REFS[imageModel].maxObjects / 2)}
+                                    label={t('objectRefs')}
+                                    currentLanguage={currentLanguage}
+                                    onWarning={(msg) => showToast(msg, 'error')}
+                                    limitWarningMsg={t('errorMaxRefs')}
+                                    prefixTag="Obj"
+                                    hideHeader
+                                />
+                                {(EDITOR_MAX_REFS[imageModel].maxCharacters > 0) && (
+                                    <ImageUploader
+                                        images={characterImages}
+                                        onImagesChange={setCharacterImages}
+                                        maxImages={EDITOR_MAX_REFS[imageModel].maxCharacters}
+                                        safeLimit={Math.floor(EDITOR_MAX_REFS[imageModel].maxCharacters / 2) || 1}
+                                        label={t('characterRefs')}
+                                        currentLanguage={currentLanguage}
+                                        onWarning={(msg) => showToast(msg, 'error')}
+                                        limitWarningMsg={t('errorMaxRefs')}
+                                        prefixTag="Char"
+                                        hideHeader
+                                    />
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
