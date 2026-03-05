@@ -72,7 +72,7 @@ This is the newly rewritten version of the Nano Banana Ultra image generation ap
 
 - **文字生圖 (Text-to-Image)**：輸入提示詞 (Prompt)，快速生成精美圖片。
 - **圖生圖 / 風格轉換 (Image-to-Image & Style Transfer)**：上傳參考圖片，結合提示詞或內建風格，生成全新面貌的作品。
-- **模型自由切換 (Advanced Model Selection)**：支援最新 Gemini Imagen 視覺模型 (包含 Gemini 3.1 Flash, Gemini 3.0 Pro, Gemini 2.5 Flash 等)，並會根據所選模型動態開關介面功能 (例如各模型支援的參考圖數量上限與輸出比例限制)。
+- **進階模型選擇 (Advanced Model Selection)**：支援多款最新的 Gemini 影像生成模型（包含 Gemini 3.1 Flash, Gemini 3.0 Pro, Gemini 2.5 Flash 等）。介面會依據模型特性智慧化調整可用功能（例如根據模型限制動態匹配支援的長寬比或參考圖數量）。
 - **全域佈景切換與語系同步**：手繪板 (SketchPad) 與編輯器 (ImageEditor) 現已與首頁完全同步色彩模式與語系設定。所有互動按鈕與滑桿皆已全面補齊懸停提示 (Tooltips)。
 - **專業影像編輯器 (Interactive Image Editor)**：內建強大的畫布編輯器，支援局部修改 (Inpainting) 與畫面外擴 (Outpainting)！您可以在畫布上自由縮放原圖、使用筆刷塗抹遮罩，精準替換或擴充指定區域的細節。擁有專屬的最佳化操作介面與精準的參考圖數量控制設計。
 - **雙軌參考圖架構 (Dual Reference Trays)**：支援人物與物品獨立配置，並支援 HTML5 原生拖放 (Drag & Drop) 排序功能讓您輕鬆更動提示詞陣列。
