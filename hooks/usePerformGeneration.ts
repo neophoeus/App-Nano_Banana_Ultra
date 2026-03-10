@@ -7,7 +7,7 @@ interface UsePerformGenerationProps {
     t: (key: string) => string;
     apiKeyReady: boolean;
     setApiKeyReady: (val: boolean) => void;
-    handleApiKeyConnect: () => Promise<void>;
+    handleApiKeyConnect: () => Promise<boolean>;
     setIsGenerating: (val: boolean) => void;
     setError: (val: string | null) => void;
     setGeneratedImageUrls: (val: React.SetStateAction<string[]>) => void;
@@ -67,7 +67,8 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
         }
 
         if (!apiKeyReady) {
-            await handleApiKeyConnect();
+            const connected = await handleApiKeyConnect();
+            if (!connected) return;
             const ready = await checkApiKey();
             if (!ready) return;
             setApiKeyReady(true);

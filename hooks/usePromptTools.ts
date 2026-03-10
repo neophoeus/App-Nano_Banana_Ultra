@@ -7,7 +7,7 @@ interface UsePromptToolsOptions {
     showNotification: (msg: string, type: 'info' | 'error') => void;
     t: (key: string) => string;
     apiKeyReady: boolean;
-    handleApiKeyConnect: () => Promise<void>;
+    handleApiKeyConnect: () => Promise<boolean>;
 }
 
 interface UsePromptToolsReturn {
@@ -35,7 +35,12 @@ export function usePromptTools({
             showNotification(t('errEnterIdea'), 'error');
             return;
         }
-        if (!apiKeyReady) await handleApiKeyConnect();
+        if (!apiKeyReady) {
+            const ready = await handleApiKeyConnect();
+            if (!ready) {
+                return;
+            }
+        }
 
         setIsEnhancingPrompt(true);
         try {
@@ -51,7 +56,12 @@ export function usePromptTools({
     }, [apiKeyReady, handleApiKeyConnect, getLanguageLabel, addLog, showNotification, t]);
 
     const handleSurpriseMe = useCallback(async (setPrompt: (p: string) => void) => {
-        if (!apiKeyReady) await handleApiKeyConnect();
+        if (!apiKeyReady) {
+            const ready = await handleApiKeyConnect();
+            if (!ready) {
+                return;
+            }
+        }
         setIsEnhancingPrompt(true);
         try {
             const randomPrompt = await generateRandomPrompt(getLanguageLabel());

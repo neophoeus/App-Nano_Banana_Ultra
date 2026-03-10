@@ -18,13 +18,13 @@ export const ASPECT_RATIOS: { value: AspectRatio; label: string; iconClass: stri
   { value: '8:1', label: 'Panorama', iconClass: 'aspect-[8/1]' },
 ];
 
-export const IMAGE_SIZES: ImageSize[] = ['0.5K', '1K', '2K', '4K'];
+export const IMAGE_SIZES: ImageSize[] = ['512', '1K', '2K', '4K'];
 
 export const IMAGE_MODELS: ImageModel[] = ['gemini-3.1-flash-image-preview', 'gemini-3-pro-image-preview', 'gemini-2.5-flash-image'];
 
 export const MODEL_CAPABILITIES: Record<ImageModel, { supportedSizes: ImageSize[], supportedRatios: AspectRatio[], maxObjects: number, maxCharacters: number }> = {
   'gemini-3.1-flash-image-preview': {
-    supportedSizes: ['0.5K', '1K', '2K', '4K'],
+    supportedSizes: ['512', '1K', '2K', '4K'],
     supportedRatios: ['1:1', '16:9', '9:16', '4:3', '3:4', '2:3', '3:2', '21:9', '4:5', '5:4', '1:4', '4:1', '1:8', '8:1'],
     maxObjects: 10,
     maxCharacters: 4

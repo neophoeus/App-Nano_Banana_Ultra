@@ -6,12 +6,95 @@ interface GlobalLogConsoleProps {
   logs: string[];
   isLoading: boolean;
   currentLanguage?: Language;
+    refreshToken?: number;
 }
 
-const GlobalLogConsole: React.FC<GlobalLogConsoleProps> = ({ logs, isLoading, currentLanguage = 'en' }) => {
+type HealthPayload = {
+    ok: boolean;
+    hasApiKey: boolean;
+    timestamp: string;
+};
+
+const REFRESH_INTERVAL_MS = 30000;
+
+const normalizeLocaleTag = (locale: string | undefined) => {
+    if (!locale) return undefined;
+    return locale.replace('_', '-');
+};
+
+const formatTimestamp = (timestamp: string | null, locale: string | undefined, t: (key: string) => string) => {
+    if (!timestamp) return t('statusPanelNever');
+
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return t('statusPanelUnknown');
+
+    try {
+        const normalizedLocale = normalizeLocaleTag(locale);
+        return date.toLocaleTimeString(normalizedLocale ? [normalizedLocale] : undefined, {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+        });
+    } catch {
+        return date.toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+        });
+    }
+};
+
+const GlobalLogConsole: React.FC<GlobalLogConsoleProps> = ({ logs, isLoading, currentLanguage = 'en', refreshToken = 0 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+    const [health, setHealth] = useState<HealthPayload | null>(null);
+    const [healthError, setHealthError] = useState<string | null>(null);
+    const [isRefreshingHealth, setIsRefreshingHealth] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const t = (key: string) => getTranslation(currentLanguage as Language, key);
+
+    useEffect(() => {
+        let isDisposed = false;
+
+        const loadHealth = async (silent: boolean = false) => {
+            if (!silent) {
+                setIsRefreshingHealth(true);
+            }
+
+            try {
+                const response = await fetch('/api/health');
+                const payload = await response.json().catch(() => null);
+
+                if (!response.ok) {
+                    throw new Error(payload?.error || t('statusPanelHealthFailed'));
+                }
+
+                if (!isDisposed) {
+                    setHealth(payload as HealthPayload);
+                    setHealthError(null);
+                }
+            } catch (error: any) {
+                if (!isDisposed) {
+                    setHealthError(error?.message || t('statusPanelHealthFailed'));
+                }
+            } finally {
+                if (!isDisposed) {
+                    setIsRefreshingHealth(false);
+                }
+            }
+        };
+
+        loadHealth();
+        const intervalId = window.setInterval(() => {
+            loadHealth(true);
+        }, REFRESH_INTERVAL_MS);
+
+        return () => {
+            isDisposed = true;
+            window.clearInterval(intervalId);
+        };
+    }, [currentLanguage, refreshToken]);
 
   // Auto-scroll logic
   useEffect(() => {
@@ -62,16 +145,41 @@ const GlobalLogConsole: React.FC<GlobalLogConsoleProps> = ({ logs, isLoading, cu
     return { color: 'text-gray-500 dark:text-gray-400', border: 'border-gray-200 dark:border-gray-800/50', icon: '›' };
   };
 
+    const localApiTone = healthError || !health?.ok ? 'bg-red-500' : 'bg-emerald-500';
+    const keyTone = health?.hasApiKey ? 'bg-emerald-500' : 'bg-red-500';
+    const localApiLabel = healthError || !health?.ok ? t('statusPanelOffline') : t('statusPanelLive');
+    const keyLabel = health?.hasApiKey ? t('statusPanelReady') : t('statusPanelMissing');
+
   return (
     <div className="relative flex flex-col items-end gap-2 font-mono text-xs transition-all duration-300">
       
       {/* Expanded Console (Absolute positioned relative to this container) */}
       {isExpanded && (
-        <div className="absolute bottom-full right-0 mb-3 w-[85vw] max-w-[400px] h-64 bg-white/95 dark:bg-[#0a0c10]/95 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl flex flex-col overflow-hidden animate-[fadeIn_0.1s_ease-out] z-[10000]">
+        <div className="absolute bottom-full right-0 mb-3 w-[85vw] max-w-[400px] h-[23rem] bg-white/95 dark:bg-[#0a0c10]/95 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl flex flex-col overflow-hidden animate-[fadeIn_0.1s_ease-out] z-[10000]">
             {/* Header */}
             <div className="flex items-center justify-between px-3 py-2 bg-gray-100/80 dark:bg-gray-900/80 border-b border-gray-200 dark:border-gray-800">
                 <span className="font-bold text-gray-500 dark:text-gray-400 text-[10px] tracking-wider">{t('consoleSystem')}</span>
                 <div className="flex gap-2">
+                    <button
+                        onClick={() => {
+                            setIsRefreshingHealth(true);
+                            fetch('/api/health')
+                                .then(async (response) => {
+                                    const payload = await response.json().catch(() => null);
+                                    if (!response.ok) throw new Error(payload?.error || t('statusPanelHealthFailed'));
+                                    setHealth(payload as HealthPayload);
+                                    setHealthError(null);
+                                })
+                                .catch((error: any) => setHealthError(error?.message || t('statusPanelHealthFailed')))
+                                .finally(() => setIsRefreshingHealth(false));
+                        }}
+                        className="text-gray-400 dark:text-gray-500 hover:text-amber-500 dark:hover:text-amber-300 transition-colors"
+                        title={t('statusPanelRefresh')}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${isRefreshingHealth ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </button>
                     <button 
                         onClick={() => setIsExpanded(false)} 
                         className="text-gray-400 dark:text-gray-500 hover:text-gray-800 dark:hover:text-white transition-colors"
@@ -81,6 +189,34 @@ const GlobalLogConsole: React.FC<GlobalLogConsoleProps> = ({ logs, isLoading, cu
                         </svg>
                     </button>
                 </div>
+            </div>
+
+            <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-white/5">
+                <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-black/20 px-2.5 py-2 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                            <span className="truncate text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('statusPanelLocalApi')}</span>
+                            <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${localApiTone}`}></span>
+                        </div>
+                        <p className="mt-1 truncate text-[11px] font-semibold text-gray-700 dark:text-gray-200">{localApiLabel}</p>
+                    </div>
+                    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-black/20 px-2.5 py-2 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                            <span className="truncate text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">{t('statusPanelGeminiKey')}</span>
+                            <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${keyTone}`}></span>
+                        </div>
+                        <p className="mt-1 truncate text-[11px] font-semibold text-gray-700 dark:text-gray-200">{keyLabel}</p>
+                    </div>
+                </div>
+                <div className="mt-2 flex items-center justify-between gap-2 text-[10px] text-gray-500 dark:text-gray-400">
+                    <span className="truncate uppercase tracking-wider">{t('statusPanelLastCheck')}</span>
+                    <span className="truncate font-semibold">{formatTimestamp(health?.timestamp ?? null, currentLanguage, t)}</span>
+                </div>
+                {healthError && (
+                    <div className="mt-2 rounded-lg border border-red-200 dark:border-red-500/20 bg-red-50 dark:bg-red-900/10 px-2 py-1.5 text-[10px] text-red-600 dark:text-red-300 truncate">
+                        {healthError}
+                    </div>
+                )}
             </div>
             
             {/* Log Content */}
@@ -127,7 +263,11 @@ const GlobalLogConsole: React.FC<GlobalLogConsoleProps> = ({ logs, isLoading, cu
           {!isExpanded && (
               <div className="flex flex-col items-start text-left max-w-[200px] hidden sm:flex">
                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-0.5">{t('consoleSystem')}</span>
-                 <span className="text-[11px] font-medium truncate w-full opacity-90">{isLoading ? t('statusProcessing') : lastLog}</span>
+                      <div className="flex items-center gap-2 w-full">
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${localApiTone}`}></span>
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${keyTone}`}></span>
+                          <span className="text-[11px] font-medium truncate w-full opacity-90">{isLoading ? t('statusProcessing') : lastLog}</span>
+                      </div>
               </div>
           )}
           

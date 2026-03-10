@@ -1,79 +1,48 @@
 
-import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
 import { AspectRatio, ImageSize, ImageStyle, GenerateOptions } from "../types";
 
-// --- F8: Singleton GoogleGenAI Client ---
-let _aiClient: GoogleGenAI | null = null;
-function getAIClient(): GoogleGenAI {
-  if (!_aiClient) {
-    _aiClient = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const jsonHeaders = {
+  'Content-Type': 'application/json',
+};
+
+async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
+  const response = await fetch(input, init);
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const errorMessage = payload && typeof payload.error === 'string'
+      ? payload.error
+      : `Request failed with status ${response.status}`;
+    throw new Error(errorMessage);
   }
-  return _aiClient;
+
+  return payload as T;
 }
-/** Call if the API key changes at runtime */
-export function resetAIClient(): void { _aiClient = null; }
 
 // Helper to ensure we get the key
 export const checkApiKey = async (): Promise<boolean> => {
-  const aistudio = (window as any).aistudio;
-  if (typeof aistudio?.hasSelectedApiKey === 'function') {
-    return await aistudio.hasSelectedApiKey();
+  try {
+    const payload = await fetchJson<{ hasApiKey: boolean }>('/api/runtime-config');
+    return payload.hasApiKey;
+  } catch {
+    return false;
   }
-  return !!process.env.API_KEY;
 };
 
 export const promptForApiKey = async (): Promise<void> => {
-  const aistudio = (window as any).aistudio;
-  if (typeof aistudio?.openSelectKey === 'function') {
-    await aistudio.openSelectKey();
-  } else {
-    console.warn("AI Studio key selection not available in this environment.");
-  }
+  window.alert('Missing GEMINI_API_KEY. Add it to .env.local and restart the dev server.');
 };
-
-/**
- * SAFETY SETTINGS CONFIGURATION
- * Set to BLOCK_NONE to allow maximum creative freedom for image generation tasks.
- * ⚠️ NOTE: This is appropriate for personal/local use only.
- *    If deploying publicly, consider setting at least DANGEROUS_CONTENT to BLOCK_MEDIUM.
- */
-const PERMISSIVE_SAFETY_SETTINGS = [
-  { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-  { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-  { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-  { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-];
 
 // --- Text Utilities (Prompt Engineering) ---
 
 export const enhancePromptWithGemini = async (currentPrompt: string, lang: string = 'en'): Promise<string> => {
-  const ai = getAIClient();
-
-  // Strict enhancement instruction
-  const systemInstruction = `You are an expert image prompt engineer.
-  Task: Optimize the user's prompt for a high-quality AI image generator (like Midjourney or Gemini).
-  Add details about lighting, texture, composition, and mood.
-  CRITICAL RULES:
-  1. Output ONLY the raw prompt text.
-  2. Do NOT add "Here is the prompt", labels, titles, or quotes.
-  3. Keep the original subject matter.
-  4. Output in ${lang}.`;
-
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      config: {
-        systemInstruction: systemInstruction,
-        safetySettings: PERMISSIVE_SAFETY_SETTINGS,
-        thinkingConfig: { thinkingBudget: 0 }
-      },
-      contents: currentPrompt || "A creative image",
+    const response = await fetchJson<{ text: string }>('/api/prompt/enhance', {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({ currentPrompt, lang }),
     });
-
-    // Cleanup any residual quotes or newlines just in case
-    let cleanText = response.text?.trim() || currentPrompt;
-    cleanText = cleanText.replace(/^["']|["']$/g, '');
-    return cleanText;
+    return response.text?.trim() || currentPrompt;
   } catch (e) {
     console.warn("Prompt enhancement failed, using original.", e);
     return currentPrompt;
@@ -81,70 +50,15 @@ export const enhancePromptWithGemini = async (currentPrompt: string, lang: strin
 };
 
 export const generateRandomPrompt = async (lang: string = 'en'): Promise<string> => {
-  const ai = getAIClient();
-
-  const themes = [
-    'Cyberpunk City', 'Fantasy Landscape', 'Sci-Fi Portrait', 'Abstract Fluid Art', 'Macro Nature', 'Retro Poster Design', 'Surrealist Dream', 'Architectural Marvel',
-    'Steampunk Invention', 'Noir Detective Scene', 'Isometric Room', 'Pixel Art Game Level', 'Renaissance Oil Painting', 'Vaporwave Statue', 'Gothic Cathedral',
-    'Ukiyo-e Wave', 'Origami Animal', 'Neon Tokyo Street', 'Post-Apocalyptic Ruin', 'Double Exposure Portrait', 'Knolling Photography', 'Bioluminescent Forest',
-    'Minimalist Vector Icon', 'Claymation Character', 'Space Nebula', 'Underwater Coral Reef', 'Cinematic Movie Still', 'Vintage Botanical Illustration'
-  ];
-  const randomTheme = themes[Math.floor(Math.random() * themes.length)];
-
-  const systemInstruction = `You are a creative image prompt generator.
-  Task: Generate a single, highly descriptive, and vivid image prompt based on a random theme.
-  CRITICAL RULES:
-  1. Output ONLY the raw prompt text.
-  2. Do NOT include any conversational filler (e.g., "Here is a prompt", "Title:", "Concept:").
-  3. Do NOT use markdown code blocks.
-  4. The prompt must be ready to copy-paste into an image generator.
-  5. Output in ${lang}.`;
-
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      config: {
-        systemInstruction: systemInstruction,
-        safetySettings: PERMISSIVE_SAFETY_SETTINGS,
-        thinkingConfig: { thinkingBudget: 0 }
-      },
-      contents: `Theme: ${randomTheme}. Generate one prompt now.`,
+    const response = await fetchJson<{ text: string }>('/api/prompt/random', {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({ lang }),
     });
-    // Remove any accidental quotes or newlines
-    let cleanText = response.text?.trim() || "";
-    cleanText = cleanText.replace(/^["']|["']$/g, '');
-    return cleanText || "A creative artistic image";
+    return response.text?.trim() || "A creative artistic image";
   } catch (e) {
     return "A beautiful creative image, 8k resolution.";
-  }
-};
-
-// --- Keyword Identification Service ---
-// This function asks Gemini Flash to analyze WHY the prompt might have been blocked
-const identifyBlockKeywords = async (prompt: string, category: string): Promise<string> => {
-  const ai = getAIClient();
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      config: {
-        systemInstruction: `You are a content safety analyzer. 
-                Task: Analyze the input text which triggered a "${category}" safety filter.
-                Output: Extract specific words, phrases, or visual descriptions that likely caused this policy violation.
-                Constraints:
-                1. Return ONLY a comma-separated list (e.g. "blood, gore, weapon").
-                2. Do NOT output conversational text, definitions, or markdown.
-                3. If specific words are not found, output the concept (e.g. "explicit violence").`,
-        safetySettings: PERMISSIVE_SAFETY_SETTINGS,
-        thinkingConfig: { thinkingBudget: 0 }
-      },
-      contents: `Text: "${prompt}"`
-    });
-    const keywords = response.text?.trim();
-    // Clean up quotes if present
-    const cleanKeywords = keywords?.replace(/^["']|["']$/g, '');
-    return cleanKeywords ? `[${cleanKeywords}]` : "";
-  } catch {
-    return ""; // If analysis fails, return empty string
   }
 };
 
@@ -225,101 +139,47 @@ const getStyleKeywords = (style: ImageStyle): string => {
 };
 
 const generateSingleImage = async (
-  ai: GoogleGenAI,
   options: GenerateOptions,
   imgIndex: number = 1,
   onLog?: (msg: string) => void,
   abortSignal?: AbortSignal
 ): Promise<string> => {
-
   let finalPrompt = options.prompt;
   const hasInputImages = (options.objectImageInputs && options.objectImageInputs.length > 0) ||
     (options.characterImageInputs && options.characterImageInputs.length > 0);
 
-  // --- PRECISE AUTO-FILLING LOGIC ---
   if (!finalPrompt || finalPrompt.trim() === "") {
-    if (hasInputImages) {
-      // If empty prompt with ref images, assume style transfer or variation
-      finalPrompt = "High resolution, seamless integration with surrounding context, maintain consistent lighting and texture.";
-    } else {
-      finalPrompt = "A creative image.";
-    }
+    finalPrompt = hasInputImages
+      ? "High resolution, seamless integration with surrounding context, maintain consistent lighting and texture."
+      : "A creative image.";
   }
 
-  // Only append style if explicitly selected
   if (options.style && options.style !== 'None') {
     const styleKeywords = getStyleKeywords(options.style);
     finalPrompt = `${finalPrompt}, ${styleKeywords}`;
   }
 
-  const parts: any[] = [];
-
-  // Helper to process internal images
-  const pushImagesToParts = (images: string[] | undefined, prefix: string) => {
-    if (!images || images.length === 0) return;
-
-    for (let i = 0; i < images.length; i++) {
-      const imgInput = images[i];
-      if (!imgInput) continue;
-
-      // Inject the unique label for each image (e.g. [Obj_1])
-      parts.push({ text: `[${prefix}_${i + 1}]` });
-
-      let mimeType = 'image/png';
-      const match = imgInput.match(/^data:([^;]+);base64,/);
-      if (match && match[1]) mimeType = match[1];
-      const base64Data = imgInput.includes('base64,') ? imgInput.split('base64,')[1] : imgInput;
-
-      parts.push({ inlineData: { data: base64Data, mimeType: mimeType } });
-    }
-  };
-
-  pushImagesToParts(options.objectImageInputs, "Obj");
-  pushImagesToParts(options.characterImageInputs, "Char");
-
-  parts.push({ text: finalPrompt });
-
-  const imageConfig: any = {};
-
-  if (options.model !== 'gemini-2.5-flash-image') {
-    imageConfig.imageSize = options.imageSize;
-  }
-
-  // FIX: Allow all ratios selected by the user to be passed to the API.
-  // The API (Gemini 3 Pro Image) supports more than the basic 5 ratios.
-  if (options.aspectRatio) {
-    imageConfig.aspectRatio = options.aspectRatio;
-  }
-
   try {
     onLog?.(`Image #${imgIndex}: Sending request...`);
 
-    // F1: Check abort before sending request
-    if (abortSignal?.aborted) throw new Error('ABORTED');
-
-    // --- Enable Grounding with Google Search ---
-    const tools: any[] = [];
-    if (options.model === 'gemini-3.1-flash-image-preview') {
-      tools.push({
-        googleSearch: { searchTypes: { webSearch: {}, imageSearch: {} } }
-      });
-    } else if (options.model === 'gemini-3-pro-image-preview') {
-      tools.push({
-        googleSearch: {}
-      });
+    if (abortSignal?.aborted) {
+      throw new Error('ABORTED');
     }
 
-    const apiCall = ai.models.generateContent({
-      model: options.model,
-      contents: { parts: parts },
-      config: {
-        imageConfig: imageConfig,
-        safetySettings: PERMISSIVE_SAFETY_SETTINGS,
-        ...(tools.length > 0 && { tools })
-      },
+    const apiCall = fetchJson<{ imageUrl: string }>('/api/images/generate', {
+      method: 'POST',
+      headers: jsonHeaders,
+      signal: abortSignal,
+      body: JSON.stringify({
+        prompt: finalPrompt,
+        model: options.model,
+        aspectRatio: options.aspectRatio,
+        imageSize: options.model === 'gemini-2.5-flash-image' ? undefined : options.imageSize,
+        objectImageInputs: options.objectImageInputs,
+        characterImageInputs: options.characterImageInputs,
+      }),
     });
 
-    // F1-FIX: Race the API call against abort signal so cancel takes effect immediately
     const response = abortSignal
       ? await Promise.race([
         apiCall,
@@ -327,95 +187,22 @@ const generateSingleImage = async (
           if (abortSignal.aborted) reject(new Error('ABORTED'));
           const handler = () => reject(new Error('ABORTED'));
           abortSignal.addEventListener('abort', handler, { once: true });
-          // Clean up listener when API call settles (both success and error paths)
-          apiCall.then(
-            () => abortSignal.removeEventListener('abort', handler),
-            () => abortSignal.removeEventListener('abort', handler)
-          );
+          apiCall.finally(() => abortSignal.removeEventListener('abort', handler));
         })
       ])
       : await apiCall;
 
-    // --- CHECK PROMPT FEEDBACK (Blocking happened BEFORE generation) ---
-    if (response.promptFeedback) {
-      const { blockReason } = response.promptFeedback;
-      // Cast to string to avoid TypeScript strict check errors against potentially incompatible types
-      const reasonStr = blockReason as unknown as string;
-      if (reasonStr && reasonStr !== 'BLOCK_REASON_UNSPECIFIED' && reasonStr !== 'NONE') {
-        // This is a definitive block on the input prompt
-        throw new Error(`PROMPT_BLOCKED: ${blockReason}`);
-      }
-    }
-
-    // Check for inline data (Success)
-    if (response.candidates && response.candidates.length > 0) {
-      const candidate = response.candidates[0];
-
-      if (candidate.content && candidate.content.parts) {
-        for (const part of candidate.content.parts) {
-          if (part.inlineData) {
-            const mimeType = part.inlineData.mimeType || 'image/png';
-            const url = `data:${mimeType};base64,${part.inlineData.data}`;
-            onLog?.(`Image #${imgIndex}: Success.`);
-            return url;
-          }
-        }
-      }
-
-      // If we have candidates but no image, check finishReason
-      const finishReason = candidate.finishReason;
-
-      // Detailed Safety Analysis for Output Blocking
-      if (finishReason === 'SAFETY') {
-        const ratings = candidate?.safetyRatings ?? [];
-        const blockedCategories = ratings
-          .filter((r: any) => r.probability === 'HIGH' || r.probability === 'MEDIUM' || r.blocked)
-          .map((r: any) => {
-            const cat = String(r.category ?? 'UNKNOWN');
-            return cat.replace('HARM_CATEGORY_', '').replace(/_/g, ' ').toLowerCase();
-          });
-
-        const reason = blockedCategories.length > 0
-          ? blockedCategories.join(', ')
-          : 'Unknown Safety Filter';
-
-        onLog?.(`Image #${imgIndex}: Output blocked by filter.`);
-        let specificKeywords = '';
-        try {
-          specificKeywords = await identifyBlockKeywords(finalPrompt, reason);
-        } catch { /* ignore analysis failure */ }
-        throw new Error(`SAFETY_BLOCK: ${reason} ${specificKeywords}`);
-      }
-
-      if (finishReason === 'OTHER') {
-        throw new Error("Generic Block (Other)");
-      }
-    }
-
-    // If candidates array is empty AND promptFeedback didn't catch it, it's a true empty response (server glitch or silent block)
-    throw new Error("EMPTY_RESPONSE");
-
+    onLog?.(`Image #${imgIndex}: Success.`);
+    return response.imageUrl;
   } catch (error: any) {
-    let errorMessage = error.message || "Unknown error";
+    const errorMessage = error.message || "Unknown error";
 
-    // Handle "Limit: 0" Quota Errors
     if (errorMessage.includes("limit: 0")) {
       throw new Error("API key quota exceeded. This model requires a paid API key or billing enabled.");
     }
 
-    // Handle Prompt Blocks specifically
-    if (errorMessage.startsWith("PROMPT_BLOCKED")) {
-      const reason = errorMessage.split(': ')[1];
-      throw new Error(`Prompt rejected by policy: ${reason}. Please modify your prompt.`);
-    }
-
-    if (errorMessage === "EMPTY_RESPONSE") {
-      throw new Error("Server returned empty response. Likely a temporary server issue or silent safety block.");
-    }
-
-    if (errorMessage.startsWith("SAFETY_BLOCK")) {
-      const blockReason = errorMessage.split(': ')[1];
-      throw new Error(`Blocked by filter: ${blockReason}`);
+    if (errorMessage === 'Model returned no image data.') {
+      throw new Error('Server returned empty response. Likely a temporary server issue or silent safety block.');
     }
 
     throw new Error(errorMessage);
@@ -487,8 +274,6 @@ export const generateImageWithGemini = async (
   abortSignal?: AbortSignal,
   onProgress?: (completed: number, total: number) => void  // F4: Batch progress
 ): Promise<GenerationResult[]> => {
-  const ai = getAIClient();
-
   // PARALLEL EXECUTION WITH STAGGER
   const STAGGER_DELAY_MS = 300;
   let completedCount = 0;
@@ -503,7 +288,7 @@ export const generateImageWithGemini = async (
     try {
       // F2: 3 retries with exponential backoff (1.5s → 3s → 6s)
       const url = await retryOperation(
-        () => generateSingleImage(ai, options, index + 1, onLog, abortSignal),
+        () => generateSingleImage(options, index + 1, onLog, abortSignal),
         3,
         1500,
         { backoffMultiplier: 2, maxDelay: 8000, abortSignal, onLog }

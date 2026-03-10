@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { checkApiKey, promptForApiKey, generateImageWithGemini, enhancePromptWithGemini, generateRandomPrompt, resetAIClient } from './services/geminiService';
+import { checkApiKey, promptForApiKey } from './services/geminiService';
 import { AspectRatio, ImageSize, ImageStyle, ImageModel, GeneratedImage as GeneratedImageType } from './types';
 import Button from './components/Button';
 import RatioSelector from './components/RatioSelector';
@@ -89,6 +89,7 @@ const App: React.FC = () => {
 
     // Batch progress
     const [batchProgress, setBatchProgress] = useState({ completed: 0, total: 0 });
+    const [systemStatusRefreshToken, setSystemStatusRefreshToken] = useState(0);
 
     const { promptHistory, addPrompt: addPromptToHistory, removePrompt, clearHistory: clearPromptHistory } = usePromptHistory();
 
@@ -113,12 +114,18 @@ const App: React.FC = () => {
 
     const t = useCallback((key: string) => getTranslation(currentLang, key), [currentLang]);
 
-    const handleApiKeyConnect = async () => {
+    const handleApiKeyConnect = async (): Promise<boolean> => {
         try {
             await promptForApiKey();
-            setApiKeyReady(true);
+            const ready = await checkApiKey();
+            setApiKeyReady(ready);
+            setSystemStatusRefreshToken(prev => prev + 1);
+            return ready;
         } catch (e) {
             console.error("Failed to select key", e);
+            setApiKeyReady(false);
+            setSystemStatusRefreshToken(prev => prev + 1);
+            return false;
         }
     };
 
@@ -551,11 +558,11 @@ const App: React.FC = () => {
             {/* Floating Controls Container (Log + Lang + Theme) */}
             <div className="fixed bottom-4 right-4 z-[10002] flex items-end gap-2 pointer-events-none">
                 {!isSketchPadOpen && (
-                    <div className="pointer-events-auto">
-                        <GlobalLogConsole logs={logs} isLoading={isGenerating} currentLanguage={currentLang} />
+                    <div className="pointer-events-auto z-[10002]">
+                        <GlobalLogConsole logs={logs} isLoading={isGenerating} currentLanguage={currentLang} refreshToken={systemStatusRefreshToken} />
                     </div>
                 )}
-                <div className="pointer-events-auto flex flex-col gap-2">
+                <div className="pointer-events-auto relative z-[10020] flex flex-col gap-2">
                     <ThemeToggle currentLanguage={currentLang} />
                     <LanguageSelector currentLanguage={currentLang} onLanguageChange={setCurrentLang} />
                 </div>

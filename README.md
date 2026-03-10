@@ -5,13 +5,14 @@
 
 <br>
 
-This is the newly rewritten version of the Nano Banana Ultra image generation application. Built on the React ecosystem, it integrates the Google Gemini API to help users generate or edit high-quality images quickly.
+This is the newly rewritten version (v2.5) of the Nano Banana Ultra image generation application. Built on the React ecosystem, it uses a local Vite server route to call the Google Gemini API so your API key stays out of the browser bundle.
 
 ## ✨ Features
 
 - **Text-to-Image**: Generate beautiful images quickly by entering text prompts.
 - **Image-to-Image & Style Transfer**: Upload reference images and combine them with prompts or built-in styles to create entirely new artworks.
-- **Advanced Model Selection**: Switch freely between the latest Gemini image models (Gemini 3.1 Flash, Gemini 3.0 Pro, Gemini 2.5 Flash). The UI smartly adapts and locks unsupported features based on your selection (e.g. tracking specific ratio limits or max object counts).
+- **Advanced Model Selection**: Switch freely between the latest Gemini image models (Gemini 3.1 Flash Image, Gemini 3 Pro Image, Gemini 2.5 Flash Image). The UI adapts and locks unsupported features based on your selection (for example ratio limits, image sizes, and reference-image counts).
+- **System Status Monitor**: Built-in API health dashboard shows real-time status of local backend and Gemini API key availability, with multi-language support and automatic refresh.
 - **Global Theme & Language Sync**: SketchPad and ImageEditor now feature synchronized global theme and language controls for a seamless experience. Added consistent hover tooltips across all interactive UI elements.
 - **Interactive Image Editor**: Built-in powerful canvas editor supporting Inpainting and Outpainting! Zoom, pan, and mask specific areas of an image using the brush tool for precise modification. Features a dedicated UI layout and optimized reference image limits specialized for editing tasks.
 - **Dual Reference Trays**: Independently configure Characters and Objects schemas, equipped with native HTML5 Drag and Drop ordering for prompt structure matching.
@@ -50,13 +51,40 @@ This is the newly rewritten version of the Nano Banana Ultra image generation ap
    npm run dev
    ```
 
-4. **Build for Production:**
+4. **Check local API health:**
+
+   Open this URL in your browser after the dev server starts:
+
+   ```text
+   http://127.0.0.1:3000/api/health
+   ```
+
+   A healthy response looks like this:
+
+   ```json
+   {"ok":true,"hasApiKey":true,"outputDir":"...","timestamp":"..."}
+   ```
+
+5. **Run the production-like local preview:**
+
+   ```bash
+   npm run build
+   npm run preview
+   ```
+
+   Then verify:
+
+   ```text
+   http://127.0.0.1:4173/api/health
+   ```
+
+6. **Build for Production:**
 
    ```bash
    npm run build
    ```
 
-</details>
+   The generated static files do not contain your Gemini key. To use image generation outside dev mode, serve the app with a Node process that exposes the same API routes, such as `vite preview` or a small Express server.</details>
 
 ---
 
@@ -66,13 +94,14 @@ This is the newly rewritten version of the Nano Banana Ultra image generation ap
 
 <br>
 
-這是全新改版的 Nano Banana Ultra 影像生成應用程式。此專案基於前端 React 生態系建立，並直接串接 Google Gemini API 來協助使用者快速產生或編輯高品質的圖片。
+這是全新改版 (v2.5) 的 Nano Banana Ultra 影像生成應用程式。此專案基於前端 React 生態系建立，並透過本機 Vite 伺服器路由呼叫 Google Gemini API，避免把 API 金鑰打包進瀏覽器端。
 
 ## ✨ 核心功能 (Features)
 
 - **文字生圖 (Text-to-Image)**：輸入提示詞 (Prompt)，快速生成精美圖片。
 - **圖生圖 / 風格轉換 (Image-to-Image & Style Transfer)**：上傳參考圖片，結合提示詞或內建風格，生成全新面貌的作品。
-- **進階模型選擇 (Advanced Model Selection)**：支援多款最新的 Gemini 影像生成模型（包含 Gemini 3.1 Flash, Gemini 3.0 Pro, Gemini 2.5 Flash 等）。介面會依據模型特性智慧化調整可用功能（例如根據模型限制動態匹配支援的長寬比或參考圖數量）。
+- **進階模型選擇 (Advanced Model Selection)**：支援最新 Gemini 影像模型 (包含 Gemini 3.1 Flash Image、Gemini 3 Pro Image、Gemini 2.5 Flash Image 等)，並會根據所選模型動態開關介面功能 (例如各模型支援的尺寸、比例與參考圖數量上限)。
+- **系統狀態監控 (System Status Monitor)**：內建 API 健康狀態面板，即時顯示本機後端與 Gemini API 金鑰的可用狀態，支援多語言且可自動重新整理。
 - **全域佈景切換與語系同步**：手繪板 (SketchPad) 與編輯器 (ImageEditor) 現已與首頁完全同步色彩模式與語系設定。所有互動按鈕與滑桿皆已全面補齊懸停提示 (Tooltips)。
 - **專業影像編輯器 (Interactive Image Editor)**：內建強大的畫布編輯器，支援局部修改 (Inpainting) 與畫面外擴 (Outpainting)！您可以在畫布上自由縮放原圖、使用筆刷塗抹遮罩，精準替換或擴充指定區域的細節。擁有專屬的最佳化操作介面與精準的參考圖數量控制設計。
 - **雙軌參考圖架構 (Dual Reference Trays)**：支援人物與物品獨立配置，並支援 HTML5 原生拖放 (Drag & Drop) 排序功能讓您輕鬆更動提示詞陣列。
@@ -111,13 +140,40 @@ This is the newly rewritten version of the Nano Banana Ultra image generation ap
    npm run dev
    ```
 
-4. **打包正式環境版本 (Build for Production):**
+4. **檢查本機 API 狀態 (Check local API health):**
+
+   開啟下列網址確認後端路由與金鑰狀態：
+
+   ```text
+   http://127.0.0.1:3000/api/health
+   ```
+
+   正常回應範例：
+
+   ```json
+   {"ok":true,"hasApiKey":true,"outputDir":"...","timestamp":"..."}
+   ```
+
+5. **用接近正式環境的本機模式驗證 (Run local preview):**
+
+   ```bash
+   npm run build
+   npm run preview
+   ```
+
+   啟動後可再檢查：
+
+   ```text
+   http://127.0.0.1:4173/api/health
+   ```
+
+6. **打包正式環境版本 (Build for Production):**
 
    ```bash
    npm run build
    ```
 
-</details>
+   打包後的靜態檔不會包含 Gemini 金鑰。若要在非開發模式下繼續使用生成功能，仍需透過 `vite preview` 或自建 Node/Express 伺服器提供相同 API 路由。</details>
 
 ---
 *Built with React, Vite, and TailwindCSS. Powered by Google Gemini.*
