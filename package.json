@@ -1,7 +1,7 @@
 {
     "name": "nano-banana-ultra-dev",
     "private": true,
-    "version": "3.0.1",
+    "version": "3.0.2",
     "type": "module",
     "scripts": {
         "dev": "vite",
@@ -11,6 +11,7 @@
         "format:check": "prettier . --check",
         "test": "vitest run tests",
         "test:e2e": "playwright test",
+        "test:e2e:restore": "playwright test e2e/workspace-restore.spec.ts",
         "test:e2e:restore:owner-paths": "playwright test e2e/workspace-restore.spec.ts --grep \"restored batch variants remain candidates until explicitly promoted|session turn stack open reopens|session turn stack keeps a single history-open route|active branch continue latest aligns|active branch open latest reopens\"",
         "test:e2e:restore:branch-rename": "playwright test e2e/workspace-restore.spec.ts --grep \"branch rename updates the active branch label|branch rename reset restores the automatic label\"",
         "test:e2e:restore:provenance": "playwright test e2e/workspace-restore.spec.ts --grep \"replace imported inherited provenance exposes continuity summary and recovered sources|replace imported live provenance exposes direct grounding summary and multiple sources|provenance panel surfaces attribution overview and uncited sources in the live UI|provenance detail inspector links sources to citation bundles and reuses the selected detail in the composer|provenance detail focus mode narrows linked items and clear selection resets the inspector|provenance bundle compare view shows linked sources side by side and can inspect either source|provenance source compare view shows multiple cited segments and can inspect either bundle\"",

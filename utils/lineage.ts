@@ -1,5 +1,4 @@
 import { BranchNameOverrides, GeneratedImage } from '../types';
-import { getTranslation } from './translations';
 
 type LineagePresentation = {
     branchLabelByTurnId: Record<string, string>;
@@ -28,10 +27,12 @@ export type BranchSummary = {
 
 const getTurnRootId = (turn: GeneratedImage) => turn.rootHistoryId || turn.id;
 
-const getDefaultLineageLabels = (): Required<LineageLabelConfig> => ({
-    main: getTranslation('en', 'historyBranchMain'),
-    branchNumber: getTranslation('en', 'historyBranchNumber'),
-});
+const DEFAULT_LINEAGE_LABELS: Required<LineageLabelConfig> = {
+    main: 'Main',
+    branchNumber: 'Branch {0}',
+};
+
+const getDefaultLineageLabels = (): Required<LineageLabelConfig> => DEFAULT_LINEAGE_LABELS;
 
 const formatAutoBranchLabel = (branchIndex: number, labels?: LineageLabelConfig): string => {
     const defaultLabels = getDefaultLineageLabels();

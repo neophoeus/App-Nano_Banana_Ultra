@@ -26,7 +26,7 @@ import WorkspaceOverlayStack from './components/WorkspaceOverlayStack';
 import WorkspaceResponseRail from './components/WorkspaceResponseRail';
 import WorkspaceSideToolPanel from './components/WorkspaceSideToolPanel';
 import WorkspaceTopHeader from './components/WorkspaceTopHeader';
-import { Language, getTranslation } from './utils/translations';
+import { Language, ensureLanguageLoaded, getTranslation } from './utils/translations';
 import { ASPECT_RATIOS, IMAGE_MODELS, MODEL_CAPABILITIES, OUTPUT_FORMATS, THINKING_LEVELS } from './constants';
 import {
     EMPTY_WORKSPACE_COMPOSER_STATE,
@@ -280,6 +280,22 @@ const App: React.FC = () => {
         batchSize,
     });
 
+    const handleLanguageChange = useCallback(
+        (nextLanguage: Language) => {
+            if (nextLanguage === currentLang) {
+                return;
+            }
+
+            void ensureLanguageLoaded(nextLanguage)
+                .then(() => {
+                    setCurrentLang(nextLanguage);
+                })
+                .catch((error) => {
+                    console.error(`Failed to load translations for ${nextLanguage}.`, error);
+                });
+        },
+        [currentLang],
+    );
     const t = useCallback((key: string) => getTranslation(currentLang, key), [currentLang]);
     const capability = MODEL_CAPABILITIES[imageModel];
     const groundingMode = deriveGroundingMode(googleSearch, imageSearch);
@@ -992,7 +1008,7 @@ const App: React.FC = () => {
         maxCharacters: capability.maxCharacters,
         floatingControlsZIndex,
         currentLanguage: currentLang,
-        onLanguageChange: setCurrentLang,
+        onLanguageChange: handleLanguageChange,
         setIsSurfaceSharedControlsOpen,
         setIsAdvancedSettingsOpen,
         openSurfacePickerSheet,
@@ -1188,7 +1204,7 @@ const App: React.FC = () => {
     const workspaceTopHeaderProps = useWorkspaceTopHeaderProps({
         headerConsole,
         currentLanguage: currentLang,
-        onLanguageChange: setCurrentLang,
+        onLanguageChange: handleLanguageChange,
     });
     const handleReplacePromptFromStructuredOutput = useCallback(
         (value: string) => {

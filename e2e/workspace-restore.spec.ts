@@ -1,6 +1,8 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
-import { getTranslation, SUPPORTED_LANGUAGES, type Language } from '../utils/translations';
+import { getTranslation, preloadAllTranslations, SUPPORTED_LANGUAGES, type Language } from '../utils/translations';
+
+await preloadAllTranslations();
 
 const TEST_LANGUAGE: Language = (process.env.PLAYWRIGHT_TEST_LANG as Language | undefined) || 'en';
 const tt = (key: string, ...values: string[]) =>
@@ -81,23 +83,27 @@ const localizedText = (message: string) => {
     }
 };
 
-const snapshotFilePath = fileURLToPath(new URL('../output/ui-import-smoke-workspace.json', import.meta.url));
-const variantSnapshotFilePath = fileURLToPath(new URL('../output/ui-import-variant-workspace.json', import.meta.url));
-const invalidSnapshotFilePath = fileURLToPath(new URL('../output/ui-import-invalid-workspace.json', import.meta.url));
+const snapshotFilePath = fileURLToPath(new URL('./fixtures/restore/ui-import-smoke-workspace.json', import.meta.url));
+const variantSnapshotFilePath = fileURLToPath(
+    new URL('./fixtures/restore/ui-import-variant-workspace.json', import.meta.url),
+);
+const invalidSnapshotFilePath = fileURLToPath(
+    new URL('./fixtures/restore/ui-import-invalid-workspace.json', import.meta.url),
+);
 const inheritedProvenanceSnapshotFilePath = fileURLToPath(
-    new URL('../output/ui-import-provenance-inherited-workspace.json', import.meta.url),
+    new URL('./fixtures/restore/ui-import-provenance-inherited-workspace.json', import.meta.url),
 );
 const liveProvenanceSnapshotFilePath = fileURLToPath(
-    new URL('../output/ui-import-provenance-live-workspace.json', import.meta.url),
+    new URL('./fixtures/restore/ui-import-provenance-live-workspace.json', import.meta.url),
 );
 const multiBundleProvenanceSnapshotFilePath = fileURLToPath(
-    new URL('../output/ui-import-provenance-multi-bundle-workspace.json', import.meta.url),
+    new URL('./fixtures/restore/ui-import-provenance-multi-bundle-workspace.json', import.meta.url),
 );
 const officialConversationSnapshotFilePath = fileURLToPath(
-    new URL('../output/ui-import-official-conversation-workspace.json', import.meta.url),
+    new URL('./fixtures/restore/ui-import-official-conversation-workspace.json', import.meta.url),
 );
 const editorSharedContextFixturePath = fileURLToPath(
-    new URL('../output/editor-shared-context-fixture.svg', import.meta.url),
+    new URL('./fixtures/restore/editor-shared-context-fixture.svg', import.meta.url),
 );
 const queuedImportedFixtureDataUrl = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
 const editorSharedControlsPrompt = 'Editor surface prompt';
@@ -771,7 +777,7 @@ const assertCurrentStageSourceCard = async (
 ) => {
     const stageSourceCard = currentStageSourceCard(page);
 
-    await expect(stageSourceCard).toContainText(localizedText('Current Stage Source'));
+    await expect(stageSourceCard).toContainText(tt('workspaceInsightsCurrentImage'));
     if (options.sourceLabel) {
         await expect(stageSourceCard).toContainText(options.sourceLabel);
     }
@@ -872,7 +878,7 @@ const assertComposerChromeLocalized = async (page: Page) => {
     await expect(workspaceTools.getByRole('button', { name: tt('composerToolbarExportWorkspace') })).toBeVisible();
     await expect(workspaceTools.getByRole('button', { name: tt('composerToolbarImportWorkspace') })).toBeVisible();
 
-    const advancedToggle = workspaceTools.getByRole('button', { name: tt('composerToolbarAdvancedSettings') });
+    const advancedToggle = page.getByRole('button', { name: tt('composerToolbarAdvancedSettings') }).first();
     await expect(advancedToggle).toBeVisible();
     await expect(page.getByRole('heading', { name: tt('composerActionPanelTitle') }).first()).toBeVisible();
     await expect(page.getByText(tt('composerActionPanelDesc'), { exact: true }).first()).toBeVisible();
@@ -880,7 +886,7 @@ const assertComposerChromeLocalized = async (page: Page) => {
 
     await advancedToggle.click();
 
-    await expect(page.getByText(tt('composerAdvancedTitle'), { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: tt('composerAdvancedTitle') }).first()).toBeVisible();
 };
 
 const dismissRestoreNotice = async (page: Page) => {
@@ -2098,7 +2104,7 @@ test.describe('workspace restore flows', () => {
         await dismissRestoreNotice(page);
 
         await ensureDetailsExpanded(page, 'active-branch-switcher-section');
-        await activeBranchCard(page).getByTestId('active-branch-switch-turn-root').click();
+        await activeBranchCard(page).getByTestId('active-branch-switch-root-turn').click();
 
         await assertStageSourceSurfaces(page, {
             composerValue: 'Imported root turn',

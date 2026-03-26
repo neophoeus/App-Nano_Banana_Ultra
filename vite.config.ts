@@ -22,6 +22,20 @@ export default defineConfig(({ mode }) => {
             rollupOptions: {
                 output: {
                     manualChunks(id) {
+                        if (id.includes('/utils/translations/')) {
+                            const match = id.match(/\/utils\/translations\/([^/]+)\.ts$/);
+
+                            if (match) {
+                                return `workspace-i18n-${match[1]}`;
+                            }
+
+                            return 'workspace-i18n';
+                        }
+
+                        if (id.includes('/utils/translations.ts')) {
+                            return 'workspace-i18n';
+                        }
+
                         if (id.includes('node_modules')) {
                             if (id.includes('react') || id.includes('scheduler')) {
                                 return 'react-vendor';
@@ -30,22 +44,13 @@ export default defineConfig(({ mode }) => {
                             return 'vendor';
                         }
 
-                        if (id.includes('/components/GlobalLogConsole') || id.includes('/utils/workflowTimeline')) {
-                            return 'workspace-workflow';
-                        }
-
-                        if (id.includes('/utils/lineage')) {
-                            return 'workspace-lineage';
-                        }
-
-                        if (id.includes('/components/GeneratedImage')) {
-                            return 'workspace-stage';
-                        }
-
                         return undefined;
                     },
                 },
             },
+        },
+        test: {
+            setupFiles: ['./tests/setupTranslations.ts'],
         },
     };
 });

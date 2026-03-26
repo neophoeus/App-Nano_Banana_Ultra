@@ -1,0 +1,176 @@
+{
+  "format": "nbu-workspace-snapshot",
+  "version": 1,
+  "exportedAt": "2026-03-12T08:05:00.000Z",
+  "snapshot": {
+    "workflowLogs": [
+      "[10:05:00] Requesting grounded root turn.",
+      "[10:05:03] Success: Grounded root result saved.",
+      "[10:06:00] Requesting follow-up edit.",
+      "[10:06:04] __workflow_i18n__:{\"key\":\"historySourceLoadedLog\",\"args\":[]}"
+    ],
+    "history": [
+      {
+        "id": "turn-provenance-followup",
+        "url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
+        "prompt": "Inherited provenance turn",
+        "aspectRatio": "1:1",
+        "size": "1K",
+        "style": "None",
+        "model": "gemini-3.1-flash-image-preview",
+        "createdAt": 1710001001000,
+        "mode": "Follow-up Edit",
+        "status": "success",
+        "text": "Inherited provenance text",
+        "metadata": {
+          "outputFormat": "images-and-text",
+          "thinkingLevel": "high",
+          "includeThoughts": true
+        },
+        "sessionHints": {
+          "provenanceInherited": true,
+          "groundingMetadataReturned": true,
+          "groundingSupportsReturned": true,
+          "thoughtSignatureReturned": true
+        },
+        "parentHistoryId": "turn-provenance-root",
+        "rootHistoryId": "turn-provenance-root",
+        "sourceHistoryId": "turn-provenance-root",
+        "lineageAction": "continue",
+        "lineageDepth": 1
+      },
+      {
+        "id": "turn-provenance-root",
+        "url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
+        "prompt": "Grounded root turn",
+        "aspectRatio": "1:1",
+        "size": "1K",
+        "style": "None",
+        "model": "gemini-3.1-flash-image-preview",
+        "createdAt": 1710001000000,
+        "mode": "Text to Image",
+        "status": "success",
+        "text": "Grounded root text",
+        "grounding": {
+          "enabled": true,
+          "webQueries": [
+            "taipei blue hour travel poster"
+          ],
+          "supports": [
+            {
+              "chunkIndices": [0, 1],
+              "sourceIndices": [0],
+              "segmentText": "Taipei skyline and atmosphere",
+              "sourceTitles": [
+                "Taipei Official Travel Guide"
+              ]
+            }
+          ],
+          "sources": [
+            {
+              "title": "Taipei Official Travel Guide",
+              "url": "https://example.com/taipei-guide",
+              "sourceType": "web"
+            }
+          ]
+        },
+        "sessionHints": {
+          "groundingMetadataReturned": true,
+          "groundingSupportsReturned": true
+        },
+        "rootHistoryId": "turn-provenance-root",
+        "lineageAction": "root",
+        "lineageDepth": 0
+      }
+    ],
+    "stagedAssets": [
+      {
+        "id": "stage-provenance-inherited",
+        "url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
+        "role": "stage-source",
+        "origin": "history",
+        "createdAt": 1710001002000,
+        "sourceHistoryId": "turn-provenance-followup",
+        "lineageAction": "continue"
+      }
+    ],
+    "workspaceSession": {
+      "activeResult": {
+        "text": "Inherited provenance text",
+        "thoughts": null,
+        "grounding": null,
+        "metadata": {
+          "outputFormat": "images-and-text",
+          "thinkingLevel": "high",
+          "includeThoughts": true
+        },
+        "sessionHints": {
+          "provenanceInherited": true,
+          "groundingMetadataReturned": true,
+          "groundingSupportsReturned": true,
+          "thoughtSignatureReturned": true
+        },
+        "historyId": "turn-provenance-followup"
+      },
+      "continuityGrounding": {
+        "enabled": true,
+        "webQueries": [
+          "taipei blue hour travel poster"
+        ],
+        "supports": [
+          {
+            "chunkIndices": [0, 1],
+            "sourceIndices": [0],
+            "segmentText": "Taipei skyline and atmosphere",
+            "sourceTitles": [
+              "Taipei Official Travel Guide"
+            ]
+          }
+        ],
+        "sources": [
+          {
+            "title": "Taipei Official Travel Guide",
+            "url": "https://example.com/taipei-guide",
+            "sourceType": "web"
+          }
+        ]
+      },
+      "continuitySessionHints": {
+        "provenanceInherited": true,
+        "groundingMetadataReturned": true,
+        "groundingSupportsReturned": true,
+        "thoughtSignatureReturned": true
+      },
+      "provenanceMode": "inherited",
+      "provenanceSourceHistoryId": "turn-provenance-root",
+      "source": "follow-up",
+      "sourceHistoryId": "turn-provenance-followup",
+      "updatedAt": 1710001003000
+    },
+    "branchState": {
+      "nameOverrides": {}
+    },
+    "viewState": {
+      "generatedImageUrls": [
+        "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+      ],
+      "selectedImageIndex": 0,
+      "selectedHistoryId": "turn-provenance-followup"
+    },
+    "composerState": {
+      "prompt": "Inherited provenance workspace prompt",
+      "aspectRatio": "1:1",
+      "imageSize": "1K",
+      "imageStyle": "None",
+      "imageModel": "gemini-3.1-flash-image-preview",
+      "batchSize": 1,
+      "outputFormat": "images-and-text",
+      "temperature": 1,
+      "thinkingLevel": "high",
+      "includeThoughts": true,
+      "googleSearch": true,
+      "imageSearch": false,
+      "generationMode": "Follow-up Edit"
+    }
+  }
+}

@@ -4,7 +4,30 @@ This changelog is compiled from the repository's local git tags plus the publish
 
 ## Unreleased
 
-- No unreleased changes recorded after `v3.0.1` yet.
+- No unreleased changes recorded after `v3.0.2` yet.
+
+## v3.0.2 - 2026-03-26
+
+- Release title: Nano Banana Ultra 3.0.2 - i18n Chunking & Restore Fixture Hardening
+- Release prep summary:
+    - removed the Vite chunk-size warning by taking lineage fallback labels out of the translation runtime graph and splitting locale payloads into dedicated i18n chunks
+    - switched runtime localization to lazy-load non-English dictionaries on demand while keeping English eager, reducing the default bundle cost without changing translation call sites
+    - added translation preload helpers for Vitest and Playwright so test environments can still assert localized UI deterministically after the runtime loading change
+    - moved restore and import snapshot fixtures out of `output/` into `e2e/fixtures/restore` so regression coverage no longer depends on runtime artifact directories
+    - restored and normalized the dedicated restore fixtures used by smoke, variant, provenance, official conversation, invalid import, and shared-context paths
+    - updated the restore Playwright suite to preload translations, consume the dedicated fixture directory, and align a few selectors and headings with the current shell wording
+    - added a dedicated `test:e2e:restore` npm script so focused restore runs can safely pass `--grep` without the `npm exec` argument-swallowing problem
+    - revalidated the restore workflow after the fixture migration, including a full `workspace-restore.spec.ts` pass at `66 passed`
+- 繁中發版摘要:
+    - 3.0.2 是針對 i18n 載入與 restore 測試基礎設施的穩定化版本，重點在於減少預設 bundle 負擔，同時把還原回歸測試從 runtime 輸出資料夾中解耦
+    - 透過把 lineage 的英文 fallback label 從翻譯 runtime graph 拿掉，並將各語系拆成獨立 i18n chunk，清除了 Vite 的 chunk size warning
+    - 非英文翻譯改成 runtime 按需載入，英文維持 eager，既保留既有翻譯呼叫方式，也避免預設首包把所有 locale 一次帶進來
+    - 補上 Vitest 與 Playwright 的翻譯 preload 路徑，確保改成 lazy-load 後，測試環境仍能穩定驗證多語系介面
+    - restore 與 import 的測試 fixture 正式搬到 `e2e/fixtures/restore`，不再依賴 `output/` 這種執行期產物目錄
+    - 一併修整 smoke、variant、provenance、official conversation、invalid import 與 shared-context 這批 restore fixture，讓目前的 E2E 路徑都回到專用測試資料
+    - restore Playwright 規格同步更新為讀取新 fixture 目錄、預先載入翻譯，並對齊目前 shell wording 與 selector
+    - 新增 `test:e2e:restore` 指令，之後可用 `npm run test:e2e:restore -- --grep "..."` 做精準 restore 回歸，不再受 `npm exec` 參數吞掉問題影響
+    - 完整 restore 回歸已重新驗證通過，`workspace-restore.spec.ts` 目前為 `66 passed`
 
 ## v3.0.1 - 2026-03-26
 
