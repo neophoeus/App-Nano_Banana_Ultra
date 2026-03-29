@@ -4,7 +4,19 @@ This changelog is compiled from the repository's local git tags plus the publish
 
 ## Unreleased
 
-- No unreleased changes recorded after `v3.0.3` yet.
+- No unreleased changes recorded after `v3.0.4` yet.
+
+## v3.0.4 - 2026-03-29
+
+- Release title: Nano Banana Ultra 3.0.4 - Square Stage Layout Update
+- Release prep summary:
+    - locked the main generated-image stage to a square frame so portrait outputs no longer stretch the workspace and force extra scrolling
+    - applied the same square-stage layout contract to the empty, loading, and error states so the focus surface keeps a stable footprint throughout the workflow
+    - added focused Vitest coverage for the square stage-frame contract in `GeneratedImage`
+- 繁中發版摘要:
+    - 3.0.4 是主圖工作區的版面穩定化更新，重點是把主圖區固定成正方形，避免直式輸出把整個畫面拉得過長
+    - 主圖、空狀態、生成中與錯誤狀態現在都共用同一個 square stage 版面契約，使用流程中的視覺佔位會更穩定
+    - 已補上 `GeneratedImage` 的 focused Vitest 測試，避免之後有人把這個正方形 stage 契約改壞
 
 ## v3.0.3 - 2026-03-29
 

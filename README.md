@@ -98,9 +98,9 @@ Nano Banana Ultra currently supports three Gemini image-model paths, each presen
 
 ## Version Overview
 
-### Latest Release: 3.0.3
+### Latest Release: 3.0.4
 
-Latest release: 3.0.3. See `CHANGELOG.md` for details.
+Latest release: 3.0.4. See `CHANGELOG.md` for details.
 
 ### 3.x
 
@@ -251,9 +251,9 @@ Nano Banana Ultra 目前支援三條 Gemini 影像模型路徑，並會依模型
 
 ## 版本總覽
 
-### 最新版本：3.0.3
+### 最新版本：3.0.4
 
-最新版本：3.0.3。詳細內容請見 `CHANGELOG.md`。
+最新版本：3.0.4。詳細內容請見 `CHANGELOG.md`。
 
 ### 3.x
 

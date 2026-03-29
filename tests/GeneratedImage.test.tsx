@@ -60,4 +60,29 @@ describe('GeneratedImage', () => {
         expect(markup).not.toContain('Edit & Repaint');
         expect(markup).toContain('Clear View');
     });
+
+    it('locks the selected-image stage into a square frame', () => {
+        const markup = renderToStaticMarkup(
+            <GeneratedImage
+                imageUrls={['https://example.com/result.png']}
+                isLoading={false}
+                prompt="Square stage"
+                settings={{
+                    aspectRatio: '3:4',
+                    size: '1K',
+                    style: 'None',
+                    model: 'gemini-3.1-flash-image-preview',
+                    batchSize: 1,
+                }}
+                generationMode="Text to Image"
+                executionMode="single-turn"
+                onGenerate={() => {}}
+            />,
+        );
+
+        const stageFrameTag = markup.match(/<div[^>]*data-testid="generated-image-stage-frame"[^>]*>/)?.[0];
+
+        expect(stageFrameTag).toBeDefined();
+        expect(stageFrameTag).toContain('aspect-square');
+    });
 });
