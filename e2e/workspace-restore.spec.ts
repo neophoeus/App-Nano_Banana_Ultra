@@ -3174,10 +3174,7 @@ test.describe('workspace restore flows', () => {
                 .first(),
         ).toBeVisible();
 
-        const mobileInsights = page
-            .locator('details:visible')
-            .filter({ hasText: tt('workspaceInsightsTitle') })
-            .first();
+        const mobileInsights = page.locator('[data-testid="workspace-insights-collapsible"]:visible').first();
         await mobileInsights.evaluate((element) => {
             if (element instanceof HTMLDetailsElement) {
                 element.open = true;
@@ -3223,6 +3220,13 @@ test.describe('workspace restore flows', () => {
         await expect(provenancePanel).toBeVisible();
         await expect(provenancePanel.getByTestId('provenance-summary')).toBeVisible();
 
+        const desktopInsights = page.locator('[data-testid="workspace-insights-collapsible"]:visible').first();
+        await desktopInsights.evaluate((element) => {
+            if (element instanceof HTMLDetailsElement) {
+                element.open = true;
+            }
+        });
+
         const contextWorkflow = page.locator('[data-testid="context-workflow-summary"]:visible').first();
         await expect(contextWorkflow).toBeVisible();
         await expect(contextWorkflow).toContainText(
@@ -3263,6 +3267,13 @@ test.describe('workspace restore flows', () => {
         const provenancePanel = page.locator('[data-testid="provenance-panel-light"]:visible').first();
         await expect(provenancePanel).toBeVisible();
         await expect(provenancePanel.getByTestId('provenance-summary')).toBeVisible();
+
+        const desktopInsights = page.locator('[data-testid="workspace-insights-collapsible"]:visible').first();
+        await desktopInsights.evaluate((element) => {
+            if (element instanceof HTMLDetailsElement) {
+                element.open = true;
+            }
+        });
 
         const contextWorkflow = page.locator('[data-testid="context-workflow-summary"]:visible').first();
         await expect(contextWorkflow).toBeVisible();

@@ -4,7 +4,23 @@ This changelog is compiled from the repository's local git tags plus the publish
 
 ## Unreleased
 
-- No unreleased changes recorded after `v3.0.2` yet.
+- No unreleased changes recorded after `v3.0.3` yet.
+
+## v3.0.3 - 2026-03-29
+
+- Release title: Nano Banana Ultra 3.0.3 - Workspace Context Flow Alignment
+- Release prep summary:
+    - moved `Workspace Context` out of the desktop sticky side rail and into the main reading flow directly between `Response` and `Recent Turns`
+    - aligned desktop and mobile to share the same collapsible `Workspace Context` container instead of maintaining separate always-open desktop and mobile-only disclosure paths
+    - moved `Image Tools` into the main image workspace support rail so tool actions sit beside the focus surface instead of competing with context placement above the canvas
+    - replaced the long desktop right-rail presentation with a single summary-first entry point that reduces the feeling of floating context cards across unrelated sections
+    - revalidated the layout refactor with focused Vitest coverage for `WorkspaceInsightsSidebar` and `WorkspaceHistoryCanvas`
+- 繁中發版摘要:
+    - 3.0.3 是針對 `Workspace Context` 與 `Image Tools` 版面流向的整理版，重點在於把脈絡資訊放回主要閱讀順序，而不是懸浮在多個區塊旁邊
+    - `Workspace Context` 已從 desktop 的 sticky 右側欄移回主流程，固定排在 `Response` 與 `Recent Turns` 之間
+    - desktop 與 mobile 現在共用同一個可收合 `Workspace Context` 容器，不再維持桌機常駐、手機另外一套 disclosure 的分裂路徑
+    - `Image Tools` 已移到主圖工作區右側的 support rail，讓工具操作貼近主圖焦點區，而不是跟 context 區塊爭奪上方視覺空間
+    - 相關版面調整已用 `WorkspaceInsightsSidebar` 與 `WorkspaceHistoryCanvas` 的 focused Vitest 測試重新驗證
 
 ## v3.0.2 - 2026-03-26
 

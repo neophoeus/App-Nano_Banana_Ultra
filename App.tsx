@@ -21,6 +21,7 @@ import ComposerSettingsPanel from './components/ComposerSettingsPanel';
 import PanelLoadingFallback from './components/PanelLoadingFallback';
 import SurfaceLoadingFallback from './components/SurfaceLoadingFallback';
 import WorkspaceHistoryCanvas from './components/WorkspaceHistoryCanvas';
+import WorkspaceInsightsHeaderSummary from './components/WorkspaceInsightsHeaderSummary';
 import WorkspaceInsightsSidebar from './components/WorkspaceInsightsSidebar';
 import WorkspaceOverlayStack from './components/WorkspaceOverlayStack';
 import WorkspaceResponseRail from './components/WorkspaceResponseRail';
@@ -1599,24 +1600,34 @@ const App: React.FC = () => {
                         onAppendPrompt={handleAppendPromptFromStructuredOutput}
                     />
 
-                    <section className="grid gap-5 xl:grid-cols-[minmax(0,1.58fr)_356px]">
+                    <details
+                        data-testid="workspace-insights-collapsible"
+                        className="nbu-shell-panel nbu-shell-surface-context-rail p-4"
+                    >
+                        <summary
+                            data-testid="workspace-insights-collapsible-summary"
+                            className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                        >
+                            <WorkspaceInsightsHeaderSummary currentLanguage={currentLang} />
+                            <span className="nbu-status-pill">{t('workspaceInsightsPhaseLabel')}</span>
+                        </summary>
+                        <div className="mt-4 border-t border-gray-200/80 pt-4 dark:border-gray-800">
+                            <WorkspaceInsightsSidebar
+                                {...workspaceInsightsSidebarProps}
+                                showHeader={false}
+                                provenancePanel={contextProvenancePanel}
+                                provenanceStatusLabel={contextProvenanceStatusLabel}
+                            />
+                        </div>
+                    </details>
+
+                    <section className="grid gap-5">
                         <div className="flex min-w-0 flex-col gap-5">
-                            <div className="hidden xl:block">{sideToolPanel}</div>
                             <WorkspaceHistoryCanvas
                                 recentLane={recentLane}
                                 focusSurface={focusSurface}
-                                supportSurface={null}
+                                supportSurface={sideToolPanel}
                             />
-                        </div>
-
-                        <div className="hidden xl:block xl:sticky xl:top-4 xl:self-start">
-                            <div className="flex flex-col gap-5">
-                                <WorkspaceInsightsSidebar
-                                    {...workspaceInsightsSidebarProps}
-                                    provenancePanel={contextProvenancePanel}
-                                    provenanceStatusLabel={contextProvenanceStatusLabel}
-                                />
-                            </div>
                         </div>
                     </section>
 
@@ -1625,28 +1636,6 @@ const App: React.FC = () => {
                     <div className="order-4 xl:order-none">
                         <ComposerSettingsPanel {...composerSettingsPanelProps} />
                     </div>
-
-                    <details className="order-5 nbu-shell-panel nbu-shell-surface-context-rail p-4 xl:hidden">
-                        <summary className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden">
-                            <div>
-                                <p className="nbu-section-eyebrow">{t('workspaceInsightsEyebrow')}</p>
-                                <h2 className="mt-1 text-base font-black text-gray-900 dark:text-gray-100">
-                                    {t('workspaceInsightsTitle')}
-                                </h2>
-                                <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
-                                    {t('workspaceInsightsSessionStateHint')}
-                                </p>
-                            </div>
-                            <span className="nbu-status-pill">{t('workspaceInsightsPhaseLabel')}</span>
-                        </summary>
-                        <div className="mt-4 border-t border-gray-200/80 pt-4 dark:border-gray-800">
-                            <WorkspaceInsightsSidebar
-                                {...workspaceInsightsSidebarProps}
-                                provenancePanel={contextProvenancePanel}
-                                provenanceStatusLabel={contextProvenanceStatusLabel}
-                            />
-                        </div>
-                    </details>
                 </main>
             </div>
         </div>

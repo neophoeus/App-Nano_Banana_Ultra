@@ -254,6 +254,12 @@ describe('WorkspaceInsightsSidebar', () => {
         expect(markup).toContain('context-system-panel');
         expect(markup).toContain('current-work-section');
         expect(markup).toContain('versions-section');
+        expect(markup).toContain('workspace-insights-header-summary');
+        expect(markup).toContain('workspace-insights-header-summary" class="mt-3 grid grid-cols-2 gap-2"');
+        expect(markup).toContain('workspace-insights-header-chip-workspaceInsightsCurrentWork');
+        expect(markup).toContain('workspace-insights-header-chip-workspaceInsightsVersions');
+        expect(markup).toContain('workspace-insights-header-chip-workspaceInsightsSourcesCitations');
+        expect(markup).toContain('workspace-insights-header-chip-workspaceInsightsActivity');
         expect(markup).toContain('context-workflow-summary');
         expect(markup).toContain('context-provenance-section');
         expect(markup).toContain('context-timeline-section');
@@ -409,6 +415,70 @@ describe('WorkspaceInsightsSidebar', () => {
         expect(markup).toContain('lineage-map-card');
         expect(sessionStackEmptyMatches(markup)).toHaveLength(1);
         expect(lineageEmptyMatches(markup)).toHaveLength(1);
+    });
+
+    it('can render the rail content without repeating the header block', () => {
+        const markup = renderToStaticMarkup(
+            <WorkspaceInsightsSidebar
+                currentLanguage="en"
+                showHeader={false}
+                provenancePanel={null}
+                provenanceStatusLabel={null}
+                latestWorkflowEntry={null}
+                isGenerating={false}
+                batchProgress={{ completed: 0, total: 0 }}
+                queuedJobs={[] as any}
+                resultStatusSummary={null}
+                resultStatusTone={null}
+                currentStageAsset={null}
+                currentStageBranchSummary={null}
+                currentStageSourceTurn={null}
+                currentStageSourceHistoryId={null}
+                activeBranchSummary={null}
+                recentBranchSummaries={[]}
+                branchSummariesCount={0}
+                sessionUpdatedLabel="just now"
+                sessionContinuitySignals={[]}
+                conversationSummary={null}
+                conversationSourceTurn={null}
+                sessionSourceTurn={null}
+                sessionTurnStack={[]}
+                selectedHistoryId={null}
+                branchLabelByTurnId={{}}
+                lineageRootGroups={[]}
+                timelineEntries={[]}
+                sessionHintEntries={[]}
+                onOpenSessionReplay={() => undefined}
+                onHistorySelect={() => undefined}
+                onRenameBranch={() => undefined}
+                getStageOriginLabel={() => 'History'}
+                getLineageActionLabel={() => 'Continue'}
+                getLineageActionDescription={() => 'Continue from current turn'}
+                getShortTurnId={(historyId) => historyId?.slice(0, 8) || '--------'}
+                getBranchAccentClassName={() => 'border-gray-200 text-gray-700'}
+                renderHistoryTurnSnapshotContent={({ item, actionRow }) => (
+                    <div>
+                        <div>{item.prompt}</div>
+                        {actionRow}
+                    </div>
+                )}
+                renderHistoryTurnBadges={() => <span>badge</span>}
+                renderHistoryTurnActionRow={({ testIds }) => (
+                    <div>
+                        {testIds?.open ? <span data-testid={testIds.open}>open</span> : null}
+                        {testIds?.continue ? <span data-testid={testIds.continue}>continue</span> : null}
+                        {testIds?.branch ? <span data-testid={testIds.branch}>branch</span> : null}
+                        {testIds?.rename ? <span data-testid={testIds.rename}>rename</span> : null}
+                    </div>
+                )}
+                renderActiveBranchSummaryContent={() => <div>active branch</div>}
+                formatSessionHintKey={(key) => key}
+                formatSessionHintValue={(value) => String(value)}
+            />,
+        );
+
+        expect(markup).toContain('current-work-section');
+        expect(markup).not.toContain('workspace-insights-header-summary');
     });
 
     it('renders a single continuity source directly without an outer disclosure', () => {
