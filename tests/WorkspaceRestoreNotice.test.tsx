@@ -95,7 +95,6 @@ describe('WorkspaceRestoreNotice', () => {
         for (const language of Object.keys(translations)) {
             const dictionary = translations[language as keyof typeof translations];
             expect(dictionary.workspaceRestoreTitle).toBeTruthy();
-            expect(dictionary.workspaceRestoreRecoveredSummary).toBeTruthy();
             expect(dictionary.workspaceRestoreActiveBranch).toContain('{0}');
             expect(dictionary.workspaceRestoreDismiss).toBeTruthy();
         }

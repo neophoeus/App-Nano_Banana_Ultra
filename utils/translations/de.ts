@@ -152,12 +152,9 @@ export const de = {
     workflowStatusIdle: 'Leerlauf',
     branchRenameEyebrow: 'Branch umbenennen',
     branchRenameTitle: 'Verlaufs-Branch umbenennen',
-    branchRenameDesc: 'Dadurch werden alle Runden aktualisiert, die zum Branch {0} gehoren.',
     branchRenameClose: 'Schliessen',
     branchRenameAutomaticLabel: 'Automatische Beschriftung',
     branchRenameDisplayName: 'Anzeigename',
-    branchRenameRestoreHint:
-        'Leer lassen oder wieder auf {0} setzen, um die automatische Branch-Beschriftung wiederherzustellen.',
     branchRenameUseAutomatic: 'Automatische Beschriftung verwenden',
     branchRenameSave: 'Branch-Namen speichern',
     branchRenameResetNotice: 'Der Branch-Name wurde auf seine automatische Beschriftung zuruckgesetzt.',
@@ -400,8 +397,6 @@ export const de = {
         'Diese Stufe tragt Editor-Herkunft, daher bleiben weitere Folgeschritte an ein bereits bearbeitetes Quellbild gebunden.',
     lineageActionDescReplay: 'Diese Stufe spielt eine zuvor aufgezeichnete Runde zur Prufung erneut ab.',
     workspaceRestoreTitle: 'Arbeitsbereich wiederhergestellt',
-    workspaceRestoreRecoveredSummary:
-        'Der letzte Stufenkontext, Zweigstatus, die Sitzungskontinuitat und die Kompositions-Einstellungen wurden wiederhergestellt.',
     workspaceRestoreTurns: '{0} Runden',
     workspaceRestoreStagedAssets: '{0} vorbereitete Ressourcen',
     workspaceRestoreViewerImages: '{0} Bilder im Betrachter',
@@ -741,8 +736,6 @@ export const de = {
     workspaceImportReviewExecutionSingleTurn: 'Einzelrunde',
     sessionReplayEyebrow: 'Sitzungswiedergabe',
     sessionReplayTitle: 'Spielen Sie die aufgezeichnete Ablaufchronik fur diesen Arbeitsbereich erneut ab.',
-    sessionReplayDesc:
-        'Die Wiedergabe lasst die zentrale Stufenansicht intakt, wahrend Sie das vollstandige Ablaufprotokoll dieses Arbeitsbereich-Schnappschusses prufen.',
     sessionReplayEvents: 'Ereignisse',
     sessionReplayStages: 'Stufen',
     sessionReplayHistorySteps: 'Verlaufsschritte',

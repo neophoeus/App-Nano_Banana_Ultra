@@ -4,7 +4,16 @@ This changelog is compiled from the repository's local git tags plus the publish
 
 ## Unreleased
 
-- No unreleased changes recorded after `v3.0.4` yet.
+- No unreleased changes recorded after `v3.0.5` yet.
+
+## v3.0.5 - 2026-03-29
+
+- Release title: Nano Banana Ultra 3.0.5 - Panel Simplification & Restore Regression Update
+- Release prep summary:
+    - removed redundant helper copy across panel surfaces and moved high-value guidance into reusable info-tooltips instead of keeping long inline instructions visible by default
+    - flattened disclosure shells in workspace insights, provenance, viewer, and import review surfaces where collapsed and expanded states were effectively showing the same information
+    - moved `Queue Batch Job` mode guidance beside the action as an info icon, simplified duplicated thoughts presentation into a single readable block, and made tooltip panels easier to read with fully opaque backgrounds
+    - revalidated the cleanup with focused Vitest coverage plus a full restore regression pass at `25 passed`
 
 ## v3.0.4 - 2026-03-29
 

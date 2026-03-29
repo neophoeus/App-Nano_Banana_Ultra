@@ -163,13 +163,16 @@ describe('WorkspacePickerSheet', () => {
             />,
         );
 
-        expect(markup).toContain('picker-references-editor-base-details');
-        expect(markup).toContain('picker-references-editor-base-summary');
-        expect(markup).toContain('picker-references-character-details');
-        expect(markup).toContain('picker-references-character-summary');
-        expect(markup).toContain('picker-references-stage-source-details');
-        expect(markup).toContain('picker-references-stage-source-summary');
-        expect(markup).toContain('group-open:rotate-180');
+        expect(markup).toContain('picker-references-editor-base-card');
+        expect(markup).toContain('picker-references-editor-base-hint-trigger');
+        expect(markup).toContain('picker-references-character-card');
+        expect(markup).toContain('picker-references-character-hint-trigger');
+        expect(markup).toContain('picker-references-stage-source-card');
+        expect(markup).toContain('picker-references-stage-source-hint-trigger');
+        expect(markup).not.toContain('picker-references-editor-base-details');
+        expect(markup).not.toContain('picker-references-character-details');
+        expect(markup).not.toContain('picker-references-stage-source-details');
+        expect(markup).not.toContain('group-open:rotate-180');
         expect(markup).toContain('1 / 4');
         expect(markup).toContain('Origin: history');
         expect(markup).toContain('Lineage: continued');

@@ -45,7 +45,6 @@ export default function ComposerAdvancedSettingsDialog({
             closeButtonTestId="composer-advanced-settings-close"
             eyebrow={t('composerAdvancedEyebrow')}
             title={t('composerAdvancedTitle')}
-            description={t('composerAdvancedDesc')}
             backdropClassName="bg-[radial-gradient(circle_at_top,_rgba(245,158,11,0.14),_transparent_34%),rgba(15,23,42,0.76)] backdrop-blur-md"
             panelClassName="nbu-overlay-panel-neutral max-h-[88vh]"
             headerClassName="border-b border-gray-200/80 px-6 py-5 dark:border-gray-700/80"

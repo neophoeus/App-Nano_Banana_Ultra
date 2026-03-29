@@ -32,9 +32,6 @@ export default function WorkspaceInsightsHeaderSummary({ currentLanguage }: Work
                     </div>
                 ))}
             </div>
-            <p className="mt-3 max-w-[28ch] text-xs leading-5 text-gray-500 dark:text-gray-400">
-                {t('workspaceInsightsSessionStateHint')}
-            </p>
         </div>
     );
 }

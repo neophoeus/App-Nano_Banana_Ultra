@@ -143,7 +143,6 @@ describe('GroundingProvenancePanel', () => {
         expect(markup).toContain('Uncited Source');
         expect(markup).toContain('provenance-uncited-source-summary-1');
         expect(markup).toContain('provenance-uncited-source-details-1');
-        expect(markup).toContain('provenance-uncited-source-details-1" class="group"');
         expect(markup).toContain('example.com');
         expect(markup.indexOf('Continuity Summary')).toBeLessThan(markup.indexOf('Model settings'));
         expect(markup.indexOf('Attribution Overview')).toBeLessThan(markup.indexOf('Model settings'));
@@ -438,19 +437,16 @@ describe('GroundingProvenancePanel', () => {
         expect(markup).toContain('provenance-detail-bundle-status-details');
         expect(markup).toContain('provenance-detail-selected-bundle-summary');
         expect(markup).toContain('provenance-detail-selected-bundle-details');
-        expect(markup).toContain('provenance-detail-selected-bundle-details" class="group ');
         expect(markup).toContain('provenance-detail-bundle-segment-summary');
         expect(markup).toContain('provenance-detail-bundle-segment-details');
         expect(markup).toContain('provenance-detail-linked-sources-summary');
         expect(markup).toContain('provenance-detail-linked-sources-details');
         expect(markup).toContain('provenance-compare-source-summary-0');
         expect(markup).toContain('provenance-compare-source-details-0');
-        expect(markup).toContain('provenance-compare-source-details-0" class="group"');
         expect(markup).toContain('provenance-detail-other-sources-summary');
         expect(markup).toContain('provenance-detail-other-sources-details');
         expect(markup).toContain('provenance-compare-other-source-summary-1');
         expect(markup).toContain('provenance-compare-other-source-details-1');
-        expect(markup).toContain('provenance-compare-other-source-details-1" class="group"');
         expect(markup).toContain('In bundle');
         expect(markup).toContain('Outside bundle');
         expect(markup).toContain('This bundle cites 1 of 2 retrieved sources.');

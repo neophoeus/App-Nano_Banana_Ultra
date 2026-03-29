@@ -151,12 +151,9 @@ export const es = {
     workflowStatusIdle: 'Inactivo',
     branchRenameEyebrow: 'Renombrar rama',
     branchRenameTitle: 'Renombrar rama de linaje',
-    branchRenameDesc: 'Esto actualiza todos los turnos que pertenecen a la rama {0}.',
     branchRenameClose: 'Cerrar',
     branchRenameAutomaticLabel: 'Etiqueta automatica',
     branchRenameDisplayName: 'Nombre para mostrar',
-    branchRenameRestoreHint:
-        'Dejalo en blanco, o vuelve a poner {0}, para restaurar la etiqueta automatica de la rama.',
     branchRenameUseAutomatic: 'Usar etiqueta automatica',
     branchRenameSave: 'Guardar nombre de la rama',
     branchRenameResetNotice: 'El nombre de la rama se restablecio a su etiqueta automatica.',
@@ -398,8 +395,6 @@ export const es = {
         'Esta etapa conserva el linaje del editor, por lo que los siguientes seguimientos siguen anclados a una imagen de origen ya editada.',
     lineageActionDescReplay: 'Esta etapa esta reproduciendo un turno capturado previamente para inspeccion.',
     workspaceRestoreTitle: 'Espacio de trabajo restaurado',
-    workspaceRestoreRecoveredSummary:
-        'Se recuperaron tu ultimo estado de etapa, estado de rama, continuidad de la sesion y ajustes del compositor.',
     workspaceRestoreTurns: '{0} turnos',
     workspaceRestoreStagedAssets: '{0} recursos preparados',
     workspaceRestoreViewerImages: '{0} imagenes del visor',
@@ -739,8 +734,6 @@ export const es = {
     workspaceImportReviewExecutionSingleTurn: 'Un solo turno',
     sessionReplayEyebrow: 'Repeticion de sesion',
     sessionReplayTitle: 'Repite la linea temporal del flujo de trabajo guardada para este espacio de trabajo.',
-    sessionReplayDesc:
-        'La repeticion mantiene intacta la vista central mientras inspeccionas el registro completo del flujo de trabajo guardado con esta instantanea del espacio de trabajo.',
     sessionReplayEvents: 'Eventos',
     sessionReplayStages: 'Etapas',
     sessionReplayHistorySteps: 'Pasos de historial',

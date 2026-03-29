@@ -19,7 +19,7 @@ const buildTurn = (overrides: Partial<GeneratedImage> = {}): GeneratedImage => (
 });
 
 describe('WorkspaceImportReview', () => {
-    it('renders branch preview cards as disclosure shells with prompt previews', () => {
+    it('renders branch preview cards expanded with prompt previews and actions', () => {
         const longPrompt =
             'Imported branch prompt with enough descriptive detail to force a preview truncation in the summary shell while preserving the full prompt inside the expanded content for branch actions.';
         const previewPrompt = `${longPrompt.slice(0, 120).trimEnd()}...`;
@@ -69,8 +69,6 @@ describe('WorkspaceImportReview', () => {
         expect(markup).toContain('workspace-import-review');
         expect(markup).toContain('import-review-branch-details-root-1');
         expect(markup).toContain('import-review-branch-summary-root-1');
-        expect(markup).toContain('group-open:rotate-180');
-        expect(markup).toContain('<details data-testid="import-review-branch-details-root-1" class="group ');
         expect(markup).toContain(previewPrompt);
         expect(markup).toContain(longPrompt);
         expect(markup).toContain('Choose next step');
@@ -88,7 +86,7 @@ describe('WorkspaceImportReview', () => {
         expect(markup).toContain('Merge keeps your current setup intact. Replace switches to the imported workspace.');
     });
 
-    it('renders the direct replace path as a disclosure shell with preview-first copy', () => {
+    it('renders the direct replace path expanded with preview-first copy and actions', () => {
         const longPrompt =
             'Latest successful import prompt that should stay preview-first in the direct replace summary while leaving the full restore, continue, and branch actions in the expanded body.';
         const previewPrompt = `${longPrompt.slice(0, 120).trimEnd()}...`;
@@ -123,8 +121,6 @@ describe('WorkspaceImportReview', () => {
 
         expect(markup).toContain('import-review-replace-latest-details');
         expect(markup).toContain('import-review-replace-latest-summary');
-        expect(markup).toContain('<details data-testid="import-review-replace-latest-details" class="group ');
-        expect(markup).toContain('group-open:rotate-180');
         expect(markup).toContain(previewPrompt);
         expect(markup).toContain(longPrompt);
         expect(markup).toContain('Choose next step');

@@ -72,7 +72,6 @@ const workspaceFlowKeys = [
     'workspaceImportReviewExecutionSingleTurn',
     'sessionReplayEyebrow',
     'sessionReplayTitle',
-    'sessionReplayDesc',
     'sessionReplayEvents',
     'sessionReplayStages',
     'sessionReplayHistorySteps',
@@ -209,11 +208,9 @@ const sourceLineageLabelFallbackSensitiveKeys = [
 const branchRenameDialogKeys = [
     'branchRenameEyebrow',
     'branchRenameTitle',
-    'branchRenameDesc',
     'branchRenameClose',
     'branchRenameAutomaticLabel',
     'branchRenameDisplayName',
-    'branchRenameRestoreHint',
     'branchRenameUseAutomatic',
     'branchRenameSave',
     'branchRenameResetNotice',
@@ -311,11 +308,9 @@ const workspaceInsightsStructuralKeys = [
 const branchRenameDialogFallbackSensitiveKeys = [
     'branchRenameEyebrow',
     'branchRenameTitle',
-    'branchRenameDesc',
     'branchRenameClose',
     'branchRenameAutomaticLabel',
     'branchRenameDisplayName',
-    'branchRenameRestoreHint',
     'branchRenameUseAutomatic',
     'branchRenameSave',
     'branchRenameResetNotice',
@@ -1826,15 +1821,11 @@ const zhCnLineageDescriptionBaseline = {
 
 const zhTwBranchRestoreBaseline = {
     branchRenameTitle: '重新命名延續脈絡分支',
-    branchRenameDesc: '這會更新屬於分支 {0} 的所有回合。',
-    workspaceRestoreRecoveredSummary: '已恢復你上次的階段狀態、分支狀態、工作階段延續與提示詞編輯區設定。',
     workspaceRestoreTurns: '{0} 個回合',
 } as const;
 
 const zhCnBranchRestoreBaseline = {
     branchRenameTitle: '重命名延续脉络分支',
-    branchRenameDesc: '这会更新属于分支 {0} 的所有回合。',
-    workspaceRestoreRecoveredSummary: '已恢复你上次的阶段状态、分支状态、会话延续和提示词编辑区设置。',
     workspaceRestoreTurns: '{0} 个回合',
 } as const;
 
@@ -2770,11 +2761,9 @@ const ruSourceLineageLabelBaseline = {
 const jaBranchRenameDialogBaseline = {
     branchRenameEyebrow: '分岐名の変更',
     branchRenameTitle: '系統分岐の名前を変更',
-    branchRenameDesc: 'これにより、分岐 {0} に属するすべてのターンが更新されます。',
     branchRenameClose: '閉じる',
     branchRenameAutomaticLabel: '自動ラベル',
     branchRenameDisplayName: '表示名',
-    branchRenameRestoreHint: '空欄のままにするか {0} に戻すと、自動の分岐ラベルを復元できます。',
     branchRenameUseAutomatic: '自動ラベルを使う',
     branchRenameSave: '分岐名を保存',
     branchRenameResetNotice: '分岐名を自動ラベルに戻しました。',
@@ -2784,11 +2773,9 @@ const jaBranchRenameDialogBaseline = {
 const koBranchRenameDialogBaseline = {
     branchRenameEyebrow: '브랜치 이름 변경',
     branchRenameTitle: '계보 브랜치 이름 바꾸기',
-    branchRenameDesc: '이 작업은 브랜치 {0}에 속한 모든 턴을 업데이트합니다.',
     branchRenameClose: '닫기',
     branchRenameAutomaticLabel: '자동 라벨',
     branchRenameDisplayName: '표시 이름',
-    branchRenameRestoreHint: '비워 두거나 {0}(으)로 되돌리면 자동 브랜치 라벨이 복원됩니다.',
     branchRenameUseAutomatic: '자동 라벨 사용',
     branchRenameSave: '브랜치 이름 저장',
     branchRenameResetNotice: '브랜치 이름이 자동 라벨로 재설정되었습니다.',
@@ -2798,12 +2785,9 @@ const koBranchRenameDialogBaseline = {
 const esBranchRenameDialogBaseline = {
     branchRenameEyebrow: 'Renombrar rama',
     branchRenameTitle: 'Renombrar rama de linaje',
-    branchRenameDesc: 'Esto actualiza todos los turnos que pertenecen a la rama {0}.',
     branchRenameClose: 'Cerrar',
     branchRenameAutomaticLabel: 'Etiqueta automatica',
     branchRenameDisplayName: 'Nombre para mostrar',
-    branchRenameRestoreHint:
-        'Dejalo en blanco, o vuelve a poner {0}, para restaurar la etiqueta automatica de la rama.',
     branchRenameUseAutomatic: 'Usar etiqueta automatica',
     branchRenameSave: 'Guardar nombre de la rama',
     branchRenameResetNotice: 'El nombre de la rama se restablecio a su etiqueta automatica.',
@@ -2813,11 +2797,9 @@ const esBranchRenameDialogBaseline = {
 const frBranchRenameDialogBaseline = {
     branchRenameEyebrow: 'Renommer la branche',
     branchRenameTitle: 'Renommer la branche de lignage',
-    branchRenameDesc: 'Cela met a jour tous les tours qui appartiennent a la branche {0}.',
     branchRenameClose: 'Fermer',
     branchRenameAutomaticLabel: 'Libelle automatique',
     branchRenameDisplayName: 'Nom d affichage',
-    branchRenameRestoreHint: 'Laissez vide, ou remettez {0}, pour restaurer le libelle automatique de la branche.',
     branchRenameUseAutomatic: 'Utiliser le libelle automatique',
     branchRenameSave: 'Enregistrer le nom de la branche',
     branchRenameResetNotice: 'Le nom de la branche a ete retabli a son libelle automatique.',
@@ -2827,12 +2809,9 @@ const frBranchRenameDialogBaseline = {
 const deBranchRenameDialogBaseline = {
     branchRenameEyebrow: 'Branch umbenennen',
     branchRenameTitle: 'Verlaufs-Branch umbenennen',
-    branchRenameDesc: 'Dadurch werden alle Runden aktualisiert, die zum Branch {0} gehoren.',
     branchRenameClose: 'Schliessen',
     branchRenameAutomaticLabel: 'Automatische Beschriftung',
     branchRenameDisplayName: 'Anzeigename',
-    branchRenameRestoreHint:
-        'Leer lassen oder wieder auf {0} setzen, um die automatische Branch-Beschriftung wiederherzustellen.',
     branchRenameUseAutomatic: 'Automatische Beschriftung verwenden',
     branchRenameSave: 'Branch-Namen speichern',
     branchRenameResetNotice: 'Der Branch-Name wurde auf seine automatische Beschriftung zuruckgesetzt.',
@@ -2842,12 +2821,9 @@ const deBranchRenameDialogBaseline = {
 const ruBranchRenameDialogBaseline = {
     branchRenameEyebrow: 'Переименование ветки',
     branchRenameTitle: 'Переименовать ветку линии',
-    branchRenameDesc: 'Это обновит все ходы, которые принадлежат ветке {0}.',
     branchRenameClose: 'Закрыть',
     branchRenameAutomaticLabel: 'Автоматическая метка',
     branchRenameDisplayName: 'Отображаемое имя',
-    branchRenameRestoreHint:
-        'Оставьте поле пустым или верните значение {0}, чтобы восстановить автоматическую метку ветки.',
     branchRenameUseAutomatic: 'Использовать автоматическую метку',
     branchRenameSave: 'Сохранить имя ветки',
     branchRenameResetNotice: 'Имя ветки сброшено на автоматическую метку.',
@@ -3821,8 +3797,6 @@ const jaSessionReplayAndImportReviewBaseline = {
     workspaceImportReviewMergeTurnsOnly: 'ターンのみ統合',
     workspaceImportReviewReplaceCurrentWorkspace: '現在のワークスペースを置換',
     sessionReplayTitle: 'このワークスペースに保存されたワークフロータイムラインを再生します。',
-    sessionReplayDesc:
-        '再生中も中央のステージ表示は保たれたまま、ワークスペーススナップショットと一緒に保存された完全なワークフローログを確認できます。',
     sessionReplayCurrentStageSource: '現在のステージソース',
     sessionReplayEmpty: 'このワークスペースには、まだワークフロー項目が記録されていません。',
     sessionReplayTimeline: '再生タイムライン',
@@ -3843,8 +3817,6 @@ const koSessionReplayAndImportReviewBaseline = {
     workspaceImportReviewMergeTurnsOnly: '턴만 병합',
     workspaceImportReviewReplaceCurrentWorkspace: '현재 워크스페이스 교체',
     sessionReplayTitle: '이 워크스페이스에 저장된 워크플로 타임라인을 재생합니다.',
-    sessionReplayDesc:
-        '재생 중에도 중앙 스테이지 화면은 유지되며, 워크스페이스 스냅샷과 함께 저장된 전체 워크플로 로그를 검토할 수 있습니다.',
     sessionReplayCurrentStageSource: '현재 스테이지 소스',
     sessionReplayEmpty: '이 워크스페이스에는 아직 워크플로 항목이 기록되지 않았습니다.',
     workspaceInsightsContinuitySourceTurn: '{0}개 턴',
@@ -3868,8 +3840,6 @@ const esSessionReplayAndImportReviewBaseline = {
     workspaceImportReviewReplaceCurrentWorkspace: 'Reemplazar el espacio de trabajo actual',
     sessionReplayEyebrow: 'Repeticion de sesion',
     sessionReplayTitle: 'Repite la linea temporal del flujo de trabajo guardada para este espacio de trabajo.',
-    sessionReplayDesc:
-        'La repeticion mantiene intacta la vista central mientras inspeccionas el registro completo del flujo de trabajo guardado con esta instantanea del espacio de trabajo.',
     sessionReplayCurrentStageSource: 'Origen actual de la escena',
     sessionReplayEmpty: 'Todavia no se han capturado entradas del flujo de trabajo para este espacio de trabajo.',
     sessionReplayTimeline: 'Linea temporal de repeticion',
@@ -3890,8 +3860,6 @@ const frSessionReplayAndImportReviewBaseline = {
     workspaceImportReviewMergeTurnsOnly: 'Fusionner les tours seulement',
     workspaceImportReviewReplaceCurrentWorkspace: "Remplacer l'espace de travail actuel",
     sessionReplayTitle: 'Relisez la chronologie du flux de travail capturee pour cet espace de travail.',
-    sessionReplayDesc:
-        "La relecture garde la vue centrale intacte tout en vous laissant inspecter le journal complet du flux de travail enregistre avec cet instantane de l'espace de travail.",
     sessionReplayCurrentStageSource: 'Source actuelle de la scene',
     sessionReplayEmpty: "Aucune entree du flux de travail n'a encore ete capturee pour cet espace de travail.",
     sessionReplayTimeline: 'Chronologie de relecture',
@@ -3914,8 +3882,6 @@ const deSessionReplayAndImportReviewBaseline = {
     workspaceImportReviewReplaceCurrentWorkspace: 'Aktuellen Arbeitsbereich ersetzen',
     sessionReplayEyebrow: 'Sitzungswiedergabe',
     sessionReplayTitle: 'Spielen Sie die aufgezeichnete Ablaufchronik fur diesen Arbeitsbereich erneut ab.',
-    sessionReplayDesc:
-        'Die Wiedergabe lasst die zentrale Stufenansicht intakt, wahrend Sie das vollstandige Ablaufprotokoll dieses Arbeitsbereich-Schnappschusses prufen.',
     sessionReplayCurrentStageSource: 'Aktuelle Szenenquelle',
     sessionReplayEmpty: 'Fur diesen Arbeitsbereich wurden noch keine Ablaufeintrage erfasst.',
     sessionReplayTimeline: 'Wiedergabe-Chronik',
@@ -3940,8 +3906,6 @@ const ruSessionReplayAndImportReviewBaseline = {
     workspaceImportReviewReplaceCurrentWorkspace: 'Заменить текущее рабочее пространство',
     sessionReplayEyebrow: 'Повтор сеанса',
     sessionReplayTitle: 'Повторите сохраненную хронологию рабочего потока для этого рабочего пространства.',
-    sessionReplayDesc:
-        'Повтор сохраняет центральную сцену, пока вы просматриваете полный журнал рабочего потока, сохраненный вместе с этим снимком рабочего пространства.',
     sessionReplayCurrentStageSource: 'Текущий источник сцены',
     sessionReplayEmpty: 'Для этого рабочего пространства еще не записаны элементы рабочего потока.',
     sessionReplayTimeline: 'Хронология повтора',
@@ -4085,8 +4049,6 @@ const jaLineageRestoreBaseline = {
     lineageActionDescEditor:
         'このステージはエディタ由来の系統を持つため、後続生成は編集済みの元画像に引き続き紐づきます。',
     lineageActionDescReplay: 'このステージは以前に記録されたターンを確認用に再生しています。',
-    workspaceRestoreRecoveredSummary:
-        '前回のステージ状態、分岐状態、セッション継続性、コンポーザー設定を復元しました。',
     workspaceRestoreTurns: '{0} 件のターン',
     workspaceRestoreActiveBranch: '現在の分岐 {0}',
     workspaceRestoreActionsHint:
@@ -4107,7 +4069,6 @@ const koLineageRestoreBaseline = {
     lineageActionDescEditor:
         '이 스테이지는 에디터 계보를 지니고 있어 이후 후속 생성이 편집된 원본 이미지에 계속 고정됩니다.',
     lineageActionDescReplay: '이 스테이지는 이전에 기록된 턴을 확인용으로 재생하고 있습니다.',
-    workspaceRestoreRecoveredSummary: '이전 스테이지 상태, 분기 상태, 세션 연속성, 컴포저 설정을 복구했습니다.',
     workspaceRestoreTurns: '{0}개 턴',
     workspaceRestoreActiveBranch: '현재 분기 {0}',
     workspaceRestoreActionsHint:
@@ -4130,8 +4091,6 @@ const esLineageRestoreBaseline = {
     lineageActionDescEditor:
         'Esta etapa conserva el linaje del editor, por lo que los siguientes seguimientos siguen anclados a una imagen de origen ya editada.',
     lineageActionDescReplay: 'Esta etapa esta reproduciendo un turno capturado previamente para inspeccion.',
-    workspaceRestoreRecoveredSummary:
-        'Se recuperaron tu ultimo estado de etapa, estado de rama, continuidad de la sesion y ajustes del compositor.',
     workspaceRestoreTurns: '{0} turnos',
     workspaceRestoreActionsHint:
         'Elige si quieres reabrir la cadena recuperada, usar el ultimo turno como fuente de continuacion, crear una rama desde ahi o limpiar la cadena conservando la configuracion recuperada del compositor.',
@@ -4153,8 +4112,6 @@ const frLineageRestoreBaseline = {
     lineageActionDescEditor:
         "Cette etape conserve une lignee d'editeur, donc les suivis suivants restent ancres a une image source deja modifiee.",
     lineageActionDescReplay: 'Cette etape rejoue un tour precedemment capture pour inspection.',
-    workspaceRestoreRecoveredSummary:
-        "Le dernier etat de l'etape, l'etat de branche, la continuite de session et les reglages du compositeur ont ete recuperes.",
     workspaceRestoreTurns: '{0} tours',
     workspaceRestoreViewerImages: '{0} images du visualiseur',
     workspaceRestoreActionsHint:
@@ -4177,8 +4134,6 @@ const deLineageRestoreBaseline = {
         'Diese Stufe tragt Editor-Herkunft, daher bleiben weitere Folgeschritte an ein bereits bearbeitetes Quellbild gebunden.',
     lineageActionDescReplay: 'Diese Stufe spielt eine zuvor aufgezeichnete Runde zur Prufung erneut ab.',
     workspaceRestoreTitle: 'Arbeitsbereich wiederhergestellt',
-    workspaceRestoreRecoveredSummary:
-        'Der letzte Stufenkontext, Zweigstatus, die Sitzungskontinuitat und die Kompositions-Einstellungen wurden wiederhergestellt.',
     workspaceRestoreTurns: '{0} Runden',
     workspaceRestoreStagedAssets: '{0} vorbereitete Ressourcen',
     workspaceRestoreViewerImages: '{0} Bilder im Betrachter',
@@ -4202,8 +4157,6 @@ const ruLineageRestoreBaseline = {
     lineageActionDescEditor:
         'Этот этап несет редакторскую линию происхождения, поэтому следующие продолжения остаются привязанными к уже отредактированному исходному изображению.',
     lineageActionDescReplay: 'Этот этап воспроизводит ранее сохраненный ход для просмотра.',
-    workspaceRestoreRecoveredSummary:
-        'Восстановлены последнее состояние этапа, состояние ветки, непрерывность сессии и настройки компоновщика.',
     workspaceRestoreTurns: '{0} ходов',
     workspaceRestoreViewerImages: '{0} изображений в просмотре',
     workspaceRestoreActionsHint:

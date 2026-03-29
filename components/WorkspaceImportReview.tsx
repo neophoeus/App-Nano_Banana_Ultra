@@ -5,6 +5,7 @@ import { BranchSummary } from '../utils/lineage';
 import { GeneratedImage } from '../types';
 import { getExecutionModeLabel } from '../utils/executionMode';
 import { getTranslation, Language } from '../utils/translations';
+import InfoTooltip from './InfoTooltip';
 import ThemeToggle from './ThemeToggle';
 import WorkspaceModalFrame from './WorkspaceModalFrame';
 
@@ -47,18 +48,6 @@ const WorkspaceImportReview: React.FC<WorkspaceImportReviewProps> = ({
 }) => {
     const t = (key: string) => getTranslation(currentLanguage, key);
     const neutralActionButtonClassName = 'nbu-control-button px-4 py-2 text-sm font-semibold';
-    const renderDisclosureChevron = () => (
-        <svg
-            aria-hidden="true"
-            viewBox="0 0 20 20"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            className="h-4 w-4 text-gray-400 transition-transform group-open:rotate-180 dark:text-gray-500"
-        >
-            <path d="M6 8l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-    );
     const primaryActionClassName =
         'rounded-full bg-amber-500 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-amber-600';
     const continueActionClassName =
@@ -115,15 +104,18 @@ const WorkspaceImportReview: React.FC<WorkspaceImportReviewProps> = ({
             tone === 'amber'
                 ? 'text-[10px] font-bold uppercase tracking-[0.16em] text-amber-700 dark:text-amber-200'
                 : 'text-[10px] font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400';
-        const bodyClassName =
-            tone === 'amber'
-                ? 'mt-1 text-xs leading-5 text-amber-900/80 dark:text-amber-100/80'
-                : 'mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400';
 
         return (
             <div className="mb-3">
-                <div className={eyebrowClassName}>{t('workspaceImportReviewChooseRoute')}</div>
-                <div className={bodyClassName}>{t('workspaceImportReviewChooseRouteHint')}</div>
+                <div className={`flex items-center gap-2 ${eyebrowClassName}`}>
+                    <span>{t('workspaceImportReviewChooseRoute')}</span>
+                    <InfoTooltip
+                        dataTestId={`import-review-route-guide-hint-${tone}`}
+                        buttonLabel={t('workspaceImportReviewChooseRouteHint')}
+                        content={t('workspaceImportReviewChooseRouteHint')}
+                        align="right"
+                    />
+                </div>
             </div>
         );
     };
@@ -142,15 +134,18 @@ const WorkspaceImportReview: React.FC<WorkspaceImportReviewProps> = ({
             tone === 'amber'
                 ? 'text-[10px] font-bold uppercase tracking-[0.16em] text-amber-700 dark:text-amber-200'
                 : 'text-[10px] font-bold uppercase tracking-[0.16em] text-gray-600 dark:text-gray-300';
-        const hintClassName =
-            tone === 'amber'
-                ? 'mt-1 text-xs leading-5 text-amber-900/80 dark:text-amber-100/80'
-                : 'mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400';
 
         return (
             <div data-testid={testId} className={className}>
-                <div className={eyebrowClassName}>{title}</div>
-                <div className={hintClassName}>{hint}</div>
+                <div className={`flex items-center gap-2 ${eyebrowClassName}`}>
+                    <span>{title}</span>
+                    <InfoTooltip
+                        dataTestId={testId ? `${testId}-hint` : undefined}
+                        buttonLabel={hint}
+                        content={hint}
+                        align="right"
+                    />
+                </div>
                 <div className="mt-3 flex flex-wrap gap-2">{children}</div>
             </div>
         );
@@ -165,7 +160,6 @@ const WorkspaceImportReview: React.FC<WorkspaceImportReviewProps> = ({
             closeLabel={t('branchRenameClose')}
             eyebrow={t('workspaceImportReviewEyebrow')}
             title={t('workspaceImportReviewTitle')}
-            description={t('workspaceImportReviewDesc')}
             headerExtra={
                 <div className="mt-4 flex items-center gap-3">
                     <ThemeToggle currentLanguage={currentLanguage} className="h-9 w-9" />
@@ -279,14 +273,14 @@ const WorkspaceImportReview: React.FC<WorkspaceImportReviewProps> = ({
                     <div className="mt-3 space-y-2">
                         {importedBranchSummaries.length > 0 ? (
                             importedBranchSummaries.slice(0, 4).map((branch) => (
-                                <details
+                                <div
                                     key={branch.branchOriginId}
                                     data-testid={`import-review-branch-details-${branch.branchOriginId}`}
-                                    className="group rounded-2xl border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(250,250,252,0.88))] px-4 py-3 shadow-[0_14px_35px_rgba(15,23,42,0.06)] dark:border-gray-700/80 dark:bg-[linear-gradient(180deg,rgba(23,28,36,0.92),rgba(14,18,24,0.9))]"
+                                    className="rounded-2xl border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(250,250,252,0.88))] px-4 py-3 shadow-[0_14px_35px_rgba(15,23,42,0.06)] dark:border-gray-700/80 dark:bg-[linear-gradient(180deg,rgba(23,28,36,0.92),rgba(14,18,24,0.9))]"
                                 >
-                                    <summary
+                                    <div
                                         data-testid={`import-review-branch-summary-${branch.branchOriginId}`}
-                                        className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                                        className="flex items-start justify-between gap-3"
                                     >
                                         <div className="min-w-0 flex-1">
                                             <div className="flex flex-wrap items-center gap-2">
@@ -328,9 +322,8 @@ const WorkspaceImportReview: React.FC<WorkspaceImportReviewProps> = ({
                                                     branch.latestTurn.id.slice(0, 8),
                                                 )}
                                             </span>
-                                            {renderDisclosureChevron()}
                                         </div>
-                                    </summary>
+                                    </div>
                                     <div className="mt-3 border-t border-gray-200/80 pt-3 dark:border-gray-800">
                                         <div className="text-sm leading-6 text-gray-700 dark:text-gray-200">
                                             {branch.latestTurn.prompt}
@@ -408,7 +401,7 @@ const WorkspaceImportReview: React.FC<WorkspaceImportReviewProps> = ({
                                             </div>
                                         )}
                                     </div>
-                                </details>
+                                </div>
                             ))
                         ) : (
                             <div className="rounded-2xl border border-dashed border-gray-300 px-4 py-6 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
@@ -420,13 +413,13 @@ const WorkspaceImportReview: React.FC<WorkspaceImportReviewProps> = ({
             </div>
 
             {importedLatestSuccessfulTurn && (
-                <details
+                <div
                     data-testid="import-review-replace-latest-details"
-                    className="group mt-5 rounded-[28px] border border-amber-200/80 bg-[linear-gradient(180deg,rgba(255,250,240,0.94),rgba(255,245,230,0.9))] p-5 shadow-[0_18px_40px_rgba(245,158,11,0.12)] dark:border-amber-500/20 dark:bg-[linear-gradient(180deg,rgba(56,38,11,0.4),rgba(20,19,24,0.92))] dark:shadow-none"
+                    className="mt-5 rounded-[28px] border border-amber-200/80 bg-[linear-gradient(180deg,rgba(255,250,240,0.94),rgba(255,245,230,0.9))] p-5 shadow-[0_18px_40px_rgba(245,158,11,0.12)] dark:border-amber-500/20 dark:bg-[linear-gradient(180deg,rgba(56,38,11,0.4),rgba(20,19,24,0.92))] dark:shadow-none"
                 >
-                    <summary
+                    <div
                         data-testid="import-review-replace-latest-summary"
-                        className="flex cursor-pointer list-none items-start justify-between gap-4 marker:hidden"
+                        className="flex items-start justify-between gap-4"
                     >
                         <div className="min-w-0 flex-1">
                             <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-amber-600 dark:text-amber-300">
@@ -455,9 +448,8 @@ const WorkspaceImportReview: React.FC<WorkspaceImportReviewProps> = ({
                                         {t('workspaceImportReviewCandidate')}
                                     </span>
                                 )}
-                            {renderDisclosureChevron()}
                         </div>
-                    </summary>
+                    </div>
                     <div className="mt-3 border-t border-amber-200/80 pt-3 dark:border-amber-500/20">
                         <div className="text-sm leading-6 text-gray-600 dark:text-gray-300">
                             {importedLatestSuccessfulTurn.prompt}
@@ -520,7 +512,7 @@ const WorkspaceImportReview: React.FC<WorkspaceImportReviewProps> = ({
                             </div>
                         </div>
                     </div>
-                </details>
+                </div>
             )}
 
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-gray-200/80 pt-5 dark:border-gray-800">

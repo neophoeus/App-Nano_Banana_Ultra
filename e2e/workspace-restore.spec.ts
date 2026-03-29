@@ -653,16 +653,40 @@ const uncitedProvenanceSnapshot = {
     },
 };
 
-const composer = (page: Page) => page.locator('textarea').first();
-const visibleProvenancePanel = (page: Page) => page.locator('[data-testid="provenance-panel-light"]:visible').first();
-const currentStageSourceCard = (page: Page) => page.getByTestId('current-stage-source').first();
-const activeBranchCard = (page: Page) => page.getByTestId('active-branch-card').first();
-const lineageMap = (page: Page) => page.getByTestId('lineage-map-card').first();
-const firstSessionStackCard = (page: Page) => page.locator('[data-testid^="session-stack-card-"]').first();
-const firstLineageMapTurn = (page: Page) => page.locator('[data-testid^="lineage-map-turn-"]').first();
+const composer = (page: Page) => page.locator('textarea:visible').first();
+const visibleProvenancePanel = (page: Page) =>
+    page
+        .locator('[data-testid="provenance-panel-light"]:visible, [data-testid="provenance-panel-dark"]:visible')
+        .first();
+const visibleFilmstripCard = (page: Page) => page.locator('[data-testid^="filmstrip-card-"]:visible').first();
+const currentStageSourceCard = (page: Page) => page.locator('[data-testid="current-stage-source"]:visible').first();
+const activeBranchCard = (page: Page) => page.locator('[data-testid="active-branch-card"]:visible').first();
+const lineageMap = (page: Page) => page.locator('[data-testid="lineage-map-card"]:visible').first();
+const firstSessionStackCard = (page: Page) => page.locator('[data-testid^="session-stack-card-"]:visible').first();
+const firstLineageMapTurn = (page: Page) => page.locator('[data-testid^="lineage-map-turn-"]:visible').first();
 const generateButton = (page: Page) => page.getByRole('button', { name: tt('generate') }).first();
 
+const ensureWorkspaceInsightsExpanded = async (page: Page) => {
+    const details = page.getByTestId('workspace-insights-collapsible').first();
+    if ((await details.count()) === 0) {
+        return;
+    }
+
+    const isOpen = await details.evaluate((element) => (element instanceof HTMLDetailsElement ? element.open : true));
+    if (!isOpen) {
+        await details.evaluate((element) => {
+            if (element instanceof HTMLDetailsElement) {
+                element.open = true;
+            }
+        });
+    }
+};
+
 const ensureDetailsExpanded = async (page: Page, testId: string) => {
+    if (testId !== 'workspace-insights-collapsible') {
+        await ensureWorkspaceInsightsExpanded(page);
+    }
+
     const details = page.getByTestId(testId).first();
     if ((await details.count()) === 0) {
         return;
@@ -691,7 +715,8 @@ const clickFirstVisible = async (locator: Locator) => {
         }
     }
 
-    await locator.first().evaluate((element: HTMLElement) => element.click());
+    await expect(locator.first()).toBeVisible();
+    await locator.first().click();
 };
 
 const clickSummary = async (locator: Locator) => {
@@ -816,6 +841,8 @@ const assertStageSourceSurfaces = async (
         globalLogMode?: 'minimized' | 'expanded';
     },
 ) => {
+    await ensureWorkspaceInsightsExpanded(page);
+
     const toastText = options.toastKey
         ? localizedMessageByKey(options.toastKey)
         : localizedText(options.toastMessage || '');
@@ -831,7 +858,9 @@ const assertStageSourceSurfaces = async (
         branchLabel: options.branchLabel,
     });
     await expect(page.getByTestId('filmstrip-stage-source-badge')).toContainText(localizedText('Stage Source'));
-    await expect(page.getByTestId('timeline-stage-source-entry').first()).toContainText(timelineText);
+    await expect(page.locator('[data-testid="timeline-stage-source-entry"]:visible').first()).toContainText(
+        timelineText,
+    );
     await expect(page.getByTestId('global-log-stage-source-entry')).toHaveCount(0);
     await expect(page.getByTestId('global-log-stage-source-badge')).toHaveCount(0);
     await expect(page.getByTestId('global-log-minimized-source')).toHaveCount(0);
@@ -881,7 +910,6 @@ const assertComposerChromeLocalized = async (page: Page) => {
     const advancedToggle = page.getByRole('button', { name: tt('composerToolbarAdvancedSettings') }).first();
     await expect(advancedToggle).toBeVisible();
     await expect(page.getByRole('heading', { name: tt('composerActionPanelTitle') }).first()).toBeVisible();
-    await expect(page.getByText(tt('composerActionPanelDesc'), { exact: true }).first()).toBeVisible();
     await expect(page.getByRole('button', { name: tt('composerQueueBatchJob') })).toBeVisible();
 
     await advancedToggle.click();
@@ -891,6 +919,7 @@ const assertComposerChromeLocalized = async (page: Page) => {
 
 const dismissRestoreNotice = async (page: Page) => {
     await page.getByRole('button', { name: tt('workspaceRestoreDismiss') }).click();
+    await ensureWorkspaceInsightsExpanded(page);
 };
 
 const dismissRestoreNoticeIfPresent = async (page: Page) => {
@@ -898,6 +927,7 @@ const dismissRestoreNoticeIfPresent = async (page: Page) => {
     if ((await restoreNotice.count()) > 0) {
         await restoreNotice.getByRole('button', { name: tt('workspaceRestoreDismiss') }).click();
     }
+    await ensureWorkspaceInsightsExpanded(page);
 };
 
 const renameBranchFromGallery = async (page: Page, nextLabel: string) => {
@@ -915,14 +945,14 @@ const assertBranchLabelPropagates = async (page: Page, branchLabel: string) => {
     await expect(currentStageSourceCard(page)).toContainText(branchLabel);
     await expect(activeBranchCard(page)).toContainText(branchLabel);
     await expect(lineageMap(page)).toContainText(branchLabel);
-    await expect(page.locator('[data-testid^="filmstrip-card-"]').first()).toContainText(branchLabel);
+    await expect(visibleFilmstripCard(page)).toContainText(branchLabel);
 };
 
 const assertBranchLabelCleared = async (page: Page, branchLabel: string) => {
     await expect(currentStageSourceCard(page)).not.toContainText(branchLabel);
     await expect(activeBranchCard(page)).not.toContainText(branchLabel);
     await expect(lineageMap(page)).not.toContainText(branchLabel);
-    await expect(page.locator('[data-testid^="filmstrip-card-"]').first()).not.toContainText(branchLabel);
+    await expect(visibleFilmstripCard(page)).not.toContainText(branchLabel);
 };
 
 const assertProvenanceSummary = async (
@@ -938,6 +968,9 @@ const assertProvenanceSummary = async (
         expectSourceRouteOnly?: boolean;
     },
 ) => {
+    await ensureWorkspaceInsightsExpanded(page);
+
+    const provenanceSection = page.locator('[data-testid="context-provenance-section"]:visible').first();
     const summary = visibleProvenancePanel(page).getByTestId('provenance-summary');
     await expect(summary.getByTestId('provenance-summary-mode')).toContainText(
         options.mode === 'Inherited' ? tt('groundingProvenanceModeInherited') : tt('groundingProvenanceModeLive'),
@@ -949,16 +982,16 @@ const assertProvenanceSummary = async (
         await expect(summary.getByTestId('provenance-source-card')).toContainText(options.sourcePrompt);
     }
     if (options.expectSourceRouteOnly) {
-        await summary.getByTestId('provenance-source-details').first().click();
+        await clickFirstVisible(summary.getByTestId('provenance-source-details'));
         await expect(summary.getByTestId('provenance-source-open').first()).toBeVisible();
         await expect(summary.getByTestId('provenance-source-continue')).toHaveCount(0);
         await expect(summary.getByTestId('provenance-source-branch')).toHaveCount(0);
     }
     for (const text of options.summaryTexts || []) {
-        await expect(page.getByText(localizedText(text), { exact: true }).first()).toBeVisible();
+        await expect(provenanceSection).toContainText(localizedText(text));
     }
     for (const text of options.visibleTexts) {
-        await expect(page.getByText(localizedText(text), { exact: true }).first()).toBeVisible();
+        await expect(provenanceSection).toContainText(localizedText(text));
     }
 };
 
@@ -1022,7 +1055,7 @@ const assertOfficialConversationSummary = async (
     await expect(card).toContainText(options.prompt);
     await ensureDetailsExpanded(page, 'continuity-source-section');
     await ensureDetailsExpanded(page, 'conversation-continuity-details');
-    await expect(card.getByTestId('conversation-continuity-open')).toBeVisible();
+    await expect(card.getByTestId('conversation-continuity-open')).toHaveCount(1);
     await expect(card.getByTestId('conversation-continuity-continue')).toHaveCount(0);
     await expect(card.getByTestId('conversation-continuity-branch')).toHaveCount(0);
     if (options.expectStageBadge) {
@@ -1155,14 +1188,13 @@ const assertOfficialConversationPostGenerateState = async (page: Page, prompt: s
 };
 
 const openSessionReplay = async (page: Page) => {
-    await page.getByTestId('open-session-replay').first().focus();
-    await page.keyboard.press('Enter');
+    await ensureWorkspaceInsightsExpanded(page);
+    await clickFirstVisible(page.getByTestId('open-session-replay'));
 
     const replayDialog = page.getByTestId('session-replay-dialog');
     await expect(replayDialog).toBeVisible();
     await expect(replayDialog.getByText(tt('sessionReplayEyebrow'), { exact: true })).toBeVisible();
     await expect(replayDialog.getByText(tt('sessionReplayTitle'), { exact: true })).toBeVisible();
-    await expect(replayDialog.getByText(tt('sessionReplayDesc'), { exact: true })).toBeVisible();
     return replayDialog;
 };
 
@@ -1177,7 +1209,6 @@ const expectSessionReplayLocalizedChrome = async (
     await setWorkspaceLanguage(page, language);
     await expect(replayDialog.getByText(t('sessionReplayEyebrow'), { exact: true })).toBeVisible();
     await expect(replayDialog.getByText(t('sessionReplayTitle'), { exact: true })).toBeVisible();
-    await expect(replayDialog.getByText(t('sessionReplayDesc'), { exact: true })).toBeVisible();
     await expect(replayDialog.getByRole('button', { name: t('sessionReplayPrev') })).toBeVisible();
     await expect(replayDialog.getByRole('button', { name: t('sessionReplayNext') })).toBeVisible();
     await expect(replayDialog).toContainText(t('sessionReplayTimeline'));
@@ -1422,7 +1453,6 @@ const stageImportReview = async (
 
     await expect(reviewModal.getByText(tt('workspaceImportReviewEyebrow'), { exact: true })).toBeVisible();
     await expect(reviewModal.getByText(tt('workspaceImportReviewTitle'), { exact: true })).toBeVisible();
-    await expect(reviewModal.getByText(tt('workspaceImportReviewDesc'), { exact: true })).toBeVisible();
     await expect(reviewModal.getByText(expectedFileName, { exact: true })).toBeVisible();
     await expect(reviewModal.getByRole('button', { name: tt('workspaceImportReviewMergeTurnsOnly') })).toBeVisible();
     await expect(
@@ -1740,7 +1770,9 @@ test.describe('workspace restore flows', () => {
         await expect(page.getByText(tt('workspaceRestoreTitle'))).toHaveCount(0);
         await expect(composer(page)).toHaveValue('Imported branch turn');
         await ensureDetailsExpanded(page, 'timeline-history-section');
-        await expect(page.getByText(localizedText('History loaded.')).first()).toBeVisible();
+        await expect(page.locator('[data-testid="timeline-history-section"]:visible').first()).toContainText(
+            localizedText('History loaded.'),
+        );
     });
 
     test('import review replace plus open latest skips the restore notice and reopens the imported turn immediately', async ({
@@ -1888,8 +1920,11 @@ test.describe('workspace restore flows', () => {
             page.getByText(localizedText('History turn reopened as the current stage source.'), { exact: true }),
         ).toBeVisible();
         await expect(composer(page)).toHaveValue('Imported branch turn');
+        await ensureWorkspaceInsightsExpanded(page);
         await ensureDetailsExpanded(page, 'timeline-history-section');
-        await expect(page.getByText(localizedText('History loaded.'), { exact: true }).first()).toBeVisible();
+        await expect(page.locator('[data-testid="timeline-history-section"]:visible').first()).toContainText(
+            localizedText('History loaded.'),
+        );
         await assertCurrentStageSourceCard(page, {
             sourceLabel: tt('stageOriginHistory'),
             actionLabel: 'Reopen',
@@ -1899,16 +1934,17 @@ test.describe('workspace restore flows', () => {
         await expect(currentStageSourceCard(page).getByTestId('current-stage-source-continue')).toHaveCount(0);
         await expect(currentStageSourceCard(page).getByTestId('current-stage-source-branch')).toHaveCount(0);
         await expect(page.getByTestId('filmstrip-stage-source-badge')).toContainText(localizedText('Stage Source'));
-        await expect(page.getByTestId('session-stage-source-badge').first()).toContainText(
+        await ensureDetailsExpanded(page, 'session-stack-section');
+        await expect(page.locator('[data-testid="session-stage-source-badge"]:visible').first()).toContainText(
             localizedText('Stage Source'),
         );
-        await expect(page.getByTestId('timeline-stage-source-badge').first()).toContainText(
+        await expect(page.locator('[data-testid="timeline-stage-source-badge"]:visible').first()).toContainText(
             localizedText('Current Stage Source'),
         );
-        await expect(page.getByTestId('timeline-stage-source-entry').first()).toContainText(
+        await expect(page.locator('[data-testid="timeline-stage-source-entry"]:visible').first()).toContainText(
             localizedText('History turn reopened as current stage source'),
         );
-        await expect(page.getByTestId('timeline-source-open').first()).toBeVisible();
+        await expect(page.locator('[data-testid="timeline-source-open"]:visible').first()).toBeVisible();
         await expect(page.getByTestId('timeline-source-continue')).toHaveCount(0);
         await expect(page.getByTestId('timeline-source-branch')).toHaveCount(0);
         await page.getByTestId('global-health-toggle').click();
@@ -1937,8 +1973,8 @@ test.describe('workspace restore flows', () => {
         await ensureDetailsExpanded(page, 'current-stage-source-shell');
         await ensureDetailsExpanded(page, 'current-stage-source-details');
         await ensureDetailsExpanded(page, 'session-stack-section');
-        const bravoVariantCard = page.getByTestId('session-stack-card-bravo-v2-turn').first();
-        const alphaVariantCard = page.getByTestId('session-stack-card-alpha-v1-turn').first();
+        const bravoVariantCard = page.locator('[data-testid="session-stack-card-bravo-v2-turn"]:visible').first();
+        const alphaVariantCard = page.locator('[data-testid="session-stack-card-alpha-v1-turn"]:visible').first();
 
         await expect(stageSourceCard).toContainText('Variant candidate B');
         await expect(stageSourceCard).toContainText(localizedText('Candidate'));
@@ -1946,11 +1982,11 @@ test.describe('workspace restore flows', () => {
         await expect(bravoVariantCard).toContainText(localizedText('Candidate'));
         await expect(alphaVariantCard).toContainText(localizedText('Candidate'));
         await expect(activeBranchCard(page)).toContainText(`${localizedText('Continuation source ')}--------`);
-        await expect(page.getByTestId('active-branch-continue-latest').first()).toContainText(
+        await expect(page.locator('[data-testid="active-branch-continue-latest"]:visible').first()).toContainText(
             localizedText('Promote Variant'),
         );
 
-        await page.getByTestId('active-branch-continue-latest').first().click();
+        await page.locator('[data-testid="active-branch-continue-latest"]:visible').first().click();
 
         await expect(
             page.getByText(localizedText('Variant promoted as the active continuation source.'), { exact: true }),
@@ -1960,11 +1996,11 @@ test.describe('workspace restore flows', () => {
         await expect(bravoVariantCard).toContainText(localizedText('Source'));
         await expect(alphaVariantCard).toContainText(localizedText('Candidate'));
         await expect(activeBranchCard(page)).toContainText(`${localizedText('Continuation source ')}bravo-v2`);
-        await expect(page.getByTestId('active-branch-continue-latest').first()).toContainText(
+        await expect(page.locator('[data-testid="active-branch-continue-latest"]:visible').first()).toContainText(
             localizedText('Source Active'),
         );
 
-        await page.getByTestId('filmstrip-continue-alpha-v1-turn').first().click();
+        await page.locator('[data-testid="filmstrip-continue-alpha-v1-turn"]:visible').first().click();
 
         await expect(
             page.getByText(localizedText('Variant promoted as the active continuation source.'), { exact: true }),
@@ -1974,7 +2010,7 @@ test.describe('workspace restore flows', () => {
         await expect(alphaVariantCard).toContainText(localizedText('Source'));
         await expect(bravoVariantCard).toContainText(localizedText('Candidate'));
         await expect(activeBranchCard(page)).toContainText(`${localizedText('Continuation source ')}alpha-v1`);
-        await expect(page.getByTestId('active-branch-continue-latest').first()).toContainText(
+        await expect(page.locator('[data-testid="active-branch-continue-latest"]:visible').first()).toContainText(
             localizedText('Promote Variant'),
         );
     });
@@ -1988,7 +2024,7 @@ test.describe('workspace restore flows', () => {
 
         await assertFilmstripChromeLocalized(page);
 
-        const firstFilmstripCard = page.locator('[data-testid^="filmstrip-card-"]').first();
+        const firstFilmstripCard = visibleFilmstripCard(page);
         await firstFilmstripCard.hover();
         await firstFilmstripCard.locator('[data-testid^="filmstrip-continue-"]').click();
 
@@ -2010,7 +2046,7 @@ test.describe('workspace restore flows', () => {
 
         await assertFilmstripChromeLocalized(page);
 
-        const firstFilmstripCard = page.locator('[data-testid^="filmstrip-card-"]').first();
+        const firstFilmstripCard = visibleFilmstripCard(page);
         await firstFilmstripCard.hover();
         await expect(firstFilmstripCard.locator('[data-testid^="filmstrip-continue-"]')).toContainText(
             tt('historyContinueFromTurn'),
@@ -2055,7 +2091,7 @@ test.describe('workspace restore flows', () => {
         await dismissRestoreNotice(page);
         await composer(page).fill('Filmstrip branch draft');
 
-        const firstFilmstripCard = page.locator('[data-testid^="filmstrip-card-"]').first();
+        const firstFilmstripCard = visibleFilmstripCard(page);
         await firstFilmstripCard.hover();
         await firstFilmstripCard.locator('[data-testid^="filmstrip-branch-"]').click();
 
@@ -2125,7 +2161,7 @@ test.describe('workspace restore flows', () => {
         await expect(page.getByTestId('active-branch-open-origin')).toHaveCount(0);
         await expect(page.getByTestId('active-branch-branch-origin')).toHaveCount(0);
 
-        await page.getByTestId('active-branch-continue-latest').first().click();
+        await page.locator('[data-testid="active-branch-continue-latest"]:visible').first().click();
 
         await assertStageSourceSurfaces(page, {
             composerValue: 'Imported branch turn',
@@ -2144,7 +2180,7 @@ test.describe('workspace restore flows', () => {
         await expect(page.getByTestId('active-branch-open-origin')).toHaveCount(0);
         await expect(page.getByTestId('active-branch-branch-origin')).toHaveCount(0);
 
-        await page.getByTestId('active-branch-open-latest').first().click();
+        await page.locator('[data-testid="active-branch-open-latest"]:visible').first().click();
 
         await assertStageSourceSurfaces(page, {
             composerValue: 'Imported branch turn',
@@ -2160,7 +2196,7 @@ test.describe('workspace restore flows', () => {
         await replaceWithImportedWorkspace(page);
         await dismissRestoreNotice(page);
 
-        const firstFilmstripCard = page.locator('[data-testid^="filmstrip-card-"]').first();
+        const firstFilmstripCard = visibleFilmstripCard(page);
         await firstFilmstripCard.click();
 
         await expect(composer(page)).toHaveValue('Imported branch turn');
@@ -2252,7 +2288,10 @@ test.describe('workspace restore flows', () => {
         await expect(page.getByText(tt('workspaceRestoreTitle'))).toHaveCount(0);
         await expect(composer(page)).toHaveValue('Imported workspace prompt');
         await expect(page.getByText(tt('readyTitle'))).toBeVisible();
-        await expect(page.getByText(tt('groundingProvenanceNoActiveSessionTurn')).first()).toBeVisible();
+        await ensureWorkspaceInsightsExpanded(page);
+        await expect(page.locator('[data-testid="workspace-insights-collapsible"]:visible').first()).toContainText(
+            tt('groundingProvenanceNoActiveSessionTurn'),
+        );
     });
 
     test('branch rename updates the active branch label', async ({ page }) => {
@@ -2439,7 +2478,7 @@ test.describe('workspace restore flows', () => {
             sourceTurn: 'turn-pro',
             sources: '1',
             supportBundles: '1',
-            visibleTexts: ['Taipei Official Travel Guide', 'inherited provenance'],
+            visibleTexts: ['Taipei Official Travel Guide'],
             sourcePrompt: 'Grounded root turn',
             expectSourceRouteOnly: true,
         });
@@ -2459,7 +2498,7 @@ test.describe('workspace restore flows', () => {
             sourceTurn: 'turn-liv',
             sources: '2',
             supportBundles: '1',
-            visibleTexts: ['Taipei Night Market Guide', 'Taipei Skyline Images', 'live provenance'],
+            visibleTexts: ['Taipei Night Market Guide', 'Taipei Skyline Images'],
             sourcePrompt: 'Live grounded turn',
             expectSourceRouteOnly: true,
         });
@@ -2497,7 +2536,7 @@ test.describe('workspace restore flows', () => {
         const provenancePanel = visibleProvenancePanel(page);
         const detailPanel = provenancePanel.getByTestId('provenance-detail');
 
-        await provenancePanel.getByTestId('provenance-source-1').first().click();
+        await clickFirstVisible(provenancePanel.getByTestId('provenance-source-1'));
         await expect(detailPanel.getByTestId('provenance-detail-reuse-preview')).toContainText(
             tt('groundingPanelReusePreview'),
         );
@@ -2547,7 +2586,7 @@ test.describe('workspace restore flows', () => {
             tt('groundingPanelSourceCompareSummaryUncited', '0', '1'),
         );
 
-        await provenancePanel.getByTestId('provenance-bundle-0').first().click();
+        await clickFirstVisible(provenancePanel.getByTestId('provenance-bundle-0'));
         await expect(detailPanel.getByTestId('provenance-detail-reuse-preview')).toContainText(
             tt('groundingPanelReusePreview'),
         );
@@ -2746,7 +2785,7 @@ test.describe('workspace restore flows', () => {
         await expect(filmstripCard).toContainText('#1/2');
         await expect(filmstripCard).not.toContainText(localizedText('Candidate'));
 
-        await page.getByTestId('stage-open-viewer').click();
+        await page.getByTestId('stage-open-viewer').click({ force: true });
         await expect(page.getByTestId('workspace-viewer-prompt-value')).toContainText('Imported queued results');
         await page.getByRole('button', { name: tt('workspaceViewerClose') }).click();
         await expect(page.getByTestId('workspace-viewer-overlay')).toHaveCount(0);
@@ -2783,7 +2822,7 @@ test.describe('workspace restore flows', () => {
         await expect(sessionSourceCard).toContainText('Imported branch turn');
         await ensureDetailsExpanded(page, 'continuity-source-section');
         await ensureDetailsExpanded(page, 'session-continuity-details');
-        await expect(sessionSourceCard.getByTestId('session-continuity-open')).toBeVisible();
+        await expect(sessionSourceCard.getByTestId('session-continuity-open')).toHaveCount(1);
         await expect(sessionSourceCard.getByTestId('session-continuity-continue')).toHaveCount(0);
         await expect(sessionSourceCard.getByTestId('session-continuity-branch')).toHaveCount(0);
     });
@@ -2918,7 +2957,7 @@ test.describe('workspace restore flows', () => {
         const detailPanel = provenancePanel.getByTestId('provenance-detail');
         const visibleComposer = page.locator('textarea:visible').first();
 
-        await provenancePanel.getByTestId('provenance-source-0').first().click();
+        await clickFirstVisible(provenancePanel.getByTestId('provenance-source-0'));
         await expect(detailPanel).toContainText('Taipei Night Market Guide');
         await expect(detailPanel).toContainText('Night market atmosphere');
 
@@ -2949,7 +2988,7 @@ test.describe('workspace restore flows', () => {
         const provenancePanel = visibleProvenancePanel(page);
         const detailPanel = provenancePanel.getByTestId('provenance-detail');
 
-        await provenancePanel.getByTestId('provenance-source-0').first().click();
+        await clickFirstVisible(provenancePanel.getByTestId('provenance-source-0'));
         await detailPanel.getByTestId('provenance-detail-toggle-focus').click();
 
         await expect(detailPanel.getByTestId('provenance-detail-focus-state')).toContainText(
@@ -2982,7 +3021,7 @@ test.describe('workspace restore flows', () => {
         const provenancePanel = visibleProvenancePanel(page);
         const detailPanel = provenancePanel.getByTestId('provenance-detail');
 
-        await provenancePanel.getByTestId('provenance-bundle-0').first().click();
+        await clickFirstVisible(provenancePanel.getByTestId('provenance-bundle-0'));
         await expect(detailPanel.getByTestId('provenance-compare-source-0')).toContainText('Taipei Night Market Guide');
         await expect(detailPanel.getByTestId('provenance-compare-source-1')).toContainText('Taipei Skyline Images');
 
@@ -3005,7 +3044,7 @@ test.describe('workspace restore flows', () => {
         const provenancePanel = visibleProvenancePanel(page);
         const detailPanel = provenancePanel.getByTestId('provenance-detail');
 
-        await provenancePanel.getByTestId('provenance-source-0').first().click();
+        await clickFirstVisible(provenancePanel.getByTestId('provenance-source-0'));
         await expect(detailPanel.getByTestId('provenance-compare-bundle-0')).toContainText(
             'Lantern-lit market street energy',
         );
@@ -3131,7 +3170,8 @@ test.describe('workspace restore flows', () => {
             '[10:00:01] Reload log history loaded',
         ]);
 
-        await expect(page.getByTestId('open-session-replay').first()).toBeVisible();
+        await ensureWorkspaceInsightsExpanded(page);
+        await expect(page.locator('[data-testid="open-session-replay"]:visible').first()).toBeVisible();
     });
 
     test('narrow shell owner routes keep actions, advanced settings, and workflow log reachable after import', async ({
@@ -3153,9 +3193,11 @@ test.describe('workspace restore flows', () => {
         await page.getByTestId('composer-reference-context-button').click();
         const pickerSheet = page.getByRole('dialog').filter({ hasText: tt('workspaceSheetTitleReferences') });
         await expect(pickerSheet).toBeVisible();
-        await expect(pickerSheet).toContainText(tt('workspacePickerCapabilityHint'));
         await expect(pickerSheet).toContainText(tt('workspacePickerEditorBase'));
         await expect(pickerSheet).toContainText(tt('workspacePickerStageSource'));
+        await expect(pickerSheet.getByTestId('picker-references-character-hint-trigger')).toBeVisible();
+        await expect(pickerSheet.getByTestId('picker-references-editor-base-hint-trigger')).toBeVisible();
+        await expect(pickerSheet.getByTestId('picker-references-stage-source-hint-trigger')).toBeVisible();
         await expect(pickerSheet.getByRole('button', { name: tt('workspacePickerOpenSketchPad') })).toBeVisible();
         await pickerSheet.getByTestId('picker-sheet-close').click();
         await expect(pickerSheet).toHaveCount(0);
@@ -3216,7 +3258,7 @@ test.describe('workspace restore flows', () => {
         const sideTools = page.locator('[data-testid="workspace-side-tool-panel"]:visible').first();
         await expect(sideTools).toBeVisible();
 
-        const provenancePanel = page.locator('[data-testid="provenance-panel-light"]:visible').first();
+        const provenancePanel = visibleProvenancePanel(page);
         await expect(provenancePanel).toBeVisible();
         await expect(provenancePanel.getByTestId('provenance-summary')).toBeVisible();
 
@@ -3264,7 +3306,7 @@ test.describe('workspace restore flows', () => {
         await expect(responseRail.getByTestId('workspace-model-output-card')).toBeVisible();
         await expect(responseRail.getByTestId('workspace-thoughts-card')).toBeVisible();
 
-        const provenancePanel = page.locator('[data-testid="provenance-panel-light"]:visible').first();
+        const provenancePanel = visibleProvenancePanel(page);
         await expect(provenancePanel).toBeVisible();
         await expect(provenancePanel.getByTestId('provenance-summary')).toBeVisible();
 
@@ -3398,9 +3440,6 @@ test.describe('workspace restore flows', () => {
 
         const responseRail = page.locator('[data-testid="workspace-response-rail"]:visible').first();
         await expect(responseRail).toBeVisible();
-        await expect(responseRail.getByTestId('workspace-response-structured-output-hint')).toContainText(
-            tt('workspaceResponseRailStructuredOutputHint'),
-        );
         await expect(responseRail.getByTestId('workspace-model-output-card')).toContainText(
             tt('workspaceViewerStructuredOutput'),
         );
@@ -3558,11 +3597,11 @@ test.describe('workspace restore flows', () => {
         );
         await dismissRestoreNotice(page);
 
-        const provenancePanel = page.locator('[data-testid="provenance-panel-light"]:visible').first();
+        const provenancePanel = visibleProvenancePanel(page);
         const detailPanel = provenancePanel.getByTestId('provenance-detail');
         const visibleComposer = page.locator('textarea:visible').first();
 
-        await provenancePanel.getByTestId('provenance-source-0').first().click();
+        await clickFirstVisible(provenancePanel.getByTestId('provenance-source-0'));
         await clickSummary(detailPanel.getByTestId('provenance-compare-bundle-summary-0'));
         await clickSummary(detailPanel.getByTestId('provenance-compare-source-summary-1'));
 

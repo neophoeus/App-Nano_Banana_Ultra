@@ -49,10 +49,10 @@ describe('RecentHistoryFilmstrip', () => {
         );
 
         expect(markup).toContain('Continue from turn');
-        expect(markup).toContain('filmstrip-desc-details');
-        expect(markup).toContain('filmstrip-desc-summary');
         expect(markup).toContain('filmstrip-desc');
-        expect(markup).toContain('group-open:rotate-180');
+        expect(markup).toContain('filmstrip-desc-trigger');
+        expect(markup).not.toContain('filmstrip-desc-details');
+        expect(markup).not.toContain('filmstrip-desc-summary');
         expect(markup).toContain('Recent Turns');
         expect(markup).not.toContain('Open gallery');
     });

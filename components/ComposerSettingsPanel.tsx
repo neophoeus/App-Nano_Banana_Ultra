@@ -1,5 +1,6 @@
 import React from 'react';
 import Button from './Button';
+import InfoTooltip from './InfoTooltip';
 import QueuedBatchJobsPanel from './QueuedBatchJobsPanel';
 import { MODEL_CAPABILITIES, OUTPUT_FORMATS, STRUCTURED_OUTPUT_MODES, THINKING_LEVELS } from '../constants';
 import { getGroundingModeLabel } from '../utils/groundingMode';
@@ -508,9 +509,6 @@ function ComposerSettingsPanel({
                                 <h3 className="mt-1 text-lg font-black text-slate-900 dark:text-slate-100">
                                     {t('promptLabel')}
                                 </h3>
-                                <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-                                    {placeholder}
-                                </p>
                             </div>
                             <button onClick={onToggleEnterToSubmit} className="nbu-chip">
                                 {enterToSubmit ? t('composerEnterSends') : t('composerEnterNewline')}
@@ -573,9 +571,6 @@ function ComposerSettingsPanel({
                         <h3 className="mt-1 text-xl font-black text-slate-900 dark:text-white">
                             {t('composerActionPanelTitle')}
                         </h3>
-                        <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-300">
-                            {t('composerActionPanelDesc')}
-                        </p>
                     </div>
                     {isGenerating ? (
                         <Button
@@ -591,14 +586,22 @@ function ComposerSettingsPanel({
                         </Button>
                     )}
                     {!isGenerating && (
-                        <Button
-                            variant="secondary"
-                            onClick={onQueueBatchJob}
-                            title={queueBatchModeSummary}
-                            className="mt-3 rounded-[18px]"
-                        >
-                            {t('composerQueueBatchJob')}
-                        </Button>
+                        <div className="mt-3 flex items-center gap-2">
+                            <Button
+                                variant="secondary"
+                                onClick={onQueueBatchJob}
+                                className="min-w-0 flex-1 rounded-[18px]"
+                            >
+                                {t('composerQueueBatchJob')}
+                            </Button>
+                            <InfoTooltip
+                                content={queueBatchModeSummary}
+                                buttonLabel={t('composerQueueBatchJob')}
+                                dataTestId="composer-queue-batch-mode-hint"
+                                tone="light"
+                                align="right"
+                            />
+                        </div>
                     )}
                     <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
                         {!isGenerating && (
@@ -612,42 +615,33 @@ function ComposerSettingsPanel({
                             </Button>
                         )}
                     </div>
-                    <details
-                        data-testid="composer-queue-summary-details"
-                        className="group mt-3 rounded-[22px] border border-amber-200/70 bg-[linear-gradient(180deg,rgba(255,250,235,0.96),rgba(255,243,214,0.92))] px-3 py-3 text-xs leading-5 text-amber-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-amber-300/20 dark:bg-[linear-gradient(180deg,rgba(58,36,8,0.78),rgba(37,23,6,0.9))] dark:text-amber-100 dark:shadow-[inset_0_1px_0_rgba(255,244,214,0.06)]"
-                    >
-                        <summary
-                            data-testid="composer-queue-summary-summary"
-                            className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                    {queueBatchConversationNotice && (
+                        <details
+                            data-testid="composer-queue-summary-details"
+                            className="group mt-3 rounded-[22px] border border-amber-200/70 bg-[linear-gradient(180deg,rgba(255,250,235,0.96),rgba(255,243,214,0.92))] px-3 py-3 text-xs leading-5 text-amber-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-amber-300/20 dark:bg-[linear-gradient(180deg,rgba(58,36,8,0.78),rgba(37,23,6,0.9))] dark:text-amber-100 dark:shadow-[inset_0_1px_0_rgba(255,244,214,0.06)]"
                         >
-                            <div className="min-w-0 flex-1">
-                                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-700 dark:text-amber-100/80">
-                                    {t('queuedBatchJobsTitle')}
-                                </p>
-                                <p className="text-amber-950 dark:text-amber-100">{queueBatchModeSummary}</p>
-                                <p
-                                    data-testid="composer-queue-summary-workflow-hint"
-                                    className="mt-1 text-[11px] text-amber-800/90 dark:text-amber-100/80"
-                                >
-                                    {t('queuedBatchJobsWorkflowHint')}
-                                </p>
-                                {queueBatchConversationNotice && (
+                            <summary
+                                data-testid="composer-queue-summary-summary"
+                                className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                            >
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-700 dark:text-amber-100/80">
+                                        {t('queuedBatchJobsTitle')}
+                                    </p>
                                     <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-amber-700 dark:text-amber-100/80">
                                         {t('queuedBatchJobsConversationNoticeLabel')}
                                     </p>
-                                )}
-                            </div>
-                            <span className="mt-0.5 shrink-0">{renderDisclosureChevron()}</span>
-                        </summary>
-                        {queueBatchConversationNotice && (
+                                </div>
+                                <span className="mt-0.5 shrink-0">{renderDisclosureChevron()}</span>
+                            </summary>
                             <p
                                 data-testid="composer-queue-summary-notice"
                                 className="mt-2 text-amber-700/90 dark:text-amber-200/90"
                             >
                                 {queueBatchConversationNotice}
                             </p>
-                        )}
-                    </details>
+                        </details>
+                    )}
                 </div>
             </div>
 

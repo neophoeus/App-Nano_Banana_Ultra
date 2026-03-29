@@ -3,6 +3,7 @@ import { GeneratedImage, GroundingMetadata } from '../types';
 import { GroundingSelection } from '../hooks/useSelectedResultState';
 import { GroundingAttributionOverviewRow } from '../utils/groundingProvenance';
 import { getTranslation, Language } from '../utils/translations';
+import InfoTooltip from './InfoTooltip';
 
 type GroundingSource = NonNullable<GroundingMetadata['sources']>[number];
 type GroundingSupportBundle = NonNullable<GroundingMetadata['supports']>[number];
@@ -679,17 +680,17 @@ function GroundingProvenancePanel({
                     ))}
                 </div>
                 {provenanceSourceTurn && (
-                    <details
+                    <div
                         data-testid={getProvenanceTestId('provenance-source-card')}
-                        className={`group mt-3 ${
+                        className={`mt-3 ${
                             tone === 'dark'
                                 ? 'rounded-xl border border-white/10 bg-white/5 px-3 py-3'
                                 : 'rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 dark:border-gray-800 dark:bg-[#0a0c10]'
                         }`}
                     >
-                        <summary
+                        <div
                             data-testid={getProvenanceTestId('provenance-source-details')}
-                            className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                            className="flex items-start justify-between gap-3"
                         >
                             <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-2">
@@ -737,8 +738,7 @@ function GroundingProvenancePanel({
                                     })}
                                 </div>
                             </div>
-                            {renderDisclosureChevron()}
-                        </summary>
+                        </div>
                         <div
                             className={
                                 tone === 'dark'
@@ -760,16 +760,15 @@ function GroundingProvenancePanel({
                                             : 'text-[10px] font-bold uppercase tracking-[0.14em] text-amber-700 dark:text-amber-200'
                                     }
                                 >
-                                    {t('historyActionOwnerRoute')}
-                                </div>
-                                <div
-                                    className={
-                                        tone === 'dark'
-                                            ? 'mt-1 text-xs leading-5 text-amber-100/80'
-                                            : 'mt-1 text-xs leading-5 text-amber-700 dark:text-amber-200'
-                                    }
-                                >
-                                    {t('historyActionOwnerRouteHint')}
+                                    <div className="flex items-center gap-2">
+                                        <span>{t('historyActionOwnerRoute')}</span>
+                                        <InfoTooltip
+                                            content={t('historyActionOwnerRouteHint')}
+                                            buttonLabel={t('historyActionOwnerRoute')}
+                                            dataTestId={getProvenanceTestId('provenance-source-route-hint')}
+                                            tone={tone === 'dark' ? 'dark' : 'light'}
+                                        />
+                                    </div>
                                 </div>
                                 <div className="mt-3">
                                     {renderHistoryTurnActionRow({
@@ -784,7 +783,7 @@ function GroundingProvenancePanel({
                                 </div>
                             </div>
                         </div>
-                    </details>
+                    </div>
                 )}
             </div>
 
@@ -887,14 +886,13 @@ function GroundingProvenancePanel({
                     )}
 
                     {shouldShowDetailSection && (
-                        <details
+                        <div
                             data-testid={getProvenanceTestId('provenance-detail-shell')}
-                            open={activeGroundingSelection ? true : undefined}
-                            className={`group mt-2 ${detailCardClassName}`}
+                            className={`mt-2 ${detailCardClassName}`}
                         >
-                            <summary
+                            <div
                                 data-testid={getProvenanceTestId('provenance-detail-summary')}
-                                className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                                className="flex items-start justify-between gap-3"
                             >
                                 <div className="min-w-0 flex-1">
                                     <div className={sectionLabelClassName}>{t('groundingPanelCitationDetail')}</div>
@@ -925,8 +923,7 @@ function GroundingProvenancePanel({
                                         </div>
                                     )}
                                 </div>
-                                {renderDisclosureChevron()}
-                            </summary>
+                            </div>
                             <div data-testid={getProvenanceTestId('provenance-detail')} className="mt-3">
                                 {!activeGroundingSelection && (
                                     <div className={emptyClassName}>{t('groundingPanelEmptyDetail')}</div>
@@ -973,17 +970,17 @@ function GroundingProvenancePanel({
                                 )}
                                 {activeGroundingSelection?.kind === 'source' && activeSource && (
                                     <>
-                                        <details
+                                        <div
                                             data-testid={getProvenanceTestId(
                                                 'provenance-detail-selected-source-details',
                                             )}
-                                            className={`group ${detailCardClassName}`}
+                                            className={detailCardClassName}
                                         >
-                                            <summary
+                                            <div
                                                 data-testid={getProvenanceTestId(
                                                     'provenance-detail-selected-source-summary',
                                                 )}
-                                                className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                                                className="flex items-start justify-between gap-3"
                                             >
                                                 <div className="min-w-0 flex-1">
                                                     <div className={sectionLabelClassName}>
@@ -1002,8 +999,7 @@ function GroundingProvenancePanel({
                                                         {formatSourceMeta(activeSource)}
                                                     </div>
                                                 </div>
-                                                {renderDisclosureChevron()}
-                                            </summary>
+                                            </div>
                                             <div className="mt-3 flex flex-wrap gap-2">
                                                 <a
                                                     href={activeSource.url}
@@ -1014,7 +1010,7 @@ function GroundingProvenancePanel({
                                                     {t('groundingPanelOpenSource')}
                                                 </a>
                                             </div>
-                                        </details>
+                                        </div>
                                         <div className="mt-3 flex flex-wrap gap-2">
                                             <button
                                                 type="button"
@@ -1034,13 +1030,13 @@ function GroundingProvenancePanel({
                                             </button>
                                         </div>
                                         {renderReusePreview()}
-                                        <details
+                                        <div
                                             data-testid={getProvenanceTestId('provenance-detail-source-status-details')}
-                                            className={`group mt-3 ${detailCardClassName}`}
+                                            className={`mt-3 ${detailCardClassName}`}
                                         >
-                                            <summary
+                                            <div
                                                 data-testid={getProvenanceTestId('provenance-detail-source-status')}
-                                                className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                                                className="flex items-start justify-between gap-3"
                                             >
                                                 <div className="min-w-0 flex-1">
                                                     <div className={sectionLabelClassName}>
@@ -1061,8 +1057,7 @@ function GroundingProvenancePanel({
                                                             : t('groundingPanelNoBundleCitesSource')}
                                                     </div>
                                                 </div>
-                                                {renderDisclosureChevron()}
-                                            </summary>
+                                            </div>
                                             <div
                                                 data-testid={getProvenanceTestId(
                                                     'provenance-detail-source-compare-summary',
@@ -1077,19 +1072,18 @@ function GroundingProvenancePanel({
                                                     String(displayedSupportBundles.length),
                                                 )}
                                             </div>
-                                        </details>
-                                        <details
+                                        </div>
+                                        <div
                                             data-testid={getProvenanceTestId(
                                                 'provenance-detail-cited-segments-details',
                                             )}
-                                            open={relatedBundlesForSelectedSource.length === 0 ? true : undefined}
-                                            className={`group mt-4 ${detailCardClassName}`}
+                                            className={`mt-4 ${detailCardClassName}`}
                                         >
-                                            <summary
+                                            <div
                                                 data-testid={getProvenanceTestId(
                                                     'provenance-detail-cited-segments-summary',
                                                 )}
-                                                className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                                                className="flex items-start justify-between gap-3"
                                             >
                                                 <div className="min-w-0 flex-1">
                                                     <div className={sectionLabelClassName}>
@@ -1110,8 +1104,7 @@ function GroundingProvenancePanel({
                                                             : t('groundingPanelNoBundleCitesSource')}
                                                     </div>
                                                 </div>
-                                                {renderDisclosureChevron()}
-                                            </summary>
+                                            </div>
                                             <div className="mt-3 space-y-2">
                                                 {relatedBundlesForSelectedSource.length > 0 ? (
                                                     relatedBundlesForSelectedSource.map(({ bundle, index }) => (
@@ -1126,13 +1119,13 @@ function GroundingProvenancePanel({
                                                                     : 'rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 dark:border-gray-800 dark:bg-[#0a0c10]'
                                                             }
                                                         >
-                                                            <details
+                                                            <div
                                                                 data-testid={getProvenanceTestId(
                                                                     `provenance-compare-bundle-details-${index}`,
                                                                 )}
-                                                                className="group"
                                                             >
-                                                                <summary
+                                                                <button
+                                                                    type="button"
                                                                     data-testid={getProvenanceTestId(
                                                                         `provenance-compare-bundle-summary-${index}`,
                                                                     )}
@@ -1142,7 +1135,7 @@ function GroundingProvenancePanel({
                                                                             index,
                                                                         })
                                                                     }
-                                                                    className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                                                                    className="flex w-full cursor-pointer items-start justify-between gap-3 bg-transparent p-0 text-left"
                                                                 >
                                                                     <div className="min-w-0 flex-1">
                                                                         <div
@@ -1175,8 +1168,7 @@ function GroundingProvenancePanel({
                                                                             )}
                                                                         </div>
                                                                     </div>
-                                                                    {renderDisclosureChevron()}
-                                                                </summary>
+                                                                </button>
                                                                 <div
                                                                     className={
                                                                         tone === 'dark'
@@ -1187,7 +1179,7 @@ function GroundingProvenancePanel({
                                                                     {bundle.segmentText ||
                                                                         t('groundingPanelNoBundleSegmentText')}
                                                                 </div>
-                                                            </details>
+                                                            </div>
                                                         </div>
                                                     ))
                                                 ) : (
@@ -1196,22 +1188,22 @@ function GroundingProvenancePanel({
                                                     </div>
                                                 )}
                                             </div>
-                                        </details>
+                                        </div>
                                     </>
                                 )}
                                 {activeGroundingSelection?.kind === 'bundle' && activeSupportBundle && (
                                     <>
-                                        <details
+                                        <div
                                             data-testid={getProvenanceTestId(
                                                 'provenance-detail-selected-bundle-details',
                                             )}
-                                            className={`group ${detailCardClassName}`}
+                                            className={detailCardClassName}
                                         >
-                                            <summary
+                                            <div
                                                 data-testid={getProvenanceTestId(
                                                     'provenance-detail-selected-bundle-summary',
                                                 )}
-                                                className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                                                className="flex items-start justify-between gap-3"
                                             >
                                                 <div className="min-w-0 flex-1">
                                                     <div className={sectionLabelClassName}>
@@ -1245,9 +1237,8 @@ function GroundingProvenancePanel({
                                                                 0,
                                                         )}
                                                     </span>
-                                                    {renderDisclosureChevron()}
                                                 </div>
-                                            </summary>
+                                            </div>
                                             <div className={`mt-3 ${detailMetaClassName}`}>
                                                 {formatMessage(
                                                     'groundingPanelSelectedBundleMeta',
@@ -1256,18 +1247,18 @@ function GroundingProvenancePanel({
                                                     relatedSourcesForSelectedBundle.length,
                                                 )}
                                             </div>
-                                        </details>
-                                        <details
+                                        </div>
+                                        <div
                                             data-testid={getProvenanceTestId(
                                                 'provenance-detail-bundle-segment-details',
                                             )}
-                                            className={`group mt-3 ${detailCardClassName}`}
+                                            className={`mt-3 ${detailCardClassName}`}
                                         >
-                                            <summary
+                                            <div
                                                 data-testid={getProvenanceTestId(
                                                     'provenance-detail-bundle-segment-summary',
                                                 )}
-                                                className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                                                className="flex items-start justify-between gap-3"
                                             >
                                                 <div className="min-w-0 flex-1">
                                                     <div className={sectionLabelClassName}>
@@ -1284,8 +1275,7 @@ function GroundingProvenancePanel({
                                                             t('groundingPanelNoBundleSegmentText')}
                                                     </div>
                                                 </div>
-                                                {renderDisclosureChevron()}
-                                            </summary>
+                                            </div>
                                             <div
                                                 className={
                                                     tone === 'dark'
@@ -1296,7 +1286,7 @@ function GroundingProvenancePanel({
                                                 {activeSupportBundle.segmentText ||
                                                     t('groundingPanelNoBundleSegmentText')}
                                             </div>
-                                        </details>
+                                        </div>
                                         <div className="mt-3 flex flex-wrap gap-2">
                                             <button
                                                 type="button"
@@ -1316,15 +1306,15 @@ function GroundingProvenancePanel({
                                             </button>
                                         </div>
                                         {renderReusePreview()}
-                                        <details
+                                        <div
                                             data-testid={getProvenanceTestId('provenance-detail-bundle-status-details')}
-                                            className={`group mt-3 ${detailCardClassName}`}
+                                            className={`mt-3 ${detailCardClassName}`}
                                         >
-                                            <summary
+                                            <div
                                                 data-testid={getProvenanceTestId(
                                                     'provenance-detail-bundle-compare-summary',
                                                 )}
-                                                className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                                                className="flex items-start justify-between gap-3"
                                             >
                                                 <div className="min-w-0 flex-1">
                                                     <div className={sectionLabelClassName}>
@@ -1347,8 +1337,7 @@ function GroundingProvenancePanel({
                                                         )}
                                                     </div>
                                                 </div>
-                                                {renderDisclosureChevron()}
-                                            </summary>
+                                            </div>
                                             <div className={`mt-3 ${detailMetaClassName}`}>
                                                 {otherSourcesForSelectedBundle.length > 0
                                                     ? formatMessage(
@@ -1357,19 +1346,18 @@ function GroundingProvenancePanel({
                                                       )
                                                     : t('groundingPanelNoOtherSourcesForBundle')}
                                             </div>
-                                        </details>
-                                        <details
+                                        </div>
+                                        <div
                                             data-testid={getProvenanceTestId(
                                                 'provenance-detail-linked-sources-details',
                                             )}
-                                            open={relatedSourcesForSelectedBundle.length === 0 ? true : undefined}
-                                            className={`group mt-4 ${detailCardClassName}`}
+                                            className={`mt-4 ${detailCardClassName}`}
                                         >
-                                            <summary
+                                            <div
                                                 data-testid={getProvenanceTestId(
                                                     'provenance-detail-linked-sources-summary',
                                                 )}
-                                                className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                                                className="flex items-start justify-between gap-3"
                                             >
                                                 <div className="min-w-0 flex-1">
                                                     <div className={sectionLabelClassName}>
@@ -1390,8 +1378,7 @@ function GroundingProvenancePanel({
                                                             : t('groundingPanelNoLinkedSourcesForBundle')}
                                                     </div>
                                                 </div>
-                                                {renderDisclosureChevron()}
-                                            </summary>
+                                            </div>
                                             <div className="mt-3 space-y-2">
                                                 {relatedSourcesForSelectedBundle.length > 0 ? (
                                                     relatedSourcesForSelectedBundle.map(({ source, index }) => (
@@ -1406,13 +1393,13 @@ function GroundingProvenancePanel({
                                                                     : 'rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 dark:border-gray-800 dark:bg-[#0a0c10]'
                                                             }
                                                         >
-                                                            <details
+                                                            <div
                                                                 data-testid={getProvenanceTestId(
                                                                     `provenance-compare-source-details-${index}`,
                                                                 )}
-                                                                className="group"
                                                             >
-                                                                <summary
+                                                                <button
+                                                                    type="button"
                                                                     data-testid={getProvenanceTestId(
                                                                         `provenance-compare-source-summary-${index}`,
                                                                     )}
@@ -1422,7 +1409,7 @@ function GroundingProvenancePanel({
                                                                             index,
                                                                         })
                                                                     }
-                                                                    className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                                                                    className="flex w-full cursor-pointer items-start justify-between gap-3 bg-transparent p-0 text-left"
                                                                 >
                                                                     <div className="min-w-0 flex-1">
                                                                         <div
@@ -1446,10 +1433,9 @@ function GroundingProvenancePanel({
                                                                         >
                                                                             {t('groundingPanelCompareStateLinked')}
                                                                         </span>
-                                                                        {renderDisclosureChevron()}
                                                                     </div>
-                                                                </summary>
-                                                            </details>
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     ))
                                                 ) : (
@@ -1458,17 +1444,16 @@ function GroundingProvenancePanel({
                                                     </div>
                                                 )}
                                             </div>
-                                        </details>
-                                        <details
+                                        </div>
+                                        <div
                                             data-testid={getProvenanceTestId('provenance-detail-other-sources-details')}
-                                            open={otherSourcesForSelectedBundle.length === 0 ? true : undefined}
-                                            className={`group mt-4 ${detailCardClassName}`}
+                                            className={`mt-4 ${detailCardClassName}`}
                                         >
-                                            <summary
+                                            <div
                                                 data-testid={getProvenanceTestId(
                                                     'provenance-detail-other-sources-summary',
                                                 )}
-                                                className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                                                className="flex items-start justify-between gap-3"
                                             >
                                                 <div className="min-w-0 flex-1">
                                                     <div className={sectionLabelClassName}>
@@ -1489,8 +1474,7 @@ function GroundingProvenancePanel({
                                                             : t('groundingPanelNoOtherSourcesForBundle')}
                                                     </div>
                                                 </div>
-                                                {renderDisclosureChevron()}
-                                            </summary>
+                                            </div>
                                             <div className="mt-3 space-y-2">
                                                 {otherSourcesForSelectedBundle.length > 0 ? (
                                                     otherSourcesForSelectedBundle.map(({ source, index }) => (
@@ -1505,13 +1489,13 @@ function GroundingProvenancePanel({
                                                                     : 'rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 dark:border-gray-800 dark:bg-[#0a0c10]'
                                                             }
                                                         >
-                                                            <details
+                                                            <div
                                                                 data-testid={getProvenanceTestId(
                                                                     `provenance-compare-other-source-details-${index}`,
                                                                 )}
-                                                                className="group"
                                                             >
-                                                                <summary
+                                                                <button
+                                                                    type="button"
                                                                     data-testid={getProvenanceTestId(
                                                                         `provenance-compare-other-source-summary-${index}`,
                                                                     )}
@@ -1521,7 +1505,7 @@ function GroundingProvenancePanel({
                                                                             index,
                                                                         })
                                                                     }
-                                                                    className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                                                                    className="flex w-full cursor-pointer items-start justify-between gap-3 bg-transparent p-0 text-left"
                                                                 >
                                                                     <div className="min-w-0 flex-1">
                                                                         <div
@@ -1577,9 +1561,8 @@ function GroundingProvenancePanel({
                                                                                       'groundingPanelSourceStatusRetrievedOnly',
                                                                                   )}
                                                                         </span>
-                                                                        {renderDisclosureChevron()}
                                                                     </div>
-                                                                </summary>
+                                                                </button>
                                                                 <div className="mt-3 flex flex-wrap gap-2">
                                                                     <a
                                                                         href={source.url}
@@ -1590,7 +1573,7 @@ function GroundingProvenancePanel({
                                                                         {t('groundingPanelOpenSource')}
                                                                     </a>
                                                                 </div>
-                                                            </details>
+                                                            </div>
                                                         </div>
                                                     ))
                                                 ) : (
@@ -1599,11 +1582,11 @@ function GroundingProvenancePanel({
                                                     </div>
                                                 )}
                                             </div>
-                                        </details>
+                                        </div>
                                     </>
                                 )}
                             </div>
-                        </details>
+                        </div>
                     )}
 
                     {shouldShowSourcesSection && (
@@ -1690,18 +1673,18 @@ function GroundingProvenancePanel({
                                                 : 'rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 dark:border-gray-800 dark:bg-[#0a0c10]'
                                         }
                                     >
-                                        <details
+                                        <div
                                             data-testid={getProvenanceTestId(
                                                 `provenance-uncited-source-details-${index}`,
                                             )}
-                                            className="group"
                                         >
-                                            <summary
+                                            <button
+                                                type="button"
                                                 data-testid={getProvenanceTestId(
                                                     `provenance-uncited-source-summary-${index}`,
                                                 )}
                                                 onClick={() => setActiveGroundingSelection({ kind: 'source', index })}
-                                                className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                                                className="flex w-full cursor-pointer items-start justify-between gap-3 bg-transparent p-0 text-left"
                                             >
                                                 <div className="min-w-0 flex-1">
                                                     <div
@@ -1720,8 +1703,7 @@ function GroundingProvenancePanel({
                                                         {t('groundingPanelUncitedSourcesHint')}
                                                     </div>
                                                 </div>
-                                                {renderDisclosureChevron()}
-                                            </summary>
+                                            </button>
                                             <div className="mt-3 flex flex-wrap gap-2">
                                                 <a
                                                     href={source.url}
@@ -1732,7 +1714,7 @@ function GroundingProvenancePanel({
                                                     {t('groundingPanelOpenSource')}
                                                 </a>
                                             </div>
-                                        </details>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

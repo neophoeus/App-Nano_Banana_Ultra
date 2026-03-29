@@ -5,6 +5,7 @@ import { getTranslation, Language } from '../utils/translations';
 import { useOverlayEscapeDismiss } from '../hooks/useOverlayEscapeDismiss';
 import { useOverlayFocusTrap } from '../hooks/useOverlayFocusTrap';
 import { useOverlayScrollLock } from '../hooks/useOverlayScrollLock';
+import InfoTooltip from './InfoTooltip';
 import StructuredOutputActions from './StructuredOutputActions';
 import StructuredOutputDisplay from './StructuredOutputDisplay';
 
@@ -75,16 +76,6 @@ export default function WorkspaceViewerOverlay({
     }
 
     const t = (key: string) => getTranslation(currentLanguage, key);
-    const renderDisclosureChevron = () => (
-        <svg
-            aria-hidden="true"
-            viewBox="0 0 20 20"
-            fill="none"
-            className="h-4 w-4 text-white/45 transition-transform group-open:rotate-180"
-        >
-            <path d="M5 7.5 10 12.5 15 7.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-        </svg>
-    );
     const renderTextPreview = (value: string, limit = 140) => {
         const trimmedValue = value.trim();
         if (trimmedValue.length <= limit) {
@@ -119,17 +110,16 @@ export default function WorkspaceViewerOverlay({
                         <h2 data-testid="workspace-viewer-title" className="text-lg font-bold">
                             {t('workspaceViewerTitle')}
                         </h2>
-                        <details
+                        <div
                             data-testid="workspace-viewer-desc-details"
-                            className="group mt-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2"
+                            className="mt-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2"
                         >
-                            <summary
+                            <div
                                 data-testid="workspace-viewer-desc-summary"
-                                className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                                className="flex items-start justify-between gap-3"
                             >
                                 <div className="text-xs text-white/60">{t('workspaceViewerDesc')}</div>
-                                <span className="mt-0.5 shrink-0">{renderDisclosureChevron()}</span>
-                            </summary>
+                            </div>
                             <div
                                 data-testid="workspace-viewer-desc"
                                 className="mt-3 flex flex-wrap gap-2 border-t border-white/10 pt-3"
@@ -150,7 +140,7 @@ export default function WorkspaceViewerOverlay({
                                     {t('workspaceViewerSessionHints')}
                                 </span>
                             </div>
-                        </details>
+                        </div>
                     </div>
                     <button
                         ref={closeButtonRef}
@@ -230,19 +220,21 @@ export default function WorkspaceViewerOverlay({
                             <div>
                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                     <div>
-                                        <div className="text-xs font-bold uppercase tracking-[0.16em] text-white/45">
-                                            {formattedStructuredOutput
-                                                ? t('workspaceViewerStructuredOutput')
-                                                : t('workspaceViewerResultText')}
+                                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-white/45">
+                                            <span>
+                                                {formattedStructuredOutput
+                                                    ? t('workspaceViewerStructuredOutput')
+                                                    : t('workspaceViewerResultText')}
+                                            </span>
+                                            {formattedStructuredOutput && (
+                                                <InfoTooltip
+                                                    tone="dark"
+                                                    dataTestId="workspace-viewer-structured-output-hint"
+                                                    buttonLabel={t('workspaceViewerStructuredOutputHint')}
+                                                    content={t('workspaceViewerStructuredOutputHint')}
+                                                />
+                                            )}
                                         </div>
-                                        {formattedStructuredOutput && (
-                                            <p
-                                                data-testid="workspace-viewer-structured-output-hint"
-                                                className="mt-2 max-w-[34ch] text-xs leading-5 text-white/55"
-                                            >
-                                                {t('workspaceViewerStructuredOutputHint')}
-                                            </p>
-                                        )}
                                     </div>
                                     {formattedStructuredOutput && (
                                         <StructuredOutputActions
@@ -269,10 +261,10 @@ export default function WorkspaceViewerOverlay({
                                 </div>
                             </div>
 
-                            <details data-testid="workspace-viewer-thoughts-details" className="group">
-                                <summary
+                            <div data-testid="workspace-viewer-thoughts-details">
+                                <div
                                     data-testid="workspace-viewer-thoughts-summary"
-                                    className="flex cursor-pointer list-none items-start justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-3 marker:hidden"
+                                    className="flex items-start justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-3"
                                 >
                                     <div className="min-w-0 flex-1">
                                         <div className="text-xs font-bold uppercase tracking-[0.16em] text-white/45">
@@ -282,15 +274,14 @@ export default function WorkspaceViewerOverlay({
                                             {renderTextPreview(thoughtsValue)}
                                         </div>
                                     </div>
-                                    <span className="mt-1 shrink-0">{renderDisclosureChevron()}</span>
-                                </summary>
+                                </div>
                                 <div
                                     data-testid="workspace-viewer-thoughts-body"
                                     className="mt-2 rounded-2xl border border-dashed border-white/10 bg-white/5 px-3 py-3 text-sm text-white/75"
                                 >
                                     {thoughtsValue}
                                 </div>
-                            </details>
+                            </div>
 
                             <div>
                                 <div className="text-xs font-bold uppercase tracking-[0.16em] text-white/45">
@@ -299,10 +290,10 @@ export default function WorkspaceViewerOverlay({
                                 <div className="mt-2">{provenancePanel}</div>
                             </div>
 
-                            <details data-testid="workspace-viewer-session-hints-details" className="group">
-                                <summary
+                            <div data-testid="workspace-viewer-session-hints-details">
+                                <div
                                     data-testid="workspace-viewer-session-hints-summary"
-                                    className="flex cursor-pointer list-none items-start justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-3 marker:hidden"
+                                    className="flex items-start justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-3"
                                 >
                                     <div className="min-w-0 flex-1">
                                         <div
@@ -325,8 +316,7 @@ export default function WorkspaceViewerOverlay({
                                             )}
                                         </div>
                                     </div>
-                                    <span className="mt-1 shrink-0">{renderDisclosureChevron()}</span>
-                                </summary>
+                                </div>
                                 <div
                                     data-testid="workspace-viewer-session-hints"
                                     className="mt-2 space-y-2 rounded-2xl border border-dashed border-white/10 bg-white/5 px-3 py-3 text-sm text-white/75"
@@ -347,7 +337,7 @@ export default function WorkspaceViewerOverlay({
                                           ))
                                         : t('workspaceViewerSessionHintsEmpty')}
                                 </div>
-                            </details>
+                            </div>
                         </div>
                     </div>
                 </div>

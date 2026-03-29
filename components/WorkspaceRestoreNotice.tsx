@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { WORKSPACE_OVERLAY_Z_INDEX } from '../constants/workspaceOverlays';
 import { getTranslation, Language } from '../utils/translations';
+import InfoTooltip from './InfoTooltip';
 import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
 import WorkspaceModalFrame from './WorkspaceModalFrame';
@@ -52,7 +53,6 @@ const WorkspaceRestoreNotice: React.FC<WorkspaceRestoreNoticeProps> = ({
             onClose={onDismiss}
             closeLabel={t('workspaceRestoreDismiss')}
             title={t('workspaceRestoreTitle')}
-            description={t('workspaceRestoreRecoveredSummary')}
             headerExtra={
                 <div className="mt-4 flex items-center gap-3">
                     <LanguageSelector currentLanguage={currentLanguage} onLanguageChange={onLanguageChange} />
@@ -80,14 +80,15 @@ const WorkspaceRestoreNotice: React.FC<WorkspaceRestoreNoticeProps> = ({
                 </div>
 
                 <div className="rounded-[28px] border border-gray-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(247,250,252,0.9))] p-5 shadow-[0_16px_48px_rgba(15,23,42,0.08)] dark:border-gray-700/80 dark:bg-[linear-gradient(180deg,rgba(23,28,36,0.94),rgba(14,18,24,0.9))] dark:shadow-[0_16px_48px_rgba(0,0,0,0.28)]">
-                    <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
-                        {t('workspaceRestoreActionsTitle')}
-                    </div>
-                    <div
-                        data-testid="workspace-restore-actions-hint"
-                        className="mt-2 max-w-3xl text-sm leading-6 text-gray-500 dark:text-gray-400"
-                    >
-                        {t('workspaceRestoreActionsHint')}
+                    <div className="flex items-center gap-2">
+                        <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
+                            {t('workspaceRestoreActionsTitle')}
+                        </div>
+                        <InfoTooltip
+                            content={t('workspaceRestoreActionsHint')}
+                            buttonLabel={t('workspaceRestoreActionsTitle')}
+                            dataTestId="workspace-restore-actions-hint"
+                        />
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
                         {onOpenLatestTurn && (

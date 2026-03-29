@@ -151,12 +151,9 @@ export const ru = {
     workflowStatusIdle: 'Ожидание',
     branchRenameEyebrow: 'Переименование ветки',
     branchRenameTitle: 'Переименовать ветку линии',
-    branchRenameDesc: 'Это обновит все ходы, которые принадлежат ветке {0}.',
     branchRenameClose: 'Закрыть',
     branchRenameAutomaticLabel: 'Автоматическая метка',
     branchRenameDisplayName: 'Отображаемое имя',
-    branchRenameRestoreHint:
-        'Оставьте поле пустым или верните значение {0}, чтобы восстановить автоматическую метку ветки.',
     branchRenameUseAutomatic: 'Использовать автоматическую метку',
     branchRenameSave: 'Сохранить имя ветки',
     branchRenameResetNotice: 'Имя ветки сброшено на автоматическую метку.',
@@ -398,8 +395,6 @@ export const ru = {
         'Этот этап несет редакторскую линию происхождения, поэтому следующие продолжения остаются привязанными к уже отредактированному исходному изображению.',
     lineageActionDescReplay: 'Этот этап воспроизводит ранее сохраненный ход для просмотра.',
     workspaceRestoreTitle: 'Рабочее пространство восстановлено',
-    workspaceRestoreRecoveredSummary:
-        'Восстановлены последнее состояние этапа, состояние ветки, непрерывность сессии и настройки компоновщика.',
     workspaceRestoreTurns: '{0} ходов',
     workspaceRestoreStagedAssets: '{0} подготовленных ресурсов',
     workspaceRestoreViewerImages: '{0} изображений в просмотре',
@@ -735,8 +730,6 @@ export const ru = {
     workspaceImportReviewExecutionSingleTurn: 'Одиночный ход',
     sessionReplayEyebrow: 'Повтор сеанса',
     sessionReplayTitle: 'Повторите сохраненную хронологию рабочего потока для этого рабочего пространства.',
-    sessionReplayDesc:
-        'Повтор сохраняет центральную сцену, пока вы просматриваете полный журнал рабочего потока, сохраненный вместе с этим снимком рабочего пространства.',
     sessionReplayEvents: 'События',
     sessionReplayStages: 'Стадии',
     sessionReplayHistorySteps: 'Шаги истории',

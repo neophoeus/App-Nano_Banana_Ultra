@@ -5,6 +5,7 @@ import { Language } from '../utils/translations';
 import { AspectRatio, GeneratedImage, ImageModel, ImageSize, ImageStyle, StageAsset } from '../types';
 import Button from './Button';
 import BatchSelector from './BatchSelector';
+import InfoTooltip from './InfoTooltip';
 import ImageUploader from './ImageUploader';
 import RatioSelector from './RatioSelector';
 import SizeSelector from './SizeSelector';
@@ -162,17 +163,6 @@ export default function WorkspacePickerSheet({
     if (!activePickerSheet) {
         return null;
     }
-
-    const renderDisclosureChevron = () => (
-        <svg
-            aria-hidden="true"
-            viewBox="0 0 20 20"
-            fill="none"
-            className="h-4 w-4 text-gray-400 transition-transform group-open:rotate-180 dark:text-gray-500"
-        >
-            <path d="M5 7.5 10 12.5 15 7.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-        </svg>
-    );
 
     const secondaryNavItems = [
         {
@@ -463,86 +453,74 @@ export default function WorkspacePickerSheet({
                                 {hasSketch ? t('workspacePickerHasSketchAsset') : t('workspacePickerNoSketchAsset')}
                             </div>
                         </div>
-                        <details
-                            data-testid="picker-references-character-details"
-                            className="nbu-overlay-card-neutral group rounded-2xl border px-4 py-3 text-sm"
+                        <div
+                            data-testid="picker-references-character-card"
+                            className="nbu-overlay-card-neutral rounded-2xl border px-4 py-3 text-sm"
                         >
-                            <summary
-                                data-testid="picker-references-character-summary"
-                                className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
-                            >
-                                <div className="min-w-0 flex-1">
-                                    <div className="text-xs font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
-                                        {t('workspacePickerCharacters')}
-                                    </div>
-                                    <div className="mt-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                        {characterImages.length} / {capability.maxCharacters}
-                                    </div>
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
+                                    <span>{t('workspacePickerCharacters')}</span>
+                                    <InfoTooltip
+                                        dataTestId="picker-references-character-hint"
+                                        buttonLabel={t('workspacePickerCharacterHint')}
+                                        content={t('workspacePickerCharacterHint')}
+                                    />
                                 </div>
-                                <span className="mt-1 shrink-0">{renderDisclosureChevron()}</span>
-                            </summary>
-                            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                {t('workspacePickerCharacterHint')}
-                            </div>
-                        </details>
-                        <details
-                            data-testid="picker-references-editor-base-details"
-                            className="nbu-overlay-card-neutral group rounded-2xl border px-4 py-3 text-sm"
-                        >
-                            <summary
-                                data-testid="picker-references-editor-base-summary"
-                                className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
-                            >
-                                <div className="min-w-0 flex-1">
-                                    <div className="text-xs font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
-                                        {t('workspacePickerEditorBase')}
-                                    </div>
-                                    <div className="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                        {editorBaseAsset
-                                            ? getStageOriginLabel(editorBaseAsset.origin)
-                                            : t('stageOriginNotStaged')}
-                                    </div>
+                                <div className="mt-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                    {characterImages.length} / {capability.maxCharacters}
                                 </div>
-                                <span className="mt-1 shrink-0">{renderDisclosureChevron()}</span>
-                            </summary>
-                            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                {t('workspacePickerEditorBaseHint')}
                             </div>
-                        </details>
-                        <details
-                            data-testid="picker-references-stage-source-details"
-                            className="nbu-overlay-card-neutral group rounded-2xl border px-4 py-3 text-sm md:col-span-3"
+                        </div>
+                        <div
+                            data-testid="picker-references-editor-base-card"
+                            className="nbu-overlay-card-neutral rounded-2xl border px-4 py-3 text-sm"
                         >
-                            <summary
-                                data-testid="picker-references-stage-source-summary"
-                                className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
-                            >
-                                <div className="min-w-0 flex-1">
-                                    <div className="text-xs font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
-                                        {t('workspacePickerStageSource')}
-                                    </div>
-                                    <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
+                                    <span>{t('workspacePickerEditorBase')}</span>
+                                    <InfoTooltip
+                                        dataTestId="picker-references-editor-base-hint"
+                                        buttonLabel={t('workspacePickerEditorBaseHint')}
+                                        content={t('workspacePickerEditorBaseHint')}
+                                    />
+                                </div>
+                                <div className="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                    {editorBaseAsset
+                                        ? getStageOriginLabel(editorBaseAsset.origin)
+                                        : t('stageOriginNotStaged')}
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            data-testid="picker-references-stage-source-card"
+                            className="nbu-overlay-card-neutral rounded-2xl border px-4 py-3 text-sm md:col-span-3"
+                        >
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
+                                    <span>{t('workspacePickerStageSource')}</span>
+                                    <InfoTooltip
+                                        dataTestId="picker-references-stage-source-hint"
+                                        buttonLabel={t('workspacePickerStageSourceHint')}
+                                        content={t('workspacePickerStageSourceHint')}
+                                    />
+                                </div>
+                                <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
+                                    <span className="rounded-full border border-gray-200 px-2.5 py-1 text-xs dark:border-gray-700">
+                                        {getStageOriginLabel(currentStageAsset?.origin)}
+                                    </span>
+                                    {currentStageAsset?.sourceHistoryId && (
                                         <span className="rounded-full border border-gray-200 px-2.5 py-1 text-xs dark:border-gray-700">
-                                            {getStageOriginLabel(currentStageAsset?.origin)}
+                                            {t('workspacePickerHistoryLinked')}
                                         </span>
-                                        {currentStageAsset?.sourceHistoryId && (
-                                            <span className="rounded-full border border-gray-200 px-2.5 py-1 text-xs dark:border-gray-700">
-                                                {t('workspacePickerHistoryLinked')}
-                                            </span>
-                                        )}
-                                        {currentStageAsset?.lineageAction && (
-                                            <span className="rounded-full border border-gray-200 px-2.5 py-1 text-xs dark:border-gray-700">
-                                                {getLineageActionLabel(currentStageAsset.lineageAction)}
-                                            </span>
-                                        )}
-                                    </div>
+                                    )}
+                                    {currentStageAsset?.lineageAction && (
+                                        <span className="rounded-full border border-gray-200 px-2.5 py-1 text-xs dark:border-gray-700">
+                                            {getLineageActionLabel(currentStageAsset.lineageAction)}
+                                        </span>
+                                    )}
                                 </div>
-                                <span className="mt-1 shrink-0">{renderDisclosureChevron()}</span>
-                            </summary>
-                            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                {t('workspacePickerStageSourceHint')}
                             </div>
-                        </details>
+                        </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
@@ -606,7 +584,6 @@ export default function WorkspacePickerSheet({
             closeLabel={t('branchRenameClose')}
             closeButtonTestId="picker-sheet-close"
             title={activeSheetTitle}
-            description={t('workspacePickerCapabilityHint')}
             headerExtra={
                 <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
                     <WorkspaceSecondaryNav items={secondaryNavItems} className="min-w-0 flex-1" />

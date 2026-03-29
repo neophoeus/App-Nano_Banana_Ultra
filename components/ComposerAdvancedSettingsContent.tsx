@@ -5,6 +5,7 @@ import { getGroundingModeLabel } from '../utils/groundingMode';
 import { getStructuredOutputDefinition } from '../utils/structuredOutputs';
 import { STRUCTURED_OUTPUT_FIELD_LABEL_KEYS } from '../utils/structuredOutputPresentation';
 import { getTranslation, Language } from '../utils/translations';
+import InfoTooltip from './InfoTooltip';
 
 type ComposerAdvancedSettingsContentProps = {
     currentLanguage: Language;
@@ -245,21 +246,29 @@ export default function ComposerAdvancedSettingsContent({
                 <div className="mb-4 flex items-center justify-between gap-3">
                     <div>
                         <p className="nbu-section-eyebrow">{t('composerAdvancedEyebrow')}</p>
-                        <h3 className="mt-1 text-base font-black text-slate-900 dark:text-slate-100">
-                            {t('composerAdvancedTitle')}
-                        </h3>
-                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('composerAdvancedDesc')}</p>
+                        <div className="mt-1 flex items-center gap-2">
+                            <h3 className="text-base font-black text-slate-900 dark:text-slate-100">
+                                {t('composerAdvancedTitle')}
+                            </h3>
+                            <InfoTooltip
+                                dataTestId="composer-advanced-header-hint"
+                                buttonLabel={t('composerAdvancedDesc')}
+                                content={t('composerAdvancedDesc')}
+                            />
+                        </div>
                     </div>
                     <span className="nbu-chip">{t('composerDefaultTemp').replace('{0}', temperature.toFixed(1))}</span>
                 </div>
 
-                <div className="mb-3">
+                <div className="mb-3 flex items-center gap-2">
                     <h4 className="text-xs font-bold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
                         {t('composerAdvancedGenerationSectionTitle')}
                     </h4>
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        {t('composerAdvancedGenerationSectionDesc')}
-                    </p>
+                    <InfoTooltip
+                        dataTestId="composer-advanced-generation-hint"
+                        buttonLabel={t('composerAdvancedGenerationSectionDesc')}
+                        content={t('composerAdvancedGenerationSectionDesc')}
+                    />
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
@@ -287,9 +296,16 @@ export default function ComposerAdvancedSettingsContent({
 
                     {capability.supportsStructuredOutputs && (
                         <div className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
-                            <span className="block text-xs font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
-                                {t('composerAdvancedStructuredOutput')}
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <span className="block text-xs font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
+                                    {t('composerAdvancedStructuredOutput')}
+                                </span>
+                                <InfoTooltip
+                                    dataTestId="composer-advanced-structured-output-hint"
+                                    buttonLabel={t('composerAdvancedStructuredOutputDesc')}
+                                    content={t('composerAdvancedStructuredOutputDesc')}
+                                />
+                            </div>
                             <select
                                 value={structuredOutputMode}
                                 onChange={(event) =>
@@ -303,9 +319,6 @@ export default function ComposerAdvancedSettingsContent({
                                     </option>
                                 ))}
                             </select>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                {t('composerAdvancedStructuredOutputDesc')}
-                            </p>
                             <div
                                 data-testid="composer-advanced-structured-output-guide"
                                 className="rounded-2xl border border-emerald-200/80 bg-emerald-50/70 px-4 py-3 dark:border-emerald-500/20 dark:bg-emerald-950/20"
@@ -456,11 +469,13 @@ export default function ComposerAdvancedSettingsContent({
 
                     {capability.supportsIncludeThoughts && (
                         <div className="nbu-input-surface px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
-                            <div className="text-xs font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
-                                {t('groundingProvenanceInsightReturnThoughts')}
-                            </div>
-                            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                {t('composerAdvancedReturnThoughtsDesc')}
+                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
+                                <span>{t('groundingProvenanceInsightReturnThoughts')}</span>
+                                <InfoTooltip
+                                    dataTestId="composer-advanced-return-thoughts-hint"
+                                    buttonLabel={t('composerAdvancedReturnThoughtsDesc')}
+                                    content={t('composerAdvancedReturnThoughtsDesc')}
+                                />
                             </div>
                             <div className="mt-2 text-[11px] font-semibold text-gray-600 dark:text-gray-300">
                                 {includeThoughts ? t('composerVisibilityVisible') : t('composerVisibilityHidden')}
@@ -472,19 +487,28 @@ export default function ComposerAdvancedSettingsContent({
 
             {availableGroundingModes.length > 1 && (
                 <div className="nbu-soft-well p-4">
-                    <div className="mb-3">
+                    <div className="mb-3 flex items-center gap-2">
                         <h4 className="text-xs font-bold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
                             {t('composerAdvancedGroundingSectionTitle')}
                         </h4>
-                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            {t('composerAdvancedGroundingSectionDesc')}
-                        </p>
+                        <InfoTooltip
+                            dataTestId="composer-advanced-grounding-section-hint"
+                            buttonLabel={t('composerAdvancedGroundingSectionDesc')}
+                            content={t('composerAdvancedGroundingSectionDesc')}
+                        />
                     </div>
 
                     <label className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
-                        <span className="block text-xs font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
-                            {t('composerAdvancedGroundingMode')}
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="block text-xs font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
+                                {t('composerAdvancedGroundingMode')}
+                            </span>
+                            <InfoTooltip
+                                dataTestId="composer-advanced-grounding-mode-hint"
+                                buttonLabel={t('composerAdvancedGroundingDesc')}
+                                content={t('composerAdvancedGroundingDesc')}
+                            />
+                        </div>
                         <select
                             value={groundingMode}
                             onChange={(event) => onGroundingModeChange(event.target.value as GroundingMode)}
@@ -496,9 +520,6 @@ export default function ComposerAdvancedSettingsContent({
                                 </option>
                             ))}
                         </select>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                            {t('composerAdvancedGroundingDesc')}
-                        </div>
                     </label>
 
                     {showGroundingResolutionWarning && (
@@ -516,15 +537,18 @@ export default function ComposerAdvancedSettingsContent({
                             className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
                         >
                             <div className="min-w-0 flex-1">
-                                <div className="text-xs font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
-                                    {t('composerAdvancedGroundingGuideTitle')}
-                                </div>
-                                <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                    {t('composerAdvancedGroundingGuideDesc')}
+                                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
+                                    <span>{t('composerAdvancedGroundingGuideTitle')}</span>
+                                    <InfoTooltip
+                                        dataTestId="composer-advanced-grounding-guide-hint"
+                                        buttonLabel={t('composerAdvancedGroundingGuideDesc')}
+                                        content={t('composerAdvancedGroundingGuideDesc')}
+                                        align="right"
+                                    />
                                 </div>
                                 <div
                                     data-testid="composer-advanced-grounding-guide-count"
-                                    className="mt-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500"
+                                    className="mt-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500"
                                 >
                                     {groundingGuideRows.length} notes
                                 </div>

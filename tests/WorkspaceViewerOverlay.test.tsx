@@ -61,7 +61,6 @@ describe('WorkspaceViewerOverlay', () => {
         expect(markup).toContain('workspace-viewer-thoughts-summary');
         expect(markup).toContain('workspace-viewer-session-hints-details');
         expect(markup).toContain('workspace-viewer-session-hints-summary');
-        expect(markup).toContain('group-open:rotate-180');
         expect(markup).toContain(thoughtsPreview);
         expect(markup).toContain(longThoughts);
         expect(markup).toContain('mode: single-turn');
@@ -108,6 +107,7 @@ describe('WorkspaceViewerOverlay', () => {
         expect(markup).toContain('Structured Output');
         expect(markup).toContain('Full inspection layout for the same structured output shown in the top rail.');
         expect(markup).toContain('workspace-viewer-structured-output-hint');
+        expect(markup).toContain('workspace-viewer-structured-output-hint-trigger');
         expect(markup).toContain('structured-output-display');
         expect(markup).toContain('Night portrait');
         expect(markup).toContain('alley signage');
@@ -213,6 +213,7 @@ describe('WorkspaceViewerOverlay', () => {
 
         expect(markup).toContain('structured-output-prompt-ready-hint');
         expect(markup).toContain('Full inspection layout for the same structured output shown in the top rail.');
+        expect(markup).toContain('workspace-viewer-structured-output-hint-trigger');
         expect(markup).toContain('Use the reusable cues below when you want to build the next prompt by hand.');
         expect(markup).toContain('data-prompt-building-section="true"');
         expect(markup).toContain('border-sky-200/80');

@@ -1600,17 +1600,17 @@ const App: React.FC = () => {
                         onAppendPrompt={handleAppendPromptFromStructuredOutput}
                     />
 
-                    <details
+                    <section
                         data-testid="workspace-insights-collapsible"
                         className="nbu-shell-panel nbu-shell-surface-context-rail p-4"
                     >
-                        <summary
+                        <div
                             data-testid="workspace-insights-collapsible-summary"
-                            className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                            className="flex items-start justify-between gap-3"
                         >
                             <WorkspaceInsightsHeaderSummary currentLanguage={currentLang} />
                             <span className="nbu-status-pill">{t('workspaceInsightsPhaseLabel')}</span>
-                        </summary>
+                        </div>
                         <div className="mt-4 border-t border-gray-200/80 pt-4 dark:border-gray-800">
                             <WorkspaceInsightsSidebar
                                 {...workspaceInsightsSidebarProps}
@@ -1619,7 +1619,7 @@ const App: React.FC = () => {
                                 provenanceStatusLabel={contextProvenanceStatusLabel}
                             />
                         </div>
-                    </details>
+                    </section>
 
                     <section className="grid gap-5">
                         <div className="flex min-w-0 flex-col gap-5">

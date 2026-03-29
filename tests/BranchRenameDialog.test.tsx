@@ -16,17 +16,16 @@ const baseProps = {
 };
 
 describe('BranchRenameDialog', () => {
-    it('keeps rename actions visible while collapsing restore guidance into a disclosure shell', () => {
+    it('keeps rename actions visible without a second restore-guidance block', () => {
         const markup = renderToStaticMarkup(<BranchRenameDialog {...baseProps} />);
 
         expect(markup).toContain('branch-rename-dialog');
-        expect(markup).toContain('branch-rename-restore-details');
-        expect(markup).toContain('branch-rename-restore-summary');
-        expect(markup).toContain('branch-rename-restore-hint');
-        expect(markup).toContain('group-open:rotate-180');
         expect(markup).toContain('Use automatic label');
         expect(markup).toContain('Branch b7c1d2');
-        expect(markup).toContain(
+        expect(markup).not.toContain('branch-rename-restore-details');
+        expect(markup).not.toContain('branch-rename-restore-summary');
+        expect(markup).not.toContain('branch-rename-restore-hint');
+        expect(markup).not.toContain(
             'Leave this blank, or set it back to Branch b7c1d2, to restore the automatic branch label.',
         );
         expect(markup).toContain('Reset');

@@ -3,6 +3,7 @@ import { GeneratedImage, QueuedBatchJob, StageAsset, TurnLineageAction } from '.
 import { getTranslation, Language } from '../utils/translations';
 import { BranchSummary } from '../utils/lineage';
 import { getWorkflowEntryLabelKey, type WorkflowStage } from '../utils/workflowTimeline';
+import InfoTooltip from './InfoTooltip';
 import WorkspaceInsightsHeaderSummary from './WorkspaceInsightsHeaderSummary';
 
 type WorkflowEntryLike = {
@@ -194,22 +195,6 @@ function WorkspaceInsightsSidebar({
     ].filter((label): label is string => Boolean(label));
     const continuitySourceCount = continuitySourceLabels.length;
 
-    const renderDisclosureChevron = () => (
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 text-gray-400 transition-transform group-open:rotate-180 dark:text-gray-500"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            aria-hidden="true"
-        >
-            <path
-                fillRule="evenodd"
-                d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 011.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                clipRule="evenodd"
-            />
-        </svg>
-    );
-
     const renderPromptPreview = (value?: string | null) => {
         const preview = value?.trim();
         if (!preview) {
@@ -220,13 +205,15 @@ function WorkspaceInsightsSidebar({
     };
     const renderOwnerRouteActionShell = (actionRow: React.ReactNode, testId?: string) => (
         <div data-testid={testId} className={`${sourceActionShellClassName} space-y-3`}>
-            <div>
+            <div className="flex items-center gap-2">
                 <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-amber-700 dark:text-amber-200">
                     {t('historyActionOwnerRoute')}
                 </div>
-                <div className="mt-1 text-xs leading-5 text-amber-700 dark:text-amber-200">
-                    {t('historyActionOwnerRouteHint')}
-                </div>
+                <InfoTooltip
+                    content={t('historyActionOwnerRouteHint')}
+                    buttonLabel={t('historyActionOwnerRoute')}
+                    dataTestId={testId ? `${testId}-hint` : undefined}
+                />
             </div>
             <div className="flex flex-wrap gap-2">{actionRow}</div>
         </div>
@@ -247,8 +234,8 @@ function WorkspaceInsightsSidebar({
         badges: React.ReactNode;
         actionRow?: React.ReactNode;
     }) => (
-        <details data-testid={testId} className={`mt-3 ${collapsibleSectionClassName}`}>
-            <summary className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden">
+        <div data-testid={testId} className={`mt-3 ${collapsibleSectionClassName} space-y-3`}>
+            <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                     {eyebrow ? (
                         <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
@@ -267,18 +254,15 @@ function WorkspaceInsightsSidebar({
                         </div>
                     )}
                 </div>
-                {renderDisclosureChevron()}
-            </summary>
-            <div className="mt-3 space-y-3">
-                <div className={detailSurfaceClassName}>
-                    {renderHistoryTurnSnapshotContent({
-                        item,
-                        badges,
-                    })}
-                </div>
-                {actionRow ? renderOwnerRouteActionShell(actionRow) : null}
             </div>
-        </details>
+            <div className={detailSurfaceClassName}>
+                {renderHistoryTurnSnapshotContent({
+                    item,
+                    badges,
+                })}
+            </div>
+            {actionRow ? renderOwnerRouteActionShell(actionRow) : null}
+        </div>
     );
 
     const continuitySourceCards = (
@@ -616,38 +600,28 @@ function WorkspaceInsightsSidebar({
                                     </span>
                                 )}
                             </div>
-                            {continuitySourceCount > 0 &&
-                                (continuitySourceCount > 1 ? (
-                                    <details
-                                        data-testid="continuity-source-section"
-                                        className={`mt-3 ${collapsibleSectionClassName}`}
-                                    >
-                                        <summary
-                                            data-testid="continuity-source-summary"
-                                            className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                            {continuitySourceCount > 0 && (
+                                <div data-testid="continuity-source-section" className="mt-3 space-y-3">
+                                    {continuitySourceCount > 1 ? (
+                                        <div
+                                            className={`flex items-start justify-between gap-3 ${collapsibleSectionClassName}`}
                                         >
                                             <div className="min-w-0 flex-1">
                                                 <div className="text-[11px] leading-5 text-gray-500 dark:text-gray-400">
                                                     {continuitySourceLabels.join(' · ')}
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[11px] text-gray-400 dark:text-gray-500">
-                                                    {t('workspaceInsightsItemsCount').replace(
-                                                        '{0}',
-                                                        String(continuitySourceCount),
-                                                    )}
-                                                </span>
-                                                {renderDisclosureChevron()}
-                                            </div>
-                                        </summary>
-                                        <div className="mt-3 space-y-3 border-t border-gray-200/80 pt-3 dark:border-gray-800">
-                                            {continuitySourceCards}
+                                            <span className="text-[11px] text-gray-400 dark:text-gray-500">
+                                                {t('workspaceInsightsItemsCount').replace(
+                                                    '{0}',
+                                                    String(continuitySourceCount),
+                                                )}
+                                            </span>
                                         </div>
-                                    </details>
-                                ) : (
-                                    <div className="mt-3 space-y-3">{continuitySourceCards}</div>
-                                ))}
+                                    ) : null}
+                                    <div className="space-y-3">{continuitySourceCards}</div>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -679,31 +653,25 @@ function WorkspaceInsightsSidebar({
                                         {renderActiveBranchSummaryContent(activeBranchSummary)}
                                     </div>
                                     {recentBranchSummaries.length > 1 && (
-                                        <details
+                                        <div
                                             data-testid="active-branch-switcher-section"
-                                            className={`group ${collapsibleSectionClassName}`}
+                                            className={`${collapsibleSectionClassName} space-y-3`}
                                         >
-                                            <summary
-                                                data-testid="active-branch-switcher-summary"
-                                                className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
-                                            >
+                                            <div className="flex items-start justify-between gap-3">
                                                 <div className="min-w-0 flex-1">
                                                     <div className="text-[11px] leading-5 text-gray-500 dark:text-gray-400">
                                                         {recentBranchSummaries[0].branchLabel} ·{' '}
                                                         {recentBranchSummaries[0].turnCount}
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[11px] text-gray-400 dark:text-gray-500">
-                                                        {t('workspaceInsightsItemsCount').replace(
-                                                            '{0}',
-                                                            String(recentBranchSummaries.length),
-                                                        )}
-                                                    </span>
-                                                    {renderDisclosureChevron()}
-                                                </div>
-                                            </summary>
-                                            <div className="mt-3 flex flex-wrap gap-2 border-t border-gray-200/80 pt-3 dark:border-gray-800">
+                                                <span className="text-[11px] text-gray-400 dark:text-gray-500">
+                                                    {t('workspaceInsightsItemsCount').replace(
+                                                        '{0}',
+                                                        String(recentBranchSummaries.length),
+                                                    )}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2 border-t border-gray-200/80 pt-3 dark:border-gray-800">
                                                 {recentBranchSummaries.map((branch) => {
                                                     const isActiveBranch =
                                                         branch.branchOriginId === activeBranchSummary.branchOriginId;
@@ -719,7 +687,7 @@ function WorkspaceInsightsSidebar({
                                                     );
                                                 })}
                                             </div>
-                                        </details>
+                                        </div>
                                     )}
                                 </div>
                             ) : (
@@ -730,181 +698,102 @@ function WorkspaceInsightsSidebar({
                         </div>
 
                         <div className={nestedSectionDividerClassName}>
-                            {sessionTurnStack.length === 1 ? (
-                                <div data-testid="session-stack-section" className="space-y-2">
-                                    <div className="text-xs uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
-                                        {t('workspaceInsightsSessionTurnStack')}
-                                    </div>
-                                    {sessionTurnStack.map((item) => {
-                                        const isActiveTurn = selectedHistoryId === item.id;
-                                        const isCurrentStageSource = currentStageSourceHistoryId === item.id;
-                                        return (
-                                            <div
-                                                data-testid={`session-stack-card-${item.id}`}
-                                                key={item.id}
-                                                className={
-                                                    isActiveTurn
-                                                        ? 'rounded-2xl border border-amber-300 bg-amber-50 px-3 py-3 dark:border-amber-500/40 dark:bg-amber-950/20'
-                                                        : inlineSurfaceClassName
-                                                }
-                                            >
-                                                {renderHistoryTurnSnapshotContent({
-                                                    item,
-                                                    badges: renderHistoryTurnBadges({
-                                                        item,
-                                                        variant: 'session-stack',
-                                                        branchLabel:
-                                                            branchLabelByTurnId[item.id] || t('historyBranchMain'),
-                                                        isCurrentStageSource,
-                                                        isActive: isActiveTurn,
-                                                    }),
-                                                    promptClassName:
-                                                        'mt-2 line-clamp-2 text-xs leading-5 text-gray-600 dark:text-gray-300',
-                                                    actionRow: (
-                                                        <div className="space-y-2">
-                                                            {renderOwnerRouteActionShell(
-                                                                renderHistoryTurnActionRow({
-                                                                    item,
-                                                                    openLabel: t('historyActionOpenInHistory'),
-                                                                    continueLabel: null,
-                                                                    branchLabel: null,
-                                                                    renameLabel: null,
-                                                                    testIds: {
-                                                                        open: `session-stack-open-${item.id}`,
-                                                                    },
-                                                                }),
-                                                                `session-stack-owner-route-${item.id}`,
-                                                            )}
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {renderHistoryTurnActionRow({
-                                                                    item,
-                                                                    openLabel: null,
-                                                                    continueLabel: null,
-                                                                    branchLabel: null,
-                                                                    renameTarget: item,
-                                                                    testIds: {
-                                                                        rename: `session-stack-rename-${item.id}`,
-                                                                    },
-                                                                })}
-                                                            </div>
-                                                        </div>
-                                                    ),
-                                                })}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            ) : (
-                                <details data-testid="session-stack-section" className={collapsibleSectionClassName}>
-                                    <summary
-                                        data-testid="session-stack-summary"
-                                        className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
-                                    >
-                                        <div className="min-w-0 flex-1">
-                                            <div className="text-xs uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
-                                                {t('workspaceInsightsSessionTurnStack')}
-                                            </div>
-                                            {sessionTurnStack.length > 0 && (
-                                                <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-gray-500 dark:text-gray-400">
-                                                    <span className="nbu-chip px-2 py-0.5 font-mono">
-                                                        {getShortTurnId(sessionTurnStack[0]?.id)}
-                                                    </span>
-                                                    <span>
-                                                        {branchLabelByTurnId[sessionTurnStack[0]?.id || ''] ||
-                                                            t('historyBranchMain')}
-                                                    </span>
-                                                </div>
-                                            )}
+                            <div data-testid="session-stack-section" className="space-y-3">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0 flex-1">
+                                        <div className="text-xs uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
+                                            {t('workspaceInsightsSessionTurnStack')}
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[11px] text-gray-400 dark:text-gray-500">
-                                                {t('workspaceInsightsTurnsCount').replace(
-                                                    '{0}',
-                                                    String(sessionTurnStack.length),
-                                                )}
-                                            </span>
-                                            {renderDisclosureChevron()}
-                                        </div>
-                                    </summary>
-                                    <div className="mt-3 space-y-2 border-t border-gray-200/80 pt-3 dark:border-gray-800">
-                                        {sessionTurnStack.length > 0 ? (
-                                            sessionTurnStack.map((item) => {
-                                                const isActiveTurn = selectedHistoryId === item.id;
-                                                const isCurrentStageSource = currentStageSourceHistoryId === item.id;
-                                                return (
-                                                    <div
-                                                        data-testid={`session-stack-card-${item.id}`}
-                                                        key={item.id}
-                                                        className={
-                                                            isActiveTurn
-                                                                ? 'rounded-2xl border border-amber-300 bg-amber-50 px-3 py-3 dark:border-amber-500/40 dark:bg-amber-950/20'
-                                                                : inlineSurfaceClassName
-                                                        }
-                                                    >
-                                                        {renderHistoryTurnSnapshotContent({
-                                                            item,
-                                                            badges: renderHistoryTurnBadges({
-                                                                item,
-                                                                variant: 'session-stack',
-                                                                branchLabel:
-                                                                    branchLabelByTurnId[item.id] ||
-                                                                    t('historyBranchMain'),
-                                                                isCurrentStageSource,
-                                                                isActive: isActiveTurn,
-                                                            }),
-                                                            promptClassName:
-                                                                'mt-2 line-clamp-2 text-xs leading-5 text-gray-600 dark:text-gray-300',
-                                                            actionRow: (
-                                                                <div className="space-y-2">
-                                                                    {renderOwnerRouteActionShell(
-                                                                        renderHistoryTurnActionRow({
-                                                                            item,
-                                                                            openLabel: t('historyActionOpenInHistory'),
-                                                                            continueLabel: null,
-                                                                            branchLabel: null,
-                                                                            renameLabel: null,
-                                                                            testIds: {
-                                                                                open: `session-stack-open-${item.id}`,
-                                                                            },
-                                                                        }),
-                                                                        `session-stack-owner-route-${item.id}`,
-                                                                    )}
-                                                                    <div className="flex flex-wrap gap-2">
-                                                                        {renderHistoryTurnActionRow({
-                                                                            item,
-                                                                            openLabel: null,
-                                                                            continueLabel: null,
-                                                                            branchLabel: null,
-                                                                            renameTarget: item,
-                                                                            testIds: {
-                                                                                rename: `session-stack-rename-${item.id}`,
-                                                                            },
-                                                                        })}
-                                                                    </div>
-                                                                </div>
-                                                            ),
-                                                        })}
-                                                    </div>
-                                                );
-                                            })
-                                        ) : (
-                                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                {t('workspaceInsightsSessionTurnStackEmpty')}
+                                        {sessionTurnStack.length > 0 && (
+                                            <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-gray-500 dark:text-gray-400">
+                                                <span className="nbu-chip px-2 py-0.5 font-mono">
+                                                    {getShortTurnId(sessionTurnStack[0]?.id)}
+                                                </span>
+                                                <span>
+                                                    {branchLabelByTurnId[sessionTurnStack[0]?.id || ''] ||
+                                                        t('historyBranchMain')}
+                                                </span>
                                             </div>
                                         )}
                                     </div>
-                                </details>
-                            )}
+                                    <span className="text-[11px] text-gray-400 dark:text-gray-500">
+                                        {t('workspaceInsightsTurnsCount').replace(
+                                            '{0}',
+                                            String(sessionTurnStack.length),
+                                        )}
+                                    </span>
+                                </div>
+                                <div className="space-y-2">
+                                    {sessionTurnStack.length > 0 ? (
+                                        sessionTurnStack.map((item) => {
+                                            const isActiveTurn = selectedHistoryId === item.id;
+                                            const isCurrentStageSource = currentStageSourceHistoryId === item.id;
+                                            return (
+                                                <div
+                                                    data-testid={`session-stack-card-${item.id}`}
+                                                    key={item.id}
+                                                    className={
+                                                        isActiveTurn
+                                                            ? 'rounded-2xl border border-amber-300 bg-amber-50 px-3 py-3 dark:border-amber-500/40 dark:bg-amber-950/20'
+                                                            : inlineSurfaceClassName
+                                                    }
+                                                >
+                                                    {renderHistoryTurnSnapshotContent({
+                                                        item,
+                                                        badges: renderHistoryTurnBadges({
+                                                            item,
+                                                            variant: 'session-stack',
+                                                            branchLabel:
+                                                                branchLabelByTurnId[item.id] || t('historyBranchMain'),
+                                                            isCurrentStageSource,
+                                                            isActive: isActiveTurn,
+                                                        }),
+                                                        promptClassName:
+                                                            'mt-2 line-clamp-2 text-xs leading-5 text-gray-600 dark:text-gray-300',
+                                                        actionRow: (
+                                                            <div className="space-y-2">
+                                                                {renderOwnerRouteActionShell(
+                                                                    renderHistoryTurnActionRow({
+                                                                        item,
+                                                                        openLabel: t('historyActionOpenInHistory'),
+                                                                        continueLabel: null,
+                                                                        branchLabel: null,
+                                                                        renameLabel: null,
+                                                                        testIds: {
+                                                                            open: `session-stack-open-${item.id}`,
+                                                                        },
+                                                                    }),
+                                                                    `session-stack-owner-route-${item.id}`,
+                                                                )}
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {renderHistoryTurnActionRow({
+                                                                        item,
+                                                                        openLabel: null,
+                                                                        continueLabel: null,
+                                                                        branchLabel: null,
+                                                                        renameTarget: item,
+                                                                        testIds: {
+                                                                            rename: `session-stack-rename-${item.id}`,
+                                                                        },
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        ),
+                                                    })}
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            {t('workspaceInsightsSessionTurnStackEmpty')}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
-                        <details
-                            data-testid="lineage-map-card"
-                            className={`${nestedSectionDividerClassName} ${collapsibleSectionClassName}`}
-                        >
-                            <summary
-                                data-testid="lineage-map-summary"
-                                className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
-                            >
+                        <div data-testid="lineage-map-card" className={`${nestedSectionDividerClassName} space-y-3`}>
+                            <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0 flex-1">
                                     <div className="text-xs uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
                                         {t('workspaceInsightsLineageMap')}
@@ -925,17 +814,11 @@ function WorkspaceInsightsSidebar({
                                         </div>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[11px] text-gray-400 dark:text-gray-500">
-                                        {t('workspaceInsightsRootsCount').replace(
-                                            '{0}',
-                                            String(lineageRootGroups.length),
-                                        )}
-                                    </span>
-                                    {renderDisclosureChevron()}
-                                </div>
-                            </summary>
-                            <div className="mt-3 space-y-2 border-t border-gray-200/80 pt-3 dark:border-gray-800">
+                                <span className="text-[11px] text-gray-400 dark:text-gray-500">
+                                    {t('workspaceInsightsRootsCount').replace('{0}', String(lineageRootGroups.length))}
+                                </span>
+                            </div>
+                            <div className="space-y-2 border-t border-gray-200/80 pt-3 dark:border-gray-800">
                                 {lineageRootGroups.length > 0 ? (
                                     lineageRootGroups.map((rootGroup) => (
                                         <div key={`root-group-${rootGroup.rootId}`} className="nbu-inline-panel p-3">
@@ -1048,7 +931,7 @@ function WorkspaceInsightsSidebar({
                                     </div>
                                 )}
                             </div>
-                        </details>
+                        </div>
                     </div>
                     {provenancePanel ? (
                         <div data-testid="context-provenance-section" className={`${sectionCardClassName} space-y-3`}>
@@ -1060,9 +943,6 @@ function WorkspaceInsightsSidebar({
                                     <span className="nbu-status-pill">{provenanceStatusLabel}</span>
                                 ) : null}
                             </div>
-                            <div className="text-[11px] leading-5 text-gray-500 dark:text-gray-400">
-                                {t('workspaceInsightsProvenance')}
-                            </div>
                             <div>{provenancePanel}</div>
                         </div>
                     ) : null}
@@ -1073,12 +953,16 @@ function WorkspaceInsightsSidebar({
                                 <div className="text-xs uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
                                     {t('workspaceInsightsActivity')}
                                 </div>
-                                <div className="mt-2 text-[11px] font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
-                                    {t('workspaceInsightsTimelineTitle')}
+                                <div className="mt-2 flex items-center gap-2">
+                                    <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
+                                        {t('workspaceInsightsTimelineTitle')}
+                                    </div>
+                                    <InfoTooltip
+                                        content={t('workspaceInsightsTimelineDesc')}
+                                        buttonLabel={t('workspaceInsightsTimelineTitle')}
+                                        dataTestId="context-timeline-tooltip"
+                                    />
                                 </div>
-                                <p className="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">
-                                    {t('workspaceInsightsTimelineDesc')}
-                                </p>
                             </div>
                             <div className="shrink-0 flex flex-wrap items-center justify-end gap-2">
                                 <button
@@ -1100,70 +984,35 @@ function WorkspaceInsightsSidebar({
                                     {t('workspaceInsightsTimelineEmpty')}
                                 </div>
                             )}
-                            {timelineHistoryEntries.length > 0 &&
-                                (timelineHistoryEntries.length === 1 ? (
-                                    <div data-testid="timeline-history-section" className="space-y-2">
-                                        {renderTimelineEntry(timelineHistoryEntries[0], 1)}
-                                    </div>
-                                ) : (
-                                    <details
-                                        data-testid="timeline-history-section"
-                                        className={collapsibleSectionClassName}
-                                    >
-                                        <summary
-                                            data-testid="timeline-history-summary"
-                                            className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
-                                        >
-                                            <div className="min-w-0 flex-1">
-                                                <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
-                                                    {getTimelineEntryLabel(timelineHistoryEntries[0])}
-                                                </div>
-                                                <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
-                                                    {timelineHistoryEntries[0].displayMessage}
-                                                </p>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[11px] text-gray-400 dark:text-gray-500">
-                                                    {t('workspaceInsightsItemsCount').replace(
-                                                        '{0}',
-                                                        String(timelineHistoryEntries.length),
-                                                    )}
-                                                </span>
-                                                {renderDisclosureChevron()}
-                                            </div>
-                                        </summary>
-                                        <div className="mt-3 space-y-2 border-t border-gray-200/80 pt-3 dark:border-gray-800">
-                                            {timelineHistoryEntries
-                                                .slice(1)
-                                                .map((entry, index) => renderTimelineEntry(entry, index + 2))}
-                                        </div>
-                                    </details>
-                                ))}
+                            {timelineHistoryEntries.length > 0 && (
+                                <div
+                                    data-testid="timeline-history-section"
+                                    className={`${timelineHistoryEntries.length > 1 ? 'border-t border-gray-200/80 pt-3 dark:border-gray-800' : ''} space-y-2`}
+                                >
+                                    {timelineHistoryEntries.map((entry, index) =>
+                                        renderTimelineEntry(entry, index + 1),
+                                    )}
+                                </div>
+                            )}
                         </div>
-                        <details
+                        <div
                             data-testid="session-hints-section"
-                            className={`${nestedSectionDividerClassName} group`}
+                            className={`${nestedSectionDividerClassName} space-y-3`}
                         >
-                            <summary
-                                data-testid="session-hints-summary"
-                                className="flex cursor-pointer list-none items-center justify-between gap-3 marker:hidden"
-                            >
+                            <div className="flex items-center justify-between gap-3">
                                 <h4 className="text-xs font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
                                     {t('workspaceViewerSessionHints')}
                                 </h4>
-                                <div className="flex items-center gap-2">
-                                    {sessionHintEntries.length > 0 && (
-                                        <span className="rounded-full bg-amber-100 px-2 py-1 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
-                                            {t('workspaceInsightsItemsCount').replace(
-                                                '{0}',
-                                                String(sessionHintEntries.length),
-                                            )}
-                                        </span>
-                                    )}
-                                    {renderDisclosureChevron()}
-                                </div>
-                            </summary>
-                            <div className="mt-3 space-y-2">
+                                {sessionHintEntries.length > 0 && (
+                                    <span className="rounded-full bg-amber-100 px-2 py-1 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+                                        {t('workspaceInsightsItemsCount').replace(
+                                            '{0}',
+                                            String(sessionHintEntries.length),
+                                        )}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="space-y-2">
                                 {sessionHintEntries.length > 0 ? (
                                     sessionHintEntries.map(([key, value]) => (
                                         <div
@@ -1184,7 +1033,7 @@ function WorkspaceInsightsSidebar({
                                     </div>
                                 )}
                             </div>
-                        </details>
+                        </div>
                     </div>
                 </div>
             </div>

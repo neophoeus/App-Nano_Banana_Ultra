@@ -2,6 +2,7 @@ import React from 'react';
 import { getExecutionModeLabel } from '../utils/executionMode';
 import { getTranslation, Language } from '../utils/translations';
 import { GeneratedImage } from '../types';
+import InfoTooltip from './InfoTooltip';
 
 type BranchSummary = {
     branchOriginId: string;
@@ -59,18 +60,6 @@ function RecentHistoryFilmstrip({
     renderHistoryActionButton,
 }: RecentHistoryFilmstripProps) {
     const t = (key: string) => getTranslation(currentLanguage, key);
-    const renderDisclosureChevron = () => (
-        <svg
-            aria-hidden="true"
-            viewBox="0 0 20 20"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            className="h-4 w-4 text-gray-400 transition-transform group-open:rotate-180 dark:text-gray-500"
-        >
-            <path d="M6 8l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-    );
     const getFilmstripContinueLabel = (item: GeneratedImage) => {
         const continueLabel = getContinueActionLabel(item);
 
@@ -88,32 +77,19 @@ function RecentHistoryFilmstrip({
         <div className="nbu-stage-hero-filmstrip-shell rounded-[24px] border p-3">
             <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                    <h3
-                        data-testid="filmstrip-title"
-                        className="text-sm font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400"
-                    >
-                        {t('historyFilmstripTitle')}
-                    </h3>
-                    <details
-                        data-testid="filmstrip-desc-details"
-                        className="nbu-stage-hero-filmstrip-disclosure group mt-1 max-w-[42rem] rounded-2xl border px-3 py-2"
-                    >
-                        <summary
-                            data-testid="filmstrip-desc-summary"
-                            className="flex cursor-pointer list-none items-start justify-between gap-3 marker:hidden"
+                    <div className="flex items-center gap-2">
+                        <h3
+                            data-testid="filmstrip-title"
+                            className="text-sm font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400"
                         >
-                            <div className="text-xs leading-5 text-gray-500 dark:text-gray-400">
-                                {t('historyFilmstripDesc')}
-                            </div>
-                            <span className="mt-0.5 shrink-0">{renderDisclosureChevron()}</span>
-                        </summary>
-                        <p
-                            data-testid="filmstrip-desc"
-                            className="mt-3 border-t border-gray-200/80 pt-3 text-xs leading-5 text-gray-500 dark:border-gray-700 dark:text-gray-400"
-                        >
-                            {t('historyFilmstripDesc')}
-                        </p>
-                    </details>
+                            {t('historyFilmstripTitle')}
+                        </h3>
+                        <InfoTooltip
+                            content={t('historyFilmstripDesc')}
+                            buttonLabel={t('historyFilmstripTitle')}
+                            dataTestId="filmstrip-desc"
+                        />
+                    </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <span

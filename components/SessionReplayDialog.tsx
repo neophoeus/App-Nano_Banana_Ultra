@@ -75,7 +75,6 @@ const SessionReplayDialog: React.FC<SessionReplayDialogProps> = ({
             closeLabel={t('branchRenameClose')}
             eyebrow={t('sessionReplayEyebrow')}
             title={t('sessionReplayTitle')}
-            description={t('sessionReplayDesc')}
             headerExtra={
                 <div className="mt-4 flex items-center gap-3">
                     <ThemeToggle currentLanguage={currentLanguage} className="h-9 w-9" />

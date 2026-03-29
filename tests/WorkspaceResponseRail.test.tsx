@@ -4,10 +4,9 @@ import { describe, expect, it } from 'vitest';
 import WorkspaceResponseRail from '../components/WorkspaceResponseRail';
 
 describe('WorkspaceResponseRail', () => {
-    it('renders a single model output owner surface with thoughts as secondary disclosure', () => {
+    it('renders a single model output owner surface with simplified thoughts context', () => {
         const longThoughts =
             'Thoughts should now stay preview-first in the top rail so the user can scan the response surface without the secondary reasoning block always occupying the full card height in the default state.';
-        const thoughtsPreview = `${longThoughts.slice(0, 140).trimEnd()}...`;
         const markup = renderToStaticMarkup(
             <WorkspaceResponseRail
                 currentLanguage="en"
@@ -29,15 +28,31 @@ describe('WorkspaceResponseRail', () => {
         expect(markup).toContain('workspace-thoughts-card');
         expect(markup).toContain('workspace-thoughts-details');
         expect(markup).toContain('workspace-thoughts-summary');
-        expect(markup).toContain('group-open:rotate-180');
-        expect(markup).toContain('<details data-testid="workspace-thoughts-card" class="group ');
-        expect(markup).toContain('Latest Thoughts');
-        expect(markup).toContain(thoughtsPreview);
         expect(markup).toContain(longThoughts);
         expect(markup).not.toContain('workspace-workflow-card');
         expect(markup).not.toContain('Queued Batch Jobs');
         expect(markup).not.toContain('Grounded result');
         expect(markup).not.toContain('xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,0.92fr)]');
+    });
+
+    it('shows the no-thoughts placeholder once without duplicate headings or preview text', () => {
+        const placeholder = 'Thoughts were requested, but the model did not return thought artifacts for this result.';
+        const markup = renderToStaticMarkup(
+            <WorkspaceResponseRail
+                currentLanguage="en"
+                resultText="Fresh response text from the model."
+                structuredData={null}
+                structuredOutputMode={null}
+                resultPlaceholder="Result placeholder"
+                thoughtsText={null}
+                thoughtsPlaceholder={placeholder}
+            />,
+        );
+
+        expect(markup).toContain('workspace-thoughts-card');
+        expect(markup).not.toContain('Prepared');
+        expect(markup).not.toContain('Latest Thoughts');
+        expect(markup.split(placeholder)).toHaveLength(2);
     });
 
     it('renders scene-brief structured output as readable sections instead of raw JSON only', () => {
@@ -69,8 +84,6 @@ describe('WorkspaceResponseRail', () => {
         );
 
         expect(markup).toContain('Structured Output');
-        expect(markup).toContain('Compact scan here. Open viewer for the full structured-output layout.');
-        expect(markup).toContain('workspace-response-structured-output-hint');
         expect(markup).toContain('structured-output-display');
         expect(markup).toContain('structured-output-summary');
         expect(markup).toContain('Cyberpunk street scene');
@@ -162,7 +175,6 @@ describe('WorkspaceResponseRail', () => {
         );
 
         expect(markup).toContain('structured-output-prompt-ready-hint');
-        expect(markup).toContain('Compact scan here. Open viewer for the full structured-output layout.');
         expect(markup).toContain('Use the reusable cues below when you want to build the next prompt by hand.');
         expect(markup).toContain('data-prompt-building-section="true"');
         expect(markup).toContain('border-sky-200/80');

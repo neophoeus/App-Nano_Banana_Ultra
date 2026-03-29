@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import WorkspaceInsightsSidebar from '../components/WorkspaceInsightsSidebar';
 
 describe('WorkspaceInsightsSidebar', () => {
-    it('renders compact collapsible context sections with a latest timeline summary', () => {
+    it('renders expanded context sections with a latest timeline summary', () => {
         const markup = renderToStaticMarkup(
             <WorkspaceInsightsSidebar
                 currentLanguage="en"
@@ -288,16 +288,12 @@ describe('WorkspaceInsightsSidebar', () => {
         expect(markup).toContain('What carries over');
         expect(markup).toContain('Recent turns');
         expect(markup).toContain('Version map');
-        expect(markup).toContain('Source details');
         expect(markup).toContain('Review session');
         expect(markup).toContain('History</span>');
         expect(markup).toContain('session-hints-section');
-        expect(markup).toContain(
-            'session-hints-section" class="border-t border-gray-200/80 pt-4 dark:border-gray-800 group"',
-        );
+        expect(markup).not.toContain('session-hints-summary');
         expect(markup).toContain('continuity-source-section');
-        expect(markup).toContain('continuity-source-summary');
-        expect(markup).toContain('continuity-source-section" class="mt-3 group ');
+        expect(markup).not.toContain('continuity-source-summary');
         expect(markup).not.toContain('current-stage-source-shell');
         expect(markup).not.toContain('current-stage-source-summary');
         expect(markup).not.toContain('Enabled');
@@ -305,6 +301,7 @@ describe('WorkspaceInsightsSidebar', () => {
         expect(markup).not.toContain('active-branch-switcher-section');
         expect(markup).not.toContain('active-branch-switcher-summary');
         expect(markup).not.toContain('session-stack-summary');
+        expect(markup).not.toContain('lineage-map-summary');
         expect(markup).toContain('Processing queued import.');
         expect(markup).toContain('2/4');
         expect(markup).toContain('1 active');
@@ -320,6 +317,7 @@ describe('WorkspaceInsightsSidebar', () => {
         expect(markup).toContain('session-continuity-details');
         expect(markup).toContain('History Route');
         expect(markup).toContain('This route returns to this source turn in history.');
+        expect(markup).toContain('context-timeline-tooltip');
         expect(markup).toContain('session-stack-open-turn-a');
         expect(markup).toContain('session-stack-owner-route-turn-a');
         expect(markup).toContain('session-stack-rename-turn-a');
@@ -340,6 +338,7 @@ describe('WorkspaceInsightsSidebar', () => {
         expect(markup).toContain('session-continuity-open');
         expect(markup).toContain('lineage-map-open-turn-a');
         expect(markup).toContain('lineage-map-owner-route-turn-a');
+        expect(markup).not.toContain('Source details');
         expect(markup).not.toContain('Origin root-a');
         expect(markup).not.toContain('Open gallery');
         expect(markup).not.toContain('Open prompt history');
@@ -481,7 +480,7 @@ describe('WorkspaceInsightsSidebar', () => {
         expect(markup).not.toContain('workspace-insights-header-summary');
     });
 
-    it('renders a single continuity source directly without an outer disclosure', () => {
+    it('renders a single continuity source without a nested disclosure summary', () => {
         const markup = renderToStaticMarkup(
             <WorkspaceInsightsSidebar
                 currentLanguage="en"
@@ -542,7 +541,7 @@ describe('WorkspaceInsightsSidebar', () => {
             />,
         );
 
-        expect(markup).not.toContain('continuity-source-section');
+        expect(markup).toContain('continuity-source-section');
         expect(markup).not.toContain('continuity-source-summary');
         expect(markup).toContain('conversation-continuity-card');
         expect(markup).toContain('conversation-continuity-details');

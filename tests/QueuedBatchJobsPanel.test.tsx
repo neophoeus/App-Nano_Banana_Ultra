@@ -180,15 +180,19 @@ describe('QueuedBatchJobsPanel', () => {
         );
 
         expect(markup).toContain('Queued Batch Jobs');
-        expect(markup).toContain('queued-batch-panel-guidance-details');
-        expect(markup).toContain('queued-batch-panel-guidance-summary');
+        expect(markup).toContain('queued-batch-panel-guidance');
+        expect(markup).toContain('queued-batch-panel-guidance-trigger');
+        expect(markup).toContain('queued-batch-panel-notice');
+        expect(markup).toContain('queued-batch-panel-notice-trigger');
+        expect(markup).not.toContain('queued-batch-panel-guidance-details');
+        expect(markup).not.toContain('queued-batch-panel-guidance-summary');
         expect(markup).toContain('1 active');
         expect(markup).toContain('1 ready to import');
         expect(markup).toContain('1 closed with issues');
         expect(markup).toContain('4 tracked');
         expect(markup).toContain('Continuity note');
         expect(markup).toContain(
-            'Check status here, import finished results into history when they are ready, then remove the entry when the workflow is done.',
+            'Tracked official Gemini Batch API jobs stay here while pending or running, so status checks, imports, and cleanup stay in one workflow.',
         );
         expect(markup).toContain('Import ready results');
         expect(markup).toContain('queued-batch-panel-monitor-group');
@@ -252,7 +256,6 @@ describe('QueuedBatchJobsPanel', () => {
         expect(markup).not.toContain('queued-batch-job-job-failed-poll');
         expect(markup).toContain('queued-batch-job-job-failed-restored-history');
         expect(markup).toContain('queued-batch-job-job-failed-restored-history-note');
-        expect(markup).toContain('queued-batch-panel-workflow-hint');
     });
 
     it('renders every queue state label and localizes generation modes', () => {

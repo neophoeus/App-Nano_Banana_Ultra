@@ -103,6 +103,8 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).toContain('Objects 1/4');
         expect(markup).toContain('Characters 1/2');
         expect(markup).toContain('Advanced settings');
+        expect(markup).toContain('composer-queue-batch-mode-hint-trigger');
+        expect(markup).toContain('composer-queue-batch-mode-hint');
         expect(markup).toContain('Export Workspace');
         expect(markup).toContain('Import Workspace');
         expect(markup).not.toContain('border-amber-200 bg-amber-50');
