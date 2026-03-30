@@ -1,7 +1,6 @@
-import React, { Suspense, lazy } from 'react';
+import React from 'react';
 import BranchRenameDialog from './BranchRenameDialog';
 import ComposerAdvancedSettingsDialog from './ComposerAdvancedSettingsDialog';
-import type { SessionReplayDialogProps } from './SessionReplayDialog';
 import SurfaceSharedControls from './SurfaceSharedControls';
 import SurfaceLoadingFallback from './SurfaceLoadingFallback';
 import ThemeToggle from './ThemeToggle';
@@ -11,9 +10,6 @@ import WorkspacePickerSheet from './WorkspacePickerSheet';
 import WorkspaceRestoreNotice from './WorkspaceRestoreNotice';
 import WorkspaceViewerOverlay from './WorkspaceViewerOverlay';
 import { WORKSPACE_OVERLAY_Z_INDEX } from '../constants/workspaceOverlays';
-import { getTranslation } from '../utils/translations';
-
-const SessionReplayDialog = lazy(() => import('./SessionReplayDialog'));
 
 type NotificationState = { msg: string; type: 'info' | 'error' } | null;
 
@@ -33,7 +29,6 @@ type WorkspaceOverlayStackProps = {
     onSketchReplaceCancel: () => void;
     onSketchReplaceConfirm: () => void;
     branchRenameDialogProps: React.ComponentProps<typeof BranchRenameDialog> | null;
-    sessionReplayDialogProps: SessionReplayDialogProps | null;
     imageEditorSurface: React.ReactNode;
     pickerSheetProps: React.ComponentProps<typeof WorkspacePickerSheet>;
     viewerOverlayProps: React.ComponentProps<typeof WorkspaceViewerOverlay>;
@@ -55,7 +50,6 @@ export default function WorkspaceOverlayStack({
     onSketchReplaceCancel,
     onSketchReplaceConfirm,
     branchRenameDialogProps,
-    sessionReplayDialogProps,
     imageEditorSurface,
     pickerSheetProps,
     viewerOverlayProps,
@@ -139,17 +133,6 @@ export default function WorkspaceOverlayStack({
             )}
 
             {branchRenameDialogProps && <BranchRenameDialog {...branchRenameDialogProps} />}
-            {sessionReplayDialogProps && (
-                <Suspense
-                    fallback={
-                        <SurfaceLoadingFallback
-                            label={getTranslation(sessionReplayDialogProps.currentLanguage, 'loadingActivityConsole')}
-                        />
-                    }
-                >
-                    <SessionReplayDialog {...sessionReplayDialogProps} />
-                </Suspense>
-            )}
             {imageEditorSurface}
             <WorkspacePickerSheet {...pickerSheetProps} />
             <WorkspaceViewerOverlay {...viewerOverlayProps} />

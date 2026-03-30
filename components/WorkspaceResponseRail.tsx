@@ -11,8 +11,6 @@ type WorkspaceResponseRailProps = {
     structuredOutputMode: StructuredOutputMode | null;
     formattedStructuredOutput: string | null;
     resultPlaceholder: string;
-    thoughtsText: string | null;
-    thoughtsPlaceholder: string;
     onReplacePrompt?: (value: string) => void;
     onAppendPrompt?: (value: string) => void;
 };
@@ -24,20 +22,18 @@ function WorkspaceResponseRail({
     structuredOutputMode,
     formattedStructuredOutput,
     resultPlaceholder,
-    thoughtsText,
-    thoughtsPlaceholder,
     onReplacePrompt,
     onAppendPrompt,
 }: WorkspaceResponseRailProps) {
     const t = (key: string) => getTranslation(currentLanguage, key);
-    const thoughtsBodyText = thoughtsText || thoughtsPlaceholder;
-    const thoughtsStatusLabel = thoughtsText ? t('workspacePanelStatusEnabled') : null;
+    const hasAnswerContent = Boolean(formattedStructuredOutput || resultText?.trim());
     const resultTitle = formattedStructuredOutput
         ? t('workspaceViewerStructuredOutput')
         : t('workspaceViewerResultText');
+    const statusDotClassName = hasAnswerContent ? 'bg-emerald-500 dark:bg-emerald-300' : 'bg-slate-300 dark:bg-slate-600';
 
     return (
-        <section data-testid="workspace-response-rail" className="grid gap-4">
+        <section data-testid="workspace-response-rail" className="grid h-full content-start gap-4">
             <div
                 data-testid="workspace-model-output-card"
                 className="nbu-shell-panel nbu-shell-surface-output-strip min-h-[212px] p-4 md:p-5"
@@ -61,10 +57,12 @@ function WorkspaceResponseRail({
                                 </div>
                             )}
                         </div>
-                        <span className="nbu-status-pill">
-                            {formattedStructuredOutput || resultText
-                                ? t('workspacePanelStatusEnabled')
-                                : t('workspacePanelStatusReserved')}
+                        <span className="nbu-status-pill inline-flex items-center gap-2 whitespace-nowrap">
+                            <span
+                                aria-hidden="true"
+                                className={`h-2 w-2 rounded-full ${statusDotClassName}`}
+                            />
+                            {hasAnswerContent ? t('workspacePanelStatusEnabled') : t('workspacePanelStatusReserved')}
                         </span>
                     </div>
                     <div className="nbu-soft-well min-h-[132px] px-4 py-4 text-sm leading-7 text-slate-700 dark:text-slate-300">
@@ -78,31 +76,6 @@ function WorkspaceResponseRail({
                             onReplacePrompt={onReplacePrompt}
                             onAppendPrompt={onAppendPrompt}
                         />
-                    </div>
-                </div>
-
-                <div
-                    data-testid="workspace-thoughts-card"
-                    className="mt-4 border-t border-slate-200/80 pt-4 dark:border-slate-800"
-                >
-                    <div
-                        data-testid="workspace-thoughts-summary"
-                        className="flex items-start justify-between gap-3"
-                    >
-                        <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                                <span className="text-xs font-black uppercase tracking-[0.14em] text-slate-900 dark:text-slate-100">
-                                    {t('workspaceViewerThoughts')}
-                                </span>
-                                {thoughtsStatusLabel && <span className="nbu-status-pill">{thoughtsStatusLabel}</span>}
-                            </div>
-                        </div>
-                    </div>
-                    <div
-                        data-testid="workspace-thoughts-details"
-                        className="mt-3 nbu-inline-panel px-4 py-4 whitespace-pre-wrap text-sm leading-7 text-slate-700 dark:text-slate-300"
-                    >
-                        {thoughtsBodyText}
                     </div>
                 </div>
             </div>

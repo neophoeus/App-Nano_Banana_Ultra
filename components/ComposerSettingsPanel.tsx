@@ -597,6 +597,7 @@ function ComposerSettingsPanel({
                             <InfoTooltip
                                 content={queueBatchModeSummary}
                                 buttonLabel={t('composerQueueBatchJob')}
+                                ariaLabel={t('queuedBatchJobsTitle')}
                                 dataTestId="composer-queue-batch-mode-hint"
                                 tone="light"
                                 align="right"

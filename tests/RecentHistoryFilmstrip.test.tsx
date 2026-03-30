@@ -28,8 +28,14 @@ describe('RecentHistoryFilmstrip', () => {
                 currentStageSourceHistoryId={null}
                 branchOriginIdByTurnId={{ 'turn-1': 'turn-1' }}
                 branchLabelByTurnId={{ 'turn-1': 'Main' }}
-                branchSummaryByOriginId={{}}
-                activeBranchOriginId={null}
+                branchSummaryByOriginId={{
+                    'turn-1': {
+                        branchOriginId: 'turn-1',
+                        turnCount: 1,
+                        latestTurn: buildTurn({ lineageAction: 'continue' }),
+                    },
+                }}
+                activeBranchOriginId="turn-1"
                 onClear={vi.fn()}
                 onHistorySelect={vi.fn()}
                 onContinueFromHistoryTurn={vi.fn()}
@@ -53,6 +59,8 @@ describe('RecentHistoryFilmstrip', () => {
         expect(markup).toContain('filmstrip-desc-trigger');
         expect(markup).not.toContain('filmstrip-desc-details');
         expect(markup).not.toContain('filmstrip-desc-summary');
+        expect(markup).toContain('filmstrip-active-branch');
+        expect(markup).toContain('Current version · Main');
         expect(markup).toContain('Recent Turns');
         expect(markup).not.toContain('Open gallery');
     });

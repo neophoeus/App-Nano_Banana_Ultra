@@ -36,7 +36,7 @@ vi.mock('../components/WorkspaceViewerOverlay', () => ({
 }));
 
 describe('WorkspaceOverlayStack', () => {
-    it('renders the localized suspense fallback for the replay dialog during SSR', () => {
+    it('renders the base picker and viewer overlays when optional dialogs are absent', () => {
         const markup = renderToStaticMarkup(
             <WorkspaceOverlayStack
                 notification={null}
@@ -54,23 +54,15 @@ describe('WorkspaceOverlayStack', () => {
                 onSketchReplaceCancel={vi.fn()}
                 onSketchReplaceConfirm={vi.fn()}
                 branchRenameDialogProps={null}
-                sessionReplayDialogProps={{
-                    currentLanguage: 'ja',
-                    logs: [],
-                    onClose: vi.fn(),
-                    currentStageSourceShortId: null,
-                    onOpenCurrentStageSource: undefined,
-                }}
                 imageEditorSurface={null}
                 pickerSheetProps={{} as any}
                 viewerOverlayProps={{} as any}
             />,
         );
 
-        expect(markup).toContain('アクティビティコンソールを読み込み中...');
-        expect(markup).not.toContain('このワークスペースに保存されたワークフロータイムラインを再生します。');
         expect(markup).toContain('mock-workspace-picker-sheet');
         expect(markup).toContain('mock-workspace-viewer-overlay');
+        expect(markup).not.toContain('mock-workspace-modal');
     });
 
     it('renders sketch replace confirm with shared summary and action sections', () => {
@@ -91,7 +83,6 @@ describe('WorkspaceOverlayStack', () => {
                 onSketchReplaceCancel={vi.fn()}
                 onSketchReplaceConfirm={vi.fn()}
                 branchRenameDialogProps={null}
-                sessionReplayDialogProps={null}
                 imageEditorSurface={null}
                 pickerSheetProps={{} as any}
                 viewerOverlayProps={{} as any}

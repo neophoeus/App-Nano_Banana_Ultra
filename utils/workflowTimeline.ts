@@ -146,25 +146,25 @@ export type WorkflowEntry = {
 
 export const getWorkflowEntryLabelKey = (entry: Pick<WorkflowEntry, 'stage' | 'label'>): string => {
     if (entry.label === 'Cancelled') {
-        return 'sessionReplayLabelCancelled';
+        return 'workflowStageLabelCancelled';
     }
 
     switch (entry.stage) {
         case 'input':
-            return 'sessionReplayLabelInput';
+            return 'workflowStageLabelInput';
         case 'request':
-            return 'sessionReplayLabelRequest';
+            return 'workflowStageLabelRequest';
         case 'processing':
-            return 'sessionReplayLabelProcessing';
+            return 'workflowStageLabelProcessing';
         case 'output':
-            return 'sessionReplayLabelOutput';
+            return 'workflowStageLabelOutput';
         case 'history':
-            return 'sessionReplayLabelHistory';
+            return 'workflowStageLabelHistory';
         case 'error':
-            return 'sessionReplayLabelError';
+            return 'workflowStageLabelError';
         case 'system':
         default:
-            return 'sessionReplayLabelSystem';
+            return 'workflowStageLabelSystem';
     }
 };
 

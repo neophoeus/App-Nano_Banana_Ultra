@@ -33,7 +33,7 @@ const localizedText = (message: string) => {
         case 'Workspace Restored':
             return tt('workspaceRestoreTitle');
         case 'Current Stage Source':
-            return tt('sessionReplayCurrentStageSource');
+            return tt('workflowCurrentStageSource');
         case 'Stage Source':
             return tt('workspacePickerStageSource');
         case 'Source':
@@ -662,7 +662,6 @@ const visibleFilmstripCard = (page: Page) => page.locator('[data-testid^="filmst
 const currentStageSourceCard = (page: Page) => page.locator('[data-testid="current-stage-source"]:visible').first();
 const activeBranchCard = (page: Page) => page.locator('[data-testid="active-branch-card"]:visible').first();
 const lineageMap = (page: Page) => page.locator('[data-testid="lineage-map-card"]:visible').first();
-const firstSessionStackCard = (page: Page) => page.locator('[data-testid^="session-stack-card-"]:visible').first();
 const firstLineageMapTurn = (page: Page) => page.locator('[data-testid^="lineage-map-turn-"]:visible').first();
 const generateButton = (page: Page) => page.getByRole('button', { name: tt('generate') }).first();
 
@@ -858,9 +857,7 @@ const assertStageSourceSurfaces = async (
         branchLabel: options.branchLabel,
     });
     await expect(page.getByTestId('filmstrip-stage-source-badge')).toContainText(localizedText('Stage Source'));
-    await expect(page.locator('[data-testid="timeline-stage-source-entry"]:visible').first()).toContainText(
-        timelineText,
-    );
+    await expect(page.locator('[data-testid="context-workflow-summary"]:visible').first()).toContainText(timelineText);
     await expect(page.getByTestId('global-log-stage-source-entry')).toHaveCount(0);
     await expect(page.getByTestId('global-log-stage-source-badge')).toHaveCount(0);
     await expect(page.getByTestId('global-log-minimized-source')).toHaveCount(0);
@@ -872,7 +869,8 @@ const assertStageSourceSurfaces = async (
         await expect(page.getByTestId('global-health-gemini-key')).toContainText(tt('statusPanelGeminiKey'));
         await expect(page.getByTestId('global-health-last-check')).toContainText(tt('statusPanelLastCheck'));
     } else {
-        await expect(page.getByTestId('global-health-summary').first()).toContainText(tt('consoleSystem'));
+        await expect(page.getByTestId('global-health-summary').first()).toContainText(tt('statusPanelLocalApi'));
+        await expect(page.getByTestId('global-health-summary').first()).toContainText(tt('statusPanelGeminiKey'));
     }
 };
 
@@ -1185,51 +1183,6 @@ const assertOfficialConversationPostGenerateState = async (page: Page, prompt: s
         activeSourceShortId: persistedState!.generatedTurn.id.slice(0, 8),
         prompt,
     });
-};
-
-const openSessionReplay = async (page: Page) => {
-    await ensureWorkspaceInsightsExpanded(page);
-    await clickFirstVisible(page.getByTestId('open-session-replay'));
-
-    const replayDialog = page.getByTestId('session-replay-dialog');
-    await expect(replayDialog).toBeVisible();
-    await expect(replayDialog.getByText(tt('sessionReplayEyebrow'), { exact: true })).toBeVisible();
-    await expect(replayDialog.getByText(tt('sessionReplayTitle'), { exact: true })).toBeVisible();
-    return replayDialog;
-};
-
-const expectSessionReplayLocalizedChrome = async (
-    page: Page,
-    replayDialog: ReturnType<Page['getByTestId']>,
-    language: Language,
-) => {
-    const t = (key: string, ...values: string[]) =>
-        values.reduce((message, value, index) => message.replace(`{${index}}`, value), getTranslation(language, key));
-
-    await setWorkspaceLanguage(page, language);
-    await expect(replayDialog.getByText(t('sessionReplayEyebrow'), { exact: true })).toBeVisible();
-    await expect(replayDialog.getByText(t('sessionReplayTitle'), { exact: true })).toBeVisible();
-    await expect(replayDialog.getByRole('button', { name: t('sessionReplayPrev') })).toBeVisible();
-    await expect(replayDialog.getByRole('button', { name: t('sessionReplayNext') })).toBeVisible();
-    await expect(replayDialog).toContainText(t('sessionReplayTimeline'));
-    await expect(replayDialog).toContainText(t('sessionReplayLabelHistory'));
-
-    if ((await replayDialog.getByTestId('session-replay-jump-source').count()) > 0) {
-        await expect(replayDialog.getByTestId('session-replay-jump-source')).toContainText(
-            t('sessionReplayJumpToSource'),
-        );
-        await replayDialog.getByTestId('session-replay-jump-source').click();
-        await expect(replayDialog.getByRole('button', { name: t('sessionReplayJumpToLatest') })).toBeVisible();
-        await expect(replayDialog.getByTestId('session-replay-stage-source-badge')).toContainText(
-            t('sessionReplayCurrentStageSource'),
-        );
-        await expect(replayDialog.getByTestId('session-replay-active')).toContainText(t('sessionReplayLabelHistory'));
-        await expect(replayDialog.getByTestId('session-replay-source-open')).toContainText(
-            t('historyActionOpenInHistory'),
-        );
-        await expect(replayDialog.getByTestId('session-replay-source-continue')).toHaveCount(0);
-        await expect(replayDialog.getByTestId('session-replay-source-branch')).toHaveCount(0);
-    }
 };
 
 const setWorkspaceLanguageWithin = async (target: Page | Locator, language: Language) => {
@@ -1768,11 +1721,13 @@ test.describe('workspace restore flows', () => {
         await page.getByTestId('workspace-restore-continue').click();
 
         await expect(page.getByText(tt('workspaceRestoreTitle'))).toHaveCount(0);
-        await expect(composer(page)).toHaveValue('Imported branch turn');
-        await ensureDetailsExpanded(page, 'timeline-history-section');
-        await expect(page.locator('[data-testid="timeline-history-section"]:visible').first()).toContainText(
-            localizedText('History loaded.'),
-        );
+        await assertStageSourceSurfaces(page, {
+            composerValue: 'Imported branch turn',
+            followUpSource: 'Continue',
+            toastMessage: 'History turn is now the active continuation source.',
+            timelineText: 'History turn aligned as active continuation source',
+            branchLabel: 'Imported Branch',
+        });
     });
 
     test('import review replace plus open latest skips the restore notice and reopens the imported turn immediately', async ({
@@ -1919,12 +1874,14 @@ test.describe('workspace restore flows', () => {
         await expect(
             page.getByText(localizedText('History turn reopened as the current stage source.'), { exact: true }),
         ).toBeVisible();
-        await expect(composer(page)).toHaveValue('Imported branch turn');
-        await ensureWorkspaceInsightsExpanded(page);
-        await ensureDetailsExpanded(page, 'timeline-history-section');
-        await expect(page.locator('[data-testid="timeline-history-section"]:visible').first()).toContainText(
-            localizedText('History loaded.'),
-        );
+        await assertStageSourceSurfaces(page, {
+            composerValue: 'Imported branch turn',
+            followUpSource: 'Reopen',
+            toastMessage: 'History turn reopened as the current stage source.',
+            timelineText: 'History turn reopened as current stage source',
+            branchLabel: 'Imported Branch',
+            globalLogMode: 'expanded',
+        });
         await assertCurrentStageSourceCard(page, {
             sourceLabel: tt('stageOriginHistory'),
             actionLabel: 'Reopen',
@@ -1933,26 +1890,10 @@ test.describe('workspace restore flows', () => {
         });
         await expect(currentStageSourceCard(page).getByTestId('current-stage-source-continue')).toHaveCount(0);
         await expect(currentStageSourceCard(page).getByTestId('current-stage-source-branch')).toHaveCount(0);
-        await expect(page.getByTestId('filmstrip-stage-source-badge')).toContainText(localizedText('Stage Source'));
-        await ensureDetailsExpanded(page, 'session-stack-section');
-        await expect(page.locator('[data-testid="session-stage-source-badge"]:visible').first()).toContainText(
-            localizedText('Stage Source'),
-        );
-        await expect(page.locator('[data-testid="timeline-stage-source-badge"]:visible').first()).toContainText(
+        await expect(page.getByTestId('session-continuity-stage-badge')).toContainText(
             localizedText('Current Stage Source'),
         );
-        await expect(page.locator('[data-testid="timeline-stage-source-entry"]:visible').first()).toContainText(
-            localizedText('History turn reopened as current stage source'),
-        );
-        await expect(page.locator('[data-testid="timeline-source-open"]:visible').first()).toBeVisible();
-        await expect(page.getByTestId('timeline-source-continue')).toHaveCount(0);
-        await expect(page.getByTestId('timeline-source-branch')).toHaveCount(0);
-        await page.getByTestId('global-health-toggle').click();
-        await expect(page.getByTestId('global-health-panel')).toBeVisible();
-        await expect(page.getByTestId('global-health-summary').last()).toContainText(tt('consoleSystem'));
-        await expect(page.getByTestId('global-health-local-api')).toContainText(tt('statusPanelLocalApi'));
-        await expect(page.getByTestId('global-health-gemini-key')).toContainText(tt('statusPanelGeminiKey'));
-        await expect(page.getByTestId('global-health-last-check')).toContainText(tt('statusPanelLastCheck'));
+        await expect(page.getByTestId('session-continuity-open')).toBeVisible();
         await expect(page.getByTestId('global-log-stage-source-pill')).toHaveCount(0);
         await expect(page.getByTestId('global-log-stage-source-badge')).toHaveCount(0);
         await expect(page.getByTestId('global-log-stage-source-entry')).toHaveCount(0);
@@ -1972,9 +1913,8 @@ test.describe('workspace restore flows', () => {
         const stageSourceCard = currentStageSourceCard(page);
         await ensureDetailsExpanded(page, 'current-stage-source-shell');
         await ensureDetailsExpanded(page, 'current-stage-source-details');
-        await ensureDetailsExpanded(page, 'session-stack-section');
-        const bravoVariantCard = page.locator('[data-testid="session-stack-card-bravo-v2-turn"]:visible').first();
-        const alphaVariantCard = page.locator('[data-testid="session-stack-card-alpha-v1-turn"]:visible').first();
+        const bravoVariantCard = page.locator('[data-testid="filmstrip-card-bravo-v2-turn"]:visible').first();
+        const alphaVariantCard = page.locator('[data-testid="filmstrip-card-alpha-v1-turn"]:visible').first();
 
         await expect(stageSourceCard).toContainText('Variant candidate B');
         await expect(stageSourceCard).toContainText(localizedText('Candidate'));
@@ -1993,8 +1933,8 @@ test.describe('workspace restore flows', () => {
         ).toBeVisible();
         await expect(stageSourceCard).toContainText(localizedText('Source'));
         await expect(stageSourceCard.getByTestId('current-stage-source-continue')).toHaveCount(0);
-        await expect(bravoVariantCard).toContainText(localizedText('Source'));
-        await expect(alphaVariantCard).toContainText(localizedText('Candidate'));
+        await expect(bravoVariantCard).toBeVisible();
+        await expect(alphaVariantCard).toBeVisible();
         await expect(activeBranchCard(page)).toContainText(`${localizedText('Continuation source ')}bravo-v2`);
         await expect(page.locator('[data-testid="active-branch-continue-latest"]:visible').first()).toContainText(
             localizedText('Source Active'),
@@ -2007,8 +1947,8 @@ test.describe('workspace restore flows', () => {
         ).toBeVisible();
         await expect(currentStageSourceCard(page)).toContainText('Variant candidate A');
         await expect(currentStageSourceCard(page)).toContainText(localizedText('Source'));
-        await expect(alphaVariantCard).toContainText(localizedText('Source'));
-        await expect(bravoVariantCard).toContainText(localizedText('Candidate'));
+        await expect(alphaVariantCard).toBeVisible();
+        await expect(bravoVariantCard).toBeVisible();
         await expect(activeBranchCard(page)).toContainText(`${localizedText('Continuation source ')}alpha-v1`);
         await expect(page.locator('[data-testid="active-branch-continue-latest"]:visible').first()).toContainText(
             localizedText('Promote Variant'),
@@ -2207,41 +2147,6 @@ test.describe('workspace restore flows', () => {
             expectOpenAction: true,
         });
         await expect(page.getByTestId('filmstrip-stage-source-badge')).toContainText(localizedText('Stage Source'));
-    });
-
-    test('session turn stack open reopens the latest turn across source surfaces', async ({ page }) => {
-        await openFreshWorkspace(page);
-        await replaceWithImportedWorkspace(page);
-        await dismissRestoreNotice(page);
-
-        await ensureDetailsExpanded(page, 'session-stack-section');
-
-        await firstSessionStackCard(page).locator('[data-testid^="session-stack-open-"]').click();
-
-        await assertStageSourceSurfaces(page, {
-            composerValue: 'Imported branch turn',
-            followUpSource: 'Reopen',
-            toastMessage: 'History turn reopened as the current stage source.',
-            timelineText: 'History turn reopened as current stage source',
-            branchLabel: 'Imported Branch',
-        });
-        await expect(page.getByTestId('session-stage-source-badge').first()).toContainText(
-            localizedText('Stage Source'),
-        );
-    });
-
-    test('session turn stack keeps a single history-open route without sidebar-local continue or branch actions', async ({
-        page,
-    }) => {
-        await openFreshWorkspace(page);
-        await replaceWithImportedWorkspace(page);
-        await dismissRestoreNotice(page);
-
-        await ensureDetailsExpanded(page, 'session-stack-section');
-
-        await expect(firstSessionStackCard(page).locator('[data-testid^="session-stack-open-"]')).toBeVisible();
-        await expect(firstSessionStackCard(page).locator('[data-testid^="session-stack-continue-"]')).toHaveCount(0);
-        await expect(firstSessionStackCard(page).locator('[data-testid^="session-stack-branch-"]')).toHaveCount(0);
     });
 
     test('lineage map open reopens the selected turn across source surfaces', async ({ page }) => {
@@ -3057,51 +2962,7 @@ test.describe('workspace restore flows', () => {
         await expect(detailPanel).toContainText('Skyline silhouette with mountain backdrop');
     });
 
-    test('session replay reopens imported workflow logs from the workspace snapshot', async ({ page }) => {
-        await openFreshWorkspace(page);
-        await replaceWithImportedWorkspace(
-            page,
-            liveProvenanceSnapshotFilePath,
-            'ui-import-provenance-live-workspace.json',
-        );
-        await dismissRestoreNotice(page);
-
-        const replayDialog = await openSessionReplay(page);
-        await expect(replayDialog.getByTestId('session-replay-active')).toContainText(
-            localizedMessageByKey('workspaceSnapshotImportedLog', 'ui-import-provenance-live-workspace.json', '1'),
-        );
-
-        await replayDialog.getByRole('button', { name: tt('sessionReplayPrev') }).click();
-        await expect(replayDialog.getByTestId('session-replay-active')).toContainText(localizedText('History loaded.'));
-
-        await replayDialog.getByRole('button', { name: tt('sessionReplayPrev') }).click();
-        await expect(replayDialog.getByTestId('session-replay-active')).toContainText(
-            'Success: Live grounded result saved.',
-        );
-        await replayDialog.getByTestId('session-replay-entry-0').click();
-        await expect(replayDialog.getByTestId('session-replay-active')).toContainText(
-            'Requesting grounded image generation.',
-        );
-    });
-
-    test('session replay localizes replay chrome, stage labels, and source actions after import', async ({ page }) => {
-        await openFreshWorkspace(page);
-        await replaceWithImportedWorkspace(page);
-        await page
-            .getByTestId('workspace-restore-notice')
-            .getByRole('button', { name: tt('workspaceRestoreOpenLatest') })
-            .click();
-
-        const replayDialog = await openSessionReplay(page);
-
-        await expectSessionReplayLocalizedChrome(page, replayDialog, 'ja');
-        await expectSessionReplayLocalizedChrome(page, replayDialog, 'es');
-        await expectSessionReplayLocalizedChrome(page, replayDialog, 'fr');
-        await expectSessionReplayLocalizedChrome(page, replayDialog, 'de');
-        await expectSessionReplayLocalizedChrome(page, replayDialog, 'ru');
-    });
-
-    test('reload keeps persisted workflow logs available for session replay', async ({ page }) => {
+    test('reload keeps persisted workflow logs surfaced in current work summary', async ({ page }) => {
         await openWorkspaceWithSnapshot(page, {
             history: [
                 {
@@ -3171,7 +3032,9 @@ test.describe('workspace restore flows', () => {
         ]);
 
         await ensureWorkspaceInsightsExpanded(page);
-        await expect(page.locator('[data-testid="open-session-replay"]:visible').first()).toBeVisible();
+        await expect(page.locator('[data-testid="context-workflow-summary"]:visible').first()).toContainText(
+            'Reload log history loaded',
+        );
     });
 
     test('narrow shell owner routes keep actions, advanced settings, and workflow log reachable after import', async ({
@@ -3222,18 +3085,12 @@ test.describe('workspace restore flows', () => {
                 element.open = true;
             }
         });
-        const contextTimeline = page.locator('[data-testid="context-timeline-section"]:visible').first();
-        await expect(contextTimeline).toContainText(tt('workspaceInsightsTimelineTitle'));
-
-        const timelineHistory = page.locator('[data-testid="timeline-history-section"]:visible').first();
-        await timelineHistory.evaluate((element) => {
-            if (element instanceof HTMLDetailsElement) {
-                element.open = true;
-            }
-        });
-        await expect(timelineHistory).toContainText(localizedText('History loaded.'));
-        await expect(timelineHistory).toContainText('Requesting grounded image generation.');
-        await expect(timelineHistory).toContainText('Success: Live grounded result saved.');
+        const contextWorkflow = page.locator('[data-testid="context-workflow-summary"]:visible').first();
+        await expect(contextWorkflow).toBeVisible();
+        await expect(contextWorkflow).toContainText(
+            localizedMessageByKey('workspaceSnapshotImportedLog', 'ui-import-provenance-live-workspace.json', '1'),
+        );
+        await expect(page.getByTestId('current-stage-source')).toBeVisible();
     });
 
     test('desktop shell owner layout keeps model output, context rail, and provenance separated after import', async ({
@@ -3252,8 +3109,7 @@ test.describe('workspace restore flows', () => {
         await expect(responseRail).toBeVisible();
         await expect(responseRail.getByTestId('workspace-model-output-card')).toBeVisible();
         await expect(responseRail.getByTestId('workspace-response-text-card')).toBeVisible();
-        await expect(responseRail.getByTestId('workspace-thoughts-card')).toBeVisible();
-        await expect(responseRail.getByTestId('context-workflow-summary')).toHaveCount(0);
+        await expect(responseRail.getByTestId('workspace-thoughts-card')).toHaveCount(0);
 
         const sideTools = page.locator('[data-testid="workspace-side-tool-panel"]:visible').first();
         await expect(sideTools).toBeVisible();
@@ -3274,15 +3130,7 @@ test.describe('workspace restore flows', () => {
         await expect(contextWorkflow).toContainText(
             localizedMessageByKey('workspaceSnapshotImportedLog', 'ui-import-provenance-live-workspace.json', '1'),
         );
-
-        const timelineHistory = page.locator('[data-testid="timeline-history-section"]:visible').first();
-        await timelineHistory.evaluate((element) => {
-            if (element instanceof HTMLDetailsElement) {
-                element.open = true;
-            }
-        });
-        await expect(timelineHistory).toContainText(localizedText('History loaded.'));
-        await expect(timelineHistory).toContainText('Requesting grounded image generation.');
+        await expect(desktopInsights.getByTestId('current-work-thoughts-section')).toBeVisible();
     });
 
     test('dark mode keeps shell owner surfaces readable after import', async ({ page }) => {
@@ -3304,7 +3152,7 @@ test.describe('workspace restore flows', () => {
 
         const responseRail = page.locator('[data-testid="workspace-response-rail"]:visible').first();
         await expect(responseRail.getByTestId('workspace-model-output-card')).toBeVisible();
-        await expect(responseRail.getByTestId('workspace-thoughts-card')).toBeVisible();
+        await expect(responseRail.getByTestId('workspace-thoughts-card')).toHaveCount(0);
 
         const provenancePanel = visibleProvenancePanel(page);
         await expect(provenancePanel).toBeVisible();
@@ -3322,6 +3170,7 @@ test.describe('workspace restore flows', () => {
         await expect(contextWorkflow).toContainText(
             localizedMessageByKey('workspaceSnapshotImportedLog', 'ui-import-provenance-live-workspace.json', '1'),
         );
+        await expect(desktopInsights.getByTestId('current-work-thoughts-section')).toBeVisible();
 
         await page.getByRole('button', { name: tt('composerToolbarAdvancedSettings') }).click();
         await expect(
@@ -3444,7 +3293,10 @@ test.describe('workspace restore flows', () => {
             tt('workspaceViewerStructuredOutput'),
         );
         await expect(responseRail.getByTestId('workspace-model-output-card')).toContainText('Night portrait');
-        await expect(responseRail.getByTestId('workspace-thoughts-card')).toBeVisible();
+        await expect(responseRail.getByTestId('workspace-thoughts-card')).toHaveCount(0);
+
+        await ensureWorkspaceInsightsExpanded(page);
+        await expect(page.getByTestId('current-work-thoughts-section')).toBeVisible();
 
         await page
             .getByTestId('workspace-history-focus-state')
@@ -3615,25 +3467,5 @@ test.describe('workspace restore flows', () => {
         await expect(visibleComposer).toHaveValue(
             tt('groundingProvenanceReferenceSource', 'Taipei Skyline Images', 'example.com'),
         );
-    });
-
-    test('session replay current source entry exposes direct source actions', async ({ page }) => {
-        await openFreshWorkspace(page);
-        await replaceWithImportedWorkspace(page);
-
-        await page
-            .getByTestId('workspace-restore-notice')
-            .getByRole('button', { name: tt('workspaceRestoreOpenLatest') })
-            .click();
-
-        const replayDialog = await openSessionReplay(page);
-        await expect(replayDialog.getByTestId('session-replay-jump-source')).toBeVisible();
-        await replayDialog.getByTestId('session-replay-jump-source').click();
-        await expect(replayDialog.getByTestId('session-replay-stage-source-badge')).toContainText(
-            localizedText('Current Stage Source'),
-        );
-        await expect(replayDialog.getByTestId('session-replay-source-open')).toBeVisible();
-        await expect(replayDialog.getByTestId('session-replay-source-continue')).toHaveCount(0);
-        await expect(replayDialog.getByTestId('session-replay-source-branch')).toHaveCount(0);
     });
 });

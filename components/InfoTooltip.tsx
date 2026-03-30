@@ -3,6 +3,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 type InfoTooltipProps = {
     content: React.ReactNode;
     buttonLabel: string;
+    ariaLabel?: string;
     dataTestId?: string;
     tone?: 'light' | 'dark';
     align?: 'left' | 'right';
@@ -11,6 +12,7 @@ type InfoTooltipProps = {
 export default function InfoTooltip({
     content,
     buttonLabel,
+    ariaLabel,
     dataTestId,
     tone = 'light',
     align = 'left',
@@ -69,7 +71,7 @@ export default function InfoTooltip({
         >
             <button
                 type="button"
-                aria-label={buttonLabel}
+                aria-label={ariaLabel || buttonLabel}
                 aria-describedby={isOpen ? tooltipId : undefined}
                 aria-expanded={isOpen}
                 data-testid={dataTestId ? `${dataTestId}-trigger` : undefined}

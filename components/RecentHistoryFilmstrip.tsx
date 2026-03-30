@@ -6,6 +6,7 @@ import InfoTooltip from './InfoTooltip';
 
 type BranchSummary = {
     branchOriginId: string;
+    branchLabel?: string;
     turnCount: number;
     latestTurn: GeneratedImage;
 };
@@ -69,6 +70,12 @@ function RecentHistoryFilmstrip({
 
         return continueLabel;
     };
+    const activeBranchSummary = activeBranchOriginId ? branchSummaryByOriginId[activeBranchOriginId] || null : null;
+    const activeBranchLabel = activeBranchSummary
+        ? activeBranchSummary.branchLabel ||
+          branchLabelByTurnId[activeBranchSummary.latestTurn.id] ||
+          t('historyBranchMain')
+        : null;
     const summaryLabel = t('historyFilmstripSummary')
         .replace('{0}', String(recentHistory.length))
         .replace('{1}', String(branchCount));
@@ -92,6 +99,14 @@ function RecentHistoryFilmstrip({
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
+                    {activeBranchSummary ? (
+                        <span
+                            data-testid="filmstrip-active-branch"
+                            className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${getBranchAccentClassName(activeBranchSummary.branchOriginId, activeBranchLabel || t('historyBranchMain'))}`}
+                        >
+                            {t('workspaceInsightsActiveBranch')} · {activeBranchLabel}
+                        </span>
+                    ) : null}
                     <span
                         data-testid="filmstrip-summary"
                         className="nbu-stage-hero-filmstrip-summary rounded-full border px-3 py-1 text-[11px] font-semibold text-gray-500 dark:text-gray-300"

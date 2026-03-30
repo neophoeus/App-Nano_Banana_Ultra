@@ -21,10 +21,10 @@ import ComposerSettingsPanel from './components/ComposerSettingsPanel';
 import PanelLoadingFallback from './components/PanelLoadingFallback';
 import SurfaceLoadingFallback from './components/SurfaceLoadingFallback';
 import WorkspaceHistoryCanvas from './components/WorkspaceHistoryCanvas';
-import WorkspaceInsightsHeaderSummary from './components/WorkspaceInsightsHeaderSummary';
 import WorkspaceInsightsSidebar from './components/WorkspaceInsightsSidebar';
 import WorkspaceOverlayStack from './components/WorkspaceOverlayStack';
 import WorkspaceResponseRail from './components/WorkspaceResponseRail';
+import WorkspaceSourcesCitationsPanel from './components/WorkspaceSourcesCitationsPanel';
 import WorkspaceSideToolPanel from './components/WorkspaceSideToolPanel';
 import WorkspaceTopHeader from './components/WorkspaceTopHeader';
 import { Language, ensureLanguageLoaded, getTranslation } from './utils/translations';
@@ -84,7 +84,7 @@ import { useLegacyWorkspaceSnapshotMigration } from './hooks/useLegacyWorkspaceS
 
 const ImageEditor = lazy(() => import('./components/ImageEditor'));
 const GeneratedImage = lazy(() => import('./components/GeneratedImage'));
-const GlobalLogConsole = lazy(() => import('./components/GlobalLogConsole'));
+const WorkspaceHealthPanel = lazy(() => import('./components/WorkspaceHealthPanel'));
 const GroundingProvenancePanel = lazy(() => import('./components/GroundingProvenancePanel'));
 const SketchPad = lazy(() => import('./components/SketchPad'));
 const getShortTurnId = (historyId?: string | null) => (historyId ? historyId.slice(0, 8) : '--------');
@@ -125,8 +125,6 @@ const App: React.FC = () => {
         setBranchRenameDraft,
         openBranchRenameDialog,
         closeBranchRenameDialog,
-        isSessionReplayOpen,
-        setIsSessionReplayOpen,
         isSurfaceSharedControlsOpen,
         setIsSurfaceSharedControlsOpen,
         openSurfacePickerSheet,
@@ -349,7 +347,6 @@ const App: React.FC = () => {
     );
 
     const recentHistory = useMemo(() => history.slice(0, 12), [history]);
-    const sessionTurnStack = useMemo(() => history.filter((item) => item.status === 'success').slice(0, 4), [history]);
     const {
         successfulHistory,
         branchLabelByTurnId,
@@ -824,7 +821,7 @@ const App: React.FC = () => {
     const {
         viewSettings,
         currentStageSourceShortId,
-        timelineEntries,
+        latestWorkflowEntry,
         activeSheetTitle,
         isSurfaceWorkspaceOpen,
         floatingControlsZIndex,
@@ -875,7 +872,6 @@ const App: React.FC = () => {
         groundingResolutionStatusTone,
         sessionUpdatedLabel,
         sessionContinuitySignals,
-        insightRows,
         selectedSources,
         selectedSupportBundles,
         activeSupportBundle,
@@ -887,15 +883,13 @@ const App: React.FC = () => {
         relatedSourcesForSelectedBundle,
         otherSourcesForSelectedBundle,
         relatedBundlesForSelectedSource,
-        activeGroundingReuseSnippet,
-        activeGroundingReuseLabel,
+        displayedSources,
+        displayedSupportBundles,
         activeGroundingAppendPreview,
         activeGroundingReplacePreview,
         activeGroundingHasExistingPrompt,
         activeGroundingCurrentPromptText,
         activeGroundingAppendCueText,
-        displayedSources,
-        displayedSupportBundles,
         groundingQueries,
         searchEntryPointRenderedContent,
         attributionOverviewRows,
@@ -908,6 +902,8 @@ const App: React.FC = () => {
         formatSessionHintKey,
         formatSessionHintValue,
         formatSourceHost,
+        activeGroundingReuseSnippet,
+        activeGroundingReuseLabel,
         handleAppendGroundingSelectionToPrompt,
         handleReplacePromptWithGroundingSelection,
         thoughtStateMessage,
@@ -939,7 +935,6 @@ const App: React.FC = () => {
     });
     const groundingProvenancePanelProps = useGroundingProvenancePanelProps({
         currentLanguage: currentLang,
-        insightRows,
         provenanceSummaryRows,
         attributionOverviewRows,
         provenanceSourceTurn,
@@ -952,6 +947,8 @@ const App: React.FC = () => {
         setActiveGroundingSelection,
         focusLinkedGroundingItems,
         setFocusLinkedGroundingItems,
+        totalSourceCount: selectedSources.length,
+        totalSupportBundleCount: selectedSupportBundles.length,
         displayedSources,
         displayedSupportBundles,
         uncitedSources,
@@ -983,90 +980,76 @@ const App: React.FC = () => {
         groundingQueries,
         searchEntryPointRenderedContent,
     });
-    const {
-        surfaceSharedControlsProps,
-        restoreNoticeProps,
-        importReviewProps,
-        branchRenameDialogProps,
-        sessionReplayDialogProps,
-    } = useWorkspaceOverlayAuxiliaryProps({
-        isSurfaceWorkspaceOpen,
-        isSurfaceSharedControlsOpen,
-        isAdvancedSettingsOpen,
-        isEditing,
-        activeSurfaceSheetLabel,
-        activePickerSheet,
-        surfacePromptPreview,
-        totalReferenceCount,
-        imageStyle,
-        imageModel,
-        aspectRatio,
-        imageSize,
-        batchSize,
-        objectImageCount: objectImages.length,
-        characterImageCount: characterImages.length,
-        maxObjects: capability.maxObjects,
-        maxCharacters: capability.maxCharacters,
-        floatingControlsZIndex,
-        currentLanguage: currentLang,
-        onLanguageChange: handleLanguageChange,
-        setIsSurfaceSharedControlsOpen,
-        setIsAdvancedSettingsOpen,
-        openSurfacePickerSheet,
-        getStyleLabel,
-        getModelLabel,
-        showWorkspaceRestoreNotice,
-        historyCount: history.length,
-        stagedAssetCount: stagedAssets.length,
-        viewerImageCount: generatedImageUrls.length,
-        activeBranchLabel: activeBranchSummary?.branchLabel || null,
-        latestRestorableTurn,
-        latestSuccessfulRestorableTurn,
-        handleHistorySelect,
-        handleContinueFromHistoryTurn,
-        handleBranchFromHistoryTurn,
-        setShowWorkspaceRestoreNotice,
-        getContinueActionLabel,
-        handleStartNewConversation,
-        openPromptSheet: () => setActivePickerSheet('prompt'),
-        openGallerySheet: () => setActivePickerSheet('gallery'),
-        openPromptHistorySheet: () => setActivePickerSheet('history'),
-        openReferencesSheet: () => setActivePickerSheet('references'),
-        workspaceImportReview,
-        importedBranchSummaries,
-        importedLatestTurn,
-        importedLatestSuccessfulTurn,
-        isImportedPromotedContinuationSource,
-        getImportedContinueActionLabel,
-        handleCloseWorkspaceImportReview,
-        handleMergeImportedWorkspaceSnapshot,
-        handleApplyImportedWorkspaceSnapshot,
-        importReviewBranchActions,
-        branchRenameDialog,
-        getShortTurnId,
-        branchRenameDraft,
-        setBranchRenameDraft,
-        closeBranchRenameDialog,
-        handleSubmitBranchRename,
-        isSessionReplayOpen,
-        logs,
-        currentStageSourceShortId,
-        currentStageSourceTurn,
-        setIsSessionReplayOpen,
-    });
-    const handleOpenSessionReplay = useCallback(() => {
-        setIsSessionReplayOpen(true);
-    }, [setIsSessionReplayOpen]);
+    const { surfaceSharedControlsProps, restoreNoticeProps, importReviewProps, branchRenameDialogProps } =
+        useWorkspaceOverlayAuxiliaryProps({
+            isSurfaceWorkspaceOpen,
+            isSurfaceSharedControlsOpen,
+            isAdvancedSettingsOpen,
+            isEditing,
+            activeSurfaceSheetLabel,
+            activePickerSheet,
+            surfacePromptPreview,
+            totalReferenceCount,
+            imageStyle,
+            imageModel,
+            aspectRatio,
+            imageSize,
+            batchSize,
+            objectImageCount: objectImages.length,
+            characterImageCount: characterImages.length,
+            maxObjects: capability.maxObjects,
+            maxCharacters: capability.maxCharacters,
+            floatingControlsZIndex,
+            currentLanguage: currentLang,
+            onLanguageChange: handleLanguageChange,
+            setIsSurfaceSharedControlsOpen,
+            setIsAdvancedSettingsOpen,
+            openSurfacePickerSheet,
+            getStyleLabel,
+            getModelLabel,
+            showWorkspaceRestoreNotice,
+            historyCount: history.length,
+            stagedAssetCount: stagedAssets.length,
+            viewerImageCount: generatedImageUrls.length,
+            activeBranchLabel: activeBranchSummary?.branchLabel || null,
+            latestRestorableTurn,
+            latestSuccessfulRestorableTurn,
+            handleHistorySelect,
+            handleContinueFromHistoryTurn,
+            handleBranchFromHistoryTurn,
+            setShowWorkspaceRestoreNotice,
+            getContinueActionLabel,
+            handleStartNewConversation,
+            openPromptSheet: () => setActivePickerSheet('prompt'),
+            openGallerySheet: () => setActivePickerSheet('gallery'),
+            openPromptHistorySheet: () => setActivePickerSheet('history'),
+            openReferencesSheet: () => setActivePickerSheet('references'),
+            workspaceImportReview,
+            importedBranchSummaries,
+            importedLatestTurn,
+            importedLatestSuccessfulTurn,
+            isImportedPromotedContinuationSource,
+            getImportedContinueActionLabel,
+            handleCloseWorkspaceImportReview,
+            handleMergeImportedWorkspaceSnapshot,
+            handleApplyImportedWorkspaceSnapshot,
+            importReviewBranchActions,
+            branchRenameDialog,
+            getShortTurnId,
+            branchRenameDraft,
+            setBranchRenameDraft,
+            closeBranchRenameDialog,
+            handleSubmitBranchRename,
+        });
     const handleOpenUploadDialog = useCallback(() => {
         uploadInputRef.current?.click();
     }, []);
     const handleOpenReferencesSheet = useCallback(() => {
         setActivePickerSheet('references');
     }, [setActivePickerSheet]);
-    const latestTimelineEntry = timelineEntries[0] || null;
     const workspaceInsightsSidebarProps = useWorkspaceInsightsSidebarProps({
         currentLanguage: currentLang,
-        latestWorkflowEntry: latestTimelineEntry,
+        latestWorkflowEntry,
         isGenerating,
         batchProgress,
         queuedJobs,
@@ -1077,22 +1060,12 @@ const App: React.FC = () => {
         currentStageSourceTurn,
         currentStageSourceHistoryId,
         activeBranchSummary,
-        recentBranchSummaries,
-        branchSummariesCount: branchSummaries.length,
-        sessionUpdatedLabel,
         sessionContinuitySignals,
         conversationSummary,
         conversationSourceTurn,
         sessionSourceTurn,
-        sessionTurnStack,
-        selectedHistoryId,
         branchLabelByTurnId,
-        lineageRootGroups,
-        timelineEntries,
-        sessionHintEntries,
-        onOpenSessionReplay: handleOpenSessionReplay,
         onHistorySelect: handleHistorySelect,
-        onRenameBranch: handleRenameBranch,
         getStageOriginLabel,
         getLineageActionLabel,
         getLineageActionDescription,
@@ -1101,9 +1074,6 @@ const App: React.FC = () => {
         renderHistoryTurnSnapshotContent,
         renderHistoryTurnBadges,
         renderHistoryTurnActionRow,
-        renderActiveBranchSummaryContent,
-        formatSessionHintKey,
-        formatSessionHintValue,
     });
     const composerSettingsPanelProps = useComposerSettingsPanelProps({
         prompt,
@@ -1188,12 +1158,12 @@ const App: React.FC = () => {
             <Suspense
                 fallback={
                     <PanelLoadingFallback
-                        label={t('loadingActivityConsole')}
+                        label={t('loadingHealthPanel')}
                         className="min-w-[220px] rounded-full border border-gray-200/80 bg-white/70 px-4 py-2 text-center text-xs text-gray-500 dark:border-gray-700 dark:bg-[#141922] dark:text-gray-400"
                     />
                 }
             >
-                <GlobalLogConsole
+                <WorkspaceHealthPanel
                     currentLanguage={currentLang}
                     refreshToken={systemStatusRefreshToken}
                     isSuppressed={showWorkspaceRestoreNotice}
@@ -1449,6 +1419,17 @@ const App: React.FC = () => {
         viewSettings.googleSearch || viewSettings.imageSearch
             ? t('workspacePanelStatusPrepared')
             : t('workspacePanelStatusReserved');
+    const hasSourcesCitationsContent =
+        displayedSources.length > 0 ||
+        displayedSupportBundles.length > 0 ||
+        uncitedSources.length > 0 ||
+        attributionOverviewRows.length > 0 ||
+        groundingQueries.length > 0 ||
+        Boolean(searchEntryPointRenderedContent) ||
+        Boolean(provenanceSourceTurn);
+    const sourcesCitationsStatusLabel = hasSourcesCitationsContent
+        ? t('workspacePanelStatusEnabled')
+        : contextProvenanceStatusLabel;
     const contextProvenancePanel = useMemo(
         () => (
             <Suspense
@@ -1542,7 +1523,6 @@ const App: React.FC = () => {
                 onSketchReplaceCancel={handleSketchReplaceCancel}
                 onSketchReplaceConfirm={handleSketchReplaceConfirm}
                 branchRenameDialogProps={branchRenameDialogProps}
-                sessionReplayDialogProps={sessionReplayDialogProps}
                 imageEditorSurface={
                     isEditing ? (
                         <Suspense fallback={<SurfaceLoadingFallback label={t('loadingPrepareUltraEditor')} />}>
@@ -1587,51 +1567,61 @@ const App: React.FC = () => {
                 <main className="mt-4 flex flex-1 flex-col gap-5">
                     <WorkspaceTopHeader {...workspaceTopHeaderProps} />
 
-                    <WorkspaceResponseRail
-                        currentLanguage={currentLang}
-                        resultText={effectiveResultText}
-                        structuredData={effectiveStructuredData}
-                        structuredOutputMode={effectiveStructuredOutputMode}
-                        formattedStructuredOutput={formattedStructuredOutput}
-                        resultPlaceholder={responseTextPlaceholder}
-                        thoughtsText={effectiveThoughts}
-                        thoughtsPlaceholder={thoughtStateMessage}
-                        onReplacePrompt={handleReplacePromptFromStructuredOutput}
-                        onAppendPrompt={handleAppendPromptFromStructuredOutput}
-                    />
-
                     <section
                         data-testid="workspace-insights-collapsible"
-                        className="nbu-shell-panel nbu-shell-surface-context-rail p-4"
+                        className="grid gap-5 xl:grid-cols-[minmax(280px,0.92fr)_minmax(0,1.16fr)_minmax(280px,0.98fr)] xl:items-start"
                     >
-                        <div
-                            data-testid="workspace-insights-collapsible-summary"
-                            className="flex items-start justify-between gap-3"
+                        <WorkspaceInsightsSidebar
+                            {...workspaceInsightsSidebarProps}
+                            showHeader={false}
+                            thoughtsText={effectiveThoughts}
+                            thoughtsPlaceholder={thoughtStateMessage}
+                        />
+
+                        <WorkspaceResponseRail
+                            currentLanguage={currentLang}
+                            resultText={effectiveResultText}
+                            structuredData={effectiveStructuredData}
+                            structuredOutputMode={effectiveStructuredOutputMode}
+                            formattedStructuredOutput={formattedStructuredOutput}
+                            resultPlaceholder={responseTextPlaceholder}
+                            onReplacePrompt={handleReplacePromptFromStructuredOutput}
+                            onAppendPrompt={handleAppendPromptFromStructuredOutput}
+                        />
+
+                        <WorkspaceSourcesCitationsPanel
+                            currentLanguage={currentLang}
+                            hasContent={hasSourcesCitationsContent}
+                            statusLabel={sourcesCitationsStatusLabel}
                         >
-                            <WorkspaceInsightsHeaderSummary currentLanguage={currentLang} />
-                            <span className="nbu-status-pill">{t('workspaceInsightsPhaseLabel')}</span>
-                        </div>
-                        <div className="mt-4 border-t border-gray-200/80 pt-4 dark:border-gray-800">
-                            <WorkspaceInsightsSidebar
-                                {...workspaceInsightsSidebarProps}
-                                showHeader={false}
-                                provenancePanel={contextProvenancePanel}
-                                provenanceStatusLabel={contextProvenanceStatusLabel}
-                            />
-                        </div>
+                            {contextProvenancePanel}
+                        </WorkspaceSourcesCitationsPanel>
                     </section>
 
                     <section className="grid gap-5">
                         <div className="flex min-w-0 flex-col gap-5">
                             <WorkspaceHistoryCanvas
+                                currentLanguage={currentLang}
                                 recentLane={recentLane}
                                 focusSurface={focusSurface}
                                 supportSurface={sideToolPanel}
+                                activeBranchSummary={activeBranchSummary}
+                                recentBranchSummaries={recentBranchSummaries}
+                                branchSummariesCount={branchSummaries.length}
+                                sessionUpdatedLabel={sessionUpdatedLabel}
+                                selectedHistoryId={selectedHistoryId}
+                                lineageRootGroups={lineageRootGroups}
+                                onHistorySelect={handleHistorySelect}
+                                onRenameBranch={handleRenameBranch}
+                                getShortTurnId={getShortTurnId}
+                                getBranchAccentClassName={getBranchAccentClassName}
+                                renderHistoryTurnSnapshotContent={renderHistoryTurnSnapshotContent}
+                                renderHistoryTurnBadges={renderHistoryTurnBadges}
+                                renderHistoryTurnActionRow={renderHistoryTurnActionRow}
+                                renderActiveBranchSummaryContent={renderActiveBranchSummaryContent}
                             />
                         </div>
                     </section>
-
-                    <div className="order-3 xl:hidden">{sideToolPanel}</div>
 
                     <div className="order-4 xl:order-none">
                         <ComposerSettingsPanel {...composerSettingsPanelProps} />

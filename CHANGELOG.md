@@ -4,7 +4,19 @@ This changelog is compiled from the repository's local git tags plus the publish
 
 ## Unreleased
 
-- No unreleased changes recorded after `v3.0.5` yet.
+- no unreleased changes tracked yet
+
+## v3.1.0 - 2026-03-30
+
+- Release title: Nano Banana Ultra 3.1.0 - Product-Facing Workspace Baseline
+- Release prep summary:
+    - completed the shift away from engineering-oriented shell framing and locked the product-facing workspace contract: a health-only header, `Current Work` for live process and thoughts, `Answer` for result delivery, evidence-first `Sources & Citations`, and history-owned versions
+    - closed the remaining post-Phase-F restore regressions by fixing the `Queue Batch Job` tooltip accessible-name collision and restoring the live provenance surfaces that workspace restore flows still depend on, including attribution overview rows, status strips, uncited-source cards, reuse previews, and compare summaries
+    - consolidated maintained user guidance into `README.md` and removed the separate `USER_MANUAL.zh-TW.md` so 3.1 product docs live in one place instead of splitting between the product README and a secondary manual
+    - validation summary:
+        - focused Vitest: `npm exec vitest run tests/GroundingProvenancePanel.test.tsx tests/useGroundingProvenanceView.test.tsx` -> `13 passed`
+        - full restore Playwright: `npx playwright test e2e/workspace-restore.spec.ts` -> `61 passed`
+        - full Playwright suite: `npx playwright test` -> `61 passed`
 
 ## v3.0.5 - 2026-03-29
 

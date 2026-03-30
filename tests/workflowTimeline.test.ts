@@ -16,19 +16,19 @@ const t = (key: string) => translations[key] || key;
 
 describe('workflowTimeline', () => {
     it('maps workflow stages to translation keys', () => {
-        expect(getWorkflowEntryLabelKey({ stage: 'system', label: 'System' })).toBe('sessionReplayLabelSystem');
-        expect(getWorkflowEntryLabelKey({ stage: 'input', label: 'Input' })).toBe('sessionReplayLabelInput');
-        expect(getWorkflowEntryLabelKey({ stage: 'request', label: 'Request' })).toBe('sessionReplayLabelRequest');
+        expect(getWorkflowEntryLabelKey({ stage: 'system', label: 'System' })).toBe('workflowStageLabelSystem');
+        expect(getWorkflowEntryLabelKey({ stage: 'input', label: 'Input' })).toBe('workflowStageLabelInput');
+        expect(getWorkflowEntryLabelKey({ stage: 'request', label: 'Request' })).toBe('workflowStageLabelRequest');
         expect(getWorkflowEntryLabelKey({ stage: 'processing', label: 'Processing' })).toBe(
-            'sessionReplayLabelProcessing',
+            'workflowStageLabelProcessing',
         );
-        expect(getWorkflowEntryLabelKey({ stage: 'output', label: 'Output' })).toBe('sessionReplayLabelOutput');
-        expect(getWorkflowEntryLabelKey({ stage: 'history', label: 'History' })).toBe('sessionReplayLabelHistory');
-        expect(getWorkflowEntryLabelKey({ stage: 'error', label: 'Error' })).toBe('sessionReplayLabelError');
+        expect(getWorkflowEntryLabelKey({ stage: 'output', label: 'Output' })).toBe('workflowStageLabelOutput');
+        expect(getWorkflowEntryLabelKey({ stage: 'history', label: 'History' })).toBe('workflowStageLabelHistory');
+        expect(getWorkflowEntryLabelKey({ stage: 'error', label: 'Error' })).toBe('workflowStageLabelError');
     });
 
     it('uses the cancelled label override ahead of stage mapping', () => {
-        expect(getWorkflowEntryLabelKey({ stage: 'error', label: 'Cancelled' })).toBe('sessionReplayLabelCancelled');
+        expect(getWorkflowEntryLabelKey({ stage: 'error', label: 'Cancelled' })).toBe('workflowStageLabelCancelled');
     });
 
     it('renders encoded and legacy workflow messages through the active translator', () => {

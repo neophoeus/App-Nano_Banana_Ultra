@@ -7,9 +7,9 @@ type WorkspaceInsightsHeaderSummaryProps = {
 
 const HEADER_SECTION_KEYS = [
     'workspaceInsightsCurrentWork',
-    'workspaceInsightsVersions',
+    'workspaceInsightsLatestThoughts',
     'workspaceInsightsSourcesCitations',
-    'workspaceInsightsActivity',
+    'historyFilmstripTitle',
 ] as const;
 
 export default function WorkspaceInsightsHeaderSummary({ currentLanguage }: WorkspaceInsightsHeaderSummaryProps) {

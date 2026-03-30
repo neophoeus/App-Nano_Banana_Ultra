@@ -1,6 +1,5 @@
 import { Dispatch, SetStateAction, useMemo } from 'react';
 import BranchRenameDialog from '../components/BranchRenameDialog';
-import type { SessionReplayDialogProps } from '../components/SessionReplayDialog';
 import SurfaceSharedControls from '../components/SurfaceSharedControls';
 import WorkspaceImportReview from '../components/WorkspaceImportReview';
 import WorkspaceRestoreNotice from '../components/WorkspaceRestoreNotice';
@@ -83,11 +82,6 @@ type UseWorkspaceOverlayAuxiliaryPropsArgs = {
     setBranchRenameDraft: Dispatch<SetStateAction<string>>;
     closeBranchRenameDialog: BranchRenameDialogProps['onClose'];
     handleSubmitBranchRename: BranchRenameDialogProps['onSubmit'];
-    isSessionReplayOpen: boolean;
-    logs: string[];
-    currentStageSourceShortId: string | null;
-    currentStageSourceTurn: GeneratedImage | null;
-    setIsSessionReplayOpen: Dispatch<SetStateAction<boolean>>;
 };
 
 export function useWorkspaceOverlayAuxiliaryProps({
@@ -149,11 +143,6 @@ export function useWorkspaceOverlayAuxiliaryProps({
     setBranchRenameDraft,
     closeBranchRenameDialog,
     handleSubmitBranchRename,
-    isSessionReplayOpen,
-    logs,
-    currentStageSourceShortId,
-    currentStageSourceTurn,
-    setIsSessionReplayOpen,
 }: UseWorkspaceOverlayAuxiliaryPropsArgs) {
     return useMemo(
         () => ({
@@ -267,17 +256,6 @@ export function useWorkspaceOverlayAuxiliaryProps({
                       onSubmit: handleSubmitBranchRename,
                   } satisfies BranchRenameDialogProps)
                 : null,
-            sessionReplayDialogProps: isSessionReplayOpen
-                ? ({
-                      currentLanguage,
-                      logs,
-                      onClose: () => setIsSessionReplayOpen(false),
-                      currentStageSourceShortId: currentStageSourceShortId || undefined,
-                      onOpenCurrentStageSource: currentStageSourceTurn
-                          ? () => handleHistorySelect(currentStageSourceTurn)
-                          : undefined,
-                  } satisfies SessionReplayDialogProps)
-                : null,
         }),
         [
             activeBranchLabel,
@@ -290,8 +268,6 @@ export function useWorkspaceOverlayAuxiliaryProps({
             characterImageCount,
             closeBranchRenameDialog,
             currentLanguage,
-            currentStageSourceShortId,
-            currentStageSourceTurn,
             floatingControlsZIndex,
             getContinueActionLabel,
             getImportedContinueActionLabel,
@@ -317,12 +293,10 @@ export function useWorkspaceOverlayAuxiliaryProps({
             importedLatestTurn,
             isEditing,
             isImportedPromotedContinuationSource,
-            isSessionReplayOpen,
             isSurfaceSharedControlsOpen,
             isSurfaceWorkspaceOpen,
             latestRestorableTurn,
             latestSuccessfulRestorableTurn,
-            logs,
             maxCharacters,
             maxObjects,
             objectImageCount,
@@ -334,7 +308,6 @@ export function useWorkspaceOverlayAuxiliaryProps({
             openSurfacePickerSheet,
             setBranchRenameDraft,
             setIsAdvancedSettingsOpen,
-            setIsSessionReplayOpen,
             setIsSurfaceSharedControlsOpen,
             setShowWorkspaceRestoreNotice,
             showWorkspaceRestoreNotice,

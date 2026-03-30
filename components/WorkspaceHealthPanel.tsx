@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { WORKSPACE_OVERLAY_Z_INDEX } from '../constants/workspaceOverlays';
 import { Language, getTranslation } from '../utils/translations';
 
-interface GlobalLogConsoleProps {
+interface WorkspaceHealthPanelProps {
     currentLanguage?: Language;
     refreshToken?: number;
     isSuppressed?: boolean;
@@ -47,7 +47,7 @@ const formatTimestamp = (timestamp: string | null, locale: string | undefined, t
     }
 };
 
-const GlobalLogConsole: React.FC<GlobalLogConsoleProps> = ({
+const WorkspaceHealthPanel: React.FC<WorkspaceHealthPanelProps> = ({
     currentLanguage = 'en',
     refreshToken = 0,
     isSuppressed = false,
@@ -147,7 +147,9 @@ const GlobalLogConsole: React.FC<GlobalLogConsoleProps> = ({
     const summaryTone =
         healthError || health?.ok === false
             ? 'text-red-600 dark:text-red-300'
-            : 'text-emerald-600 dark:text-emerald-300';
+            : health
+              ? 'text-emerald-600 dark:text-emerald-300'
+              : 'text-gray-500 dark:text-gray-400';
     const statusColor =
         healthError || health?.ok === false
             ? 'bg-red-500'
@@ -156,24 +158,28 @@ const GlobalLogConsole: React.FC<GlobalLogConsoleProps> = ({
               : health
                 ? 'bg-emerald-500'
                 : 'bg-gray-400 dark:bg-gray-500';
-    const statusIcon = healthError || health?.ok === false ? '✕' : isRefreshingHealth ? '↻' : '✓';
+    const checkingLabel = t('statusPanelChecking');
     const localApiLabel =
-        healthError || health?.ok === false
-            ? t('statusPanelOffline')
-            : health
-              ? t('statusPanelLive')
-              : t('statusProcessing');
-    const keyLabel = health
-        ? health.hasApiKey
-            ? t('statusPanelReady')
-            : t('statusPanelMissing')
-        : t('statusProcessing');
+        healthError || health?.ok === false ? t('statusPanelOffline') : health ? t('statusPanelLive') : checkingLabel;
+    const keyLabel = health ? (health.hasApiKey ? t('statusPanelReady') : t('statusPanelMissing')) : checkingLabel;
     const summaryLabel =
-        healthError || health?.ok === false
-            ? t('statusPanelOffline')
-            : isRefreshingHealth && !health
-              ? t('statusProcessing')
-              : t('statusPanelLive');
+        healthError || health?.ok === false ? t('statusPanelOffline') : health ? t('statusPanelLive') : checkingLabel;
+    const headerStatusItems = [
+        {
+            key: 'local-api',
+            testId: 'global-health-local-api',
+            label: t('statusPanelLocalApi'),
+            tone: localApiTone,
+            value: localApiLabel,
+        },
+        {
+            key: 'gemini-key',
+            testId: 'global-health-gemini-key',
+            label: t('statusPanelGeminiKey'),
+            tone: keyTone,
+            value: keyLabel,
+        },
+    ];
 
     const expandedConsole =
         isExpanded && panelPosition && typeof document !== 'undefined'
@@ -190,7 +196,7 @@ const GlobalLogConsole: React.FC<GlobalLogConsoleProps> = ({
                       {/* Header */}
                       <div className="flex items-center justify-between px-3 py-2 bg-gray-100/80 dark:bg-gray-900/80 border-b border-gray-200 dark:border-gray-800">
                           <span className="font-bold text-gray-500 dark:text-gray-400 text-[10px] tracking-wider">
-                              {t('consoleSystem')}
+                              {t('healthPanelTitle')}
                           </span>
                           <div className="flex gap-2">
                               <button
@@ -248,45 +254,34 @@ const GlobalLogConsole: React.FC<GlobalLogConsoleProps> = ({
                       </div>
 
                       <div className="space-y-2 px-3 py-3">
+                          <div className="grid grid-cols-2 gap-2">
+                              {headerStatusItems.map((item) => (
+                                  <div
+                                      key={item.key}
+                                      data-testid={item.testId}
+                                      className="nbu-inline-panel min-w-0 rounded-xl px-2.5 py-2"
+                                  >
+                                      <div className="flex items-center justify-between gap-2">
+                                          <span className="truncate text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                              {item.label}
+                                          </span>
+                                          <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${item.tone}`}></span>
+                                      </div>
+                                      <p className="mt-1 truncate text-[11px] font-semibold text-gray-700 dark:text-gray-200">
+                                          {item.value}
+                                      </p>
+                                  </div>
+                              ))}
+                          </div>
                           <div data-testid="global-health-summary" className="nbu-inline-panel rounded-xl px-3 py-3">
                               <div className="flex items-center justify-between gap-3">
                                   <div className="min-w-0">
                                       <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                          {t('consoleSystem')}
+                                          {t('healthPanelTitle')}
                                       </div>
                                       <p className={`mt-1 text-sm font-semibold ${summaryTone}`}>{summaryLabel}</p>
                                   </div>
                                   <span className={`h-3 w-3 shrink-0 rounded-full ${statusColor}`}></span>
-                              </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                              <div
-                                  data-testid="global-health-local-api"
-                                  className="nbu-inline-panel min-w-0 rounded-xl px-2.5 py-2"
-                              >
-                                  <div className="flex items-center justify-between gap-2">
-                                      <span className="truncate text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                          {t('statusPanelLocalApi')}
-                                      </span>
-                                      <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${localApiTone}`}></span>
-                                  </div>
-                                  <p className="mt-1 truncate text-[11px] font-semibold text-gray-700 dark:text-gray-200">
-                                      {localApiLabel}
-                                  </p>
-                              </div>
-                              <div
-                                  data-testid="global-health-gemini-key"
-                                  className="nbu-inline-panel min-w-0 rounded-xl px-2.5 py-2"
-                              >
-                                  <div className="flex items-center justify-between gap-2">
-                                      <span className="truncate text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                          {t('statusPanelGeminiKey')}
-                                      </span>
-                                      <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${keyTone}`}></span>
-                                  </div>
-                                  <p className="mt-1 truncate text-[11px] font-semibold text-gray-700 dark:text-gray-200">
-                                      {keyLabel}
-                                  </p>
                               </div>
                           </div>
                           <div
@@ -320,9 +315,11 @@ const GlobalLogConsole: React.FC<GlobalLogConsoleProps> = ({
             {/* Minimized Pill / Toggle Button */}
             <button
                 data-testid="global-health-toggle"
+                type="button"
+                aria-expanded={isExpanded}
                 onClick={() => setIsExpanded(!isExpanded)}
                 className={`
-            group flex items-center gap-2 pl-2.5 pr-2.5 lg:pl-3 lg:pr-3 py-2 rounded-full border transition-all duration-300
+            group flex max-w-full flex-wrap items-center justify-end gap-2 pl-2.5 pr-2.5 py-2 lg:pl-3 lg:pr-3 rounded-full border text-left transition-all duration-300
             ${
                 isExpanded
                     ? 'nbu-overlay-shell border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300 shadow-lg'
@@ -330,41 +327,36 @@ const GlobalLogConsole: React.FC<GlobalLogConsoleProps> = ({
             }
         `}
             >
-                {/* Status Dot */}
-                <div
-                    className={`w-2.5 h-2.5 rounded-full ${statusColor} flex items-center justify-center text-[8px] text-white dark:text-black font-bold shrink-0`}
-                >
-                    {statusIcon}
+                <div className="flex items-center gap-2 rounded-full bg-gray-100/80 px-2.5 py-1.5 dark:bg-gray-900/80">
+                    <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${statusColor}`}></span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
+                        {t('healthPanelTitle')}
+                    </span>
                 </div>
 
-                {/* Text (Hidden on mobile when minimized to save space, unless expanding) */}
                 {!isExpanded && (
                     <div
                         data-testid="global-health-summary"
-                        className="hidden max-w-[180px] flex-col items-start text-left sm:flex"
+                        className="flex max-w-full flex-wrap items-center justify-end gap-2"
                     >
-                        <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-0.5">
-                            {t('consoleSystem')}
-                        </span>
-                        <div className="flex items-center gap-1.5 w-full">
-                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${localApiTone}`}></span>
-                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${keyTone}`}></span>
-                            <span className="truncate text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
-                                {summaryLabel}
-                            </span>
-                        </div>
-                        <span className="mt-1 max-w-full truncate text-[10px] text-gray-400 dark:text-gray-500">
-                            {formatTimestamp(health?.timestamp ?? null, currentLanguage, t)}
-                        </span>
+                        {headerStatusItems.map((item) => (
+                            <div
+                                key={item.key}
+                                className="flex min-w-0 items-center gap-2 rounded-full border border-gray-200/80 bg-white/70 px-2.5 py-1.5 dark:border-gray-700/80 dark:bg-[#141922]/75"
+                            >
+                                <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${item.tone}`}></span>
+                                <span className="truncate text-[10px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">
+                                    {item.label}
+                                </span>
+                                <span className="truncate text-[10px] font-semibold text-gray-700 dark:text-gray-200">
+                                    {item.value}
+                                </span>
+                            </div>
+                        ))}
                     </div>
                 )}
 
-                {/* Mobile-only label (simple) */}
-                {!isExpanded && (
-                    <span className="text-[10px] font-bold text-gray-400 sm:hidden uppercase">{summaryLabel}</span>
-                )}
-
-                {isExpanded && <span className="text-xs font-bold px-1">{t('consoleHide')}</span>}
+                {isExpanded && <span className="text-xs font-bold px-1">{t('healthPanelHide')}</span>}
 
                 {/* Chevron */}
                 <svg
@@ -384,4 +376,4 @@ const GlobalLogConsole: React.FC<GlobalLogConsoleProps> = ({
     );
 };
 
-export default GlobalLogConsole;
+export default WorkspaceHealthPanel;

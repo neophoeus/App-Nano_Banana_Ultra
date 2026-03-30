@@ -53,20 +53,18 @@ vi.mock('../components/RecentHistoryFilmstrip', async () => {
 
 vi.mock('../components/WorkspaceHistoryCanvas', async () => {
     const ReactModule = await vi.importActual<typeof import('react')>('react');
-    const Component = ReactModule.memo(
-        ({ recentLane, focusSurface }: { recentLane: React.ReactNode; focusSurface: React.ReactNode }) => {
-            const previousPropsRef = ReactModule.useRef<Record<string, unknown>>();
-            const props = { recentLane, focusSurface };
-            recordRender(trackers.workspaceHistoryCanvas, props, previousPropsRef.current);
-            previousPropsRef.current = props;
-            return (
-                <div data-testid="mock-workspace-history-canvas">
-                    {recentLane}
-                    {focusSurface}
-                </div>
-            );
-        },
-    );
+    const Component = ReactModule.memo((props: Record<string, unknown>) => {
+        const previousPropsRef = ReactModule.useRef<Record<string, unknown>>();
+        recordRender(trackers.workspaceHistoryCanvas, props, previousPropsRef.current);
+        previousPropsRef.current = props;
+        return (
+            <div data-testid="mock-workspace-history-canvas">
+                {props.recentLane as React.ReactNode}
+                {props.focusSurface as React.ReactNode}
+                {props.supportSurface as React.ReactNode}
+            </div>
+        );
+    });
     return { default: Component };
 });
 
@@ -101,7 +99,7 @@ vi.mock('../components/WorkspaceSideToolPanel', async () => {
     return { default: Component };
 });
 
-vi.mock('../components/GlobalLogConsole', () => ({
+vi.mock('../components/WorkspaceHealthPanel', () => ({
     default: () => <div data-testid="mock-global-log-console" />,
 }));
 

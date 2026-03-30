@@ -52,12 +52,13 @@ describe('useGroundingProvenanceView', () => {
         selectedSessionHints: Record<string, unknown> | null,
         imageSize = '1K',
         workspaceSessionOverrides: Record<string, unknown> = {},
+        selectedGrounding: any = null,
     ) => {
         function TestComponent() {
             latestHook = useGroundingProvenanceView({
                 selectedResultText: null,
                 selectedThoughts: null,
-                selectedGrounding: null,
+                selectedGrounding,
                 selectedMetadata,
                 selectedSessionHints,
                 workspaceSession: {
@@ -182,6 +183,39 @@ describe('useGroundingProvenanceView', () => {
             'thought signature',
             'grounding metadata',
             'grounding supports',
+        ]);
+    });
+
+    it('keeps the full attribution overview row set available to the panel', () => {
+        renderHook(
+            null,
+            null,
+            '1K',
+            {},
+            {
+                enabled: true,
+                webQueries: ['alpha', 'beta'],
+                imageQueries: ['gamma'],
+                searchEntryPointAvailable: true,
+                sources: [
+                    { title: 'Example One', url: 'https://example.com/one', sourceType: 'web' },
+                    { title: 'Example Two', url: 'https://example.com/two', sourceType: 'image' },
+                ],
+                supports: [
+                    {
+                        chunkIndices: [0],
+                        sourceIndices: [0],
+                        sourceTitles: ['Example One'],
+                    },
+                ],
+            },
+        );
+
+        expect(latestHook?.attributionOverviewRows.map((row) => row.id)).toEqual([
+            'coverage',
+            'source-mix',
+            'queries',
+            'entry-point',
         ]);
     });
 });

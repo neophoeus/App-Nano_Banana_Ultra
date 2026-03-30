@@ -114,24 +114,21 @@ export function useWorkspaceShellViewModel({
 
     const currentStageSourceShortId = currentStageSourceHistoryId ? getShortTurnId(currentStageSourceHistoryId) : null;
 
-    const timelineEntries = useMemo(
-        () =>
-            buildWorkflowTimeline(logs, 8)
-                .reverse()
-                .map((entry) => {
-                    const isCurrentStageSourceEntry = Boolean(
-                        currentStageSourceShortId &&
-                        workflowMessageIncludes(entry.message, currentStageSourceShortId, t),
-                    );
+    const latestWorkflowEntry = useMemo(() => {
+        const latestEntry = buildWorkflowTimeline(logs, 8).reverse()[0];
 
-                    return {
-                        ...entry,
-                        displayMessage: renderWorkflowMessage(entry.message, t),
-                        isCurrentStageSourceEntry,
-                    };
-                }),
-        [currentStageSourceShortId, logs, t],
-    );
+        if (!latestEntry) {
+            return null;
+        }
+
+        return {
+            ...latestEntry,
+            displayMessage: renderWorkflowMessage(latestEntry.message, t),
+            isCurrentStageSourceEntry: Boolean(
+                currentStageSourceShortId && workflowMessageIncludes(latestEntry.message, currentStageSourceShortId, t),
+            ),
+        };
+    }, [currentStageSourceShortId, logs, t]);
 
     const activeSheetTitle = useMemo(() => {
         switch (activePickerSheet) {
@@ -184,7 +181,7 @@ export function useWorkspaceShellViewModel({
     return {
         viewSettings,
         currentStageSourceShortId,
-        timelineEntries,
+        latestWorkflowEntry,
         activeSheetTitle,
         isSurfaceWorkspaceOpen,
         floatingControlsZIndex,

@@ -4,53 +4,48 @@ import { describe, expect, it } from 'vitest';
 import WorkspaceResponseRail from '../components/WorkspaceResponseRail';
 
 describe('WorkspaceResponseRail', () => {
-    it('renders a single model output owner surface with simplified thoughts context', () => {
-        const longThoughts =
-            'Thoughts should now stay preview-first in the top rail so the user can scan the response surface without the secondary reasoning block always occupying the full card height in the default state.';
+    it('renders the answer rail without a thoughts block', () => {
         const markup = renderToStaticMarkup(
             <WorkspaceResponseRail
                 currentLanguage="en"
                 resultText="Fresh response text from the model."
                 structuredData={null}
                 structuredOutputMode={null}
+                formattedStructuredOutput={null}
                 resultPlaceholder="Result placeholder"
-                thoughtsText={longThoughts}
-                thoughtsPlaceholder="Thoughts were requested, but the model did not return thought artifacts for this result."
             />,
         );
 
         expect(markup).toContain('workspace-response-rail');
         expect(markup).toContain('workspace-model-output-card');
+        expect(markup).toContain('Answer');
         expect(markup).toContain('Result Text');
         expect(markup).toContain('Fresh response text from the model.');
-        expect(markup).toContain('Thoughts');
-        expect(markup).toContain('Enabled');
-        expect(markup).toContain('workspace-thoughts-card');
-        expect(markup).toContain('workspace-thoughts-details');
-        expect(markup).toContain('workspace-thoughts-summary');
-        expect(markup).toContain(longThoughts);
+        expect(markup).not.toContain('Thoughts');
+        expect(markup).not.toContain('workspace-thoughts-card');
+        expect(markup).not.toContain('workspace-thoughts-details');
+        expect(markup).not.toContain('workspace-thoughts-summary');
         expect(markup).not.toContain('workspace-workflow-card');
         expect(markup).not.toContain('Queued Batch Jobs');
         expect(markup).not.toContain('Grounded result');
         expect(markup).not.toContain('xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,0.92fr)]');
+        expect(markup).toContain('bg-emerald-500');
     });
 
-    it('shows the no-thoughts placeholder once without duplicate headings or preview text', () => {
-        const placeholder = 'Thoughts were requested, but the model did not return thought artifacts for this result.';
+    it('shows the answer placeholder once without rendering a thoughts fallback block', () => {
+        const placeholder = 'Result placeholder';
         const markup = renderToStaticMarkup(
             <WorkspaceResponseRail
                 currentLanguage="en"
-                resultText="Fresh response text from the model."
+                resultText={null}
                 structuredData={null}
                 structuredOutputMode={null}
+                formattedStructuredOutput={null}
                 resultPlaceholder="Result placeholder"
-                thoughtsText={null}
-                thoughtsPlaceholder={placeholder}
             />,
         );
 
-        expect(markup).toContain('workspace-thoughts-card');
-        expect(markup).not.toContain('Prepared');
+        expect(markup).not.toContain('workspace-thoughts-card');
         expect(markup).not.toContain('Latest Thoughts');
         expect(markup.split(placeholder)).toHaveLength(2);
     });
@@ -71,13 +66,6 @@ describe('WorkspaceResponseRail', () => {
                 structuredOutputMode="scene-brief"
                 formattedStructuredOutput={JSON.stringify({ summary: 'raw fallback' }, null, 2)}
                 resultPlaceholder="Result placeholder"
-                thoughtsText={null}
-                thoughtsPlaceholder="No thoughts"
-                latestWorkflowEntry={null}
-                isGenerating={false}
-                batchProgress={{ completed: 0, total: 0 }}
-                queuedJobs={[]}
-                resultStatusSummary={null}
                 onAppendPrompt={() => undefined}
                 onReplacePrompt={() => undefined}
             />,
@@ -120,13 +108,6 @@ describe('WorkspaceResponseRail', () => {
                 structuredOutputMode="variation-compare"
                 formattedStructuredOutput={JSON.stringify({ comparisonSummary: 'raw fallback' }, null, 2)}
                 resultPlaceholder="Result placeholder"
-                thoughtsText={null}
-                thoughtsPlaceholder="No thoughts"
-                latestWorkflowEntry={null}
-                isGenerating={false}
-                batchProgress={{ completed: 0, total: 0 }}
-                queuedJobs={[]}
-                resultStatusSummary={null}
                 onReplacePrompt={() => undefined}
                 onAppendPrompt={() => undefined}
             />,
@@ -162,13 +143,6 @@ describe('WorkspaceResponseRail', () => {
                 structuredOutputMode="prompt-kit"
                 formattedStructuredOutput={JSON.stringify({ intentSummary: 'raw fallback' }, null, 2)}
                 resultPlaceholder="Result placeholder"
-                thoughtsText={null}
-                thoughtsPlaceholder="No thoughts"
-                latestWorkflowEntry={null}
-                isGenerating={false}
-                batchProgress={{ completed: 0, total: 0 }}
-                queuedJobs={[]}
-                resultStatusSummary={null}
                 onReplacePrompt={() => undefined}
                 onAppendPrompt={() => undefined}
             />,

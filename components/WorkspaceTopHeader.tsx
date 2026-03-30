@@ -12,12 +12,12 @@ type WorkspaceTopHeaderProps = {
 function WorkspaceTopHeader({ headerConsole, currentLanguage, onLanguageChange }: WorkspaceTopHeaderProps) {
     return (
         <header className="relative z-30 shrink-0">
-            <div className="nbu-shell-panel nbu-shell-surface-header relative z-30 mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-3 rounded-full px-4 py-3">
+            <div className="nbu-shell-panel nbu-shell-surface-header relative z-30 mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-3 rounded-full px-4 py-3">
                 <div className="flex items-center gap-3 rounded-full bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 px-4 py-2 text-sm font-black uppercase tracking-[0.22em] text-black shadow-lg">
                     <span>NBU</span>
                     <span className="hidden sm:inline">Nano Banana Ultra</span>
                 </div>
-                {headerConsole}
+                <div className="min-w-0 max-w-full">{headerConsole}</div>
                 <ThemeToggle currentLanguage={currentLanguage} />
                 <LanguageSelector currentLanguage={currentLanguage} onLanguageChange={onLanguageChange} />
             </div>

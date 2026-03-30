@@ -16,7 +16,7 @@ vi.mock('../components/GeneratedImage', () => ({
     default: () => <div data-testid="mock-generated-image" />,
 }));
 
-vi.mock('../components/GlobalLogConsole', () => ({
+vi.mock('../components/WorkspaceHealthPanel', () => ({
     default: () => <div data-testid="mock-global-log-console" />,
 }));
 

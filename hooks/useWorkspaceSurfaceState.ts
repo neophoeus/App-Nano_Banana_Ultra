@@ -20,8 +20,6 @@ type UseWorkspaceSurfaceStateReturn = {
     activePickerSheet: PickerSheet;
     setActivePickerSheet: Dispatch<SetStateAction<PickerSheet>>;
     closePickerSheet: () => void;
-    isSessionReplayOpen: boolean;
-    setIsSessionReplayOpen: Dispatch<SetStateAction<boolean>>;
     isSurfaceSharedControlsOpen: boolean;
     setIsSurfaceSharedControlsOpen: Dispatch<SetStateAction<boolean>>;
     branchRenameDialog: BranchRenameDialogState | null;
@@ -41,7 +39,6 @@ export function useWorkspaceSurfaceState(): UseWorkspaceSurfaceStateReturn {
     const [isViewerOpen, setIsViewerOpen] = useState(false);
     const [branchRenameDialog, setBranchRenameDialog] = useState<BranchRenameDialogState | null>(null);
     const [branchRenameDraft, setBranchRenameDraft] = useState('');
-    const [isSessionReplayOpen, setIsSessionReplayOpen] = useState(false);
     const [isSurfaceSharedControlsOpen, setIsSurfaceSharedControlsOpen] = useState(false);
 
     const closeBranchRenameDialog = useCallback(() => {
@@ -90,8 +87,6 @@ export function useWorkspaceSurfaceState(): UseWorkspaceSurfaceStateReturn {
         activePickerSheet,
         setActivePickerSheet,
         closePickerSheet,
-        isSessionReplayOpen,
-        setIsSessionReplayOpen,
         isSurfaceSharedControlsOpen,
         setIsSurfaceSharedControlsOpen,
         branchRenameDialog,

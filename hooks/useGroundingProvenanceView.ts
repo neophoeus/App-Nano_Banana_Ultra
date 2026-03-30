@@ -575,7 +575,7 @@ export function useGroundingProvenanceView({
                 label: t('groundingProvenanceSummarySourceTurn'),
                 value: workspaceSession.provenanceSourceHistoryId
                     ? getShortTurnId(workspaceSession.provenanceSourceHistoryId)
-                    : t('groundingProvenanceNone'),
+                    : t('groundingProvenanceNoActiveSessionTurn'),
             },
             { id: 'sources', label: t('groundingProvenanceSummarySources'), value: String(selectedSources.length) },
             {

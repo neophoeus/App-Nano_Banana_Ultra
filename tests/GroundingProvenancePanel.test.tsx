@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import GroundingProvenancePanel from '../components/GroundingProvenancePanel';
 
 describe('GroundingProvenancePanel', () => {
-    it('collapses into a compact empty summary when no provenance artifacts exist yet', () => {
+    it('renders only the continuity summary when no evidence artifacts exist yet', () => {
         const markup = renderToStaticMarkup(
             <GroundingProvenancePanel
                 currentLanguage="en"
@@ -56,13 +56,18 @@ describe('GroundingProvenancePanel', () => {
         );
 
         expect(markup).toContain('No provenance continuity is active for this session yet.');
-        expect(markup).toContain('Select a source or support bundle to inspect how grounding evidence connects.');
-        expect(markup).toContain('Grounding was not requested for this result.');
+        expect(markup).not.toContain('Select a source or support bundle to inspect how grounding evidence connects.');
+        expect(markup).not.toContain('Grounding was not requested for this result.');
+        expect(markup).not.toContain('Attribution Overview');
+        expect(markup).not.toContain('Citation Detail');
         expect(markup).not.toContain('Source citation status');
+        expect(markup).not.toContain('Model settings');
+        expect(markup).not.toContain('Retrieved But Not Cited');
+        expect(markup).not.toContain('Search Entry Point');
         expect(markup).not.toContain('Grounding query terms will appear here when returned by the model.');
     });
 
-    it('renders attribution overview, entry-point status, and uncited sources', () => {
+    it('renders an evidence-focused attribution overview without audit-oriented sections', () => {
         const markup = renderToStaticMarkup(
             <GroundingProvenancePanel
                 currentLanguage="en"
@@ -76,8 +81,6 @@ describe('GroundingProvenancePanel', () => {
                 attributionOverviewRows={[
                     { id: 'coverage', label: 'Coverage', value: '1/2 cited' },
                     { id: 'source-mix', label: 'Source mix', value: '1 web · 1 image' },
-                    { id: 'queries', label: 'Queries', value: '1 web' },
-                    { id: 'entry-point', label: 'Entry point', value: 'Not returned' },
                 ]}
                 provenanceSourceTurn={null}
                 currentStageSourceHistoryId={null}
@@ -85,7 +88,7 @@ describe('GroundingProvenancePanel', () => {
                 renderHistoryTurnActionRow={() => null}
                 provenanceContinuityMessage="Grounding is live on this turn."
                 provenanceSelectionMessage="Select a source or support bundle to inspect details."
-                activeGroundingSelection={{ kind: 'source', index: 0 }}
+                activeGroundingSelection={null}
                 setActiveGroundingSelection={vi.fn()}
                 focusLinkedGroundingItems={false}
                 setFocusLinkedGroundingItems={vi.fn()}
@@ -130,22 +133,18 @@ describe('GroundingProvenancePanel', () => {
             />,
         );
 
-        expect(markup).toContain('Model settings');
         expect(markup).toContain('Attribution Overview');
         expect(markup).toContain('Coverage');
+        expect(markup).toContain('Source mix');
+        expect(markup).toContain('1/2 cited');
+        expect(markup).toContain('1 web · 1 image');
+        expect(markup).not.toContain('Model settings');
         expect(markup).toContain('Source citation status');
-        expect(markup).toContain('1 cited · 1 retrieved only');
-        expect(markup).toContain('No grounding sources were returned.');
-        expect(markup).toContain('No grounding support bundles were returned.');
-        expect(markup).toContain('Entry point');
+        expect(markup).not.toContain('Entry point');
         expect(markup).toContain('Search entry point status: Not returned');
         expect(markup).toContain('Retrieved But Not Cited');
         expect(markup).toContain('Uncited Source');
-        expect(markup).toContain('provenance-uncited-source-summary-1');
-        expect(markup).toContain('provenance-uncited-source-details-1');
-        expect(markup).toContain('example.com');
-        expect(markup.indexOf('Continuity Summary')).toBeLessThan(markup.indexOf('Model settings'));
-        expect(markup.indexOf('Attribution Overview')).toBeLessThan(markup.indexOf('Model settings'));
+        expect(markup).toContain('provenance-uncited-source-1');
     });
 
     it('keeps restore-derived provenance compact when no grounding artifacts were returned', () => {
@@ -228,16 +227,14 @@ describe('GroundingProvenancePanel', () => {
         expect(markup).toContain('This route returns to this source turn in history.');
         expect(markup).not.toContain('provenance-source-continue');
         expect(markup).not.toContain('provenance-source-branch');
-        expect(markup).toContain('Model settings');
-        expect(markup).toContain('No source or bundle selected yet.');
-        expect(markup).toContain('Grounding was not requested for this result.');
-        expect(markup).toContain('No grounding support bundles were returned for this result.');
-        expect(markup).toContain('Search entry point status: Not requested');
+        expect(markup).toContain('No provenance continuity is active for this session yet.');
+        expect(markup).not.toContain('Model settings');
+        expect(markup).not.toContain('No source or bundle selected yet.');
+        expect(markup).not.toContain('Grounding was not requested for this result.');
+        expect(markup).not.toContain('No grounding support bundles were returned for this result.');
+        expect(markup).not.toContain('Search entry point status: Not requested');
         expect(markup).not.toContain('provenance-status-grid');
         expect(markup).not.toContain('Source citation status');
-        expect(markup).not.toContain(
-            'Select a source or support bundle to inspect segment-level attribution and reuse it in the composer.',
-        );
         expect(markup).not.toContain('Grounding query terms will appear here when returned by the model.');
     });
 
@@ -332,29 +329,24 @@ describe('GroundingProvenancePanel', () => {
         expect(markup).toContain('Retrieved only');
         expect(markup).toContain('Referenced in 1 bundles');
         expect(markup).toContain('No support bundle currently cites this source.');
-        expect(markup).toContain('Composer Reuse Preview');
         expect(markup).toContain('provenance-detail-summary');
-        expect(markup).toContain('provenance-detail-reuse-details');
         expect(markup).toContain('provenance-detail-selected-source-summary');
         expect(markup).toContain('provenance-detail-selected-source-details');
-        expect(markup).toContain('provenance-detail-source-status-details');
+        expect(markup).toContain('provenance-detail-source-status');
+        expect(markup).toContain('provenance-detail-source-compare-summary');
         expect(markup).toContain('provenance-detail-cited-segments-summary');
         expect(markup).toContain('provenance-detail-cited-segments-details');
         expect(markup).toContain('provenance-compare-bundle-summary-0');
         expect(markup).toContain('provenance-compare-bundle-details-0');
         expect(markup).not.toContain('provenance-source-0-inspect');
+        expect(markup).toContain('Composer Reuse Preview');
+        expect(markup).toContain('provenance-detail-reuse-preview');
+        expect(markup).not.toContain('provenance-detail-source-status-details');
         expect(markup).toContain('Append result');
         expect(markup).toContain('Replace result');
-        expect(markup).toContain('Current prompt');
-        expect(markup).toContain('Current prompt kept');
-        expect(markup).toContain('Grounding cue added');
-        expect(markup).toContain('Reference cue: Reference source Cited Source from example.com');
-        expect(markup).toContain('Reference source Cited Source from example.com');
-        expect(markup).toContain('Keeps the current composer prompt and adds the grounding cue below it.');
-        expect(markup).toContain('Replaces the current composer prompt with this grounding text.');
     });
 
-    it('renders other retrieved sources when a bundle is selected', () => {
+    it('renders linked sources and supporting excerpt when a bundle is selected', () => {
         const markup = renderToStaticMarkup(
             <GroundingProvenancePanel
                 currentLanguage="en"
@@ -433,21 +425,22 @@ describe('GroundingProvenancePanel', () => {
             />,
         );
 
-        expect(markup).toContain('Other Retrieved Sources');
-        expect(markup).toContain('provenance-detail-bundle-status-details');
         expect(markup).toContain('provenance-detail-selected-bundle-summary');
         expect(markup).toContain('provenance-detail-selected-bundle-details');
         expect(markup).toContain('provenance-detail-bundle-segment-summary');
         expect(markup).toContain('provenance-detail-bundle-segment-details');
         expect(markup).toContain('provenance-detail-linked-sources-summary');
         expect(markup).toContain('provenance-detail-linked-sources-details');
+        expect(markup).toContain('provenance-detail-bundle-compare-summary');
         expect(markup).toContain('provenance-compare-source-summary-0');
         expect(markup).toContain('provenance-compare-source-details-0');
+        expect(markup).toContain('In bundle');
+        expect(markup).toContain('Other Retrieved Sources');
+        expect(markup).not.toContain('provenance-detail-bundle-status-details');
         expect(markup).toContain('provenance-detail-other-sources-summary');
         expect(markup).toContain('provenance-detail-other-sources-details');
         expect(markup).toContain('provenance-compare-other-source-summary-1');
         expect(markup).toContain('provenance-compare-other-source-details-1');
-        expect(markup).toContain('In bundle');
         expect(markup).toContain('Outside bundle');
         expect(markup).toContain('This bundle cites 1 of 2 retrieved sources.');
         expect(markup).toContain('1 retrieved sources remain outside this bundle.');
@@ -456,13 +449,6 @@ describe('GroundingProvenancePanel', () => {
         expect(markup).toContain('support bundle 1');
         expect(markup).toContain('Append result');
         expect(markup).toContain('Replace result');
-        expect(markup).toContain('Current prompt');
-        expect(markup).toContain('Current prompt kept');
-        expect(markup).toContain('Grounding cue added');
-        expect(markup).toContain('Reference cue: Cited detail: Bundle text. Sources: Cited Source');
-        expect(markup).toContain('Cited detail: Bundle text. Sources: Cited Source');
-        expect(markup).toContain('Keeps the current composer prompt and adds the grounding cue below it.');
-        expect(markup).toContain('Replaces the current composer prompt with this grounding text.');
     });
 
     it('uses a truncated preview for coverage bundle cards in the outer list', () => {

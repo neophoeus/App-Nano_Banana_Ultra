@@ -5,7 +5,6 @@ type UseGroundingProvenancePanelPropsArgs = Omit<GroundingProvenancePanelProps, 
 
 export function useGroundingProvenancePanelProps({
     currentLanguage,
-    insightRows,
     provenanceSummaryRows,
     attributionOverviewRows,
     provenanceSourceTurn,
@@ -18,6 +17,8 @@ export function useGroundingProvenancePanelProps({
     setActiveGroundingSelection,
     focusLinkedGroundingItems,
     setFocusLinkedGroundingItems,
+    totalSourceCount,
+    totalSupportBundleCount,
     displayedSources,
     displayedSupportBundles,
     uncitedSources,
@@ -52,7 +53,6 @@ export function useGroundingProvenancePanelProps({
     return useMemo(
         () => ({
             currentLanguage,
-            insightRows,
             provenanceSummaryRows,
             attributionOverviewRows,
             provenanceSourceTurn,
@@ -65,6 +65,8 @@ export function useGroundingProvenancePanelProps({
             setActiveGroundingSelection,
             focusLinkedGroundingItems,
             setFocusLinkedGroundingItems,
+            totalSourceCount,
+            totalSupportBundleCount,
             displayedSources,
             displayedSupportBundles,
             uncitedSources,
@@ -98,7 +100,6 @@ export function useGroundingProvenancePanelProps({
         }),
         [
             currentLanguage,
-            insightRows,
             provenanceSummaryRows,
             attributionOverviewRows,
             provenanceSourceTurn,
@@ -111,6 +112,8 @@ export function useGroundingProvenancePanelProps({
             setActiveGroundingSelection,
             focusLinkedGroundingItems,
             setFocusLinkedGroundingItems,
+            totalSourceCount,
+            totalSupportBundleCount,
             displayedSources,
             displayedSupportBundles,
             uncitedSources,
