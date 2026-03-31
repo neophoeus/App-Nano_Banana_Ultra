@@ -81,8 +81,6 @@ type UseComposerSettingsPanelPropsArgs = {
     handleSurpriseMe: () => void;
     handleSmartRewrite: () => void;
     setActivePickerSheet: Dispatch<SetStateAction<PickerSheet>>;
-    handleExportWorkspaceSnapshot: () => void;
-    workspaceImportInputRef: MutableRefObject<HTMLInputElement | null>;
     setIsAdvancedSettingsOpen: Dispatch<SetStateAction<boolean>>;
     setOutputFormat: (value: OutputFormat) => void;
     setStructuredOutputMode: (value: StructuredOutputMode) => void;
@@ -151,8 +149,6 @@ export function useComposerSettingsPanelProps({
     handleSurpriseMe,
     handleSmartRewrite,
     setActivePickerSheet,
-    handleExportWorkspaceSnapshot,
-    workspaceImportInputRef,
     setIsAdvancedSettingsOpen,
     setOutputFormat,
     setStructuredOutputMode,
@@ -202,8 +198,6 @@ export function useComposerSettingsPanelProps({
         handleSurpriseMe,
         handleSmartRewrite,
         setActivePickerSheet,
-        handleExportWorkspaceSnapshot,
-        workspaceImportInputRef,
         setIsAdvancedSettingsOpen,
         setOutputFormat,
         setStructuredOutputMode,
@@ -241,8 +235,6 @@ export function useComposerSettingsPanelProps({
             handleSurpriseMe,
             handleSmartRewrite,
             setActivePickerSheet,
-            handleExportWorkspaceSnapshot,
-            workspaceImportInputRef,
             setIsAdvancedSettingsOpen,
             setOutputFormat,
             setStructuredOutputMode,
@@ -278,8 +270,6 @@ export function useComposerSettingsPanelProps({
         handleSurpriseMe,
         handleSmartRewrite,
         setActivePickerSheet,
-        handleExportWorkspaceSnapshot,
-        workspaceImportInputRef,
         setIsAdvancedSettingsOpen,
         setOutputFormat,
         setStructuredOutputMode,
@@ -363,8 +353,6 @@ export function useComposerSettingsPanelProps({
             onOpenSizePicker: openSizePicker,
             onOpenBatchPicker: openBatchPicker,
             onOpenReferences: openReferencesPicker,
-            onExportWorkspace: () => latestHandlersRef.current.handleExportWorkspaceSnapshot(),
-            onImportWorkspace: () => latestHandlersRef.current.workspaceImportInputRef.current?.click(),
             onToggleAdvancedSettings: () => {
                 latestHandlersRef.current.setActivePickerSheet(null);
                 latestHandlersRef.current.setIsAdvancedSettingsOpen(true);

@@ -75,8 +75,6 @@ export type ComposerSettingsPanelProps = {
     onOpenSizePicker: () => void;
     onOpenBatchPicker: () => void;
     onOpenReferences: () => void;
-    onExportWorkspace: () => void;
-    onImportWorkspace: () => void;
     onToggleAdvancedSettings: () => void;
     onOutputFormatChange: (value: OutputFormat) => void;
     onStructuredOutputModeChange: (value: StructuredOutputMode) => void;
@@ -206,8 +204,6 @@ function ComposerSettingsPanel({
     onOpenSizePicker,
     onOpenBatchPicker,
     onOpenReferences,
-    onExportWorkspace,
-    onImportWorkspace,
     onToggleAdvancedSettings,
     onOutputFormatChange,
     onStructuredOutputModeChange,
@@ -461,14 +457,6 @@ function ComposerSettingsPanel({
                         className={toolbarButtonClassName}
                     >
                         {t('composerToolbarAdvancedSettings')}
-                    </button>
-                </div>
-                <div data-testid="composer-workspace-tools" className={toolbarGroupClassName}>
-                    <button onClick={onExportWorkspace} className={toolbarButtonClassName}>
-                        {t('composerToolbarExportWorkspace')}
-                    </button>
-                    <button onClick={onImportWorkspace} className={toolbarButtonClassName}>
-                        {t('composerToolbarImportWorkspace')}
                     </button>
                 </div>
             </div>

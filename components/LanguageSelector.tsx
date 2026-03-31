@@ -56,7 +56,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                 <div
                     className={`nbu-overlay-shell absolute top-full right-0 z-50 mt-3 w-40 overflow-hidden animate-[fadeIn_0.1s_ease-out] rounded-xl ring-1 ring-black/5 dark:ring-white/10 ${menuClassName}`}
                 >
-                    <div className="py-1 max-h-[60vh] overflow-y-auto scrollbar-thin">
+                    <div className="py-1 max-h-[60vh] overflow-y-auto nbu-scrollbar-subtle">
                         {SUPPORTED_LANGUAGES.map((lang) => (
                             <button
                                 key={lang.value}

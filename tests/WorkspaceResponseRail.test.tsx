@@ -50,6 +50,25 @@ describe('WorkspaceResponseRail', () => {
         expect(markup.split(placeholder)).toHaveLength(2);
     });
 
+    it('renders as modal detail content without the collapsible summary wrapper when requested', () => {
+        const markup = renderToStaticMarkup(
+            <WorkspaceResponseRail
+                currentLanguage="en"
+                resultText="Fresh response text from the model."
+                structuredData={null}
+                structuredOutputMode={null}
+                formattedStructuredOutput={null}
+                resultPlaceholder="Result placeholder"
+                presentation="detail-panel"
+            />,
+        );
+
+        expect(markup).toContain('workspace-response-rail');
+        expect(markup).toContain('workspace-model-output-card');
+        expect(markup).not.toContain('workspace-response-rail-summary');
+        expect(markup).not.toContain('<summary');
+    });
+
     it('renders scene-brief structured output as readable sections instead of raw JSON only', () => {
         const markup = renderToStaticMarkup(
             <WorkspaceResponseRail

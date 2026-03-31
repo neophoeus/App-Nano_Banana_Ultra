@@ -397,6 +397,7 @@ export const ru = {
     editorBaseStageNotice: 'Текущее изображение на сцене теперь используется как база редактора.',
     composerToolbarExportWorkspace: 'Экспортировать рабочее пространство',
     composerToolbarImportWorkspace: 'Импортировать рабочее пространство',
+    workspaceSnapshotActionsTitle: 'Снимок рабочего пространства',
     composerToolbarAdvancedSettings: 'Расширенные настройки',
     composerEnterSends: 'Enter отправляет',
     composerEnterNewline: 'Enter переводит строку',
@@ -579,6 +580,7 @@ export const ru = {
     workspacePanelStatusReserved: 'Резерв',
     workspacePanelResponseEyebrow: 'Ответ',
     workspacePanelSourceTrailEyebrow: 'Путь источника',
+    workspacePanelViewDetails: 'Показать детали',
     workspacePanelResultTextReady:
         'Эта конфигурация уже может получать текстовые ответы. Когда модель вернет описание, оно появится здесь.',
     workspacePanelResultTextReserved:
@@ -863,6 +865,7 @@ export const ru = {
     workspaceViewerStructuredOutputHint:
         'Здесь тот же структурированный вывод из верхней панели раскрывается в полный режим просмотра.',
     workspaceInsightsLatestThoughts: 'Последние мысли',
+    workspaceInsightsAllThoughts: 'Все мысли',
     workspaceInsightsProvenance: 'Сведения об источниках',
     workspaceInsightsTurnsCount: '{0} ходов',
     workspaceInsightsLineageMap: 'Карта версий',

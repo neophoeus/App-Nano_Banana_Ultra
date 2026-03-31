@@ -10,11 +10,6 @@ Nano Banana Ultra is a Gemini-powered visual creation workspace for image genera
 
 Instead of treating image generation as a disposable single-shot action, Nano Banana Ultra turns it into a persistent workspace. You can move from prompt drafting to reference-guided creation, from batch exploration to branch continuation, from targeted editing to result reuse, all inside one connected flow.
 
-## Documentation
-
-- This README is now the maintained product guide for setup, workspace structure, core workflows, and day-to-day use.
-- The standalone Traditional Chinese manual was removed so the 3.1 product contract and user guidance stay in one maintained document.
-
 ## Why It Feels Different
 
 - it is built as a workspace, not just a prompt box
@@ -99,37 +94,13 @@ Nano Banana Ultra currently supports three Gemini image-model paths, each presen
 
 ## Version Overview
 
-### Latest Release: 3.1.1
+### Latest Release: 3.1.4
 
-Latest release: 3.1.1. This is primarily a layout-refinement patch on top of the 3.1 product-facing workspace baseline. History, stage, composer, answer placeholders, and overlay surfaces now share a tighter visual contract, while the existing restore, viewer, import, and reuse flows remain validated. See `CHANGELOG.md` for details.
-
-### 3.1
-
-New in 3.1:
-
-- completes the product-facing shell contract and removes standalone debug-style ownership from the primary workspace
-- consolidates workflow, continuity, and latest-thought context into `Current Work` instead of spreading it across multiple engineering-leaning surfaces
-- keeps `Answer` separate from process state while preserving structured output reuse
-- keeps `Sources & Citations` compact and evidence-first instead of audit-first
-- keeps version and branch navigation on the history side so reopen, continue, and branch actions stay near recent turns
-- consolidates maintained user guidance into this README instead of splitting it across a separate Traditional Chinese manual
+Latest release: 3.1.4. See [CHANGELOG.md](CHANGELOG.md) for release details.
 
 ### 3.x
 
-Version 3.x includes everything from 2.x and turns the app into a continuity-first image workspace rather than a simple generation screen.
-
-New in 3.x:
-
-- a rebuilt workspace shell with a compact global bar, composer-owned Model/Ratio/Size/Qty controls, a composer Reference Tray strip, image-only side actions, a Current Work rail for workflow, thoughts, and evidence, and version navigation owned by the history side
-- official conversation continuity as a first-class product path across generation, history, restore, and snapshot persistence
-- stronger branch, source-active, open-latest, continue-latest, and lineage-routing semantics across the product
-- preset-based structured outputs with reusable result flows, richer presentation, and prompt append or replace actions
-- summary-first provenance and insights surfaces with deeper drill-down, comparison, and reuse paths when needed
-- queued-batch workflow support that reads like a tracked job system instead of a debug panel, including restore-aware job persistence
-- safer local workspace snapshot restore with compacted payloads and file-backed image recovery when possible
-- restore, import, reopen, and continuity flows that keep context visible without flattening everything into one generic action
-- broader 9-language shell wording convergence across queue, viewer, provenance, restore, history, and composer surfaces
-- a more deliberate visual system with shared shell tokens, overlay tokens, and compact secondary surfaces that reduce duplicate actions and visual noise
+Version 3.x includes everything from 2.x and represents the current Nano Banana Ultra product state: a continuity-first Gemini image workspace with a summary-first shell, detail-on-demand surfaces, persistent history and restore/import flows, structured-output and provenance reuse, queued-batch workflows, official-conversation continuity, and safer file-backed recovery behavior.
 
 ### 2.x
 
@@ -175,11 +146,6 @@ For release-by-release history, see [CHANGELOG.md](CHANGELOG.md).
 Nano Banana Ultra 是一個以 Google Gemini 影像模型為核心的視覺創作工作區產品，聚焦在影像生成、引導式編修、以及可延續的多輪創作流程。它不是只給你一個 prompt 輸入框，而是讓整個創作過程可以在同一個工作區裡持續推進。
 
 你可以從提示詞開始，加入參考圖、做批次探索、從某一張結果繼續延伸、進入編輯模式做局部修正、在稍後重新還原工作區，再把有價值的結果重用到下一輪。整體體驗更像影像工作區，而不是一次性的生圖工具。
-
-## 文件導覽
-
-- 這份 README 現在就是維護中的產品說明文件，集中整理安裝啟動、介面結構、核心工作流與日常操作。
-- 獨立的 `USER_MANUAL.zh-TW.md` 已移除，避免 3.1 之後文件分散與版本不同步。
 
 ## 產品定位
 
@@ -264,35 +230,13 @@ Nano Banana Ultra 目前支援三條 Gemini 影像模型路徑，並會依模型
 
 ## 版本總覽
 
-### 最新版本：3.1.1
+### 最新版本：3.1.4
 
-最新版本：3.1.1。這一版主要是建立在 3.1 產品導向工作區基線上的版面微調與密度收斂：歷史、主圖、composer、回答 placeholder 與各種 overlay 現在共用更一致的視覺契約，同時既有的 restore、viewer、import 與重用流程都已重新驗證。詳細內容請見 `CHANGELOG.md`。
-
-### 3.1
-
-3.1 新增：
-
-- 正式完成去工程向、轉產品向的 shell 收斂，主畫面不再用 debug / replay 式 ownership 組介面
-- 把 workflow、continuity、latest thoughts 收斂到 `目前工作`，不再分散在多個工程感 surface
-- 把 `回答` 與流程狀態拆清楚，保留 structured output 的重用能力
-- 讓 `來源與引用` 維持精簡、以證據為主，而不是審計面板
-- 把版本與分支導覽固定放回歷史區，讓 reopen、continue、branch 都跟最近回合放在一起
-- 將維護中的操作說明併回這份 README，不再分拆成獨立繁中手冊
+最新版本：3.1.4。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 3.x
 
-3.x 版本包含 2.x 的全部能力，並把產品從單純的生成工具提升為以延續與工作脈絡為核心的影像工作區。
-
-3.x 新增：
-
-- 重新整理工作區 shell：保留精簡全域列，把 Model、Ratio、Size、Qty 與 Reference Tray 狀態收斂到 composer，側邊工具只保留影像工具，右側脈絡區集中目前工作、最新思考與來源依據，版本導覽回到歷史區
-- 更清楚的 branch、continue、source-active、reopen 語意
-- 可直接驅動下一輪 prompt 的 structured output 重用流程
-- 以摘要優先呈現的 provenance 與 insight 面板，並保留深層 drill-down
-- 更像任務系統的 queued-batch 呈現，而不是除錯面板
-- 收斂次級 surface，降低重複按鈕與視覺噪音
-- 更安全的本地 snapshot restore，能在可行時優先使用 file-backed recovery
-- restore、import、reopen、continuity 流程整合得更完整，不再把不同操作壓成同一種泛用動作
+3.x 版本包含 2.x 的全部能力，並代表 Nano Banana Ultra 目前的產品狀態：它已不是單次生成工具，而是以 continuity 為核心的 Gemini 影像工作區，採用 summary-first shell 與按需展開的 detail surfaces，並整合 persistent history、restore/import、structured output 與 provenance 重用、queued batch、official conversation continuity，以及更安全的 file-backed recovery 行為。
 
 ### 2.x
 

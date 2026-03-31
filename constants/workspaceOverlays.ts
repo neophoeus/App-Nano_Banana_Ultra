@@ -5,6 +5,7 @@ export const WORKSPACE_OVERLAY_Z_INDEX = {
     surfaceLoading: 235,
     importReview: 240,
     branchRename: 245,
+    workspaceDetail: 250,
     pickerSheet: 255,
     advancedSettings: 257,
     viewer: 260,

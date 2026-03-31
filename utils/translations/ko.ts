@@ -390,6 +390,7 @@ export const ko = {
     editorBaseStageNotice: '현재 스테이지 이미지가 에디터 기본 이미지로 설정되었습니다.',
     composerToolbarExportWorkspace: '워크스페이스 내보내기',
     composerToolbarImportWorkspace: '워크스페이스 가져오기',
+    workspaceSnapshotActionsTitle: '워크스페이스 스냅샷',
     composerToolbarAdvancedSettings: '고급 설정',
     composerEnterSends: 'Enter로 전송',
     composerEnterNewline: 'Enter로 줄바꿈',
@@ -563,6 +564,7 @@ export const ko = {
     workspacePanelStatusReserved: '대기',
     workspacePanelResponseEyebrow: '답변',
     workspacePanelSourceTrailEyebrow: '소스 트레일',
+    workspacePanelViewDetails: '상세 보기',
     workspacePanelResultTextReady:
         '현재 설정은 텍스트 응답을 받을 수 있습니다. 모델이 설명을 반환하면 여기에 표시됩니다.',
     workspacePanelResultTextReserved: '이미지와 텍스트를 모두 지원하는 모델로 전환하면 응답 설명이 여기에 표시됩니다.',
@@ -835,6 +837,7 @@ export const ko = {
     workspaceViewerStructuredOutputHint:
         '여기서는 상단 레일에 보이는 같은 구조화 출력을 전체 검토 레이아웃으로 펼쳐 보여줍니다.',
     workspaceInsightsLatestThoughts: '최신 생각',
+    workspaceInsightsAllThoughts: '전체 생각',
     workspaceInsightsProvenance: '출처 세부 정보',
     workspaceInsightsTurnsCount: '{0}개 턴',
     workspaceInsightsLineageMap: '버전 맵',

@@ -391,6 +391,7 @@ export const ja = {
     editorBaseStageNotice: '現在ステージしている画像をエディターのベースに設定しました。',
     composerToolbarExportWorkspace: 'ワークスペースを書き出し',
     composerToolbarImportWorkspace: 'ワークスペースを読み込み',
+    workspaceSnapshotActionsTitle: 'ワークスペーススナップショット',
     composerToolbarAdvancedSettings: '詳細設定',
     composerEnterSends: 'Enterで送信',
     composerEnterNewline: 'Enterで改行',
@@ -564,6 +565,7 @@ export const ja = {
     workspacePanelStatusReserved: '待機',
     workspacePanelResponseEyebrow: '回答',
     workspacePanelSourceTrailEyebrow: 'ソーストレイル',
+    workspacePanelViewDetails: '詳細を見る',
     workspacePanelResultTextReady:
         'この設定ではテキスト応答を受け取れます。モデルが説明文を返すと、ここに表示されます。',
     workspacePanelResultTextReserved:
@@ -844,6 +846,7 @@ export const ja = {
     workspaceViewerStructuredOutputHint:
         'ここでは上部レールに出ている同じ構造化出力を、完全な確認レイアウトとして展開します。',
     workspaceInsightsLatestThoughts: '最新の思考',
+    workspaceInsightsAllThoughts: 'すべての思考',
     workspaceInsightsProvenance: 'ソースの詳細',
     workspaceInsightsTurnsCount: '{0} ターン',
     workspaceInsightsLineageMap: 'バージョンマップ',

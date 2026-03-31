@@ -6,6 +6,7 @@ import {
     parseWorkspaceSnapshotDocument,
     sanitizeWorkspaceSnapshot,
 } from './workspacePersistence';
+import { hasRestorableWorkspaceContent } from './workspaceSnapshotState';
 
 export const LEGACY_WORKSPACE_MIGRATION_STATE_KEY = 'nbu_legacyWorkspaceMigrationState';
 export const LEGACY_WORKSPACE_SNAPSHOT_REQUEST = 'nbu-request-workspace-snapshot';
@@ -44,21 +45,7 @@ const getSnapshotRecency = (snapshot: WorkspacePersistenceSnapshot): number => {
     return Math.max(historyRecency, queuedJobRecency, snapshot.workspaceSession.updatedAt || 0);
 };
 
-export const hasRestorableWorkspaceContent = (snapshot: WorkspacePersistenceSnapshot): boolean => {
-    const normalized = sanitizeWorkspaceSnapshot(snapshot);
-    return Boolean(
-        normalized.history.length ||
-        normalized.stagedAssets.length ||
-        normalized.workflowLogs.length ||
-        normalized.queuedJobs.length ||
-        normalized.viewState.generatedImageUrls.length ||
-        normalized.viewState.selectedHistoryId ||
-        normalized.composerState.prompt.trim() ||
-        normalized.workspaceSession.activeResult ||
-        normalized.workspaceSession.sourceHistoryId ||
-        normalized.workspaceSession.conversationId,
-    );
-};
+export { hasRestorableWorkspaceContent };
 
 export const isWorkspaceSnapshotEffectivelyEmpty = (snapshot: WorkspacePersistenceSnapshot): boolean =>
     !hasRestorableWorkspaceContent(snapshot);

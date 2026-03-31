@@ -649,6 +649,7 @@ export const en = {
     editorBaseStageNotice: 'Current staged image is now set as the editor base.',
     composerToolbarExportWorkspace: 'Export Workspace',
     composerToolbarImportWorkspace: 'Import Workspace',
+    workspaceSnapshotActionsTitle: 'Workspace Snapshot',
     composerToolbarAdvancedSettings: 'Advanced settings',
     composerEnterSends: 'Enter sends',
     composerEnterNewline: 'Enter newline',
@@ -861,6 +862,7 @@ export const en = {
     workspaceResponseRailStructuredOutputHint: 'Compact scan here. Open viewer for the full structured-output layout.',
     workspaceViewerStructuredOutputHint: 'Full inspection layout for the same structured output shown in the top rail.',
     workspaceInsightsLatestThoughts: 'Latest Thoughts',
+    workspaceInsightsAllThoughts: 'All Thoughts',
     workspaceInsightsProvenance: 'Source details',
     workspaceInsightsTurnsCount: '{0} turns',
     workspaceInsightsLineageMap: 'Version map',
@@ -903,6 +905,7 @@ export const en = {
     workspacePanelStatusReserved: 'Standby',
     workspacePanelResponseEyebrow: 'Answer',
     workspacePanelSourceTrailEyebrow: 'Source Trail',
+    workspacePanelViewDetails: 'View details',
     workspacePanelResultTextReady:
         'Text responses are available for this setup. When the model returns narration, it will land here.',
     workspacePanelResultTextReserved: 'Switch to a model that supports Images & text to show response narration here.',

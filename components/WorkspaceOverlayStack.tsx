@@ -19,6 +19,7 @@ type WorkspaceOverlayStackProps = {
     restoreNoticeProps: React.ComponentProps<typeof WorkspaceRestoreNotice> | null;
     importReviewProps: React.ComponentProps<typeof WorkspaceImportReview> | null;
     advancedSettingsDialogProps: React.ComponentProps<typeof ComposerAdvancedSettingsDialog> | null;
+    extraOverlays?: React.ReactNode;
     sketchPadSurface: React.ReactNode;
     showSketchReplaceConfirm: boolean;
     sketchReplaceTitle: string;
@@ -40,6 +41,7 @@ export default function WorkspaceOverlayStack({
     restoreNoticeProps,
     importReviewProps,
     advancedSettingsDialogProps,
+    extraOverlays,
     sketchPadSurface,
     showSketchReplaceConfirm,
     sketchReplaceTitle,
@@ -73,6 +75,7 @@ export default function WorkspaceOverlayStack({
             {restoreNoticeProps && <WorkspaceRestoreNotice {...restoreNoticeProps} />}
             {importReviewProps && <WorkspaceImportReview {...importReviewProps} />}
             {advancedSettingsDialogProps && <ComposerAdvancedSettingsDialog {...advancedSettingsDialogProps} />}
+            {extraOverlays}
             {sketchPadSurface}
 
             {showSketchReplaceConfirm && (

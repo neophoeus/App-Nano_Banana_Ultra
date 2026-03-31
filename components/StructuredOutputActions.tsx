@@ -163,8 +163,8 @@ export default function StructuredOutputActions({
             : 'nbu-control-button px-3 py-1.5 text-xs';
     const menuPanelClassName =
         variant === 'dark'
-            ? 'nbu-floating-panel absolute right-0 top-full z-20 mt-2 w-44 rounded-2xl p-2'
-            : 'nbu-floating-panel absolute right-0 top-full z-20 mt-2 w-44 rounded-2xl p-2';
+            ? 'nbu-floating-panel absolute left-1/2 top-full z-20 mt-2 w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 rounded-2xl p-2 sm:left-auto sm:right-0 sm:w-44 sm:translate-x-0'
+            : 'nbu-floating-panel absolute left-1/2 top-full z-20 mt-2 w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 rounded-2xl p-2 sm:left-auto sm:right-0 sm:w-44 sm:translate-x-0';
     const summaryClassName =
         variant === 'dark'
             ? 'nbu-control-button flex cursor-pointer list-none items-center gap-2 px-3 py-1.5 text-xs text-slate-200'

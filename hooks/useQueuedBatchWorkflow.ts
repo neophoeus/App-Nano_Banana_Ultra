@@ -16,6 +16,7 @@ import {
     StructuredOutputMode,
 } from '../types';
 import { generateThumbnail, saveImageToLocal } from '../utils/imageSaveUtils';
+import { sanitizeSessionHintsForStorage } from '../utils/inlineImageDisplay';
 import { useQueuedBatchJobs } from './useQueuedBatchJobs';
 
 const QUEUED_BATCH_JOB_STATES: QueuedBatchJobState[] = [
@@ -581,7 +582,7 @@ export function useQueuedBatchWorkflow({
                                     includeThoughts: job.includeThoughts,
                                 },
                                 grounding: result.grounding,
-                                sessionHints: result.sessionHints || null,
+                                sessionHints: sanitizeSessionHintsForStorage(result.sessionHints || null) || null,
                                 conversationId: null,
                                 conversationBranchOriginId: null,
                                 conversationSourceHistoryId: null,

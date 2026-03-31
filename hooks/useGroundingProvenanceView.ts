@@ -2,6 +2,11 @@ import { useCallback, useMemo } from 'react';
 import { GenerationSettings, GroundingMetadata, ResultArtifacts, WorkspaceSessionState } from '../types';
 import { deriveGroundingMode, getGroundingModeLabel } from '../utils/groundingMode';
 import { buildGroundingAttributionDetails, buildGroundingAttributionOverview } from '../utils/groundingProvenance';
+import {
+    buildOmittedPayloadSummary,
+    sanitizeInlineImageDisplayValue,
+    sanitizeSensitiveDisplayText,
+} from '../utils/inlineImageDisplay';
 import { formatStructuredOutputDisplay, normalizeStructuredOutputMode } from '../utils/structuredOutputs';
 import { GroundingSelection } from './useSelectedResultState';
 
@@ -417,21 +422,28 @@ export function useGroundingProvenanceView({
         [],
     );
     const formatSessionHintValue = useCallback(
-        (value: unknown) => {
+        (key: string, value: unknown) => {
             if (typeof value === 'string') {
-                return normalizeOptionalDisplayString(value) || t('groundingProvenanceNone');
+                if (key === 'thoughtSignature' && value.trim()) {
+                    return buildOmittedPayloadSummary(formatSessionHintKey(key).toLowerCase(), value);
+                }
+
+                return (
+                    normalizeOptionalDisplayString(sanitizeSensitiveDisplayText(value)) ||
+                    t('groundingProvenanceNone')
+                );
             }
             if (typeof value === 'number' || typeof value === 'boolean' || value == null) {
                 return String(value);
             }
 
             try {
-                return JSON.stringify(value);
+                return JSON.stringify(sanitizeInlineImageDisplayValue(value));
             } catch {
                 return String(value);
             }
         },
-        [t],
+        [formatSessionHintKey, t],
     );
     const formatSourceHost = useCallback((url: string) => {
         try {

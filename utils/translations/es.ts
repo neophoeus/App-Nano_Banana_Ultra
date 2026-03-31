@@ -397,6 +397,7 @@ export const es = {
     editorBaseStageNotice: 'La imagen actual en escena se ha establecido como base del editor.',
     composerToolbarExportWorkspace: 'Exportar espacio de trabajo',
     composerToolbarImportWorkspace: 'Importar espacio de trabajo',
+    workspaceSnapshotActionsTitle: 'Instantanea del espacio de trabajo',
     composerToolbarAdvancedSettings: 'Ajustes avanzados',
     composerEnterSends: 'Enter envia',
     composerEnterNewline: 'Enter inserta salto de linea',
@@ -584,6 +585,7 @@ export const es = {
     workspacePanelStatusReserved: 'En espera',
     workspacePanelResponseEyebrow: 'Respuesta',
     workspacePanelSourceTrailEyebrow: 'Rastro de origen',
+    workspacePanelViewDetails: 'Ver detalles',
     workspacePanelResultTextReady:
         'Esta configuracion ya puede recibir respuestas de texto. Cuando el modelo devuelva una narracion, aparecera aqui.',
     workspacePanelResultTextReserved:
@@ -872,6 +874,7 @@ export const es = {
     workspaceViewerStructuredOutputHint:
         'Aqui se expande la misma salida estructurada de la barra superior en un diseno completo de inspeccion.',
     workspaceInsightsLatestThoughts: 'Ultimos pensamientos',
+    workspaceInsightsAllThoughts: 'Todos los pensamientos',
     workspaceInsightsProvenance: 'Detalles de origen',
     workspaceInsightsTurnsCount: '{0} turnos',
     workspaceInsightsLineageMap: 'Mapa de versiones',

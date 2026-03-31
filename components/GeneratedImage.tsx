@@ -144,9 +144,9 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
 
     // Unified Control Panel (Info + Actions) - Top Right
     const ControlPanel = () => (
-        <div className="absolute top-4 right-4 z-30 flex flex-col items-end gap-2 pointer-events-none transition-opacity duration-300">
+        <div className="pointer-events-none absolute left-3 right-3 top-3 z-30 flex flex-col items-end gap-2 transition-opacity duration-300 sm:left-auto sm:right-4 sm:top-4">
             {/* Row 1: Metadata Badges */}
-            <div className="nbu-overlay-shell pointer-events-auto flex cursor-default items-center gap-0.5 px-3 py-1.5 text-[10px] font-bold text-gray-700 transition-colors sm:text-xs dark:text-gray-200">
+            <div className="nbu-overlay-shell pointer-events-auto flex max-w-full self-stretch cursor-default flex-wrap items-center justify-end gap-x-1 gap-y-1 px-3 py-1.5 text-[10px] font-bold text-gray-700 transition-colors sm:max-w-[calc(100%-1rem)] sm:self-auto sm:text-xs dark:text-gray-200">
                 <span className="text-amber-600 dark:text-amber-400">{resolvedAspectRatio}</span>
                 <span className="mx-1.5 opacity-30">|</span>
                 <span className="text-amber-500 dark:text-amber-200">{resolvedImageSize}</span>
@@ -182,9 +182,9 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
 
             {/* Row 2: Actions (Only show if images exist) */}
             {imageUrls.length > 0 && (
-                <div className="flex items-center gap-2 pointer-events-auto animate-[fadeIn_0.2s_ease-out]">
+                <div className="pointer-events-auto flex max-w-full self-stretch flex-wrap items-center justify-end gap-2 animate-[fadeIn_0.2s_ease-out] sm:self-auto">
                     {onClear && (
-                        <div className="nbu-overlay-shell flex items-center gap-0.5 p-1 transition-colors">
+                        <div className="nbu-overlay-shell flex max-w-full items-center gap-0.5 p-1 transition-colors">
                             <button
                                 onClick={onClear}
                                 className="p-1.5 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all"
@@ -215,7 +215,7 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
     // --- FULL LOADING SCREEN (0 images yet) ---
     if (showFullLoading) {
         return (
-            <div className="flex h-full w-full flex-col transition-colors duration-500">
+            <div className="flex min-w-0 h-full w-full flex-col transition-colors duration-500">
                 <StageFrame>
                     <div className="nbu-stage-surface group relative flex h-full w-full flex-col items-center justify-center p-8">
                         <style>{`
@@ -263,7 +263,7 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
     // --- ERROR STATE (For when a failed history item is selected) ---
     if (error && imageUrls.length === 0) {
         return (
-            <div className="flex h-full w-full flex-col transition-colors duration-500">
+            <div className="flex min-w-0 h-full w-full flex-col transition-colors duration-500">
                 <StageFrame>
                     <div className="nbu-stage-surface relative flex h-full w-full flex-col items-center justify-center p-8">
                         <ControlPanel />
@@ -326,7 +326,7 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
     // --- EMPTY STATE ---
     if (!activeImage && !isLoading) {
         return (
-            <div className="flex h-full w-full flex-col transition-colors duration-500">
+            <div className="flex min-w-0 h-full w-full flex-col transition-colors duration-500">
                 <StageFrame>
                     <div className="nbu-empty-state-panel group relative flex h-full w-full flex-col items-center justify-center overflow-hidden border-2 border-dashed text-gray-500">
                         <ControlPanel />
@@ -383,7 +383,7 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
 
     // --- MAIN DISPLAY (Result + Partial Loading/Scanning Effect) ---
     return (
-        <div className="flex h-full w-full flex-col transition-colors duration-500">
+        <div className="flex min-w-0 h-full w-full flex-col transition-colors duration-500">
             {/* Main Image Display */}
             <StageFrame>
                 <div
@@ -452,7 +452,7 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
                         <button
                             data-testid="stage-open-viewer"
                             onClick={onOpenViewer}
-                            className={`nbu-overlay-shell absolute bottom-4 left-4 rounded-full px-3 py-2 text-xs font-semibold text-gray-700 transition-all dark:text-gray-200 ${isHovered ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+                            className={`nbu-overlay-shell absolute bottom-4 left-4 max-w-[calc(100%-2rem)] rounded-full px-3 py-2 text-xs font-semibold text-gray-700 transition-all dark:text-gray-200 ${isHovered ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
                         >
                             {t('stageOpenViewer')}
                         </button>
@@ -482,7 +482,7 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
 
             {/* Thumbnail Strip */}
             {(imageUrls.length > 1 || (isLoading && imageUrls.length > 0)) && (
-                <div className="h-24 mt-4 flex gap-3 overflow-x-auto pb-2 scrollbar-thin shrink-0 px-2">
+                <div className="h-24 mt-4 flex gap-3 overflow-x-auto pb-2 nbu-scrollbar-subtle shrink-0 px-2">
                     {imageUrls.map((url, idx) => (
                         <button
                             key={idx}

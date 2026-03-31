@@ -41,14 +41,19 @@ function WorkspaceSideToolPanel({
     const editorBaseDetail = editorBaseAsset ? getStageOriginLabel(editorBaseAsset.origin) : t('stageOriginNotStaged');
 
     return (
-        <aside data-testid="workspace-side-tool-panel" className="nbu-subpanel nbu-shell-surface-actions-bar p-3">
+        <aside
+            data-testid="workspace-side-tool-panel"
+            className="nbu-subpanel nbu-shell-surface-actions-bar min-w-0 overflow-hidden p-3"
+        >
             <div className="min-w-0">
                 <div className="min-w-0 flex-1">
                     <p className="nbu-section-eyebrow">{t('composerActionPanelEyebrow')}</p>
                     <h2 className="mt-1 text-[15px] font-black text-gray-900 dark:text-gray-100">
                         {t('workspaceSideToolTitle')}
                     </h2>
-                    <p className="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100">{stageSourceDetail}</p>
+                    <p className="mt-2 break-words text-sm font-semibold text-gray-900 dark:text-gray-100">
+                        {stageSourceDetail}
+                    </p>
                     <div className="mt-2.5 flex flex-wrap gap-2 text-[11px] text-gray-500 dark:text-gray-400">
                         <span className="nbu-chip">
                             {t('workspaceSideToolBaseImage')}: {editorBaseDetail}
@@ -61,7 +66,7 @@ function WorkspaceSideToolPanel({
                 <Button
                     variant="secondary"
                     onClick={onUploadBaseImage}
-                    className="justify-center rounded-[16px]"
+                    className="min-w-0 justify-center rounded-[16px] whitespace-normal text-center"
                     data-testid="side-tools-upload-base"
                 >
                     {t('workspacePickerUploadBaseImage')}
@@ -69,7 +74,7 @@ function WorkspaceSideToolPanel({
                 <Button
                     variant="secondary"
                     onClick={onOpenEditor}
-                    className="justify-center rounded-[16px]"
+                    className="min-w-0 justify-center rounded-[16px] whitespace-normal text-center"
                     data-testid="side-tools-open-editor"
                 >
                     {editorEntryLabel}
@@ -77,7 +82,7 @@ function WorkspaceSideToolPanel({
                 <Button
                     variant="secondary"
                     onClick={onOpenSketchPad}
-                    className="justify-center rounded-[16px]"
+                    className="min-w-0 justify-center rounded-[16px] whitespace-normal text-center"
                     data-testid="side-tools-open-sketchpad"
                 >
                     {t('workspacePickerOpenSketchPad')}
@@ -90,7 +95,7 @@ function WorkspaceSideToolPanel({
                         <div className="text-xs uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
                             {t('workspaceSideToolBaseImage')}
                         </div>
-                        <div className="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                        <div className="mt-2 break-words text-sm font-semibold text-gray-900 dark:text-gray-100">
                             {editorBaseDetail}
                         </div>
                     </div>
@@ -101,7 +106,7 @@ function WorkspaceSideToolPanel({
                         <div className="text-xs uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
                             {t('workspaceSideToolCurrentImage')}
                         </div>
-                        <div className="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                        <div className="mt-2 break-words text-sm font-semibold text-gray-900 dark:text-gray-100">
                             {stageSourceDetail}
                         </div>
                     </div>

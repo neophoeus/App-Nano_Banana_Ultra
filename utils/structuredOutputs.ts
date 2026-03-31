@@ -1,4 +1,5 @@
 import { StructuredOutputMode } from '../types';
+import { sanitizeInlineImageDataInText, sanitizeInlineImageDisplayValue } from './inlineImageDisplay';
 
 export type StructuredOutputDefinition = {
     label: string;
@@ -314,10 +315,10 @@ export function formatStructuredOutputDisplay(
     fallbackText?: string | null,
 ): string | null {
     if (structuredData) {
-        return JSON.stringify(structuredData, null, 2);
+        return JSON.stringify(sanitizeInlineImageDisplayValue(structuredData), null, 2);
     }
 
-    return fallbackText || null;
+    return fallbackText ? sanitizeInlineImageDataInText(fallbackText) : null;
 }
 
 export function hasStructuredOutputMode(mode: StructuredOutputMode | null | undefined): boolean {

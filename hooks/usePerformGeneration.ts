@@ -13,8 +13,9 @@ import {
     ThinkingLevel,
 } from '../types';
 import { generateImageWithGemini, checkApiKey, promptForApiKey } from '../services/geminiService';
-import { saveImageToLocal, generateThumbnail } from '../utils/imageSaveUtils';
+import { buildSavedImageLoadUrl, saveImageToLocal, generateThumbnail } from '../utils/imageSaveUtils';
 import { deriveExecutionMode } from '../utils/executionMode';
+import { sanitizeSessionHintsForStorage } from '../utils/inlineImageDisplay';
 
 const MODEL_TRANSLATION_KEYS: Record<ImageModel, string> = {
     'gemini-3.1-flash-image-preview': 'modelGemini31Flash',
@@ -213,7 +214,6 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                 addLog(t('logRequesting').replace('{0}', currentBatchSize.toString()).replace('{1}', currentImageSize));
 
                 const handleImageReceived = async (url: string): Promise<string | undefined> => {
-                    setGeneratedImageUrls((prev: string[]) => [...prev, url]);
                     const metadata = {
                         prompt: finalPrompt,
                         style: targetStyle,
@@ -223,9 +223,12 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                     };
                     const prefix = editingInput ? `${targetModel}-edit` : `${targetModel}-gen`;
                     const savedPath = await saveImageToLocal(url, prefix, metadata);
+                    const filename = savedPath?.split(/[\\/]/).pop();
+                    const displayUrl = filename ? buildSavedImageLoadUrl(filename) : url;
 
-                    if (savedPath) {
-                        const filename = savedPath.split(/[\\/]/).pop();
+                    setGeneratedImageUrls((prev: string[]) => [...prev, displayUrl]);
+
+                    if (filename) {
                         addLog(t('logSaved').replace('{0}', filename || ''));
                         return filename;
                     } else {
@@ -265,6 +268,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                 const newHistoryItems: GeneratedImageType[] = [];
                 for (const res of results) {
                     let thumbnailUrl = '';
+                    const sanitizedSessionHints = sanitizeSessionHintsForStorage(res.sessionHints || null);
                     if (res.status === 'success' && res.url) {
                         try {
                             thumbnailUrl = await generateThumbnail(res.url);
@@ -293,7 +297,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                         structuredData: res.structuredData,
                         metadata: res.metadata,
                         grounding: res.grounding,
-                        sessionHints: res.sessionHints,
+                        sessionHints: sanitizedSessionHints || undefined,
                         conversationId: res.conversation?.conversationId || null,
                         conversationBranchOriginId:
                             res.conversation?.branchOriginId || conversationContext?.branchOriginId || null,

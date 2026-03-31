@@ -402,7 +402,7 @@ const SketchPad: React.FC<SketchPadProps> = ({ onSave, onClose, currentLanguage 
             {/* === BOTTOM FLOATING TOOLBAR === */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-3 items-center w-full px-4 pointer-events-none">
                 {/* Tool Selection Pill */}
-                <div className="nbu-toolbar-shell pointer-events-auto flex max-w-full items-center gap-1 overflow-x-auto p-2 scrollbar-thin">
+                <div className="nbu-toolbar-shell pointer-events-auto flex max-w-full items-center gap-1 overflow-x-auto p-2 nbu-scrollbar-subtle">
                     {/* Pan Tool (Hand) */}
                     <button
                         onClick={() => setActiveTool('pan')}

@@ -61,8 +61,6 @@ const baseProps = {
     onOpenSizePicker: vi.fn(),
     onOpenBatchPicker: vi.fn(),
     onOpenReferences: vi.fn(),
-    onExportWorkspace: vi.fn(),
-    onImportWorkspace: vi.fn(),
     onToggleAdvancedSettings: vi.fn(),
     onOutputFormatChange: vi.fn(),
     onStructuredOutputModeChange: vi.fn(),

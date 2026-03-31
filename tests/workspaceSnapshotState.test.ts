@@ -5,6 +5,7 @@ import {
     buildDisplaySettingsFromComposerState,
     buildWorkspaceComposerStateFromHistoryItem,
     deriveAppliedWorkspaceSnapshotState,
+    hasRestorableWorkspaceContent,
     shouldShowRestoreNoticeForSnapshot,
 } from '../utils/workspaceSnapshotState';
 
@@ -38,6 +39,57 @@ describe('workspaceSnapshotState', () => {
             },
         };
         expect(shouldShowRestoreNoticeForSnapshot(withViewerImages)).toBe(true);
+
+        const withPromptOnly: WorkspacePersistenceSnapshot = {
+            ...EMPTY_WORKSPACE_SNAPSHOT,
+            composerState: {
+                ...EMPTY_WORKSPACE_SNAPSHOT.composerState,
+                prompt: 'Recovered prompt draft',
+            },
+        };
+        expect(shouldShowRestoreNoticeForSnapshot(withPromptOnly)).toBe(true);
+
+        const withQueuedJobsOnly: WorkspacePersistenceSnapshot = {
+            ...EMPTY_WORKSPACE_SNAPSHOT,
+            queuedJobs: [
+                {
+                    localId: 'queued-job-1',
+                    name: 'recovered-batch',
+                    displayName: 'Recovered batch',
+                    state: 'queued',
+                    model: 'gemini-3.1-flash-image-preview',
+                    prompt: 'Recovered queued batch',
+                    aspectRatio: '1:1',
+                    imageSize: '2K',
+                    style: 'None',
+                    outputFormat: 'images-only',
+                    temperature: 1,
+                    thinkingLevel: 'minimal',
+                    includeThoughts: true,
+                    googleSearch: false,
+                    imageSearch: false,
+                    batchSize: 1,
+                    objectImageCount: 0,
+                    characterImageCount: 0,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    restoredFromSnapshot: true,
+                },
+            ],
+        };
+        expect(shouldShowRestoreNoticeForSnapshot(withQueuedJobsOnly)).toBe(true);
+    });
+
+    it('shares the same restorable-content detection used by migration flows', () => {
+        expect(hasRestorableWorkspaceContent(EMPTY_WORKSPACE_SNAPSHOT)).toBe(false);
+
+        const withWorkflowLogsOnly: WorkspacePersistenceSnapshot = {
+            ...EMPTY_WORKSPACE_SNAPSHOT,
+            workflowLogs: ['[12:00:00] Restored workspace state.'],
+        };
+
+        expect(hasRestorableWorkspaceContent(withWorkflowLogsOnly)).toBe(true);
+        expect(shouldShowRestoreNoticeForSnapshot(withWorkflowLogsOnly)).toBe(true);
     });
 
     it('maps composer state into display settings', () => {

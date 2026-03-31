@@ -1,4 +1,5 @@
 import { StructuredOutputMode } from '../types';
+import { sanitizeInlineImageDataInText, sanitizeInlineImageDisplayValue } from './inlineImageDisplay';
 import { getTranslation, Language } from './translations';
 
 export type StructuredOutputDisplayEntry = {
@@ -221,7 +222,7 @@ export const buildStructuredOutputDisplayEntries = (
             }
 
             if (isPrimitiveDisplayValue(value)) {
-                const normalizedValue = String(value).trim();
+                const normalizedValue = sanitizeInlineImageDataInText(String(value)).trim();
                 if (normalizedValue) {
                     entries.push({
                         key,
@@ -242,7 +243,7 @@ export const buildStructuredOutputDisplayEntries = (
                         getTranslation(currentLanguage, STRUCTURED_OUTPUT_FIELD_LABEL_KEYS[key] || '') ||
                         humanizeStructuredOutputKey(key),
                     kind: 'json',
-                    value: JSON.stringify(value, null, 2),
+                    value: JSON.stringify(sanitizeInlineImageDisplayValue(value), null, 2),
                 });
             }
 

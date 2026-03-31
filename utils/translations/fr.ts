@@ -395,6 +395,7 @@ export const fr = {
     editorBaseStageNotice: 'L image actuellement placee sur la scene sert maintenant de base a l editeur.',
     composerToolbarExportWorkspace: 'Exporter l espace de travail',
     composerToolbarImportWorkspace: 'Importer l espace de travail',
+    workspaceSnapshotActionsTitle: 'Instantane de l espace de travail',
     composerToolbarAdvancedSettings: 'Parametres avances',
     composerEnterSends: 'Entrer pour envoyer',
     composerEnterNewline: 'Entrer pour un saut de ligne',
@@ -581,6 +582,7 @@ export const fr = {
     workspacePanelStatusReserved: 'En attente',
     workspacePanelResponseEyebrow: 'Reponse',
     workspacePanelSourceTrailEyebrow: 'Piste source',
+    workspacePanelViewDetails: 'Voir les details',
     workspacePanelResultTextReady:
         'Cette configuration peut deja recevoir des reponses textuelles. Quand le modele renverra une narration, elle apparaitra ici.',
     workspacePanelResultTextReserved:
@@ -872,6 +874,7 @@ export const fr = {
     workspaceViewerStructuredOutputHint:
         'Ici, la meme sortie structuree que dans la barre du haut est deployeee en mise en page d inspection complete.',
     workspaceInsightsLatestThoughts: 'Dernieres pensees',
+    workspaceInsightsAllThoughts: 'Toutes les pensees',
     workspaceInsightsProvenance: 'Details des sources',
     workspaceInsightsTurnsCount: '{0} tours',
     workspaceInsightsLineageMap: 'Carte des versions',

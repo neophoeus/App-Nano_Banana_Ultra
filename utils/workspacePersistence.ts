@@ -18,6 +18,7 @@ import {
     getNormalizedConversationTurnIds,
     resolveConversationSelectionState,
 } from './conversationState';
+import { sanitizeSessionHintsForStorage } from './inlineImageDisplay';
 import { buildLineagePresentation } from './lineage';
 
 export const WORKSPACE_SNAPSHOT_STORAGE_KEY = 'nbu_workspaceSnapshot';
@@ -92,6 +93,167 @@ const isInlineAssetUrl = (value: string): boolean => value.startsWith(INLINE_ASS
 const buildLoadImageUrl = (savedFilename: string): string =>
     `${LOAD_IMAGE_ENDPOINT}?filename=${encodeURIComponent(savedFilename)}`;
 
+const shouldStripInlineGeneratedStageAssetForPersistence = (asset: StageAsset): boolean =>
+    isInlineAssetUrl(asset.url) &&
+    !asset.savedFilename &&
+    (asset.origin === 'generated' || asset.origin === 'history' || asset.origin === 'editor');
+
+const buildPersistableHistoryItem = (item: GeneratedImage): GeneratedImage => {
+    if (item.savedFilename && isInlineAssetUrl(item.url)) {
+        return {
+            ...item,
+            url: buildLoadImageUrl(item.savedFilename),
+        };
+    }
+
+    if (!item.savedFilename && isInlineAssetUrl(item.url)) {
+        return {
+            ...item,
+            url: '',
+        };
+    }
+
+    return item;
+};
+
+const buildPersistableStageAsset = (asset: StageAsset): StageAsset => {
+    if (asset.savedFilename && isInlineAssetUrl(asset.url)) {
+        return {
+            ...asset,
+            url: buildLoadImageUrl(asset.savedFilename),
+        };
+    }
+
+    if (shouldStripInlineGeneratedStageAssetForPersistence(asset)) {
+        return {
+            ...asset,
+            url: '',
+        };
+    }
+
+    return asset;
+};
+
+const collectRuntimeInlineHistoryIds = (
+    history: GeneratedImage[],
+    snapshot: Pick<WorkspacePersistenceSnapshot, 'viewState' | 'workspaceSession' | 'conversationState'>,
+): Set<string> => {
+    const historyById = new Map(history.map((item) => [item.id, item]));
+    const preservedHistoryIds = new Set<string>();
+    const pushHistoryId = (historyId?: string | null) => {
+        if (historyId) {
+            preservedHistoryIds.add(historyId);
+        }
+    };
+
+    pushHistoryId(snapshot.viewState.selectedHistoryId);
+    pushHistoryId(snapshot.workspaceSession.activeResult?.historyId);
+    pushHistoryId(snapshot.workspaceSession.sourceHistoryId);
+    snapshot.workspaceSession.conversationTurnIds.forEach(pushHistoryId);
+
+    Object.values(snapshot.conversationState.byBranchOriginId).forEach((record) => {
+        pushHistoryId(record.activeSourceHistoryId);
+        record.turnIds.forEach(pushHistoryId);
+    });
+
+    let changed = true;
+    while (changed) {
+        changed = false;
+
+        preservedHistoryIds.forEach((historyId) => {
+            const item = historyById.get(historyId);
+            if (!item) {
+                return;
+            }
+
+            [item.conversationSourceHistoryId, item.parentHistoryId, item.rootHistoryId, item.sourceHistoryId].forEach(
+                (relatedHistoryId) => {
+                    if (relatedHistoryId && !preservedHistoryIds.has(relatedHistoryId)) {
+                        preservedHistoryIds.add(relatedHistoryId);
+                        changed = true;
+                    }
+                },
+            );
+        });
+    }
+
+    return preservedHistoryIds;
+};
+
+const buildRuntimeHistoryItem = (item: GeneratedImage, preservedInlineHistoryIds: Set<string>): GeneratedImage => {
+    if (item.savedFilename && isInlineAssetUrl(item.url)) {
+        return {
+            ...item,
+            url: buildLoadImageUrl(item.savedFilename),
+        };
+    }
+
+    if (!item.savedFilename && isInlineAssetUrl(item.url) && !preservedInlineHistoryIds.has(item.id)) {
+        return {
+            ...item,
+            url: '',
+        };
+    }
+
+    return item;
+};
+
+const shouldPreserveRuntimeStageAsset = (asset: StageAsset, preservedInlineHistoryIds: Set<string>): boolean =>
+    asset.role === 'stage-source' &&
+    Boolean(asset.sourceHistoryId && preservedInlineHistoryIds.has(asset.sourceHistoryId));
+
+const buildRuntimeStageAsset = (asset: StageAsset, preservedInlineHistoryIds: Set<string>): StageAsset => {
+    if (asset.savedFilename && isInlineAssetUrl(asset.url)) {
+        return {
+            ...asset,
+            url: buildLoadImageUrl(asset.savedFilename),
+        };
+    }
+
+    if (
+        shouldStripInlineGeneratedStageAssetForPersistence(asset) &&
+        !shouldPreserveRuntimeStageAsset(asset, preservedInlineHistoryIds)
+    ) {
+        return {
+            ...asset,
+            url: '',
+        };
+    }
+
+    return asset;
+};
+
+const buildRuntimeWorkspaceSnapshot = (snapshot: WorkspacePersistenceSnapshot): WorkspacePersistenceSnapshot => {
+    const normalized = sanitizeWorkspaceSnapshot(snapshot);
+    const preservedInlineHistoryIds = collectRuntimeInlineHistoryIds(normalized.history, normalized);
+    const historyWithRuntimeAssets = normalized.history.map((item) =>
+        buildRuntimeHistoryItem(item, preservedInlineHistoryIds),
+    );
+    const selectedHistoryItem =
+        historyWithRuntimeAssets.find((item) => item.id === normalized.viewState.selectedHistoryId) || null;
+    const stagedAssetsWithRuntimeAssets = normalized.stagedAssets.map((asset) =>
+        buildRuntimeStageAsset(asset, preservedInlineHistoryIds),
+    );
+    const currentStageAsset = stagedAssetsWithRuntimeAssets.find((asset) => asset.role === 'stage-source') || null;
+    const filteredGeneratedImageUrls = normalized.viewState.generatedImageUrls.filter((url) => !isInlineAssetUrl(url));
+    const restoredStageUrl =
+        currentStageAsset?.url ||
+        selectedHistoryItem?.url ||
+        filteredGeneratedImageUrls[0] ||
+        (selectedHistoryItem?.savedFilename ? buildLoadImageUrl(selectedHistoryItem.savedFilename) : null);
+
+    return sanitizeWorkspaceSnapshot({
+        ...normalized,
+        history: historyWithRuntimeAssets,
+        stagedAssets: stagedAssetsWithRuntimeAssets,
+        viewState: {
+            ...normalized.viewState,
+            generatedImageUrls: restoredStageUrl ? [restoredStageUrl] : filteredGeneratedImageUrls,
+            selectedImageIndex: 0,
+        },
+    });
+};
+
 const isStorageQuotaError = (error: unknown): boolean => {
     if (typeof error !== 'object' || error === null) {
         return false;
@@ -106,33 +268,15 @@ const isStorageQuotaError = (error: unknown): boolean => {
     );
 };
 
-const buildLocalWorkspaceSnapshot = (
+const buildPersistableWorkspaceSnapshot = (
     snapshot: WorkspacePersistenceSnapshot,
     options?: { aggressive?: boolean },
 ): WorkspacePersistenceSnapshot => {
     const normalized = sanitizeWorkspaceSnapshot(snapshot);
-    const historyWithLinkedAssets = normalized.history.map((item) => {
-        if (item.savedFilename && isInlineAssetUrl(item.url)) {
-            return {
-                ...item,
-                url: buildLoadImageUrl(item.savedFilename),
-            };
-        }
-
-        return item;
-    });
+    const historyWithLinkedAssets = normalized.history.map(buildPersistableHistoryItem);
     const selectedHistoryItem =
         historyWithLinkedAssets.find((item) => item.id === normalized.viewState.selectedHistoryId) || null;
-    const stagedAssetsWithLinkedAssets = normalized.stagedAssets.map((asset) => {
-        if (asset.savedFilename && isInlineAssetUrl(asset.url)) {
-            return {
-                ...asset,
-                url: buildLoadImageUrl(asset.savedFilename),
-            };
-        }
-
-        return asset;
-    });
+    const stagedAssetsWithLinkedAssets = normalized.stagedAssets.map(buildPersistableStageAsset);
     const currentStageAsset = stagedAssetsWithLinkedAssets.find((asset) => asset.role === 'stage-source') || null;
     const filteredGeneratedImageUrls = normalized.viewState.generatedImageUrls.filter((url) => !isInlineAssetUrl(url));
     const restoredStageUrl =
@@ -185,13 +329,28 @@ const sanitizeHistory = (value: unknown): GeneratedImage[] => {
         return [];
     }
 
-    return value.filter(
-        (item): item is GeneratedImage =>
-            isRecord(item) &&
-            typeof item.id === 'string' &&
-            typeof item.url === 'string' &&
-            typeof item.prompt === 'string',
-    );
+    return value.flatMap((item) => {
+        if (
+            !(
+                isRecord(item) &&
+                typeof item.id === 'string' &&
+                typeof item.url === 'string' &&
+                typeof item.prompt === 'string'
+            )
+        ) {
+            return [];
+        }
+
+        return [
+            {
+                ...(item as GeneratedImage),
+                sessionHints:
+                    sanitizeSessionHintsForStorage(
+                        isRecord(item.sessionHints) ? (item.sessionHints as Record<string, unknown>) : null,
+                    ) || undefined,
+            },
+        ];
+    });
 };
 
 const sanitizeStagedAssets = (value: unknown): StageAsset[] => {
@@ -296,9 +455,24 @@ const sanitizeWorkspaceSession = (value: unknown): WorkspaceSessionState => {
         return EMPTY_WORKSPACE_SESSION;
     }
 
+    const activeResult = isRecord(value.activeResult)
+        ? {
+              ...value.activeResult,
+              sessionHints: sanitizeSessionHintsForStorage(
+                  isRecord(value.activeResult.sessionHints)
+                      ? (value.activeResult.sessionHints as Record<string, unknown>)
+                      : null,
+              ),
+          }
+        : null;
+
     return {
         ...EMPTY_WORKSPACE_SESSION,
         ...value,
+        activeResult: activeResult as WorkspaceSessionState['activeResult'],
+        continuitySessionHints: sanitizeSessionHintsForStorage(
+            isRecord(value.continuitySessionHints) ? (value.continuitySessionHints as Record<string, unknown>) : null,
+        ),
         conversationId: typeof value.conversationId === 'string' ? value.conversationId : null,
         conversationBranchOriginId:
             typeof value.conversationBranchOriginId === 'string' ? value.conversationBranchOriginId : null,
@@ -495,7 +669,7 @@ export const loadWorkspaceSnapshot = (): WorkspacePersistenceSnapshot => {
             return EMPTY_WORKSPACE_SNAPSHOT;
         }
 
-        return sanitizeWorkspaceSnapshot(parsed);
+        return buildRuntimeWorkspaceSnapshot(parsed);
     } catch {
         return EMPTY_WORKSPACE_SNAPSHOT;
     }
@@ -503,8 +677,8 @@ export const loadWorkspaceSnapshot = (): WorkspacePersistenceSnapshot => {
 
 export const saveWorkspaceSnapshot = (snapshot: WorkspacePersistenceSnapshot): void => {
     const normalized = sanitizeWorkspaceSnapshot(snapshot);
-    const localSnapshot = buildLocalWorkspaceSnapshot(normalized);
-    const compactSnapshot = buildLocalWorkspaceSnapshot(normalized, { aggressive: true });
+    const localSnapshot = buildPersistableWorkspaceSnapshot(normalized);
+    const compactSnapshot = buildPersistableWorkspaceSnapshot(normalized, { aggressive: true });
 
     try {
         localStorage.setItem(WORKSPACE_SNAPSHOT_STORAGE_KEY, JSON.stringify(localSnapshot));
@@ -538,10 +712,10 @@ export const loadSharedWorkspaceSnapshot = async (): Promise<WorkspacePersistenc
 
         const payload = await response.json();
         if (isRecord(payload) && 'snapshot' in payload) {
-            return payload.snapshot ? sanitizeWorkspaceSnapshot(payload.snapshot) : null;
+            return payload.snapshot ? buildRuntimeWorkspaceSnapshot(payload.snapshot) : null;
         }
 
-        return sanitizeWorkspaceSnapshot(payload);
+        return buildRuntimeWorkspaceSnapshot(payload);
     } catch {
         return null;
     }
@@ -549,6 +723,7 @@ export const loadSharedWorkspaceSnapshot = async (): Promise<WorkspacePersistenc
 
 export const saveSharedWorkspaceSnapshot = async (snapshot: WorkspacePersistenceSnapshot): Promise<void> => {
     const normalized = sanitizeWorkspaceSnapshot(snapshot);
+    const persistableSnapshot = buildPersistableWorkspaceSnapshot(normalized);
     const hasContent = Boolean(
         normalized.history.length ||
         normalized.stagedAssets.length ||
@@ -572,7 +747,7 @@ export const saveSharedWorkspaceSnapshot = async (snapshot: WorkspacePersistence
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(normalized),
+            body: JSON.stringify(persistableSnapshot),
             keepalive: true,
         });
     } catch {
@@ -586,7 +761,7 @@ export const exportWorkspaceSnapshotDocument = (snapshot: WorkspacePersistenceSn
             format: WORKSPACE_SNAPSHOT_EXPORT_FORMAT,
             version: WORKSPACE_SNAPSHOT_EXPORT_VERSION,
             exportedAt: new Date().toISOString(),
-            snapshot: sanitizeWorkspaceSnapshot(snapshot),
+            snapshot: buildPersistableWorkspaceSnapshot(snapshot),
         },
         null,
         2,
@@ -597,10 +772,10 @@ export const parseWorkspaceSnapshotDocument = (raw: string): WorkspacePersistenc
         const parsed = JSON.parse(raw);
 
         if (isRecord(parsed) && parsed.format === WORKSPACE_SNAPSHOT_EXPORT_FORMAT && 'snapshot' in parsed) {
-            return sanitizeWorkspaceSnapshot(parsed.snapshot);
+            return buildRuntimeWorkspaceSnapshot(parsed.snapshot);
         }
 
-        return sanitizeWorkspaceSnapshot(parsed);
+        return buildRuntimeWorkspaceSnapshot(parsed);
     } catch {
         return null;
     }

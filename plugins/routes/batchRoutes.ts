@@ -33,9 +33,10 @@ type BatchCreateBody = ImageGenerateBody & {
 
 type RegisterBatchRoutesArgs = {
     getAIClient: () => GoogleGenAI;
+    resolvedDir: string;
 };
 
-export function registerBatchRoutes(server: any, { getAIClient }: RegisterBatchRoutesArgs): void {
+export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: RegisterBatchRoutesArgs): void {
     server.use('/api/batches/create', async (req: any, res: any) => {
         if (req.method !== 'POST') {
             sendJson(res, 405, { error: 'Method not allowed' });
@@ -79,7 +80,7 @@ export function registerBatchRoutes(server: any, { getAIClient }: RegisterBatchR
                 return;
             }
 
-            const parts = buildGenerateParts(body);
+            const parts = buildGenerateParts(body, resolvedDir);
             const { requestConfig } = buildImageRequestConfig(model, body);
             const inlineRequests = Array.from({ length: requestCount }, () => ({
                 contents: [{ role: 'user', parts }],

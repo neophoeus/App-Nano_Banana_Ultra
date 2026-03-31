@@ -12,6 +12,7 @@ export type GroundingProvenancePanelProps = {
     currentLanguage: Language;
     tone: 'light' | 'dark';
     scope?: 'primary' | 'secondary' | 'dark';
+    detailVisibility?: 'summary' | 'full';
     insightRows?: Array<{ label: string; value: string }>;
     provenanceSummaryRows: Array<{ id: string; label: string; value: string }>;
     attributionOverviewRows: GroundingAttributionOverviewRow[];
@@ -77,6 +78,7 @@ function GroundingProvenancePanel({
     currentLanguage,
     tone,
     scope = tone === 'dark' ? 'dark' : 'secondary',
+    detailVisibility = 'full',
     provenanceSummaryRows,
     attributionOverviewRows,
     provenanceSourceTurn,
@@ -537,7 +539,7 @@ function GroundingProvenancePanel({
     return (
         <div
             data-testid={tone === 'light' ? 'provenance-panel-light' : 'provenance-panel-dark'}
-            className={wrapperClassName}
+            className={`${wrapperClassName} min-w-0 overflow-x-hidden`}
         >
             <div
                 data-testid={getProvenanceTestId('provenance-summary')}
@@ -555,8 +557,8 @@ function GroundingProvenancePanel({
                             key={row.id}
                             className={
                                 tone === 'dark'
-                                    ? 'rounded-lg border border-white/10 bg-white/5 px-3 py-2'
-                                    : 'rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-800 dark:bg-[#0a0c10]'
+                                    ? 'min-w-0 rounded-lg border border-white/10 bg-white/5 px-3 py-2'
+                                    : 'min-w-0 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-800 dark:bg-[#0a0c10]'
                             }
                         >
                             <div
@@ -571,8 +573,8 @@ function GroundingProvenancePanel({
                             <div
                                 className={
                                     tone === 'dark'
-                                        ? 'mt-1 text-sm font-semibold text-white'
-                                        : 'mt-1 text-sm font-semibold text-gray-900 dark:text-gray-100'
+                                        ? 'mt-1 break-words text-sm font-semibold text-white'
+                                        : 'mt-1 break-words text-sm font-semibold text-gray-900 dark:text-gray-100'
                                 }
                             >
                                 {row.value}
@@ -583,7 +585,7 @@ function GroundingProvenancePanel({
                 {provenanceContinuityMessage ? (
                     <div className={detailMetaClassName}>{provenanceContinuityMessage}</div>
                 ) : null}
-                {provenanceSourceTurn && (
+                {detailVisibility === 'full' && provenanceSourceTurn && (
                     <div
                         data-testid={getProvenanceTestId('provenance-source-card')}
                         className={`mt-3 ${
@@ -691,7 +693,7 @@ function GroundingProvenancePanel({
                 )}
             </div>
 
-            {attributionOverviewRows.length > 0 && (
+            {detailVisibility === 'full' && attributionOverviewRows.length > 0 && (
                 <div
                     data-testid={getProvenanceTestId('provenance-attribution-overview')}
                     className={
@@ -736,7 +738,7 @@ function GroundingProvenancePanel({
                 </div>
             )}
 
-            {shouldShowAttributionStatusSection && (
+            {detailVisibility === 'full' && shouldShowAttributionStatusSection && (
                 <div
                     className={
                         tone === 'dark'
@@ -826,7 +828,7 @@ function GroundingProvenancePanel({
                 </div>
             )}
 
-            {uncitedSources.length > 0 && (
+            {detailVisibility === 'full' && uncitedSources.length > 0 && (
                 <div>
                     <div className={sectionLabelClassName}>{t('groundingPanelUncitedSourcesSection')}</div>
                     <div className="mt-2 space-y-2">
@@ -857,7 +859,7 @@ function GroundingProvenancePanel({
                 </div>
             )}
 
-            {(groundingQueries.length > 0 || searchEntryPointRenderedContent) && (
+            {detailVisibility === 'full' && (groundingQueries.length > 0 || searchEntryPointRenderedContent) && (
                 <div
                     className={
                         tone === 'dark'
@@ -904,7 +906,7 @@ function GroundingProvenancePanel({
                 </div>
             )}
 
-            {shouldShowDetailSection && (
+            {detailVisibility === 'full' && shouldShowDetailSection && (
                 <div
                     data-testid={getProvenanceTestId('provenance-detail-shell')}
                     className={`mt-2 ${detailCardClassName}`}

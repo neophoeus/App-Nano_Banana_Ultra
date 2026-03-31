@@ -654,16 +654,125 @@ const uncitedProvenanceSnapshot = {
 };
 
 const composer = (page: Page) => page.locator('textarea:visible').first();
-const visibleProvenancePanel = (page: Page) =>
-    page
+const visibleProvenancePanel = (scope: Page | Locator) =>
+    scope
         .locator('[data-testid="provenance-panel-light"]:visible, [data-testid="provenance-panel-dark"]:visible')
         .first();
 const visibleFilmstripCard = (page: Page) => page.locator('[data-testid^="filmstrip-card-"]:visible').first();
-const currentStageSourceCard = (page: Page) => page.locator('[data-testid="current-stage-source"]:visible').first();
-const activeBranchCard = (page: Page) => page.locator('[data-testid="active-branch-card"]:visible').first();
-const lineageMap = (page: Page) => page.locator('[data-testid="lineage-map-card"]:visible').first();
-const firstLineageMapTurn = (page: Page) => page.locator('[data-testid^="lineage-map-turn-"]:visible').first();
+const currentStageSourceCard = (scope: Page | Locator) =>
+    scope.locator('[data-testid="current-stage-source"]:visible').first();
+const activeBranchCard = (page: Page) =>
+    page
+        .locator(
+            '[data-testid="workspace-versions-detail-modal"] [data-testid="active-branch-card"]:visible, [data-testid="active-branch-card"]:visible',
+        )
+        .first();
+const lineageMap = (page: Page) =>
+    page
+        .locator(
+            '[data-testid="workspace-versions-detail-modal"] [data-testid="lineage-map-card"]:visible, [data-testid="lineage-map-card"]:visible',
+        )
+        .first();
+const firstLineageMapTurn = (page: Page) =>
+    page
+        .locator(
+            '[data-testid="workspace-versions-detail-modal"] [data-testid^="lineage-map-turn-"]:visible, [data-testid^="lineage-map-turn-"]:visible',
+        )
+        .first();
 const generateButton = (page: Page) => page.getByRole('button', { name: tt('generate') }).first();
+const scopedTestId = (scope: Locator, testId: string) =>
+    scope.locator(`[data-testid="${testId}"], [data-testid^="${testId}-"]`).first();
+const isLocatorVisible = async (locator: Locator) => (await locator.count()) > 0 && (await locator.first().isVisible());
+
+const openVersionsDetailModal = async (page: Page) => {
+    const modal = page.getByTestId('workspace-versions-detail-modal');
+    if (await isLocatorVisible(modal)) {
+        return;
+    }
+
+    await page.locator('[data-testid="history-versions-open-details"]:visible').first().click({ force: true });
+    await expect(page.getByTestId('workspace-versions-detail-modal')).toBeVisible();
+};
+
+const openSourcesDetailModal = async (page: Page) => {
+    const modal = page.getByTestId('workspace-sources-detail-modal');
+    if (await isLocatorVisible(modal)) {
+        return;
+    }
+
+    await clickFirstVisible(page.getByTestId('workspace-sources-open-details'));
+    await expect(page.getByTestId('workspace-sources-detail-modal')).toBeVisible();
+};
+
+const openAnswerDetailModal = async (page: Page) => {
+    const modal = page.getByTestId('workspace-answer-detail-modal');
+    if (await isLocatorVisible(modal)) {
+        return;
+    }
+
+    await clickFirstVisible(page.getByTestId('workspace-answer-open-details'));
+    await expect(page.getByTestId('workspace-answer-detail-modal')).toBeVisible();
+};
+
+const openWorkflowDetailModal = async (page: Page) => {
+    const modal = page.getByTestId('workspace-workflow-detail-modal');
+    if (await isLocatorVisible(modal)) {
+        return;
+    }
+
+    const workflowCard = page.locator('[data-testid="workspace-workflow-card"]:visible').first();
+    await workflowCard.scrollIntoViewIfNeeded();
+    await workflowCard.evaluate((element: HTMLElement) => element.click());
+    await expect(page.getByTestId('workspace-workflow-detail-modal')).toBeVisible();
+};
+
+const closeVersionsDetailModal = async (page: Page) => {
+    const modal = page.getByTestId('workspace-versions-detail-modal');
+    if (!(await isLocatorVisible(modal))) {
+        return;
+    }
+
+    await modal
+        .getByRole('button', { name: tt('workspaceViewerClose') })
+        .evaluate((button: HTMLButtonElement) => button.click());
+    await expect(page.getByTestId('workspace-versions-detail-modal')).toHaveCount(0);
+};
+
+const closeSourcesDetailModal = async (page: Page) => {
+    const modal = page.getByTestId('workspace-sources-detail-modal');
+    if (!(await isLocatorVisible(modal))) {
+        return;
+    }
+
+    await modal
+        .getByRole('button', { name: tt('workspaceViewerClose') })
+        .evaluate((button: HTMLButtonElement) => button.click());
+    await expect(page.getByTestId('workspace-sources-detail-modal')).toHaveCount(0);
+};
+
+const closeWorkflowDetailModal = async (page: Page) => {
+    const modal = page.getByTestId('workspace-workflow-detail-modal');
+    if (!(await isLocatorVisible(modal))) {
+        return;
+    }
+
+    await modal
+        .getByRole('button', { name: tt('workspaceViewerClose') })
+        .evaluate((button: HTMLButtonElement) => button.click());
+    await expect(page.getByTestId('workspace-workflow-detail-modal')).toHaveCount(0);
+};
+
+const closeAnswerDetailModal = async (page: Page) => {
+    const modal = page.getByTestId('workspace-answer-detail-modal');
+    if (!(await isLocatorVisible(modal))) {
+        return;
+    }
+
+    await modal
+        .getByRole('button', { name: tt('workspaceViewerClose') })
+        .evaluate((button: HTMLButtonElement) => button.click());
+    await expect(page.getByTestId('workspace-answer-detail-modal')).toHaveCount(0);
+};
 
 const ensureWorkspaceInsightsExpanded = async (page: Page) => {
     const details = page.getByTestId('workspace-insights-collapsible').first();
@@ -681,12 +790,8 @@ const ensureWorkspaceInsightsExpanded = async (page: Page) => {
     }
 };
 
-const ensureDetailsExpanded = async (page: Page, testId: string) => {
-    if (testId !== 'workspace-insights-collapsible') {
-        await ensureWorkspaceInsightsExpanded(page);
-    }
-
-    const details = page.getByTestId(testId).first();
+const ensureDetailsExpanded = async (scope: Page | Locator, testId: string) => {
+    const details = scope.getByTestId(testId).first();
     if ((await details.count()) === 0) {
         return;
     }
@@ -702,6 +807,50 @@ const ensureDetailsExpanded = async (page: Page, testId: string) => {
             }
         });
     }
+};
+
+const withWorkflowDetailModal = async <T>(page: Page, callback: (workflowModal: Locator) => Promise<T>): Promise<T> => {
+    const modal = page.getByTestId('workspace-workflow-detail-modal');
+    const wasOpen = await isLocatorVisible(modal);
+
+    if (!wasOpen) {
+        await openWorkflowDetailModal(page);
+    }
+
+    const result = await callback(page.getByTestId('workspace-workflow-detail-modal'));
+
+    if (!wasOpen) {
+        await closeWorkflowDetailModal(page);
+    }
+
+    return result;
+};
+
+const withWorkflowStageSourceCard = async <T>(
+    page: Page,
+    callback: (stageSourceCard: Locator, workflowModal: Locator) => Promise<T>,
+): Promise<T> =>
+    withWorkflowDetailModal(page, async (workflowModal) => {
+        const stageSourceCard = currentStageSourceCard(workflowModal);
+        await expect(stageSourceCard).toBeVisible();
+        return callback(stageSourceCard, workflowModal);
+    });
+
+const withSourcesDetailModal = async <T>(page: Page, callback: (sourcesModal: Locator) => Promise<T>): Promise<T> => {
+    const modal = page.getByTestId('workspace-sources-detail-modal');
+    const wasOpen = await isLocatorVisible(modal);
+
+    if (!wasOpen) {
+        await openSourcesDetailModal(page);
+    }
+
+    const result = await callback(page.getByTestId('workspace-sources-detail-modal'));
+
+    if (!wasOpen) {
+        await closeSourcesDetailModal(page);
+    }
+
+    return result;
 };
 
 const clickFirstVisible = async (locator: Locator) => {
@@ -742,6 +891,13 @@ const openGalleryPanel = async (page: Page) => {
     }
 
     await expect(page.locator('[data-testid^="history-card-"]').first()).toBeVisible();
+};
+
+const openFirstHistoryViewer = async (page: Page) => {
+    const stageFrame = page.getByTestId('generated-image-stage-frame').first();
+    await expect(stageFrame).toBeVisible();
+    await stageFrame.locator('img').first().click({ force: true });
+    await expect(page.getByTestId('workspace-viewer-overlay')).toBeVisible();
 };
 
 const installOfficialConversationGenerateCaptureRoute = async (page: Page) => {
@@ -799,31 +955,31 @@ const assertCurrentStageSourceCard = async (
         expectBranchAction?: boolean;
     },
 ) => {
-    const stageSourceCard = currentStageSourceCard(page);
-
-    await expect(stageSourceCard).toContainText(tt('workspaceInsightsCurrentImage'));
-    if (options.sourceLabel) {
-        await expect(stageSourceCard).toContainText(options.sourceLabel);
-    }
-    await expect(stageSourceCard).toContainText(localizedFollowUpAction(options.actionLabel));
-    if (options.branchLabel) {
-        await expect(stageSourceCard).toContainText(options.branchLabel);
-    }
-    if (options.expectOpenAction) {
-        await ensureDetailsExpanded(page, 'current-stage-source-shell');
-        await ensureDetailsExpanded(page, 'current-stage-source-details');
-        await expect(stageSourceCard.getByTestId('current-stage-source-open')).toBeVisible();
-    }
-    if (options.expectContinueAction) {
-        await ensureDetailsExpanded(page, 'current-stage-source-shell');
-        await ensureDetailsExpanded(page, 'current-stage-source-details');
-        await expect(stageSourceCard.getByTestId('current-stage-source-continue')).toBeVisible();
-    }
-    if (options.expectBranchAction) {
-        await ensureDetailsExpanded(page, 'current-stage-source-shell');
-        await ensureDetailsExpanded(page, 'current-stage-source-details');
-        await expect(stageSourceCard.getByTestId('current-stage-source-branch')).toBeVisible();
-    }
+    await withWorkflowStageSourceCard(page, async (stageSourceCard, workflowModal) => {
+        await expect(stageSourceCard).toContainText(tt('workspaceInsightsCurrentImage'));
+        if (options.sourceLabel) {
+            await expect(stageSourceCard).toContainText(options.sourceLabel);
+        }
+        await expect(stageSourceCard).toContainText(localizedFollowUpAction(options.actionLabel));
+        if (options.branchLabel) {
+            await expect(stageSourceCard).toContainText(options.branchLabel);
+        }
+        if (options.expectOpenAction) {
+            await ensureDetailsExpanded(workflowModal, 'current-stage-source-shell');
+            await ensureDetailsExpanded(workflowModal, 'current-stage-source-details');
+            await expect(stageSourceCard.getByTestId('current-stage-source-open')).toBeVisible();
+        }
+        if (options.expectContinueAction) {
+            await ensureDetailsExpanded(workflowModal, 'current-stage-source-shell');
+            await ensureDetailsExpanded(workflowModal, 'current-stage-source-details');
+            await expect(stageSourceCard.getByTestId('current-stage-source-continue')).toBeVisible();
+        }
+        if (options.expectBranchAction) {
+            await ensureDetailsExpanded(workflowModal, 'current-stage-source-shell');
+            await ensureDetailsExpanded(workflowModal, 'current-stage-source-details');
+            await expect(stageSourceCard.getByTestId('current-stage-source-branch')).toBeVisible();
+        }
+    });
 };
 
 const assertStageSourceSurfaces = async (
@@ -876,12 +1032,7 @@ const assertFilmstripChromeLocalized = async (page: Page) => {
 const assertViewerChromeLocalized = async (page: Page) => {
     const viewer = page.getByTestId('workspace-viewer-overlay');
     await expect(viewer).toBeVisible();
-    await expect(viewer.getByTestId('workspace-viewer-title')).toContainText(tt('workspaceViewerTitle'));
-    await expect(viewer.getByTestId('workspace-viewer-desc-summary')).toContainText(tt('workspaceViewerDesc'));
-    await expect(viewer.getByTestId('workspace-viewer-desc')).toContainText(tt('workspaceViewerPrompt'));
-    await expect(viewer.getByTestId('workspace-viewer-desc')).toContainText(tt('workspaceViewerResultText'));
-    await expect(viewer.getByTestId('workspace-viewer-desc')).toContainText(tt('workspaceViewerProvenance'));
-    await expect(viewer.getByTestId('workspace-viewer-desc')).toContainText(tt('workspaceViewerSessionHints'));
+    await expect(viewer.getByTestId('workspace-viewer-close')).toBeVisible();
     await expect(viewer.getByTestId('workspace-viewer-prompt-label')).toContainText(tt('workspaceViewerPrompt'));
     await expect(viewer.getByTestId('workspace-viewer-session-hints-label')).toContainText(
         tt('workspaceViewerSessionHints'),
@@ -892,9 +1043,11 @@ const assertViewerChromeLocalized = async (page: Page) => {
 };
 
 const assertComposerChromeLocalized = async (page: Page) => {
-    const workspaceTools = page.getByTestId('composer-workspace-tools');
-    await expect(workspaceTools.getByRole('button', { name: tt('composerToolbarExportWorkspace') })).toBeVisible();
-    await expect(workspaceTools.getByRole('button', { name: tt('composerToolbarImportWorkspace') })).toBeVisible();
+    await openVersionsDetailModal(page);
+    const versionsModal = page.getByTestId('workspace-versions-detail-modal');
+    await expect(versionsModal.getByTestId('history-export-workspace')).toBeVisible();
+    await expect(versionsModal.getByTestId('history-import-workspace')).toBeVisible();
+    await closeVersionsDetailModal(page);
 
     const advancedToggle = page.getByRole('button', { name: tt('composerToolbarAdvancedSettings') }).first();
     await expect(advancedToggle).toBeVisible();
@@ -928,19 +1081,22 @@ const renameBranchFromGallery = async (page: Page, nextLabel: string) => {
     await renameDialog
         .getByRole('button', { name: tt('branchRenameSave') })
         .evaluate((button: HTMLButtonElement) => button.click());
+    await expect(page.getByTestId('branch-rename-dialog')).toHaveCount(0);
 };
 
 const assertBranchLabelPropagates = async (page: Page, branchLabel: string) => {
-    await expect(currentStageSourceCard(page)).toContainText(branchLabel);
-    await expect(activeBranchCard(page)).toContainText(branchLabel);
-    await expect(lineageMap(page)).toContainText(branchLabel);
+    await withWorkflowStageSourceCard(page, async (stageSourceCard) => {
+        await expect(stageSourceCard).toContainText(branchLabel);
+    });
+    await expect(page.locator('[data-testid="history-versions-shell"]:visible').first()).toContainText(branchLabel);
     await expect(visibleFilmstripCard(page)).toContainText(branchLabel);
 };
 
 const assertBranchLabelCleared = async (page: Page, branchLabel: string) => {
-    await expect(currentStageSourceCard(page)).not.toContainText(branchLabel);
-    await expect(activeBranchCard(page)).not.toContainText(branchLabel);
-    await expect(lineageMap(page)).not.toContainText(branchLabel);
+    await withWorkflowStageSourceCard(page, async (stageSourceCard) => {
+        await expect(stageSourceCard).not.toContainText(branchLabel);
+    });
+    await expect(page.locator('[data-testid="history-versions-shell"]:visible').first()).not.toContainText(branchLabel);
     await expect(visibleFilmstripCard(page)).not.toContainText(branchLabel);
 };
 
@@ -957,31 +1113,32 @@ const assertProvenanceSummary = async (
         expectSourceRouteOnly?: boolean;
     },
 ) => {
-    await ensureWorkspaceInsightsExpanded(page);
+    await withSourcesDetailModal(page, async (sourcesModal) => {
+        const panel = visibleProvenancePanel(sourcesModal);
+        const summary = scopedTestId(panel, 'provenance-summary');
 
-    const provenanceSection = page.locator('[data-testid="context-provenance-section"]:visible').first();
-    const summary = visibleProvenancePanel(page).getByTestId('provenance-summary');
-    await expect(summary.getByTestId('provenance-summary-mode')).toContainText(
-        options.mode === 'Inherited' ? tt('groundingProvenanceModeInherited') : tt('groundingProvenanceModeLive'),
-    );
-    await expect(summary.getByTestId('provenance-summary-source-turn')).toContainText(options.sourceTurn);
-    await expect(summary.getByTestId('provenance-summary-sources')).toContainText(options.sources);
-    await expect(summary.getByTestId('provenance-summary-support-bundles')).toContainText(options.supportBundles);
-    if (options.sourcePrompt) {
-        await expect(summary.getByTestId('provenance-source-card')).toContainText(options.sourcePrompt);
-    }
-    if (options.expectSourceRouteOnly) {
-        await clickFirstVisible(summary.getByTestId('provenance-source-details'));
-        await expect(summary.getByTestId('provenance-source-open').first()).toBeVisible();
-        await expect(summary.getByTestId('provenance-source-continue')).toHaveCount(0);
-        await expect(summary.getByTestId('provenance-source-branch')).toHaveCount(0);
-    }
-    for (const text of options.summaryTexts || []) {
-        await expect(provenanceSection).toContainText(localizedText(text));
-    }
-    for (const text of options.visibleTexts) {
-        await expect(provenanceSection).toContainText(localizedText(text));
-    }
+        await expect(scopedTestId(summary, 'provenance-summary-mode')).toContainText(
+            options.mode === 'Inherited' ? tt('groundingProvenanceModeInherited') : tt('groundingProvenanceModeLive'),
+        );
+        await expect(scopedTestId(summary, 'provenance-summary-source-turn')).toContainText(options.sourceTurn);
+        await expect(scopedTestId(summary, 'provenance-summary-sources')).toContainText(options.sources);
+        await expect(scopedTestId(summary, 'provenance-summary-support-bundles')).toContainText(options.supportBundles);
+        if (options.sourcePrompt) {
+            await expect(scopedTestId(panel, 'provenance-source-card')).toContainText(options.sourcePrompt);
+        }
+        if (options.expectSourceRouteOnly) {
+            await clickFirstVisible(scopedTestId(panel, 'provenance-source-details'));
+            await expect(scopedTestId(panel, 'provenance-source-open')).toBeVisible();
+            await expect(scopedTestId(panel, 'provenance-source-continue')).toHaveCount(0);
+            await expect(scopedTestId(panel, 'provenance-source-branch')).toHaveCount(0);
+        }
+        for (const text of options.summaryTexts || []) {
+            await expect(panel).toContainText(localizedText(text));
+        }
+        for (const text of options.visibleTexts) {
+            await expect(panel).toContainText(localizedText(text));
+        }
+    });
 };
 
 const assertProvenanceAttributionOverview = async (
@@ -998,29 +1155,37 @@ const assertProvenanceAttributionOverview = async (
         uncitedSourceTitle?: string;
     },
 ) => {
-    const panel = visibleProvenancePanel(page);
-    const overview = panel.getByTestId('provenance-attribution-overview');
+    await withSourcesDetailModal(page, async (sourcesModal) => {
+        const panel = visibleProvenancePanel(sourcesModal);
+        const overview = scopedTestId(panel, 'provenance-attribution-overview');
 
-    await expect(overview).toContainText(tt('groundingPanelAttributionOverview'));
-    await expect(overview.getByTestId('provenance-attribution-coverage')).toContainText(options.coverageValue);
-    await expect(overview.getByTestId('provenance-attribution-source-mix')).toContainText(options.sourceMixValue);
-    await expect(overview.getByTestId('provenance-attribution-queries')).toContainText(options.queriesValue);
-    await expect(overview.getByTestId('provenance-attribution-entry-point')).toContainText(options.entryPointValue);
-    await expect(panel.getByTestId('provenance-status-source-status')).toContainText(options.sourceStatusValue);
-    await expect(panel.getByTestId('provenance-status-grounding-status')).toContainText(options.groundingStatus);
-    await expect(panel.getByTestId('provenance-status-support-status')).toContainText(options.supportStatus);
-    await expect(panel.getByTestId('provenance-status-entry-point-status')).toContainText(options.entryPointStatus);
-    await expect(panel.getByTestId('provenance-source-0-status')).toContainText(tt('groundingPanelSourceStatusCited'));
-    await expect(panel.getByTestId('provenance-source-1-status')).toContainText(
-        tt('groundingPanelSourceStatusRetrievedOnly'),
-    );
-
-    if (options.uncitedSourceTitle) {
-        await expect(panel.getByTestId('provenance-uncited-source-1')).toContainText(options.uncitedSourceTitle);
-        await expect(panel.getByTestId('provenance-uncited-source-1')).toContainText(
-            tt('groundingPanelUncitedSourcesHint'),
+        await expect(overview).toContainText(tt('groundingPanelAttributionOverview'));
+        await expect(scopedTestId(overview, 'provenance-attribution-coverage')).toContainText(options.coverageValue);
+        await expect(scopedTestId(overview, 'provenance-attribution-source-mix')).toContainText(options.sourceMixValue);
+        await expect(scopedTestId(overview, 'provenance-attribution-queries')).toContainText(options.queriesValue);
+        await expect(scopedTestId(overview, 'provenance-attribution-entry-point')).toContainText(
+            options.entryPointValue,
         );
-    }
+        await expect(scopedTestId(panel, 'provenance-status-source-status')).toContainText(options.sourceStatusValue);
+        await expect(scopedTestId(panel, 'provenance-status-grounding-status')).toContainText(options.groundingStatus);
+        await expect(scopedTestId(panel, 'provenance-status-support-status')).toContainText(options.supportStatus);
+        await expect(scopedTestId(panel, 'provenance-status-entry-point-status')).toContainText(
+            options.entryPointStatus,
+        );
+        await expect(scopedTestId(panel, 'provenance-source-0-status')).toContainText(
+            tt('groundingPanelSourceStatusCited'),
+        );
+        await expect(scopedTestId(panel, 'provenance-source-1-status')).toContainText(
+            tt('groundingPanelSourceStatusRetrievedOnly'),
+        );
+
+        if (options.uncitedSourceTitle) {
+            await expect(scopedTestId(panel, 'provenance-uncited-source-1')).toContainText(options.uncitedSourceTitle);
+            await expect(scopedTestId(panel, 'provenance-uncited-source-1')).toContainText(
+                tt('groundingPanelUncitedSourcesHint'),
+            );
+        }
+    });
 };
 
 const assertOfficialConversationSummary = async (
@@ -1034,7 +1199,12 @@ const assertOfficialConversationSummary = async (
         expectStageBadge?: boolean;
     },
 ) => {
-    const card = page.getByTestId('conversation-continuity-card').first();
+    await openWorkflowDetailModal(page);
+
+    const card = page
+        .getByTestId('workspace-workflow-detail-modal')
+        .getByTestId('conversation-continuity-card')
+        .first();
     await expect(card).toContainText(localizedText('Official Conversation'));
     await expect(card).toContainText(options.conversationIdShort);
     await expect(card).toContainText(options.turnCount);
@@ -1052,6 +1222,8 @@ const assertOfficialConversationSummary = async (
             localizedText('Current Stage Source'),
         );
     }
+
+    await closeWorkflowDetailModal(page);
 };
 
 const assertOfficialConversationGeneratePayload = (payload: Record<string, unknown>, prompt: string) => {
@@ -1666,6 +1838,7 @@ test.describe('workspace restore flows', () => {
             return raw ? JSON.parse(raw).composerState : null;
         });
 
+        await dismissRestoreNoticeIfPresent(page);
         await openEditorFromUpload(page, 'Persisted editor prompt');
         await closeSharedPromptSheet(page);
         await page.getByTestId('editor-close').click();
@@ -1878,12 +2051,15 @@ test.describe('workspace restore flows', () => {
             branchLabel: 'Imported Branch',
             expectOpenAction: true,
         });
-        await expect(currentStageSourceCard(page).getByTestId('current-stage-source-continue')).toHaveCount(0);
-        await expect(currentStageSourceCard(page).getByTestId('current-stage-source-branch')).toHaveCount(0);
-        await expect(page.getByTestId('session-continuity-stage-badge')).toContainText(
-            localizedText('Current Stage Source'),
-        );
-        await expect(page.getByTestId('session-continuity-open')).toBeVisible();
+        await withWorkflowDetailModal(page, async (workflowModal) => {
+            const stageSourceCard = currentStageSourceCard(workflowModal);
+            await expect(stageSourceCard.getByTestId('current-stage-source-continue')).toHaveCount(0);
+            await expect(stageSourceCard.getByTestId('current-stage-source-branch')).toHaveCount(0);
+            await expect(workflowModal.getByTestId('session-continuity-stage-badge').first()).toContainText(
+                localizedText('Current Stage Source'),
+            );
+            await expect(workflowModal.getByTestId('session-continuity-open')).toBeVisible();
+        });
         await expect(page.getByTestId('global-log-stage-source-pill')).toHaveCount(0);
         await expect(page.getByTestId('global-log-stage-source-badge')).toHaveCount(0);
         await expect(page.getByTestId('global-log-stage-source-entry')).toHaveCount(0);
@@ -1899,16 +2075,18 @@ test.describe('workspace restore flows', () => {
         const restoreNotice = page.getByTestId('workspace-restore-notice');
         await expect(restoreNotice.getByRole('button', { name: localizedText('Promote Variant') })).toBeVisible();
         await dismissRestoreNotice(page);
-
-        const stageSourceCard = currentStageSourceCard(page);
-        await ensureDetailsExpanded(page, 'current-stage-source-shell');
-        await ensureDetailsExpanded(page, 'current-stage-source-details');
         const bravoVariantCard = page.locator('[data-testid="filmstrip-card-bravo-v2-turn"]:visible').first();
         const alphaVariantCard = page.locator('[data-testid="filmstrip-card-alpha-v1-turn"]:visible').first();
 
-        await expect(stageSourceCard).toContainText('Variant candidate B');
-        await expect(stageSourceCard).toContainText(localizedText('Candidate'));
-        await expect(stageSourceCard.getByTestId('current-stage-source-continue')).toHaveCount(0);
+        await withWorkflowStageSourceCard(page, async (stageSourceCard, workflowModal) => {
+            await ensureDetailsExpanded(workflowModal, 'current-stage-source-shell');
+            await ensureDetailsExpanded(workflowModal, 'current-stage-source-details');
+            await expect(stageSourceCard).toContainText('Variant candidate B');
+            await expect(stageSourceCard).toContainText(localizedText('Candidate'));
+            await expect(stageSourceCard.getByTestId('current-stage-source-continue')).toHaveCount(0);
+        });
+
+        await openVersionsDetailModal(page);
         await expect(bravoVariantCard).toContainText(localizedText('Candidate'));
         await expect(alphaVariantCard).toContainText(localizedText('Candidate'));
         await expect(activeBranchCard(page)).toContainText(`${localizedText('Continuation source ')}--------`);
@@ -1917,28 +2095,38 @@ test.describe('workspace restore flows', () => {
         );
 
         await page.locator('[data-testid="active-branch-continue-latest"]:visible').first().click();
+        await closeVersionsDetailModal(page);
 
         await expect(
             page.getByText(localizedText('Variant promoted as the active continuation source.'), { exact: true }),
         ).toBeVisible();
-        await expect(stageSourceCard).toContainText(localizedText('Source'));
-        await expect(stageSourceCard.getByTestId('current-stage-source-continue')).toHaveCount(0);
+        await withWorkflowStageSourceCard(page, async (stageSourceCard) => {
+            await expect(stageSourceCard).toContainText(localizedText('Source'));
+            await expect(stageSourceCard.getByTestId('current-stage-source-continue')).toHaveCount(0);
+        });
         await expect(bravoVariantCard).toBeVisible();
         await expect(alphaVariantCard).toBeVisible();
+
+        await openVersionsDetailModal(page);
         await expect(activeBranchCard(page)).toContainText(`${localizedText('Continuation source ')}bravo-v2`);
         await expect(page.locator('[data-testid="active-branch-continue-latest"]:visible').first()).toContainText(
             localizedText('Source Active'),
         );
+        await closeVersionsDetailModal(page);
 
         await page.locator('[data-testid="filmstrip-continue-alpha-v1-turn"]:visible').first().click();
 
         await expect(
             page.getByText(localizedText('Variant promoted as the active continuation source.'), { exact: true }),
         ).toBeVisible();
-        await expect(currentStageSourceCard(page)).toContainText('Variant candidate A');
-        await expect(currentStageSourceCard(page)).toContainText(localizedText('Source'));
+        await withWorkflowStageSourceCard(page, async (stageSourceCard) => {
+            await expect(stageSourceCard).toContainText('Variant candidate A');
+            await expect(stageSourceCard).toContainText(localizedText('Source'));
+        });
         await expect(alphaVariantCard).toBeVisible();
         await expect(bravoVariantCard).toBeVisible();
+
+        await openVersionsDetailModal(page);
         await expect(activeBranchCard(page)).toContainText(`${localizedText('Continuation source ')}alpha-v1`);
         await expect(page.locator('[data-testid="active-branch-continue-latest"]:visible').first()).toContainText(
             localizedText('Promote Variant'),
@@ -2055,7 +2243,7 @@ test.describe('workspace restore flows', () => {
         await replaceWithImportedWorkspace(page);
         await dismissRestoreNotice(page);
 
-        await page.getByAltText('Imported workspace prompt').click();
+        await openFirstHistoryViewer(page);
         await assertViewerChromeLocalized(page);
     });
 
@@ -2069,8 +2257,10 @@ test.describe('workspace restore flows', () => {
         await replaceWithImportedWorkspace(page);
         await dismissRestoreNotice(page);
 
+        await openVersionsDetailModal(page);
         await ensureDetailsExpanded(page, 'active-branch-switcher-section');
         await activeBranchCard(page).getByTestId('active-branch-switch-root-turn').click();
+        await closeVersionsDetailModal(page);
 
         await assertStageSourceSurfaces(page, {
             composerValue: 'Imported root turn',
@@ -2088,10 +2278,12 @@ test.describe('workspace restore flows', () => {
         await replaceWithImportedWorkspace(page);
         await dismissRestoreNotice(page);
 
+        await openVersionsDetailModal(page);
         await expect(page.getByTestId('active-branch-open-origin')).toHaveCount(0);
         await expect(page.getByTestId('active-branch-branch-origin')).toHaveCount(0);
 
         await page.locator('[data-testid="active-branch-continue-latest"]:visible').first().click();
+        await closeVersionsDetailModal(page);
 
         await assertStageSourceSurfaces(page, {
             composerValue: 'Imported branch turn',
@@ -2107,10 +2299,12 @@ test.describe('workspace restore flows', () => {
         await replaceWithImportedWorkspace(page);
         await dismissRestoreNotice(page);
 
+        await openVersionsDetailModal(page);
         await expect(page.getByTestId('active-branch-open-origin')).toHaveCount(0);
         await expect(page.getByTestId('active-branch-branch-origin')).toHaveCount(0);
 
         await page.locator('[data-testid="active-branch-open-latest"]:visible').first().click();
+        await closeVersionsDetailModal(page);
 
         await assertStageSourceSurfaces(page, {
             composerValue: 'Imported branch turn',
@@ -2144,11 +2338,13 @@ test.describe('workspace restore flows', () => {
         await replaceWithImportedWorkspace(page);
         await dismissRestoreNotice(page);
 
+        await openVersionsDetailModal(page);
         await ensureDetailsExpanded(page, 'lineage-map-card');
         await expect(firstLineageMapTurn(page).locator('[data-testid^="lineage-map-continue-"]')).toHaveCount(0);
         await expect(firstLineageMapTurn(page).locator('[data-testid^="lineage-map-branch-"]')).toHaveCount(0);
 
         await firstLineageMapTurn(page).locator('[data-testid^="lineage-map-open-"]').click();
+        await closeVersionsDetailModal(page);
 
         await assertStageSourceSurfaces(page, {
             composerValue: 'Imported root turn',
@@ -2183,10 +2379,11 @@ test.describe('workspace restore flows', () => {
         await expect(page.getByText(tt('workspaceRestoreTitle'))).toHaveCount(0);
         await expect(composer(page)).toHaveValue('Imported workspace prompt');
         await expect(page.getByText(tt('readyTitle'))).toBeVisible();
-        await ensureWorkspaceInsightsExpanded(page);
-        await expect(page.locator('[data-testid="workspace-insights-collapsible"]:visible').first()).toContainText(
+        await openSourcesDetailModal(page);
+        await expect(page.getByTestId('workspace-sources-detail-modal')).toContainText(
             tt('groundingProvenanceNoActiveSessionTurn'),
         );
+        await closeSourcesDetailModal(page);
     });
 
     test('branch rename updates the active branch label', async ({ page }) => {
@@ -2218,7 +2415,9 @@ test.describe('workspace restore flows', () => {
 
         await expect(page.getByText(tt('branchRenameResetNotice'), { exact: true })).toBeVisible();
         await assertBranchLabelCleared(page, 'Imported Alt Path');
-        await expect(activeBranchCard(page)).toContainText(tt('historyBranchMain'));
+        await expect(page.locator('[data-testid="history-versions-shell"]:visible').first()).toContainText(
+            tt('historyBranchNumber').replace('{0}', '1'),
+        );
     });
 
     test('gallery tab keeps imported history actions on open-plus-rename only', async ({ page }) => {
@@ -2244,8 +2443,9 @@ test.describe('workspace restore flows', () => {
         await replaceWithImportedWorkspace(page);
         await dismissRestoreNotice(page);
 
+        await openVersionsDetailModal(page);
         const downloadPromise = page.waitForEvent('download');
-        await page.getByRole('button', { name: tt('composerToolbarExportWorkspace') }).click();
+        await page.getByTestId('history-export-workspace').click();
         const download = await downloadPromise;
 
         expect(download.suggestedFilename()).toMatch(/^nano-banana-workspace-.*\.json$/);
@@ -2359,6 +2559,49 @@ test.describe('workspace restore flows', () => {
         await restoredPage.close();
     });
 
+    test('queue batch submit from a file-backed restored stage keeps the browser payload file-backed', async ({ page }) => {
+        let queuedBatchRequestBody: Record<string, unknown> | null = null;
+
+        await page.route('**/api/batches/create', async (route) => {
+            queuedBatchRequestBody = JSON.parse(route.request().postData() || '{}') as Record<string, unknown>;
+
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    job: {
+                        name: 'batches/file-backed-queued-job',
+                        displayName: 'File-backed queue job',
+                        state: 'JOB_STATE_PENDING',
+                        model: 'gemini-3.1-flash-image-preview',
+                        createTime: '2025-03-31T09:20:00.000Z',
+                        updateTime: '2025-03-31T09:20:00.000Z',
+                    },
+                }),
+            });
+        });
+
+        await openWorkspaceWithSnapshot(page, restoredFileBackedSnapshot);
+        await dismissRestoreNoticeIfPresent(page);
+
+        const queueBatchButton = page.getByRole('button', { name: tt('composerQueueBatchJob') }).first();
+        await expect(queueBatchButton).toBeVisible();
+        await queueBatchButton.click();
+
+        await expect.poll(() => queuedBatchRequestBody).not.toBeNull();
+        expect(queuedBatchRequestBody).toMatchObject({
+            prompt: 'File-backed restore prompt',
+            model: 'gemini-3.1-flash-image-preview',
+            executionMode: 'queued-batch-job',
+            requestCount: 1,
+            editingInput: '/api/load-image?filename=file-backed-turn.png',
+        });
+        expect(String(queuedBatchRequestBody?.editingInput || '')).not.toContain('data:image/');
+
+        await expect(page.getByText(tt('queuedBatchSubmittedNotice'), { exact: true })).toBeVisible();
+        await expect(page.getByTestId('queued-batch-panel')).toContainText('File-backed queue job');
+    });
+
     test('replace imported inherited provenance exposes continuity summary and recovered sources', async ({ page }) => {
         await openFreshWorkspace(page);
         await replaceWithImportedWorkspace(
@@ -2402,6 +2645,7 @@ test.describe('workspace restore flows', () => {
     test('provenance panel surfaces attribution overview and uncited sources in the live UI', async ({ page }) => {
         await openWorkspaceWithSnapshot(page, uncitedProvenanceSnapshot);
         await dismissRestoreNoticeIfPresent(page);
+        await openSourcesDetailModal(page);
 
         await assertProvenanceSummary(page, {
             mode: 'Live',
@@ -2646,8 +2890,10 @@ test.describe('workspace restore flows', () => {
         );
 
         await panel.getByTestId('queued-batch-job-job-imported-preview-next').click();
-        await expect(currentStageSourceCard(page)).toContainText('#2/2');
-        await expect(currentStageSourceCard(page)).toContainText('Imported queued results alternate angle');
+        await withWorkflowStageSourceCard(page, async (stageSourceCard) => {
+            await expect(stageSourceCard).toContainText('#2/2');
+            await expect(stageSourceCard).toContainText('Imported queued results alternate angle');
+        });
         await expect(panel.getByTestId('queued-batch-job-job-imported-preview-1-active')).toContainText(
             tt('workspacePickerStageSource'),
         );
@@ -2659,7 +2905,9 @@ test.describe('workspace restore flows', () => {
         );
 
         await panel.getByTestId('queued-batch-job-job-imported-preview-prev').click();
-        await expect(currentStageSourceCard(page)).toContainText('#1/2');
+        await withWorkflowStageSourceCard(page, async (stageSourceCard) => {
+            await expect(stageSourceCard).toContainText('#1/2');
+        });
         await expect(panel.getByTestId('queued-batch-job-job-imported-preview-0-active')).toContainText(
             tt('workspacePickerStageSource'),
         );
@@ -2668,10 +2916,11 @@ test.describe('workspace restore flows', () => {
         );
 
         await panel.getByTestId('queued-batch-job-job-imported-open').click();
-        await expect(page.getByTestId('stage-open-viewer')).toBeVisible();
-        await expect(currentStageSourceCard(page)).toContainText(tt('workspaceImportReviewExecutionQueuedBatchJob'));
-        await expect(currentStageSourceCard(page)).toContainText('#1/2');
-        await expect(currentStageSourceCard(page)).not.toContainText(localizedText('Candidate'));
+        await withWorkflowStageSourceCard(page, async (stageSourceCard) => {
+            await expect(stageSourceCard).toContainText(tt('workspaceImportReviewExecutionQueuedBatchJob'));
+            await expect(stageSourceCard).toContainText('#1/2');
+            await expect(stageSourceCard).not.toContainText(localizedText('Candidate'));
+        });
 
         const filmstripCard = page.getByTestId('filmstrip-card-queued-imported-turn');
         await expect(filmstripCard).toBeVisible();
@@ -2679,11 +2928,6 @@ test.describe('workspace restore flows', () => {
         await expect(filmstripCard).toContainText(tt('workspaceImportReviewExecutionQueuedBatchJob'));
         await expect(filmstripCard).toContainText('#1/2');
         await expect(filmstripCard).not.toContainText(localizedText('Candidate'));
-
-        await page.getByTestId('stage-open-viewer').click({ force: true });
-        await expect(page.getByTestId('workspace-viewer-prompt-value')).toContainText('Imported queued results');
-        await page.getByRole('button', { name: tt('workspaceViewerClose') }).click();
-        await expect(page.getByTestId('workspace-viewer-overlay')).toHaveCount(0);
 
         const historyCard = page.getByTestId('history-card-queued-imported-turn');
         if ((await historyCard.count()) === 0) {
@@ -2697,8 +2941,10 @@ test.describe('workspace restore flows', () => {
         await page.getByTestId('picker-sheet-close').click();
 
         await panel.getByTestId('queued-batch-job-job-imported-open-latest').click();
-        await expect(currentStageSourceCard(page)).toContainText('#2/2');
-        await expect(currentStageSourceCard(page)).toContainText('Imported queued results alternate angle');
+        await withWorkflowStageSourceCard(page, async (stageSourceCard) => {
+            await expect(stageSourceCard).toContainText('#2/2');
+            await expect(stageSourceCard).toContainText('Imported queued results alternate angle');
+        });
 
         await expect(panel.getByTestId('queued-batch-job-job-failed')).toContainText('Failed storyboard batch');
         await expect(panel.getByTestId('queued-batch-job-job-failed-state')).toContainText(
@@ -2713,13 +2959,19 @@ test.describe('workspace restore flows', () => {
         await replaceWithImportedWorkspace(page);
         await dismissRestoreNotice(page);
 
-        const sessionSourceCard = page.getByTestId('session-continuity-source-card').first();
+        await openWorkflowDetailModal(page);
+
+        const sessionSourceCard = page
+            .getByTestId('workspace-workflow-detail-modal')
+            .getByTestId('session-continuity-source-card')
+            .first();
         await expect(sessionSourceCard).toContainText('Imported branch turn');
         await ensureDetailsExpanded(page, 'continuity-source-section');
         await ensureDetailsExpanded(page, 'session-continuity-details');
         await expect(sessionSourceCard.getByTestId('session-continuity-open')).toHaveCount(1);
         await expect(sessionSourceCard.getByTestId('session-continuity-continue')).toHaveCount(0);
         await expect(sessionSourceCard.getByTestId('session-continuity-branch')).toHaveCount(0);
+        await closeWorkflowDetailModal(page);
     });
 
     test('restore rehydrates official conversation state from the snapshot and keeps conversation source routing visible', async ({
@@ -2775,7 +3027,11 @@ test.describe('workspace restore flows', () => {
 
         await expect.poll(() => capturedBodies.length).toBe(1);
         assertOfficialConversationGeneratePayload(capturedBodies[0], prompt);
-        await expect(page.getByText('Browser official conversation reply')).toBeVisible();
+        await openAnswerDetailModal(page);
+        await expect(page.getByTestId('workspace-answer-detail-modal')).toContainText(
+            'Browser official conversation reply',
+        );
+        await closeAnswerDetailModal(page);
         await assertOfficialConversationPostGenerateState(page, prompt);
     });
 
@@ -2785,15 +3041,6 @@ test.describe('workspace restore flows', () => {
         const restoreNotice = page.getByTestId('workspace-restore-notice');
         await expect(restoreNotice).toContainText(localizedText('Workspace Restored'));
         await expect(restoreNotice).toContainText(tt('workspaceRestoreActiveBranch', 'Chat Branch'));
-
-        await assertOfficialConversationSummary(page, {
-            branchLabel: 'Chat Branch',
-            turnCount: tt('workspaceInsightsTurnsCount', '1'),
-            conversationIdShort: 'chatconv',
-            activeSourceShortId: 'chat-fol',
-            prompt: 'Official chat follow-up turn',
-            expectStageBadge: true,
-        });
 
         await composer(page).fill('Restore notice official conversation draft');
         await restoreNotice.getByTestId('workspace-restore-continue').click();
@@ -2833,7 +3080,11 @@ test.describe('workspace restore flows', () => {
 
         await expect.poll(() => capturedBodies.length).toBe(1);
         assertOfficialConversationGeneratePayload(capturedBodies[0], prompt);
-        await expect(page.getByText('Browser official conversation reply')).toBeVisible();
+        await openAnswerDetailModal(page);
+        await expect(page.getByTestId('workspace-answer-detail-modal')).toContainText(
+            'Browser official conversation reply',
+        );
+        await closeAnswerDetailModal(page);
         await assertOfficialConversationPostGenerateState(page, prompt);
     });
 
@@ -2847,6 +3098,7 @@ test.describe('workspace restore flows', () => {
             'ui-import-provenance-live-workspace.json',
         );
         await dismissRestoreNotice(page);
+        await openSourcesDetailModal(page);
 
         const provenancePanel = visibleProvenancePanel(page);
         const detailPanel = provenancePanel.getByTestId('provenance-detail');
@@ -2879,6 +3131,7 @@ test.describe('workspace restore flows', () => {
             'ui-import-provenance-live-workspace.json',
         );
         await dismissRestoreNotice(page);
+        await openSourcesDetailModal(page);
 
         const provenancePanel = visibleProvenancePanel(page);
         const detailPanel = provenancePanel.getByTestId('provenance-detail');
@@ -2912,6 +3165,7 @@ test.describe('workspace restore flows', () => {
             'ui-import-provenance-live-workspace.json',
         );
         await dismissRestoreNotice(page);
+        await openSourcesDetailModal(page);
 
         const provenancePanel = visibleProvenancePanel(page);
         const detailPanel = provenancePanel.getByTestId('provenance-detail');
@@ -2935,6 +3189,7 @@ test.describe('workspace restore flows', () => {
             'ui-import-provenance-multi-bundle-workspace.json',
         );
         await dismissRestoreNotice(page);
+        await openSourcesDetailModal(page);
 
         const provenancePanel = visibleProvenancePanel(page);
         const detailPanel = provenancePanel.getByTestId('provenance-detail');
@@ -3068,6 +3323,8 @@ test.describe('workspace restore flows', () => {
                 .getByRole('heading', { name: tt('composerAdvancedTitle') })
                 .first(),
         ).toBeVisible();
+        await page.getByTestId('composer-advanced-settings-close').click();
+        await expect(page.getByTestId('composer-advanced-settings-dialog')).toHaveCount(0);
 
         const mobileInsights = page.locator('[data-testid="workspace-insights-collapsible"]:visible').first();
         await mobileInsights.evaluate((element) => {
@@ -3080,7 +3337,11 @@ test.describe('workspace restore flows', () => {
         await expect(contextWorkflow).toContainText(
             localizedMessageByKey('workspaceSnapshotImportedLog', 'ui-import-provenance-live-workspace.json', '1'),
         );
-        await expect(page.getByTestId('current-stage-source')).toBeVisible();
+        await openWorkflowDetailModal(page);
+        await expect(
+            page.getByTestId('workspace-workflow-detail-modal').getByTestId('current-stage-source'),
+        ).toBeVisible();
+        await closeWorkflowDetailModal(page);
     });
 
     test('desktop shell owner layout keeps model output, context rail, and provenance separated after import', async ({
@@ -3095,18 +3356,25 @@ test.describe('workspace restore flows', () => {
         );
         await dismissRestoreNotice(page);
 
-        const responseRail = page.locator('[data-testid="workspace-response-rail"]:visible').first();
+        await openAnswerDetailModal(page);
+        const responseRail = page
+            .getByTestId('workspace-answer-detail-modal')
+            .locator('[data-testid="workspace-response-rail"]:visible')
+            .first();
         await expect(responseRail).toBeVisible();
         await expect(responseRail.getByTestId('workspace-model-output-card')).toBeVisible();
         await expect(responseRail.getByTestId('workspace-response-text-card')).toBeVisible();
         await expect(responseRail.getByTestId('workspace-thoughts-card')).toHaveCount(0);
+        await closeAnswerDetailModal(page);
 
         const sideTools = page.locator('[data-testid="workspace-side-tool-panel"]:visible').first();
         await expect(sideTools).toBeVisible();
 
-        const provenancePanel = visibleProvenancePanel(page);
+        await openSourcesDetailModal(page);
+        const provenancePanel = visibleProvenancePanel(page.getByTestId('workspace-sources-detail-modal'));
         await expect(provenancePanel).toBeVisible();
         await expect(provenancePanel.getByTestId('provenance-summary')).toBeVisible();
+        await closeSourcesDetailModal(page);
 
         const desktopInsights = page.locator('[data-testid="workspace-insights-collapsible"]:visible').first();
         await desktopInsights.evaluate((element) => {
@@ -3120,7 +3388,11 @@ test.describe('workspace restore flows', () => {
         await expect(contextWorkflow).toContainText(
             localizedMessageByKey('workspaceSnapshotImportedLog', 'ui-import-provenance-live-workspace.json', '1'),
         );
-        await expect(desktopInsights.getByTestId('current-work-thoughts-section')).toBeVisible();
+        await openWorkflowDetailModal(page);
+        await expect(
+            page.getByTestId('workspace-workflow-detail-modal').getByTestId('workspace-workflow-detail-thoughts'),
+        ).toBeVisible();
+        await closeWorkflowDetailModal(page);
     });
 
     test('dark mode keeps shell owner surfaces readable after import', async ({ page }) => {
@@ -3140,13 +3412,20 @@ test.describe('workspace restore flows', () => {
         await expect(page.locator('html')).toHaveClass(/dark/);
         await expect(page.locator(`button[title="${tt('switchLight')}"]`).first()).toBeVisible();
 
-        const responseRail = page.locator('[data-testid="workspace-response-rail"]:visible').first();
+        await openAnswerDetailModal(page);
+        const responseRail = page
+            .getByTestId('workspace-answer-detail-modal')
+            .locator('[data-testid="workspace-response-rail"]:visible')
+            .first();
         await expect(responseRail.getByTestId('workspace-model-output-card')).toBeVisible();
         await expect(responseRail.getByTestId('workspace-thoughts-card')).toHaveCount(0);
+        await closeAnswerDetailModal(page);
 
-        const provenancePanel = visibleProvenancePanel(page);
+        await openSourcesDetailModal(page);
+        const provenancePanel = visibleProvenancePanel(page.getByTestId('workspace-sources-detail-modal'));
         await expect(provenancePanel).toBeVisible();
         await expect(provenancePanel.getByTestId('provenance-summary')).toBeVisible();
+        await closeSourcesDetailModal(page);
 
         const desktopInsights = page.locator('[data-testid="workspace-insights-collapsible"]:visible').first();
         await desktopInsights.evaluate((element) => {
@@ -3160,7 +3439,11 @@ test.describe('workspace restore flows', () => {
         await expect(contextWorkflow).toContainText(
             localizedMessageByKey('workspaceSnapshotImportedLog', 'ui-import-provenance-live-workspace.json', '1'),
         );
-        await expect(desktopInsights.getByTestId('current-work-thoughts-section')).toBeVisible();
+        await openWorkflowDetailModal(page);
+        await expect(
+            page.getByTestId('workspace-workflow-detail-modal').getByTestId('workspace-workflow-detail-thoughts'),
+        ).toBeVisible();
+        await closeWorkflowDetailModal(page);
 
         await page.getByRole('button', { name: tt('composerToolbarAdvancedSettings') }).click();
         await expect(
@@ -3277,16 +3560,25 @@ test.describe('workspace restore flows', () => {
         });
         await dismissRestoreNoticeIfPresent(page);
 
-        const responseRail = page.locator('[data-testid="workspace-response-rail"]:visible').first();
+        await openAnswerDetailModal(page);
+        const responseRail = page
+            .getByTestId('workspace-answer-detail-modal')
+            .locator('[data-testid="workspace-response-rail"]:visible')
+            .first();
         await expect(responseRail).toBeVisible();
         await expect(responseRail.getByTestId('workspace-model-output-card')).toContainText(
             tt('workspaceViewerStructuredOutput'),
         );
         await expect(responseRail.getByTestId('workspace-model-output-card')).toContainText('Night portrait');
         await expect(responseRail.getByTestId('workspace-thoughts-card')).toHaveCount(0);
+        await closeAnswerDetailModal(page);
 
         await ensureWorkspaceInsightsExpanded(page);
-        await expect(page.getByTestId('current-work-thoughts-section')).toBeVisible();
+        await openWorkflowDetailModal(page);
+        await expect(
+            page.getByTestId('workspace-workflow-detail-modal').getByTestId('workspace-workflow-detail-thoughts'),
+        ).toBeVisible();
+        await closeWorkflowDetailModal(page);
 
         await page
             .getByTestId('workspace-history-focus-state')
@@ -3417,7 +3709,11 @@ test.describe('workspace restore flows', () => {
         });
         await dismissRestoreNoticeIfPresent(page);
 
-        const responseRail = page.locator('[data-testid="workspace-response-rail"]:visible').first();
+        await openAnswerDetailModal(page);
+        const responseRail = page
+            .getByTestId('workspace-answer-detail-modal')
+            .locator('[data-testid="workspace-response-rail"]:visible')
+            .first();
         await expect(responseRail).toBeVisible();
         await expect(responseRail.getByTestId('structured-output-prompt-ready-hint')).toBeVisible();
 
@@ -3428,6 +3724,7 @@ test.describe('workspace restore flows', () => {
         await expect(composer(page)).toHaveValue(
             'Keep Variation B as the base and borrow only the rear fog density from Variation C.',
         );
+        await closeAnswerDetailModal(page);
     });
 
     test('provenance reuse updates the composer through append and replace actions', async ({ page }) => {
@@ -3438,6 +3735,7 @@ test.describe('workspace restore flows', () => {
             'ui-import-provenance-live-workspace.json',
         );
         await dismissRestoreNotice(page);
+        await openSourcesDetailModal(page);
 
         const provenancePanel = visibleProvenancePanel(page);
         const detailPanel = provenancePanel.getByTestId('provenance-detail');

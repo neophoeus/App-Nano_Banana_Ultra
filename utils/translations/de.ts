@@ -399,6 +399,7 @@ export const de = {
     editorBaseStageNotice: 'Das aktuell auf der Szene platzierte Bild dient jetzt als Editor-Basis.',
     composerToolbarExportWorkspace: 'Arbeitsbereich exportieren',
     composerToolbarImportWorkspace: 'Arbeitsbereich importieren',
+    workspaceSnapshotActionsTitle: 'Arbeitsbereich-Schnappschuss',
     composerToolbarAdvancedSettings: 'Erweiterte Einstellungen',
     composerEnterSends: 'Enter sendet',
     composerEnterNewline: 'Enter fur Zeilenumbruch',
@@ -584,6 +585,7 @@ export const de = {
     workspacePanelStatusReserved: 'Bereitschaft',
     workspacePanelResponseEyebrow: 'Antwort',
     workspacePanelSourceTrailEyebrow: 'Quellspur',
+    workspacePanelViewDetails: 'Details anzeigen',
     workspacePanelResultTextReady:
         'Diese Konfiguration kann bereits Textantworten empfangen. Wenn das Modell eine Beschreibung zuruckgibt, erscheint sie hier.',
     workspacePanelResultTextReserved:
@@ -874,6 +876,7 @@ export const de = {
     workspaceViewerStructuredOutputHint:
         'Hier wird dieselbe strukturierte Ausgabe aus der oberen Leiste als vollstandige Inspektionsansicht gezeigt.',
     workspaceInsightsLatestThoughts: 'Neueste Gedanken',
+    workspaceInsightsAllThoughts: 'Alle Gedanken',
     workspaceInsightsProvenance: 'Quelldetails',
     workspaceInsightsTurnsCount: '{0} Zuge',
     workspaceInsightsLineageMap: 'Versionskarte',

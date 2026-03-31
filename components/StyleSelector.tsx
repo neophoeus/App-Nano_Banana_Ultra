@@ -521,7 +521,7 @@ const StyleSelector: React.FC<StyleSelectorProps> = ({
             </label>
 
             {/* Category Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+            <div className="flex gap-2 overflow-x-auto pb-2 nbu-scrollbar-subtle">
                 {STYLE_CATEGORIES.map((cat) => (
                     <button
                         key={cat.id}
@@ -541,7 +541,7 @@ const StyleSelector: React.FC<StyleSelectorProps> = ({
             </div>
 
             {/* Style Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 overflow-y-auto scrollbar-thin pr-1 pb-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 overflow-y-auto nbu-scrollbar-subtle pr-1 pb-2">
                 {stylesToShow.map((style) => (
                     <button
                         key={style}

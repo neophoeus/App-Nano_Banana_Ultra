@@ -6,6 +6,37 @@ This changelog is compiled from the repository's local git tags plus the publish
 
 - no unreleased changes tracked yet
 
+## v3.1.4 - 2026-03-31
+
+- Release title: Nano Banana Ultra 3.1.4 - Shell, Restore & Queue Batch Hardening
+- Release prep summary:
+    - reorganized the top workspace shell around summary-first ownership: `Current Work` is now a single-line live-status card with a thought-aware indicator, while `Answer`, `Source Trail`, and `Versions` open dedicated detail modals instead of carrying their full content inline
+    - moved heavyweight workflow, provenance, and version detail out of the compact summaries, including keeping `Workspace Snapshot` import/export controls inside the `Versions` detail modal and preserving full current-stage source routing, lineage context, and the full thoughts stack inside the workflow detail view
+    - tightened overflow and mobile-fit behavior across the restored shell surfaces, generated-image overlays, structured-output menus, tooltip panels, and shared scroll containers so the compact shell stays readable without viewport-breaking UI states
+    - split restore-time runtime hydration from save/export compaction so restored workspaces keep the selected turn and official-conversation image chain needed for viewer access and `priorTurns` continuation requests, while persisted snapshots still strip quota-heavy inline generated payloads wherever a file-backed or compact form should be used
+    - fixed file-backed queue batch submission from restored stage sources by keeping the browser payload on `/api/load-image?filename=...` and resolving that reference into inline Gemini bytes only at the backend request boundary, avoiding a return to retained frontend base64 state
+    - expanded regression coverage around the modal-owned shell and restored file-backed flows, including workflow/source assertions through detail modals, versions-owned workspace snapshot actions, official-conversation restore continuity, and a Playwright guard that confirms queued batch browser requests stay file-backed
+    - revalidated the release hardening with focused Vitest coverage for workflow, response, history, viewer, image-reference, workspace-persistence, and backend integration paths, the full restore Playwright suite, a production `npm run build`, and a live browser spot-check against a restored workspace snapshot
+
+## v3.1.3 - 2026-03-30
+
+- Release title: Nano Banana Ultra 3.1.3 - Restore & Payload Hardening
+- Release prep summary:
+    - reduced long-session slowdown by avoiding retained inline base64 for saved stage and viewer images when a saved file is available, so the main workspace no longer needs to keep full image data URLs in long-lived UI state after auto-save succeeds
+    - redacted inline image payloads from viewer, provenance, and structured-output text surfaces so raw `data:image/...;base64,...` blobs no longer spill into the right-side inspection panels or other text-driven UI paths
+    - aligned restore notice gating with the same restorable-content detection used by snapshot migration and import flows, so restored prompts, workflow logs, queued jobs, and other non-empty workspace states no longer silently skip the restore notice just because they lack visible viewer images or staged assets
+    - hardened thought-signature handling by summarizing opaque signature payloads in viewer and provenance session-hint surfaces, and by stripping oversized raw `thoughtSignature` blobs from stored history and workspace session hints while preserving the lightweight `thoughtSignatureReturned` continuity signal
+    - revalidated the follow-up hardening with focused Vitest coverage for restore snapshot state, legacy migration, provenance view, generation storage, and workspace persistence at `32 passed` across `5` files, plus `npm run build`
+
+## v3.1.2 - 2026-03-30
+
+- Release title: Nano Banana Ultra 3.1.2 - Versions & Viewer Refinement
+- Release prep summary:
+    - moved `Export Workspace` and `Import Workspace` out of the composer and into the history-owned `Versions` surface, adding a titled `Workspace Snapshot` strip and restoring a clearer multi-layer shell around active-branch and lineage sections
+    - simplified the single-image viewer by removing redundant header copy, moving the red close action fully outside the modal shell, and keeping the dialog labeled through accessibility metadata rather than visible chrome
+    - made the viewer sidebar independently scrollable, introduced the reusable `nbu-scrollbar-subtle` scrollbar utility, aligned legacy thin-scroll surfaces to the same understated treatment, updated localized snapshot-strip copy, and removed the banana emoji from the document title so browser chrome now reads `Nano Banana Ultra`
+    - revalidated the UI refinement with focused Vitest coverage for composer, history, and viewer surfaces, restore viewer chrome assertions, and repeated `npm run build` validation
+
 ## v3.1.1 - 2026-03-30
 
 - Release title: Nano Banana Ultra 3.1.1 - Workspace Layout Refinement
@@ -50,13 +81,13 @@ This changelog is compiled from the repository's local git tags plus the publish
 
 ## v3.0.3 - 2026-03-29
 
-- Release title: Nano Banana Ultra 3.0.3 - Workspace Context Flow Alignment
-- Release prep summary:
     - moved `Workspace Context` out of the desktop sticky side rail and into the main reading flow directly between `Response` and `Recent Turns`
     - aligned desktop and mobile to share the same collapsible `Workspace Context` container instead of maintaining separate always-open desktop and mobile-only disclosure paths
     - moved `Image Tools` into the main image workspace support rail so tool actions sit beside the focus surface instead of competing with context placement above the canvas
     - replaced the long desktop right-rail presentation with a single summary-first entry point that reduces the feeling of floating context cards across unrelated sections
+        - hardened the auto-save failure persistence path so unsaved inline generated/history payloads no longer get written into local snapshots, shared backups, or exported workspace documents, while current-session viewing still keeps working and uploaded reference assets remain restorable
     - revalidated the layout refactor with focused Vitest coverage for `WorkspaceInsightsSidebar` and `WorkspaceHistoryCanvas`
+
 - 繁中發版摘要:
     - 3.0.3 是針對 `Workspace Context` 與 `Image Tools` 版面流向的整理版，重點在於把脈絡資訊放回主要閱讀順序，而不是懸浮在多個區塊旁邊
     - `Workspace Context` 已從 desktop 的 sticky 右側欄移回主流程，固定排在 `Response` 與 `Recent Turns` 之間

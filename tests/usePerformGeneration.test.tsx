@@ -27,6 +27,7 @@ vi.mock('../services/geminiService', () => ({
 }));
 
 vi.mock('../utils/imageSaveUtils', () => ({
+    buildSavedImageLoadUrl: (savedFilename: string) => `/api/load-image?filename=${encodeURIComponent(savedFilename)}`,
     saveImageToLocal: saveImageToLocalMock,
     generateThumbnail: generateThumbnailMock,
 }));
@@ -258,7 +259,7 @@ describe('usePerformGeneration', () => {
             }),
         );
         expect(generateThumbnailMock).toHaveBeenCalledWith('data:image/png;base64,AAA');
-        expect(latestGeneratedImageUrls).toEqual(['data:image/png;base64,AAA']);
+        expect(latestGeneratedImageUrls).toEqual(['/api/load-image?filename=generated.png']);
         expect(latestSelectedImageIndex).toBe(0);
         expect(latestGenerationMode).toBe('Inpainting');
         expect(latestExecutionMode).toBe('single-turn');
@@ -392,6 +393,40 @@ describe('usePerformGeneration', () => {
                 conversationTurnIndex: 1,
             }),
         );
+    });
+
+    it('drops oversized opaque thought signatures from stored session hints while preserving the returned flag', async () => {
+        const opaqueThoughtSignature = 'A'.repeat(512);
+        generateImageWithGeminiMock.mockResolvedValue([
+            {
+                status: 'success',
+                url: 'data:image/png;base64,CCC',
+                savedFilename: 'opaque-signature.png',
+                metadata: { actualOutput: { width: 1024, height: 1024 } },
+                grounding: null,
+                sessionHints: {
+                    thoughtSignatureReturned: true,
+                    thoughtSignature: opaqueThoughtSignature,
+                },
+            },
+        ]);
+
+        renderHook();
+
+        await act(async () => {
+            await latestHook!.performGeneration(
+                'Opaque thought signature test',
+                '1:1',
+                '1K',
+                'None',
+                'gemini-3.1-flash-image-preview',
+            );
+        });
+
+        expect(latestHistory).toHaveLength(1);
+        expect(latestHistory[0].sessionHints).toEqual({
+            thoughtSignatureReturned: true,
+        });
     });
 
     it('serializes thumbnail generation for multi-image batches', async () => {

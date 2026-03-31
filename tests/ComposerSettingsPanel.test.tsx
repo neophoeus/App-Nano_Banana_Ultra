@@ -57,8 +57,6 @@ const baseProps = {
     onOpenSizePicker: vi.fn(),
     onOpenBatchPicker: vi.fn(),
     onOpenReferences: vi.fn(),
-    onExportWorkspace: vi.fn(),
-    onImportWorkspace: vi.fn(),
     onToggleAdvancedSettings: vi.fn(),
     onOutputFormatChange: vi.fn(),
     onStructuredOutputModeChange: vi.fn(),
@@ -92,7 +90,6 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).toContain('composer-settings-row');
         expect(markup).toContain('composer-quick-tools');
         expect(markup).toContain('composer-reference-context-strip');
-        expect(markup).toContain('composer-workspace-tools');
         expect(markup.indexOf('composer-settings-row')).toBeLessThan(markup.indexOf('composer-quick-tools'));
         expect(markup.indexOf('composer-quick-tools')).toBeLessThan(markup.indexOf('composer-reference-context-strip'));
         expect(markup).toContain('Model');
@@ -105,8 +102,9 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).toContain('Advanced settings');
         expect(markup).toContain('composer-queue-batch-mode-hint-trigger');
         expect(markup).toContain('composer-queue-batch-mode-hint');
-        expect(markup).toContain('Export Workspace');
-        expect(markup).toContain('Import Workspace');
+        expect(markup).not.toContain('composer-workspace-tools');
+        expect(markup).not.toContain('Export Workspace');
+        expect(markup).not.toContain('Import Workspace');
         expect(markup).not.toContain('border-amber-200 bg-amber-50');
     });
 });

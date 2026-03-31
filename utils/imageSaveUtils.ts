@@ -4,6 +4,7 @@
  */
 
 const THUMBNAIL_MAX_DIM = 300; // Max width or height for history thumbnails
+const LOAD_IMAGE_ENDPOINT = '/api/load-image';
 
 export type PreparedImageAsset = {
     dataUrl: string;
@@ -12,6 +13,9 @@ export type PreparedImageAsset = {
     height: number;
     mimeType: string;
 };
+
+export const buildSavedImageLoadUrl = (savedFilename: string): string =>
+    `${LOAD_IMAGE_ENDPOINT}?filename=${encodeURIComponent(savedFilename)}`;
 
 export const readFileAsDataUrl = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {

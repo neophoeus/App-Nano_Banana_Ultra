@@ -35,8 +35,25 @@ export const buildDisplaySettingsFromComposerState = (composerState: WorkspaceCo
     imageSearch: composerState.imageSearch,
 });
 
+export const hasRestorableWorkspaceContent = (snapshot: WorkspacePersistenceSnapshot): boolean => {
+    const normalized = sanitizeWorkspaceSnapshot(snapshot);
+
+    return Boolean(
+        normalized.history.length ||
+            normalized.stagedAssets.length ||
+            normalized.workflowLogs.length ||
+            normalized.queuedJobs.length ||
+            normalized.viewState.generatedImageUrls.length ||
+            normalized.viewState.selectedHistoryId ||
+            normalized.composerState.prompt.trim() ||
+            normalized.workspaceSession.activeResult ||
+            normalized.workspaceSession.sourceHistoryId ||
+            normalized.workspaceSession.conversationId,
+    );
+};
+
 export const shouldShowRestoreNoticeForSnapshot = (snapshot: WorkspacePersistenceSnapshot): boolean =>
-    snapshot.history.length > 0 || snapshot.stagedAssets.length > 0 || snapshot.viewState.generatedImageUrls.length > 0;
+    hasRestorableWorkspaceContent(snapshot);
 
 export const buildWorkspaceComposerStateFromHistoryItem = (item: GeneratedImage): WorkspaceComposerState => {
     const model = item.model || EMPTY_WORKSPACE_COMPOSER_STATE.imageModel;

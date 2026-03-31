@@ -403,6 +403,69 @@ describe('imageSavePlugin official conversation integration', () => {
         ]);
     });
 
+    it('resolves file-backed load-image inputs before creating official queued batch jobs', async () => {
+        const { imageSavePlugin } = await import('../plugins/imageSavePlugin');
+        const handlers = new Map<string, MiddlewareHandler>();
+        const outputDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nano-banana-batch-file-backed-'));
+        tempDirs.push(outputDir);
+        fs.writeFileSync(path.join(outputDir, 'queued-source.png'), Buffer.from(ONE_BY_ONE_PNG_BASE64, 'base64'));
+
+        const plugin = imageSavePlugin({ geminiApiKey: 'test-key', outputDir });
+        const configureServer =
+            typeof plugin.configureServer === 'function' ? plugin.configureServer : plugin.configureServer?.handler;
+
+        configureServer?.({
+            middlewares: {
+                use(route: string, handler: MiddlewareHandler) {
+                    handlers.set(route, handler);
+                },
+            },
+        } as any);
+
+        const createHandler = handlers.get('/api/batches/create');
+        expect(createHandler).toBeTruthy();
+
+        const response = await invokeJsonRoute(createHandler!, {
+            prompt: 'Queue a staged follow-up edit',
+            model: 'gemini-3.1-flash-image-preview',
+            aspectRatio: '1:1',
+            imageSize: '1K',
+            editingInput: '/api/load-image?filename=queued-source.png',
+            outputFormat: 'images-only',
+            temperature: 1,
+            thinkingLevel: 'minimal',
+            includeThoughts: true,
+            googleSearch: false,
+            imageSearch: false,
+            requestCount: 1,
+        });
+
+        expect(response.status).toBe(200);
+        expect(batchCreateMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                src: [
+                    expect.objectContaining({
+                        contents: [
+                            expect.objectContaining({
+                                role: 'user',
+                                parts: [
+                                    { text: '[Edit_1]' },
+                                    {
+                                        inlineData: {
+                                            mimeType: 'image/png',
+                                            data: ONE_BY_ONE_PNG_BASE64,
+                                        },
+                                    },
+                                    { text: 'Queue a staged follow-up edit' },
+                                ],
+                            }),
+                        ],
+                    }),
+                ],
+            }),
+        );
+    });
+
     it('persists and reloads the shared workspace snapshot backup route', async () => {
         const { imageSavePlugin } = await import('../plugins/imageSavePlugin');
         const handlers = new Map<string, MiddlewareHandler>();

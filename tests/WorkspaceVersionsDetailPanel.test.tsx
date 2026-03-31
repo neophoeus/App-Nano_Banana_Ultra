@@ -1,16 +1,13 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import WorkspaceHistoryCanvas from '../components/WorkspaceHistoryCanvas';
+import WorkspaceVersionsDetailPanel from '../components/WorkspaceVersionsDetailPanel';
 
-describe('WorkspaceHistoryCanvas', () => {
-    it('keeps the recent lane above the focus state and renders Versions as a compact summary card', () => {
+describe('WorkspaceVersionsDetailPanel', () => {
+    it('keeps the full active-branch and lineage details for the Versions modal', () => {
         const markup = renderToStaticMarkup(
-            <WorkspaceHistoryCanvas
+            <WorkspaceVersionsDetailPanel
                 currentLanguage="en"
-                recentLane={<div data-testid="recent-lane-content">Recent lane</div>}
-                focusSurface={<div data-testid="focus-surface-content">Focus surface</div>}
-                supportSurface={<div data-testid="support-surface-content">Support surface</div>}
                 activeBranchSummary={
                     {
                         branchOriginId: 'root-a',
@@ -65,7 +62,6 @@ describe('WorkspaceHistoryCanvas', () => {
                 ]}
                 onExportWorkspace={() => undefined}
                 onImportWorkspace={() => undefined}
-                onOpenVersionsDetails={() => undefined}
                 onHistorySelect={() => undefined}
                 onRenameBranch={() => undefined}
                 getShortTurnId={(historyId) => historyId?.slice(0, 8) || '--------'}
@@ -81,30 +77,16 @@ describe('WorkspaceHistoryCanvas', () => {
                     <div>{testIds?.open ? <span data-testid={testIds.open}>open</span> : null}</div>
                 )}
                 renderActiveBranchSummaryContent={() => <div>active branch</div>}
+                showHeader={false}
             />,
         );
 
-        expect(markup).toContain('workspace-history-canvas');
-        expect(markup).toContain('workspace-history-recent-lane');
-        expect(markup).toContain('workspace-history-focus-state');
-        expect(markup).toContain('workspace-history-support-rail');
-        expect(markup).toContain('history-versions-shell');
-        expect(markup).toContain('history-versions-section');
-        expect(markup).toContain('history-versions-open-details');
-        expect(markup).toContain('Versions');
-        expect(markup).toContain('Current version');
-        expect(markup).toContain('View details');
-        expect(markup).not.toContain('history-workspace-snapshot-strip');
-        expect(markup).not.toContain('history-workspace-snapshot-actions');
-        expect(markup).not.toContain('history-export-workspace');
-        expect(markup).not.toContain('history-import-workspace');
-        expect(markup).not.toContain('Workspace Snapshot');
-        expect(markup).not.toContain('active-branch-card');
-        expect(markup).not.toContain('lineage-map-card');
-        expect(markup).not.toContain('lineage-map-open-turn-a');
-        expect(markup).toContain('support-surface-content');
-        expect(markup).not.toContain('session-stack-section');
-        expect(markup.indexOf('recent-lane-content')).toBeLessThan(markup.indexOf('focus-surface-content'));
-        expect(markup.indexOf('focus-surface-content')).toBeLessThan(markup.indexOf('support-surface-content'));
+        expect(markup).toContain('workspace-versions-detail-panel');
+        expect(markup).toContain('active-branch-card');
+        expect(markup).toContain('lineage-map-card');
+        expect(markup).toContain('lineage-map-open-turn-a');
+        expect(markup).toContain('Workspace Snapshot');
+        expect(markup).toContain('Version map');
+        expect(markup).toContain('active branch');
     });
 });

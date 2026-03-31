@@ -55,7 +55,10 @@ export default function InfoTooltip({
         tone === 'dark'
             ? 'border-white/10 bg-[#0d1117] text-white/80 shadow-[0_18px_50px_rgba(0,0,0,0.38)]'
             : 'border-gray-200 bg-white text-gray-700 shadow-[0_18px_45px_rgba(15,23,42,0.14)] dark:border-gray-700 dark:bg-[#0f141c] dark:text-gray-200 dark:shadow-[0_18px_50px_rgba(0,0,0,0.34)]';
-    const alignmentClassName = align === 'right' ? 'right-0' : 'left-0';
+    const alignmentClassName =
+        align === 'right'
+            ? 'left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0'
+            : 'left-1/2 -translate-x-1/2 sm:left-0 sm:translate-x-0';
 
     return (
         <div
@@ -96,7 +99,7 @@ export default function InfoTooltip({
                 role="tooltip"
                 aria-hidden={!isOpen}
                 data-testid={dataTestId}
-                className={`absolute ${alignmentClassName} top-full z-50 mt-2 w-64 rounded-2xl border px-3 py-2 text-xs leading-5 transition ${panelClassName} ${
+                className={`absolute ${alignmentClassName} top-full z-50 mt-2 w-[min(16rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-2xl border px-3 py-2 text-xs leading-5 transition ${panelClassName} ${
                     isOpen ? 'visible opacity-100' : 'pointer-events-none invisible opacity-0'
                 }`}
             >

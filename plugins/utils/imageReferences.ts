@@ -3,6 +3,9 @@ import path from 'path';
 import type { StructuredOutputMode } from '../../types';
 import { appendStructuredOutputInstruction, normalizeStructuredOutputMode } from '../../utils/structuredOutputs';
 
+const LOAD_IMAGE_ENDPOINT = '/api/load-image';
+const RAW_BASE64_PATTERN = /^[A-Za-z0-9+/=]+$/u;
+
 export type ResolvedInlineImage = {
     data: string;
     mimeType: string;
@@ -76,10 +79,56 @@ export function readInlineImageFromReference(
     };
 }
 
+function extractSavedFilenameFromLoadImageUrl(value: string): string | null {
+    try {
+        const parsed = new URL(value, 'http://localhost');
+        if (parsed.pathname !== LOAD_IMAGE_ENDPOINT) {
+            return null;
+        }
+
+        const filename = parsed.searchParams.get('filename');
+        return filename ? path.basename(filename) : null;
+    } catch {
+        return null;
+    }
+}
+
+export function resolveInlineImageInput(image: string, resolvedDir: string): ResolvedInlineImage {
+    const trimmedImage = image.trim();
+    const dataUrlMatch = trimmedImage.match(/^data:([^;]+);base64,(.+)$/i);
+
+    if (dataUrlMatch?.[2]) {
+        return {
+            mimeType: dataUrlMatch[1] || 'image/png',
+            data: dataUrlMatch[2],
+        };
+    }
+
+    const savedFilename = extractSavedFilenameFromLoadImageUrl(trimmedImage);
+    if (savedFilename) {
+        const resolvedImage = readInlineImageFromReference({ savedFilename }, resolvedDir);
+        if (!resolvedImage) {
+            throw new Error(`Referenced image file could not be loaded: ${savedFilename}`);
+        }
+
+        return resolvedImage;
+    }
+
+    if (RAW_BASE64_PATTERN.test(trimmedImage)) {
+        return {
+            mimeType: 'image/png',
+            data: trimmedImage,
+        };
+    }
+
+    throw new Error('Unsupported image input format. Expected a data URL, raw base64, or /api/load-image?filename=...');
+}
+
 export function pushImagesToParts(
     parts: Array<{ text?: string; inlineData?: { data: string; mimeType: string } }>,
     images: string[] | undefined,
     prefix: string,
+    resolvedDir: string,
 ): void {
     if (!images?.length) {
         return;
@@ -92,11 +141,7 @@ export function pushImagesToParts(
         }
 
         parts.push({ text: `[${prefix}_${index + 1}]` });
-
-        const match = image.match(/^data:([^;]+);base64,(.+)$/);
-        const mimeType = match?.[1] || 'image/png';
-        const data = match?.[2] || image;
-        parts.push({ inlineData: { mimeType, data } });
+        parts.push({ inlineData: resolveInlineImageInput(image, resolvedDir) });
     }
 }
 
@@ -112,13 +157,14 @@ export function normalizeReferenceImages(body: GenerateImageBodyLike): {
 
 export function buildGenerateParts(
     body: GenerateImageBodyLike,
+    resolvedDir: string,
 ): Array<{ text?: string; inlineData?: { data: string; mimeType: string } }> {
     const { objectImageInputs, characterImageInputs } = normalizeReferenceImages(body);
     const parts: Array<{ text?: string; inlineData?: { data: string; mimeType: string } }> = [];
 
-    pushImagesToParts(parts, body.editingInput ? [body.editingInput] : [], 'Edit');
-    pushImagesToParts(parts, objectImageInputs, 'Obj');
-    pushImagesToParts(parts, characterImageInputs, 'Char');
+    pushImagesToParts(parts, body.editingInput ? [body.editingInput] : [], 'Edit', resolvedDir);
+    pushImagesToParts(parts, objectImageInputs, 'Obj', resolvedDir);
+    pushImagesToParts(parts, characterImageInputs, 'Char', resolvedDir);
     parts.push({
         text: appendStructuredOutputInstruction(
             String(body.prompt || 'A creative image.'),

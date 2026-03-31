@@ -33,6 +33,7 @@ vi.mock('../services/geminiService', () => ({
 }));
 
 vi.mock('../utils/imageSaveUtils', () => ({
+    buildSavedImageLoadUrl: (savedFilename: string) => `/api/load-image?filename=${encodeURIComponent(savedFilename)}`,
     saveImageToLocal: saveImageToLocalMock,
     generateThumbnail: generateThumbnailMock,
 }));

@@ -318,6 +318,53 @@
         background-color: rgba(5, 8, 12, 0.56);
     }
 
+    @layer utilities {
+        .nbu-scrollbar-subtle,
+        .scrollbar-thin {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(148, 163, 184, 0.38) transparent;
+            scrollbar-gutter: stable;
+        }
+
+        .dark .nbu-scrollbar-subtle,
+        .dark .scrollbar-thin {
+            scrollbar-color: rgba(148, 163, 184, 0.42) transparent;
+        }
+
+        .nbu-scrollbar-subtle::-webkit-scrollbar,
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .nbu-scrollbar-subtle::-webkit-scrollbar-track,
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .nbu-scrollbar-subtle::-webkit-scrollbar-thumb,
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            border: 2px solid transparent;
+            border-radius: 9999px;
+            background-clip: padding-box;
+            background-color: rgba(148, 163, 184, 0.38);
+        }
+
+        .nbu-scrollbar-subtle:hover::-webkit-scrollbar-thumb,
+        .scrollbar-thin:hover::-webkit-scrollbar-thumb {
+            background-color: rgba(100, 116, 139, 0.52);
+        }
+
+        .dark .nbu-scrollbar-subtle::-webkit-scrollbar-thumb,
+        .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+            background-color: rgba(148, 163, 184, 0.42);
+        }
+
+        .dark .nbu-scrollbar-subtle:hover::-webkit-scrollbar-thumb,
+        .dark .scrollbar-thin:hover::-webkit-scrollbar-thumb {
+            background-color: rgba(203, 213, 225, 0.5);
+        }
+    }
     .nbu-stage-hero-status-pill {
         background-color: rgba(255, 255, 255, 0.78);
     }

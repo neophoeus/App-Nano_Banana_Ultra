@@ -81,7 +81,7 @@ function RecentHistoryFilmstrip({
         .replace('{1}', String(branchCount));
 
     return (
-        <div className="nbu-stage-hero-filmstrip-shell rounded-[24px] border p-2.5">
+        <div className="nbu-stage-hero-filmstrip-shell min-w-0 max-w-full overflow-hidden rounded-[24px] border p-2.5">
             <div className="mb-2.5 flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
@@ -98,7 +98,7 @@ function RecentHistoryFilmstrip({
                         />
                     </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
                     {activeBranchSummary ? (
                         <span
                             data-testid="filmstrip-active-branch"
@@ -127,7 +127,7 @@ function RecentHistoryFilmstrip({
                     {t('historyFilmstripEmpty')}
                 </div>
             ) : (
-                <div className="flex gap-2.5 overflow-x-auto pb-1">
+                <div className="flex max-w-full gap-2.5 overflow-x-auto pb-1">
                     {recentHistory.map((item) => {
                         const isFailed = item.status === 'failed';
                         const isActive = !isFailed && activeStageImageUrl === item.url;

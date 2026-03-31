@@ -30,7 +30,7 @@ describe('WorkspaceViewerOverlay', () => {
                     ['grounding', 'search'],
                 ]}
                 formatSessionHintKey={(key) => key}
-                formatSessionHintValue={(value) => String(value)}
+                formatSessionHintValue={(_key, value) => String(value)}
                 onClose={vi.fn()}
                 onMoveViewer={vi.fn()}
                 onAppendPrompt={vi.fn()}
@@ -39,19 +39,22 @@ describe('WorkspaceViewerOverlay', () => {
         );
 
         const thoughtsPreview = `${longThoughts.slice(0, 140).trimEnd()}...`;
-        const viewerDescMatches = markup.match(
-            /Inspect the current stage image, result text, and provenance in one place\./g,
-        );
 
-        expect(markup).toContain('Inspect the current stage image, result text, and provenance in one place.');
-        expect(viewerDescMatches).toHaveLength(1);
-        expect(markup).toContain('workspace-viewer-desc-details');
-        expect(markup).toContain('workspace-viewer-desc-summary');
-        expect(markup).toContain('workspace-viewer-desc');
-        expect(markup).toContain('>Prompt<');
-        expect(markup).toContain('>Result Text<');
-        expect(markup).toContain('>Provenance<');
-        expect(markup).toContain('>Session Hints<');
+        expect(markup).not.toContain('workspace-viewer-title');
+        expect(markup).not.toContain('workspace-viewer-desc-details');
+        expect(markup).not.toContain('workspace-viewer-desc-summary');
+        expect(markup).not.toContain('workspace-viewer-desc');
+        expect(markup).not.toContain('Inspect the current stage image, result text, and provenance in one place.');
+        expect(markup).toContain('workspace-viewer-close');
+        expect(markup).toContain('aria-label="Close"');
+        expect(markup).toContain('workspace-viewer-sidebar');
+        expect(markup).toContain('workspace-viewer-sidebar-scroll');
+        expect(markup).toContain('nbu-scrollbar-subtle');
+        expect(markup).toContain('overflow-y-auto');
+        expect(markup).toContain('relative flex h-full max-h-[92vh] w-full max-w-6xl flex-col');
+        expect(markup).toContain('-right-5 -top-5 z-30');
+        expect(markup).toContain('rounded-[28px] border border-white/10 bg-[#05070b] shadow-2xl');
+        expect(markup).toContain('border-red-200 bg-red-100');
         expect(markup).not.toContain('New Conversation');
         expect(markup).not.toContain('Generate Again');
         expect(markup).not.toContain('Follow-up Edit');
@@ -96,7 +99,7 @@ describe('WorkspaceViewerOverlay', () => {
                 provenancePanel={<div>provenance</div>}
                 sessionHintEntries={[]}
                 formatSessionHintKey={(key) => key}
-                formatSessionHintValue={(value) => String(value)}
+                formatSessionHintValue={(_key, value) => String(value)}
                 onClose={vi.fn()}
                 onMoveViewer={vi.fn()}
                 onReplacePrompt={vi.fn()}
@@ -153,7 +156,7 @@ describe('WorkspaceViewerOverlay', () => {
                 provenancePanel={<div>provenance</div>}
                 sessionHintEntries={[]}
                 formatSessionHintKey={(key) => key}
-                formatSessionHintValue={(value) => String(value)}
+                formatSessionHintValue={(_key, value) => String(value)}
                 onClose={vi.fn()}
                 onMoveViewer={vi.fn()}
                 onReplacePrompt={vi.fn()}
@@ -203,7 +206,7 @@ describe('WorkspaceViewerOverlay', () => {
                 provenancePanel={<div>provenance</div>}
                 sessionHintEntries={[]}
                 formatSessionHintKey={(key) => key}
-                formatSessionHintValue={(value) => String(value)}
+                formatSessionHintValue={(_key, value) => String(value)}
                 onClose={vi.fn()}
                 onMoveViewer={vi.fn()}
                 onReplacePrompt={vi.fn()}
@@ -223,5 +226,39 @@ describe('WorkspaceViewerOverlay', () => {
         expect(markup).toContain('Replace prompt');
         expect(markup).toContain('structured-output-replace-prompt-section-prompt-draft');
         expect(markup).toContain('structured-output-prompt-ready-section-prompt-draft');
+    });
+
+    it('redacts inline image data from viewer prompt and thoughts text', () => {
+        const markup = renderToStaticMarkup(
+            <WorkspaceViewerOverlay
+                currentLanguage="en"
+                isOpen={true}
+                activeViewerImage="https://example.com/result.png"
+                generatedImageCount={1}
+                prompt="Viewer prompt data:image/png;base64,AAAA"
+                aspectRatio="1:1"
+                size="1K"
+                styleLabel="None"
+                model="Gemini 3.1 Flash"
+                effectiveResultText="Viewer text"
+                structuredData={null}
+                structuredOutputMode={null}
+                formattedStructuredOutput={null}
+                effectiveThoughts="Thought data:image/jpeg;base64,BBBB"
+                thoughtStateMessage="No visible thoughts"
+                provenancePanel={<div>provenance</div>}
+                sessionHintEntries={[]}
+                formatSessionHintKey={(key) => key}
+                formatSessionHintValue={(_key, value) => String(value)}
+                onClose={vi.fn()}
+                onMoveViewer={vi.fn()}
+                onReplacePrompt={vi.fn()}
+                onAppendPrompt={vi.fn()}
+            />,
+        );
+
+        expect(markup).toContain('inline image data omitted');
+        expect(markup).not.toContain('data:image/png;base64,AAAA');
+        expect(markup).not.toContain('data:image/jpeg;base64,BBBB');
     });
 });

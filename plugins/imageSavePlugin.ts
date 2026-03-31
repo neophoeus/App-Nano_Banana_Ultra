@@ -35,7 +35,7 @@ function registerMiddlewares(server: any, resolvedDir: string, geminiApiKey?: st
     registerWorkspaceRoutes(server, { geminiApiKey, resolvedDir });
     registerPromptRoutes(server, { getAIClient });
     registerGenerateRoutes(server, { getAIClient, resolvedDir });
-    registerBatchRoutes(server, { getAIClient });
+    registerBatchRoutes(server, { getAIClient, resolvedDir });
 }
 
 /**

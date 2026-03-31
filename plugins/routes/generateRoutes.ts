@@ -202,7 +202,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 return;
             }
 
-            const parts = buildGenerateParts(body);
+            const parts = buildGenerateParts(body, resolvedDir);
             const {
                 requestConfig,
                 resolvedResponseModalities,

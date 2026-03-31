@@ -138,7 +138,32 @@ describe('useGroundingProvenanceView', () => {
         expect(latestHook?.requestedImageSize).toBeNull();
         expect(latestHook?.insightRows.find((row) => row.label === 'Requested size')?.value).toBe('1K');
         expect(latestHook?.insightRows.find((row) => row.label === 'Actual output')?.value).toBe('None');
-        expect(latestHook?.formatSessionHintValue('null')).toBe('None');
+        expect(latestHook?.formatSessionHintValue('actualImageDimensions', 'null')).toBe('None');
+    });
+
+    it('redacts inline image data from session hint display values', () => {
+        renderHook(null, null, '1K');
+
+        const redactedString = latestHook?.formatSessionHintValue('preview', 'data:image/png;base64,AAAA');
+        const redactedObject = latestHook?.formatSessionHintValue('payload', {
+            preview: 'data:image/jpeg;base64,BBBB',
+            safe: true,
+        });
+
+        expect(redactedString).toContain('inline image data omitted');
+        expect(redactedString).not.toContain('AAAA');
+        expect(redactedObject).toContain('inline image data omitted');
+        expect(redactedObject).not.toContain('BBBB');
+    });
+
+    it('redacts thought signatures from session hint display values', () => {
+        renderHook(null, null, '1K');
+
+        const rawThoughtSignature = 'A'.repeat(512);
+        const redactedThoughtSignature = latestHook?.formatSessionHintValue('thoughtSignature', rawThoughtSignature);
+
+        expect(redactedThoughtSignature).toContain('thought signature omitted');
+        expect(redactedThoughtSignature).not.toContain(rawThoughtSignature);
     });
 
     it('falls back to the current composer size when 3.1 flash uses 512', () => {

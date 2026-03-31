@@ -801,7 +801,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                             {t('editorErrorTitle')}
                         </h3>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-8 max-h-[100px] overflow-y-auto scrollbar-thin px-2">
+                        <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-8 max-h-[100px] overflow-y-auto nbu-scrollbar-subtle px-2">
                             {error}
                         </p>
                         <div className="flex gap-4 w-full">

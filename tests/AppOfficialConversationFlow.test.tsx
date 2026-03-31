@@ -310,18 +310,13 @@ describe('App official conversation flow', () => {
 
         await waitFor(() => {
             expect(container.querySelector('[data-testid="workspace-restore-notice"]')).toBeTruthy();
-            expect(container.querySelector('[data-testid="conversation-continuity-card"]')?.textContent).toContain(
-                'Chat history',
-            );
         });
 
         await clickElement(container.querySelector('[data-testid="workspace-restore-continue"]'));
 
         await waitFor(() => {
             expect(container.querySelector('[data-testid="workspace-restore-notice"]')).toBeFalsy();
-            expect(container.querySelector('[data-testid="conversation-continuity-card"]')?.textContent).toContain(
-                'Chat Branch',
-            );
+            expect(container.querySelector('textarea')).toBeTruthy();
         });
 
         const textarea = await waitFor(() => {
