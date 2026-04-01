@@ -36,14 +36,14 @@ import WorkspaceTopHeader from './components/WorkspaceTopHeader';
 import WorkspaceVersionsDetailPanel from './components/WorkspaceVersionsDetailPanel';
 import WorkspaceWorkflowCard from './components/WorkspaceWorkflowCard';
 import WorkspaceWorkflowDetailPanel from './components/WorkspaceWorkflowDetailPanel';
-import { Language, ensureLanguageLoaded, getTranslation } from './utils/translations';
+import { Language, ensureLanguageLoaded, getTranslation, persistLanguagePreference } from './utils/translations';
 import { ASPECT_RATIOS, IMAGE_MODELS, MODEL_CAPABILITIES, OUTPUT_FORMATS, THINKING_LEVELS } from './constants';
 import {
     EMPTY_WORKSPACE_COMPOSER_STATE,
     EMPTY_WORKSPACE_SESSION,
     loadWorkspaceSnapshot,
 } from './utils/workspacePersistence';
-import { shouldShowRestoreNoticeForSnapshot } from './utils/workspaceSnapshotState';
+import { hasRestorableWorkspaceContent } from './utils/workspaceSnapshotState';
 import {
     deriveGroundingMode,
     getAvailableGroundingModes,
@@ -161,6 +161,7 @@ const App: React.FC = () => {
     const initialComposerState = initialWorkspaceSnapshot.composerState || EMPTY_WORKSPACE_COMPOSER_STATE;
     const [apiKeyReady, setApiKeyReady] = useState(false);
     const [currentLang, setCurrentLang] = useState<Language>('en');
+    const [areInitialPreferencesReady, setAreInitialPreferencesReady] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [activeWorkspaceDetailModal, setActiveWorkspaceDetailModal] = useState<
         'workflow' | 'answer' | 'sources' | 'versions' | 'queued-jobs' | null
@@ -356,6 +357,7 @@ const App: React.FC = () => {
 
             void ensureLanguageLoaded(nextLanguage)
                 .then(() => {
+                    persistLanguagePreference(nextLanguage);
                     setCurrentLang(nextLanguage);
                 })
                 .catch((error) => {
@@ -426,8 +428,6 @@ const App: React.FC = () => {
         branchSummaries,
         branchSummaryByOriginId,
         lineageRootGroups,
-        latestRestorableTurn,
-        latestSuccessfulRestorableTurn,
         activeBranchSummary,
         selectedItemModel,
         currentStageSourceHistoryId,
@@ -521,6 +521,7 @@ const App: React.FC = () => {
         characterImages,
         setApiKeyReady,
         setCurrentLang,
+        setInitialPreferencesReady: setAreInitialPreferencesReady,
         setAspectRatio,
         applyComposerState,
         logsLength: logs.length,
@@ -671,8 +672,6 @@ const App: React.FC = () => {
 
     const {
         workspaceImportReview,
-        showWorkspaceRestoreNotice,
-        setShowWorkspaceRestoreNotice,
         applyWorkspaceSnapshot,
         handleCloseWorkspaceImportReview,
         handleApplyImportedWorkspaceSnapshot,
@@ -681,7 +680,8 @@ const App: React.FC = () => {
         handleImportWorkspaceSnapshot,
     } = useWorkspaceSnapshotActions({
         currentLanguage: currentLang,
-        initialShowRestoreNotice: shouldShowRestoreNoticeForSnapshot(initialWorkspaceSnapshot),
+        initialShouldAnnounceRestoreToast: hasRestorableWorkspaceContent(initialWorkspaceSnapshot),
+        isInitialRestoreAnnouncementReady: areInitialPreferencesReady,
         workspaceImportInputRef,
         lastPromotedHistoryIdRef,
         composeCurrentWorkspaceSnapshot,
@@ -716,7 +716,6 @@ const App: React.FC = () => {
         t,
         composeCurrentWorkspaceSnapshot,
         applyWorkspaceSnapshot,
-        showNotification,
         addLog,
     });
 
@@ -1080,7 +1079,7 @@ const App: React.FC = () => {
         groundingQueries,
         searchEntryPointRenderedContent,
     });
-    const { surfaceSharedControlsProps, restoreNoticeProps, importReviewProps, branchRenameDialogProps } =
+    const { surfaceSharedControlsProps, importReviewProps, branchRenameDialogProps } =
         useWorkspaceOverlayAuxiliaryProps({
             isSurfaceWorkspaceOpen,
             isSurfaceSharedControlsOpen,
@@ -1101,25 +1100,11 @@ const App: React.FC = () => {
             maxCharacters: capability.maxCharacters,
             floatingControlsZIndex,
             currentLanguage: currentLang,
-            onLanguageChange: handleLanguageChange,
             setIsSurfaceSharedControlsOpen,
             setIsAdvancedSettingsOpen,
             openSurfacePickerSheet,
             getStyleLabel,
             getModelLabel,
-            showWorkspaceRestoreNotice,
-            historyCount: history.length,
-            stagedAssetCount: stagedAssets.length,
-            viewerImageCount: generatedImageUrls.length,
-            activeBranchLabel: activeBranchSummary?.branchLabel || null,
-            latestRestorableTurn,
-            latestSuccessfulRestorableTurn,
-            handleHistorySelect,
-            handleContinueFromHistoryTurn,
-            handleBranchFromHistoryTurn,
-            setShowWorkspaceRestoreNotice,
-            getContinueActionLabel,
-            handleStartNewConversation,
             openPromptSheet: () => setActivePickerSheet('prompt'),
             openPromptHistorySheet: () => setActivePickerSheet('history'),
             openReferencesSheet: () => setActivePickerSheet('references'),
@@ -1257,14 +1242,10 @@ const App: React.FC = () => {
                     </div>
                 }
             >
-                <WorkspaceHealthPanel
-                    currentLanguage={currentLang}
-                    refreshToken={systemStatusRefreshToken}
-                    isSuppressed={showWorkspaceRestoreNotice}
-                />
+                <WorkspaceHealthPanel currentLanguage={currentLang} refreshToken={systemStatusRefreshToken} />
             </Suspense>
         ),
-        [currentLang, showWorkspaceRestoreNotice, systemStatusRefreshToken, t],
+        [currentLang, systemStatusRefreshToken, t],
     );
     const workspaceTopHeaderProps = useWorkspaceTopHeaderProps({
         headerConsole,
@@ -1942,7 +1923,6 @@ const App: React.FC = () => {
             <WorkspaceOverlayStack
                 notification={notification}
                 surfaceSharedControlsProps={surfaceSharedControlsProps}
-                restoreNoticeProps={restoreNoticeProps}
                 importReviewProps={importReviewProps}
                 advancedSettingsDialogProps={advancedSettingsDialogProps}
                 extraOverlays={workspaceDetailOverlays}

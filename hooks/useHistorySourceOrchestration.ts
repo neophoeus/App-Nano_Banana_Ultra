@@ -50,7 +50,7 @@ type UseHistorySourceOrchestrationArgs = {
     workspaceSession: WorkspaceSessionState;
     conversationState: WorkspaceConversationState;
     branchOriginIdByTurnId: Record<string, string>;
-    handleApplyImportedWorkspaceSnapshot: (options?: { showRestoreNotice?: boolean }) => void;
+    handleApplyImportedWorkspaceSnapshot: (options?: { announceRestoreToast?: boolean }) => void;
     getHistoryTurnById: (historyId?: string | null) => GeneratedImageType | null;
     handleClearResults: () => void;
     resetSelectedOutputState: () => void;
@@ -354,7 +354,7 @@ export function useHistorySourceOrchestration({
     const handleImportReviewDirectAction = useCallback(
         (action: 'open' | 'continue' | 'branch', historyId: string) => {
             setPendingImportedWorkspaceAction({ action, historyId });
-            handleApplyImportedWorkspaceSnapshot({ showRestoreNotice: false });
+            handleApplyImportedWorkspaceSnapshot({ announceRestoreToast: true });
         },
         [handleApplyImportedWorkspaceSnapshot],
     );

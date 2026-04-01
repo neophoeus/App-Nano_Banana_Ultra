@@ -4,6 +4,8 @@ export type Language = 'en' | 'zh_TW' | 'zh_CN' | 'ja' | 'ko' | 'es' | 'fr' | 'd
 
 export type TranslationDictionary = Record<string, string>;
 
+export const LANGUAGE_STORAGE_KEY = 'nbu_language';
+
 export const SUPPORTED_LANGUAGES: { value: Language; label: string; flag: string; shortLabel: string }[] = [
     { value: 'en', label: 'English', flag: '🇺🇸', shortLabel: 'En' },
     { value: 'zh_TW', label: '繁體中文', flag: '🇹🇼', shortLabel: '繁' },
@@ -17,6 +19,9 @@ export const SUPPORTED_LANGUAGES: { value: Language; label: string; flag: string
 ];
 
 type NonEnglishLanguage = Exclude<Language, 'en'>;
+
+const isSupportedLanguage = (value: string): value is Language =>
+    SUPPORTED_LANGUAGES.some((language) => language.value === value);
 
 const loadedLanguages = new Set<Language>(['en']);
 const languageLoadPromises = new Map<NonEnglishLanguage, Promise<TranslationDictionary>>();
@@ -73,6 +78,37 @@ export const ensureLanguageLoaded = async (language: Language): Promise<Translat
 export const preloadAllTranslations = async (): Promise<void> => {
     await Promise.all(SUPPORTED_LANGUAGES.map(({ value }) => ensureLanguageLoaded(value)));
 };
+
+export const getStoredLanguagePreference = (): Language | null => {
+    if (typeof window === 'undefined') {
+        return null;
+    }
+
+    const storedLanguage = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    return storedLanguage && isSupportedLanguage(storedLanguage) ? storedLanguage : null;
+};
+
+export const persistLanguagePreference = (language: Language): void => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+};
+
+export const resolveBrowserLanguagePreference = (navigatorLanguage?: string): Language => {
+    const resolvedLanguage = navigatorLanguage || (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
+    const browserLang = resolvedLanguage.split('-')[0];
+
+    if (browserLang === 'zh') {
+        return resolvedLanguage === 'zh-CN' ? 'zh_CN' : 'zh_TW';
+    }
+
+    return isSupportedLanguage(browserLang) ? browserLang : 'en';
+};
+
+export const resolvePreferredLanguage = (navigatorLanguage?: string): Language =>
+    getStoredLanguagePreference() || resolveBrowserLanguagePreference(navigatorLanguage);
 
 export const getTranslation = (lang: Language, key: string): string => {
     return translations[lang]?.[key] || translations['en'][key] || key;

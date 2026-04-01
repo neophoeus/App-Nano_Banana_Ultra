@@ -13,8 +13,7 @@ import { loadSharedWorkspaceSnapshot } from '../utils/workspacePersistence';
 type UseLegacyWorkspaceSnapshotMigrationArgs = {
     t: (key: string) => string;
     composeCurrentWorkspaceSnapshot: () => WorkspacePersistenceSnapshot;
-    applyWorkspaceSnapshot: (incomingSnapshot: unknown, options?: { showRestoreNotice?: boolean }) => void;
-    showNotification: (message: string, type?: 'info' | 'error') => void;
+    applyWorkspaceSnapshot: (incomingSnapshot: unknown, options?: { announceRestoreToast?: boolean }) => void;
     addLog: (message: string) => void;
 };
 
@@ -28,7 +27,6 @@ export const useLegacyWorkspaceSnapshotMigration = ({
     t,
     composeCurrentWorkspaceSnapshot,
     applyWorkspaceSnapshot,
-    showNotification,
     addLog,
 }: UseLegacyWorkspaceSnapshotMigrationArgs): void => {
     useEffect(() => {
@@ -55,12 +53,8 @@ export const useLegacyWorkspaceSnapshotMigration = ({
                 return;
             }
 
-            applyWorkspaceSnapshot(sharedSnapshot, { showRestoreNotice: true });
+            applyWorkspaceSnapshot(sharedSnapshot, { announceRestoreToast: true });
             rememberLegacyWorkspaceMigration(SHARED_WORKSPACE_SNAPSHOT_SOURCE, fingerprint);
-            showNotification(
-                t('workspaceSnapshotImportedNotice').replace('{0}', SHARED_WORKSPACE_SNAPSHOT_SOURCE),
-                'info',
-            );
             addLog(
                 encodeWorkflowMessage(
                     'workspaceSnapshotImportedLog',
@@ -75,5 +69,5 @@ export const useLegacyWorkspaceSnapshotMigration = ({
         return () => {
             cancelled = true;
         };
-    }, [addLog, applyWorkspaceSnapshot, composeCurrentWorkspaceSnapshot, showNotification, t]);
+    }, [addLog, applyWorkspaceSnapshot, composeCurrentWorkspaceSnapshot, t]);
 };

@@ -16,7 +16,7 @@ export type AppliedWorkspaceSnapshotState = {
     activeResult: WorkspacePersistenceSnapshot['workspaceSession']['activeResult'];
     displaySettings: GenerationSettings;
     selectedHistoryId: string | null;
-    showRestoreNotice: boolean;
+    announceRestoreToast: boolean;
 };
 
 export const buildDisplaySettingsFromComposerState = (composerState: WorkspaceComposerState): GenerationSettings => ({
@@ -40,20 +40,22 @@ export const hasRestorableWorkspaceContent = (snapshot: WorkspacePersistenceSnap
 
     return Boolean(
         normalized.history.length ||
-            normalized.stagedAssets.length ||
-            normalized.workflowLogs.length ||
-            normalized.queuedJobs.length ||
-            normalized.viewState.generatedImageUrls.length ||
-            normalized.viewState.selectedHistoryId ||
-            normalized.composerState.prompt.trim() ||
-            normalized.workspaceSession.activeResult ||
-            normalized.workspaceSession.sourceHistoryId ||
-            normalized.workspaceSession.conversationId,
+        normalized.stagedAssets.length ||
+        normalized.workflowLogs.length ||
+        normalized.queuedJobs.length ||
+        normalized.viewState.generatedImageUrls.length ||
+        normalized.viewState.selectedHistoryId ||
+        normalized.composerState.prompt.trim() ||
+        normalized.workspaceSession.activeResult ||
+        normalized.workspaceSession.sourceHistoryId ||
+        normalized.workspaceSession.conversationId,
     );
 };
 
-export const shouldShowRestoreNoticeForSnapshot = (snapshot: WorkspacePersistenceSnapshot): boolean =>
+export const shouldAnnounceRestoreToastForSnapshot = (snapshot: WorkspacePersistenceSnapshot): boolean =>
     hasRestorableWorkspaceContent(snapshot);
+
+export const shouldShowRestoreNoticeForSnapshot = shouldAnnounceRestoreToastForSnapshot;
 
 export const buildWorkspaceComposerStateFromHistoryItem = (item: GeneratedImage): WorkspaceComposerState => {
     const model = item.model || EMPTY_WORKSPACE_COMPOSER_STATE.imageModel;
@@ -104,7 +106,7 @@ export const buildWorkspaceComposerStateFromHistoryItem = (item: GeneratedImage)
 
 export const deriveAppliedWorkspaceSnapshotState = (
     incomingSnapshot: unknown,
-    options?: { showRestoreNotice?: boolean },
+    options?: { announceRestoreToast?: boolean; showRestoreNotice?: boolean },
 ): AppliedWorkspaceSnapshotState => {
     const snapshot = sanitizeWorkspaceSnapshot(incomingSnapshot);
     const activeResult = snapshot.workspaceSession.activeResult;
@@ -114,6 +116,6 @@ export const deriveAppliedWorkspaceSnapshotState = (
         activeResult,
         displaySettings: buildDisplaySettingsFromComposerState(snapshot.composerState),
         selectedHistoryId: snapshot.viewState.selectedHistoryId || activeResult?.historyId || null,
-        showRestoreNotice: Boolean(options?.showRestoreNotice),
+        announceRestoreToast: Boolean(options?.announceRestoreToast ?? options?.showRestoreNotice),
     };
 };

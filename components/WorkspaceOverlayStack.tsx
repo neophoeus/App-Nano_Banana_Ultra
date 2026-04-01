@@ -7,7 +7,6 @@ import ThemeToggle from './ThemeToggle';
 import WorkspaceImportReview from './WorkspaceImportReview';
 import WorkspaceModalFrame from './WorkspaceModalFrame';
 import WorkspacePickerSheet from './WorkspacePickerSheet';
-import WorkspaceRestoreNotice from './WorkspaceRestoreNotice';
 import WorkspaceViewerOverlay from './WorkspaceViewerOverlay';
 import { WORKSPACE_OVERLAY_Z_INDEX } from '../constants/workspaceOverlays';
 
@@ -16,7 +15,6 @@ type NotificationState = { msg: string; type: 'info' | 'error' } | null;
 type WorkspaceOverlayStackProps = {
     notification: NotificationState;
     surfaceSharedControlsProps: React.ComponentProps<typeof SurfaceSharedControls> | null;
-    restoreNoticeProps: React.ComponentProps<typeof WorkspaceRestoreNotice> | null;
     importReviewProps: React.ComponentProps<typeof WorkspaceImportReview> | null;
     advancedSettingsDialogProps: React.ComponentProps<typeof ComposerAdvancedSettingsDialog> | null;
     extraOverlays?: React.ReactNode;
@@ -38,7 +36,6 @@ type WorkspaceOverlayStackProps = {
 export default function WorkspaceOverlayStack({
     notification,
     surfaceSharedControlsProps,
-    restoreNoticeProps,
     importReviewProps,
     advancedSettingsDialogProps,
     extraOverlays,
@@ -72,7 +69,6 @@ export default function WorkspaceOverlayStack({
             )}
 
             {surfaceSharedControlsProps && <SurfaceSharedControls {...surfaceSharedControlsProps} />}
-            {restoreNoticeProps && <WorkspaceRestoreNotice {...restoreNoticeProps} />}
             {importReviewProps && <WorkspaceImportReview {...importReviewProps} />}
             {advancedSettingsDialogProps && <ComposerAdvancedSettingsDialog {...advancedSettingsDialogProps} />}
             {extraOverlays}

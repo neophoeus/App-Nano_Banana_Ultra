@@ -4,7 +4,6 @@ import { Language, getTranslation } from '../utils/translations';
 interface WorkspaceHealthPanelProps {
     currentLanguage?: Language;
     refreshToken?: number;
-    isSuppressed?: boolean;
 }
 
 type HealthPayload = {
@@ -14,11 +13,7 @@ type HealthPayload = {
 
 const REFRESH_INTERVAL_MS = 30000;
 
-const WorkspaceHealthPanel: React.FC<WorkspaceHealthPanelProps> = ({
-    currentLanguage = 'en',
-    refreshToken = 0,
-    isSuppressed = false,
-}) => {
+const WorkspaceHealthPanel: React.FC<WorkspaceHealthPanelProps> = ({ currentLanguage = 'en', refreshToken = 0 }) => {
     const [health, setHealth] = useState<HealthPayload | null>(null);
     const [healthError, setHealthError] = useState<string | null>(null);
     const t = (key: string) => getTranslation(currentLanguage as Language, key);
@@ -54,10 +49,6 @@ const WorkspaceHealthPanel: React.FC<WorkspaceHealthPanelProps> = ({
             window.clearInterval(intervalId);
         };
     }, [currentLanguage, refreshToken]);
-
-    if (isSuppressed) {
-        return null;
-    }
 
     const headerStatusItems = [
         {

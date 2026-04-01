@@ -5,6 +5,17 @@ This changelog is compiled from the repository's local git tags plus the publish
 ## Unreleased
 
 
+## v3.1.8 - 2026-04-01
+
+- Release title: Nano Banana Ultra 3.1.8 - Restore Notice Removal & Startup Preference Persistence
+- Release prep summary:
+    - removed the blocking `WorkspaceRestoreNotice` flow from the real product runtime so startup restore, imported-workspace replace, and shared-backup migration now restore directly into the recovered workspace state instead of requiring a second decision modal
+    - replaced the old restore-modal contract with lightweight toast feedback, updated snapshot application semantics from `showRestoreNotice` toward `announceRestoreToast`, and kept restore continuity intact for history source routing and official-conversation follow-up requests
+    - preserved last-used startup preferences by restoring theme and language immediately on launch, persisting user language changes into local storage, and extracting shared theme persistence helpers so launch-time UI state comes back before restore feedback is announced
+    - cleaned up restore-era translation surface area across all supported locales by removing modal-only restore action strings, retaining the shared restore keys still used by toast and import-review flows, and realigning the locale baseline tests with the new contract
+    - rewrote the restore Playwright coverage around direct-restore behavior, removed obsolete modal-only restore tests, updated official-conversation restore assertions to the new no-click startup path, and revalidated the slice with focused Playwright, focused translation Vitest coverage, and a production `npm run build`
+
+
 ## v3.1.7 - 2026-04-01
 
 - Release title: Nano Banana Ultra 3.1.7 - Shell Density, Theme Stability & Composer Cleanup

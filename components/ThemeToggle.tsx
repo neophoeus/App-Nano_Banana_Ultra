@@ -1,61 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Language, getTranslation } from '../utils/translations';
+import {
+    applyThemeWithTransitionSuppression,
+    getPreferredDarkMode,
+    persistThemePreference,
+    THEME_EVENT_NAME,
+    THEME_STORAGE_KEY,
+} from '../utils/theme';
 
 interface ThemeToggleProps {
     currentLanguage?: Language;
     className?: string;
 }
-
-const THEME_STORAGE_KEY = 'theme';
-const THEME_EVENT_NAME = 'nbu-theme-change';
-const THEME_SWITCHING_CLASS = 'nbu-theme-switching';
-
-let themeSwitchCleanupTimeout: number | null = null;
-
-const getPreferredDarkMode = () => {
-    if (typeof window === 'undefined') {
-        return true;
-    }
-
-    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    return storedTheme === 'dark' || (!storedTheme && prefersDark);
-};
-
-const syncDocumentTheme = (isDark: boolean) => {
-    if (typeof document === 'undefined') {
-        return;
-    }
-
-    document.documentElement.classList.toggle('dark', isDark);
-};
-
-const applyThemeWithTransitionSuppression = (isDark: boolean) => {
-    if (typeof document === 'undefined') {
-        return;
-    }
-
-    const root = document.documentElement;
-
-    root.classList.add(THEME_SWITCHING_CLASS);
-    syncDocumentTheme(isDark);
-
-    void root.offsetWidth;
-
-    if (typeof window === 'undefined') {
-        root.classList.remove(THEME_SWITCHING_CLASS);
-        return;
-    }
-
-    if (themeSwitchCleanupTimeout !== null) {
-        window.clearTimeout(themeSwitchCleanupTimeout);
-    }
-
-    themeSwitchCleanupTimeout = window.setTimeout(() => {
-        root.classList.remove(THEME_SWITCHING_CLASS);
-        themeSwitchCleanupTimeout = null;
-    }, 0);
-};
 
 const ThemeToggle: React.FC<ThemeToggleProps> = ({ currentLanguage = 'en' as Language, className = '' }) => {
     const t = (key: string) => getTranslation(currentLanguage, key);
@@ -102,8 +58,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ currentLanguage = 'en' as Lan
         applyThemeWithTransitionSuppression(newDark);
 
         if (typeof window !== 'undefined') {
-            window.localStorage.setItem(THEME_STORAGE_KEY, newDark ? 'dark' : 'light');
-            window.dispatchEvent(new CustomEvent(THEME_EVENT_NAME, { detail: { isDark: newDark } }));
+            persistThemePreference(newDark);
         }
     };
 

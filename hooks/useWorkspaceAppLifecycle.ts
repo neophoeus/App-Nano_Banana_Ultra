@@ -2,7 +2,13 @@ import { Dispatch, SetStateAction, useEffect, useRef } from 'react';
 import { checkApiKey } from '../services/geminiService';
 import { ASPECT_RATIOS } from '../constants';
 import { AspectRatio, WorkspaceComposerState } from '../types';
-import { Language } from '../utils/translations';
+import {
+    ensureLanguageLoaded,
+    Language,
+    persistLanguagePreference,
+    resolvePreferredLanguage,
+} from '../utils/translations';
+import { syncThemeFromStoredPreference } from '../utils/theme';
 
 type UseWorkspaceAppLifecycleArgs = {
     historyCount: number;
@@ -13,6 +19,7 @@ type UseWorkspaceAppLifecycleArgs = {
     characterImages: string[];
     setApiKeyReady: Dispatch<SetStateAction<boolean>>;
     setCurrentLang: Dispatch<SetStateAction<Language>>;
+    setInitialPreferencesReady: Dispatch<SetStateAction<boolean>>;
     setAspectRatio: Dispatch<SetStateAction<AspectRatio>>;
     applyComposerState: (composerState: WorkspaceComposerState) => void;
     logsLength: number;
@@ -30,6 +37,7 @@ export function useWorkspaceAppLifecycle({
     characterImages,
     setApiKeyReady,
     setCurrentLang,
+    setInitialPreferencesReady,
     setAspectRatio,
     applyComposerState,
     logsLength,
@@ -45,14 +53,38 @@ export function useWorkspaceAppLifecycle({
     }, [generatedImageCount, historyCount]);
 
     useEffect(() => {
-        checkApiKey().then(setApiKeyReady);
+        let cancelled = false;
 
-        const browserLang = navigator.language.split('-')[0];
-        if (browserLang === 'zh') {
-            setCurrentLang(navigator.language === 'zh-CN' ? 'zh_CN' : 'zh_TW');
-        } else if (['ja', 'ko', 'es', 'fr', 'de', 'ru'].includes(browserLang)) {
-            setCurrentLang(browserLang as Language);
-        }
+        checkApiKey().then(setApiKeyReady);
+        syncThemeFromStoredPreference();
+
+        const restoreLanguagePreference = async () => {
+            const preferredLanguage = resolvePreferredLanguage();
+
+            try {
+                await ensureLanguageLoaded(preferredLanguage);
+                if (cancelled) {
+                    return;
+                }
+
+                setCurrentLang(preferredLanguage);
+                persistLanguagePreference(preferredLanguage);
+            } catch (error) {
+                console.error(`Failed to restore language preference ${preferredLanguage}.`, error);
+                if (cancelled) {
+                    return;
+                }
+
+                setCurrentLang('en');
+                persistLanguagePreference('en');
+            } finally {
+                if (!cancelled) {
+                    setInitialPreferencesReady(true);
+                }
+            }
+        };
+
+        void restoreLanguagePreference();
 
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
             if (hasDataRef.current) {
@@ -65,8 +97,11 @@ export function useWorkspaceAppLifecycle({
         };
 
         window.addEventListener('beforeunload', handleBeforeUnload);
-        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-    }, [setApiKeyReady, setCurrentLang]);
+        return () => {
+            cancelled = true;
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [setApiKeyReady, setCurrentLang, setInitialPreferencesReady]);
 
     useEffect(() => {
         if (objectImages.length === 0 && characterImages.length === 0) {

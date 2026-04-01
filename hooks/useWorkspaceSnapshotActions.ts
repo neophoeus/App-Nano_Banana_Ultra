@@ -1,4 +1,13 @@
-import { ChangeEvent, Dispatch, MutableRefObject, SetStateAction, useCallback, useState } from 'react';
+import {
+    ChangeEvent,
+    Dispatch,
+    MutableRefObject,
+    SetStateAction,
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+} from 'react';
 import {
     GeneratedImage,
     PendingProvenanceContext,
@@ -16,7 +25,7 @@ import {
 } from '../utils/workspacePersistence';
 import {
     deriveAppliedWorkspaceSnapshotState,
-    shouldShowRestoreNoticeForSnapshot,
+    shouldAnnounceRestoreToastForSnapshot,
 } from '../utils/workspaceSnapshotState';
 import { getTranslation, Language } from '../utils/translations';
 import { encodeWorkflowMessage } from '../utils/workflowTimeline';
@@ -28,7 +37,8 @@ export type WorkspaceImportReviewState = {
 
 type UseWorkspaceSnapshotActionsArgs = {
     currentLanguage: Language;
-    initialShowRestoreNotice: boolean;
+    initialShouldAnnounceRestoreToast: boolean;
+    isInitialRestoreAnnouncementReady: boolean;
     workspaceImportInputRef: MutableRefObject<HTMLInputElement | null>;
     lastPromotedHistoryIdRef: MutableRefObject<string | null>;
     composeCurrentWorkspaceSnapshot: () => ReturnType<typeof sanitizeWorkspaceSnapshot>;
@@ -61,7 +71,8 @@ type UseWorkspaceSnapshotActionsArgs = {
 
 export const useWorkspaceSnapshotActions = ({
     currentLanguage,
-    initialShowRestoreNotice,
+    initialShouldAnnounceRestoreToast,
+    isInitialRestoreAnnouncementReady,
     workspaceImportInputRef,
     lastPromotedHistoryIdRef,
     composeCurrentWorkspaceSnapshot,
@@ -93,16 +104,33 @@ export const useWorkspaceSnapshotActions = ({
 }: UseWorkspaceSnapshotActionsArgs) => {
     const t = useCallback((key: string) => getTranslation(currentLanguage, key), [currentLanguage]);
     const [workspaceImportReview, setWorkspaceImportReview] = useState<WorkspaceImportReviewState | null>(null);
-    const [showWorkspaceRestoreNotice, setShowWorkspaceRestoreNotice] = useState(initialShowRestoreNotice);
+    const initialRestoreToastShownRef = useRef(false);
+
+    const showRestoredToast = useCallback(() => {
+        showNotification(t('workspaceRestoreTitle'), 'info');
+    }, [showNotification, t]);
+
+    useEffect(() => {
+        if (
+            initialRestoreToastShownRef.current ||
+            !initialShouldAnnounceRestoreToast ||
+            !isInitialRestoreAnnouncementReady
+        ) {
+            return;
+        }
+
+        initialRestoreToastShownRef.current = true;
+        showRestoredToast();
+    }, [initialShouldAnnounceRestoreToast, isInitialRestoreAnnouncementReady, showRestoredToast]);
 
     const applyWorkspaceSnapshot = useCallback(
-        (incomingSnapshot: unknown, options?: { showRestoreNotice?: boolean }) => {
+        (incomingSnapshot: unknown, options?: { announceRestoreToast?: boolean }) => {
             const appliedSnapshot = deriveAppliedWorkspaceSnapshotState(incomingSnapshot, options);
             const {
                 snapshot,
                 activeResult,
                 selectedHistoryId: nextSelectedHistoryId,
-                showRestoreNotice,
+                announceRestoreToast,
             } = appliedSnapshot;
             const latestSuccessfulHistoryId = snapshot.history.find((item) => item.status === 'success')?.id || null;
 
@@ -130,8 +158,11 @@ export const useWorkspaceSnapshotActions = ({
             setBranchRenameDialog(null);
             setBranchRenameDraft('');
             setWorkspaceImportReview(null);
-            setShowWorkspaceRestoreNotice(showRestoreNotice);
             lastPromotedHistoryIdRef.current = activeResult?.historyId || latestSuccessfulHistoryId;
+
+            if (announceRestoreToast) {
+                showRestoredToast();
+            }
         },
         [
             applyComposerState,
@@ -158,6 +189,7 @@ export const useWorkspaceSnapshotActions = ({
             setSelectedImageIndex,
             setStagedAssets,
             setWorkspaceSession,
+            showRestoredToast,
         ],
     );
 
@@ -173,19 +205,23 @@ export const useWorkspaceSnapshotActions = ({
     }, [clearImportInput]);
 
     const handleApplyImportedWorkspaceSnapshot = useCallback(
-        (options?: { showRestoreNotice?: boolean }) => {
+        (options?: { announceRestoreToast?: boolean }) => {
             if (!workspaceImportReview) {
                 return;
             }
 
+            const announceRestoreToast =
+                options?.announceRestoreToast ?? shouldAnnounceRestoreToastForSnapshot(workspaceImportReview.snapshot);
+
             applyWorkspaceSnapshot(workspaceImportReview.snapshot, {
-                showRestoreNotice:
-                    options?.showRestoreNotice ?? shouldShowRestoreNoticeForSnapshot(workspaceImportReview.snapshot),
+                announceRestoreToast,
             });
-            showNotification(
-                t('workspaceSnapshotImportedNotice').replace('{0}', workspaceImportReview.fileName),
-                'info',
-            );
+            if (!announceRestoreToast) {
+                showNotification(
+                    t('workspaceSnapshotImportedNotice').replace('{0}', workspaceImportReview.fileName),
+                    'info',
+                );
+            }
             addLog(
                 encodeWorkflowMessage(
                     'workspaceSnapshotImportedLog',
@@ -208,7 +244,7 @@ export const useWorkspaceSnapshotActions = ({
             workspaceImportReview.snapshot,
         );
 
-        applyWorkspaceSnapshot(mergedSnapshot, { showRestoreNotice: false });
+        applyWorkspaceSnapshot(mergedSnapshot, { announceRestoreToast: false });
         showNotification(t('workspaceSnapshotMergedNotice').replace('{0}', workspaceImportReview.fileName), 'info');
         addLog(
             encodeWorkflowMessage(
@@ -297,8 +333,6 @@ export const useWorkspaceSnapshotActions = ({
     return {
         workspaceImportReview,
         setWorkspaceImportReview,
-        showWorkspaceRestoreNotice,
-        setShowWorkspaceRestoreNotice,
         applyWorkspaceSnapshot,
         handleCloseWorkspaceImportReview,
         handleApplyImportedWorkspaceSnapshot,

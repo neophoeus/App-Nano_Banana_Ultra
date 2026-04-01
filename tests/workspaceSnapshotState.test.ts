@@ -6,7 +6,7 @@ import {
     buildWorkspaceComposerStateFromHistoryItem,
     deriveAppliedWorkspaceSnapshotState,
     hasRestorableWorkspaceContent,
-    shouldShowRestoreNoticeForSnapshot,
+    shouldAnnounceRestoreToastForSnapshot,
 } from '../utils/workspaceSnapshotState';
 
 const buildHistoryTurn = (overrides: Partial<GeneratedImage> = {}): GeneratedImage => ({
@@ -22,14 +22,14 @@ const buildHistoryTurn = (overrides: Partial<GeneratedImage> = {}): GeneratedIma
 });
 
 describe('workspaceSnapshotState', () => {
-    it('detects whether a restored notice should be shown', () => {
-        expect(shouldShowRestoreNoticeForSnapshot(EMPTY_WORKSPACE_SNAPSHOT)).toBe(false);
+    it('detects whether a restored toast should be shown', () => {
+        expect(shouldAnnounceRestoreToastForSnapshot(EMPTY_WORKSPACE_SNAPSHOT)).toBe(false);
 
         const withHistory: WorkspacePersistenceSnapshot = {
             ...EMPTY_WORKSPACE_SNAPSHOT,
             history: [buildHistoryTurn()],
         };
-        expect(shouldShowRestoreNoticeForSnapshot(withHistory)).toBe(true);
+        expect(shouldAnnounceRestoreToastForSnapshot(withHistory)).toBe(true);
 
         const withViewerImages: WorkspacePersistenceSnapshot = {
             ...EMPTY_WORKSPACE_SNAPSHOT,
@@ -38,7 +38,7 @@ describe('workspaceSnapshotState', () => {
                 generatedImageUrls: ['https://example.com/view.png'],
             },
         };
-        expect(shouldShowRestoreNoticeForSnapshot(withViewerImages)).toBe(true);
+        expect(shouldAnnounceRestoreToastForSnapshot(withViewerImages)).toBe(true);
 
         const withPromptOnly: WorkspacePersistenceSnapshot = {
             ...EMPTY_WORKSPACE_SNAPSHOT,
@@ -47,7 +47,7 @@ describe('workspaceSnapshotState', () => {
                 prompt: 'Recovered prompt draft',
             },
         };
-        expect(shouldShowRestoreNoticeForSnapshot(withPromptOnly)).toBe(true);
+        expect(shouldAnnounceRestoreToastForSnapshot(withPromptOnly)).toBe(true);
 
         const withQueuedJobsOnly: WorkspacePersistenceSnapshot = {
             ...EMPTY_WORKSPACE_SNAPSHOT,
@@ -77,7 +77,7 @@ describe('workspaceSnapshotState', () => {
                 },
             ],
         };
-        expect(shouldShowRestoreNoticeForSnapshot(withQueuedJobsOnly)).toBe(true);
+        expect(shouldAnnounceRestoreToastForSnapshot(withQueuedJobsOnly)).toBe(true);
     });
 
     it('shares the same restorable-content detection used by migration flows', () => {
@@ -89,7 +89,7 @@ describe('workspaceSnapshotState', () => {
         };
 
         expect(hasRestorableWorkspaceContent(withWorkflowLogsOnly)).toBe(true);
-        expect(shouldShowRestoreNoticeForSnapshot(withWorkflowLogsOnly)).toBe(true);
+        expect(shouldAnnounceRestoreToastForSnapshot(withWorkflowLogsOnly)).toBe(true);
     });
 
     it('maps composer state into display settings', () => {
@@ -209,13 +209,13 @@ describe('workspaceSnapshotState', () => {
                     imageSize: '1K',
                 },
             },
-            { showRestoreNotice: true },
+            { announceRestoreToast: true },
         );
 
         expect(plan.snapshot.composerState.prompt).toBe('Imported prompt');
         expect(plan.displaySettings.prompt).toBe('Imported prompt');
         expect(plan.selectedHistoryId).toBe('turn-1');
-        expect(plan.showRestoreNotice).toBe(true);
+        expect(plan.announceRestoreToast).toBe(true);
     });
 
     it('keeps imported provenance continuity fields when deriving snapshot state', () => {

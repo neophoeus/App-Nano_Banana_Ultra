@@ -5,6 +5,8 @@ import { createRoot, Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
 import { WORKSPACE_SNAPSHOT_STORAGE_KEY } from '../utils/workspacePersistence';
+import { LANGUAGE_STORAGE_KEY } from '../utils/translations';
+import { THEME_STORAGE_KEY } from '../utils/theme';
 
 const { saveImageToLocalMock, generateThumbnailMock, loadFullImageMock } = vi.hoisted(() => ({
     saveImageToLocalMock: vi.fn(),
@@ -309,13 +311,6 @@ describe('App official conversation flow', () => {
         });
 
         await waitFor(() => {
-            expect(container.querySelector('[data-testid="workspace-restore-notice"]')).toBeTruthy();
-        });
-
-        await clickElement(container.querySelector('[data-testid="workspace-restore-continue"]'));
-
-        await waitFor(() => {
-            expect(container.querySelector('[data-testid="workspace-restore-notice"]')).toBeFalsy();
             expect(container.querySelector('textarea')).toBeTruthy();
         });
 
@@ -402,5 +397,23 @@ describe('App official conversation flow', () => {
         expect(persistedSnapshot.snapshot.conversationState.byBranchOriginId['chat-root-turn'].turnIds).toContain(
             persistedSnapshot.generatedTurn.id,
         );
+    });
+
+    it('restores saved language and theme preferences on startup', async () => {
+        localStorage.removeItem(WORKSPACE_SNAPSHOT_STORAGE_KEY);
+        localStorage.setItem(LANGUAGE_STORAGE_KEY, 'zh_TW');
+        localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+
+        await act(async () => {
+            root.render(<App />);
+        });
+
+        await waitFor(() => {
+            expect(document.documentElement.classList.contains('dark')).toBe(true);
+            expect(container.querySelector('button[title="切換為亮色模式"]')).toBeTruthy();
+        });
+
+        expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('zh_TW');
+        expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('dark');
     });
 });

@@ -1751,22 +1751,6 @@ const zhCnBranchRestoreBaseline = {
     workspaceRestoreTurns: '{0} 个回合',
 } as const;
 
-const zhTwRestoreActionBaseline = {
-    workspaceRestoreActionsHint:
-        '你可以重新打開還原的鏈、把最新回合設為延續來源、從它分支，或清除還原的鏈但保留已恢復的提示詞編輯區設定。',
-    workspaceRestoreOpenLatest: '開啟最新回合',
-    workspaceRestoreContinueChain: '延續還原回合',
-    workspaceRestoreBranch: '從還原回合分支',
-} as const;
-
-const zhCnRestoreActionBaseline = {
-    workspaceRestoreActionsHint:
-        '你可以重新打开恢复的链、把最新回合设为延续来源、从它分支，或清除恢复的链但保留已恢复的提示词编辑区设置。',
-    workspaceRestoreOpenLatest: '打开最新回合',
-    workspaceRestoreContinueChain: '延续恢复回合',
-    workspaceRestoreBranch: '从恢复回合分支',
-} as const;
-
 const zhTwWorkspacePickerSupportBaseline = {
     workspacePickerModelSupportImageSearch: '支援已建立依據的圖片搜尋',
     workspacePickerModelSupportGoogleSearch: '支援 Google 搜尋脈絡依據',
@@ -3880,13 +3864,6 @@ const jaLineageRestoreBaseline = {
         'このステージはエディタ由来の系統を持つため、後続生成は編集済みの元画像に引き続き紐づきます。',
     lineageActionDescReplay: 'このステージは以前に記録されたターンを確認用に再生しています。',
     workspaceRestoreTurns: '{0} 件のターン',
-    workspaceRestoreActiveBranch: '現在の分岐 {0}',
-    workspaceRestoreActionsHint:
-        '復元した連鎖を再び開くか、最新ターンを継続元に設定するか、そこから分岐するか、復元したコンポーザー設定だけ残して連鎖をクリアするかを選択してください。',
-    workspaceRestoreOpenLatest: '最新ターンを開く',
-    workspaceRestoreContinueChain: '復元した連鎖を継続',
-    workspaceRestoreBranch: '復元地点から分岐',
-    workspaceRestoreUseSettingsClear: '設定を使って連鎖をクリア',
 } as const;
 
 const koLineageRestoreBaseline = {
@@ -3900,13 +3877,6 @@ const koLineageRestoreBaseline = {
         '이 스테이지는 에디터 계보를 지니고 있어 이후 후속 생성이 편집된 원본 이미지에 계속 고정됩니다.',
     lineageActionDescReplay: '이 스테이지는 이전에 기록된 턴을 확인용으로 재생하고 있습니다.',
     workspaceRestoreTurns: '{0}개 턴',
-    workspaceRestoreActiveBranch: '현재 분기 {0}',
-    workspaceRestoreActionsHint:
-        '복구된 흐름을 다시 열지, 최신 턴을 연속 원본으로 둘지, 여기서 분기할지, 복구된 컴포저 설정만 유지하고 흐름을 지울지 선택하세요.',
-    workspaceRestoreOpenLatest: '최신 턴 열기',
-    workspaceRestoreContinueChain: '복원된 흐름 계속하기',
-    workspaceRestoreBranch: '복원 지점에서 분기',
-    workspaceRestoreUseSettingsClear: '설정만 유지하고 흐름 지우기',
 } as const;
 
 const esLineageRestoreBaseline = {
@@ -3922,12 +3892,6 @@ const esLineageRestoreBaseline = {
         'Esta etapa conserva el linaje del editor, por lo que los siguientes seguimientos siguen anclados a una imagen de origen ya editada.',
     lineageActionDescReplay: 'Esta etapa esta reproduciendo un turno capturado previamente para inspeccion.',
     workspaceRestoreTurns: '{0} turnos',
-    workspaceRestoreActionsHint:
-        'Elige si quieres reabrir la cadena recuperada, usar el ultimo turno como fuente de continuacion, crear una rama desde ahi o limpiar la cadena conservando la configuracion recuperada del compositor.',
-    workspaceRestoreOpenLatest: 'Abrir ultimo turno',
-    workspaceRestoreContinueChain: 'Continuar cadena restaurada',
-    workspaceRestoreBranch: 'Crear rama desde la restauracion',
-    workspaceRestoreUseSettingsClear: 'Usar ajustes y limpiar cadena',
 } as const;
 
 const frLineageRestoreBaseline = {
@@ -3943,12 +3907,6 @@ const frLineageRestoreBaseline = {
         "Cette etape conserve une lignee d'editeur, donc les suivis suivants restent ancres a une image source deja modifiee.",
     lineageActionDescReplay: 'Cette etape rejoue un tour precedemment capture pour inspection.',
     workspaceRestoreTurns: '{0} tours',
-    workspaceRestoreViewerImages: '{0} images du visualiseur',
-    workspaceRestoreActionsHint:
-        "Choisissez de rouvrir la chaine recuperee, de definir le dernier tour comme source de continuation, de creer une branche depuis celui-ci, ou d'effacer la chaine tout en gardant les reglages recuperes du compositeur.",
-    workspaceRestoreOpenLatest: 'Ouvrir le dernier tour',
-    workspaceRestoreContinueChain: 'Continuer la chaine restauree',
-    workspaceRestoreUseSettingsClear: 'Garder les reglages et effacer la chaine',
 } as const;
 
 const deLineageRestoreBaseline = {
@@ -3965,14 +3923,6 @@ const deLineageRestoreBaseline = {
     lineageActionDescReplay: 'Diese Stufe spielt eine zuvor aufgezeichnete Runde zur Prufung erneut ab.',
     workspaceRestoreTitle: 'Arbeitsbereich wiederhergestellt',
     workspaceRestoreTurns: '{0} Runden',
-    workspaceRestoreStagedAssets: '{0} vorbereitete Ressourcen',
-    workspaceRestoreViewerImages: '{0} Bilder im Betrachter',
-    workspaceRestoreActiveBranch: 'aktiver Zweig {0}',
-    workspaceRestoreActionsHint:
-        'Wahlen Sie, ob Sie die wiederhergestellte Kette erneut offnen, die letzte Runde als Fortsetzungsquelle setzen, davon abzweigen oder die Kette loschen und nur die wiederhergestellten Kompositions-Einstellungen behalten mochten.',
-    workspaceRestoreOpenLatest: 'Letzte Runde offnen',
-    workspaceRestoreContinueChain: 'Wiederhergestellte Kette fortsetzen',
-    workspaceRestoreUseSettingsClear: 'Einstellungen verwenden, Kette loschen',
 } as const;
 
 const ruLineageRestoreBaseline = {
@@ -3988,13 +3938,6 @@ const ruLineageRestoreBaseline = {
         'Этот этап несет редакторскую линию происхождения, поэтому следующие продолжения остаются привязанными к уже отредактированному исходному изображению.',
     lineageActionDescReplay: 'Этот этап воспроизводит ранее сохраненный ход для просмотра.',
     workspaceRestoreTurns: '{0} ходов',
-    workspaceRestoreViewerImages: '{0} изображений в просмотре',
-    workspaceRestoreActionsHint:
-        'Выберите, нужно ли заново открыть восстановленную цепочку, сделать последний ход источником продолжения, создать от него ветку или очистить цепочку, сохранив восстановленные настройки компоновщика.',
-    workspaceRestoreOpenLatest: 'Открыть последний ход',
-    workspaceRestoreContinueChain: 'Продолжить восстановленную цепочку',
-    workspaceRestoreBranch: 'Создать ветку от восстановления',
-    workspaceRestoreUseSettingsClear: 'Использовать настройки и очистить цепочку',
 } as const;
 
 const jaPickerViewerBaseline = {
@@ -5382,22 +5325,6 @@ describe('workspace flow translations', () => {
         const simplifiedChinese = translations.zh_CN;
 
         for (const [key, value] of Object.entries(zhCnBranchRestoreBaseline)) {
-            expect(simplifiedChinese[key as keyof typeof simplifiedChinese], `zh_CN drifted for ${key}`).toBe(value);
-        }
-    });
-
-    it('keeps the zh_TW restore action wording baseline stable', () => {
-        const traditionalChinese = translations.zh_TW;
-
-        for (const [key, value] of Object.entries(zhTwRestoreActionBaseline)) {
-            expect(traditionalChinese[key as keyof typeof traditionalChinese], `zh_TW drifted for ${key}`).toBe(value);
-        }
-    });
-
-    it('keeps the zh_CN restore action wording baseline stable', () => {
-        const simplifiedChinese = translations.zh_CN;
-
-        for (const [key, value] of Object.entries(zhCnRestoreActionBaseline)) {
             expect(simplifiedChinese[key as keyof typeof simplifiedChinese], `zh_CN drifted for ${key}`).toBe(value);
         }
     });

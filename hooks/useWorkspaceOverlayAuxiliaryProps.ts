@@ -2,14 +2,12 @@ import { Dispatch, SetStateAction, useMemo } from 'react';
 import BranchRenameDialog from '../components/BranchRenameDialog';
 import SurfaceSharedControls from '../components/SurfaceSharedControls';
 import WorkspaceImportReview from '../components/WorkspaceImportReview';
-import WorkspaceRestoreNotice from '../components/WorkspaceRestoreNotice';
-import { AspectRatio, GeneratedImage, ImageModel, ImageSize, ImageStyle } from '../types';
+import { AspectRatio, ImageModel, ImageSize, ImageStyle } from '../types';
 import { getTranslation, Language } from '../utils/translations';
 
 type BranchRenameDialogProps = React.ComponentProps<typeof BranchRenameDialog>;
 type SurfaceSharedControlsProps = React.ComponentProps<typeof SurfaceSharedControls>;
 type WorkspaceImportReviewProps = React.ComponentProps<typeof WorkspaceImportReview>;
-type WorkspaceRestoreNoticeProps = React.ComponentProps<typeof WorkspaceRestoreNotice>;
 
 type ImportReviewBranchActions = {
     openLatest: WorkspaceImportReviewProps['onReplaceAndOpenLatest'];
@@ -22,7 +20,6 @@ type ImportReviewBranchActions = {
 
 type UseWorkspaceOverlayAuxiliaryPropsArgs = {
     currentLanguage: Language;
-    onLanguageChange: Dispatch<SetStateAction<Language>>;
     isSurfaceWorkspaceOpen: boolean;
     isSurfaceSharedControlsOpen: boolean;
     isAdvancedSettingsOpen: boolean;
@@ -46,19 +43,6 @@ type UseWorkspaceOverlayAuxiliaryPropsArgs = {
     openSurfacePickerSheet: SurfaceSharedControlsProps['onOpenSheet'];
     getStyleLabel: (style: ImageStyle) => string;
     getModelLabel: (model: ImageModel) => string;
-    showWorkspaceRestoreNotice: boolean;
-    historyCount: number;
-    stagedAssetCount: number;
-    viewerImageCount: number;
-    activeBranchLabel: string | null;
-    latestRestorableTurn: GeneratedImage | null;
-    latestSuccessfulRestorableTurn: GeneratedImage | null;
-    handleHistorySelect: (item: GeneratedImage) => void;
-    handleContinueFromHistoryTurn: (item: GeneratedImage) => void;
-    handleBranchFromHistoryTurn: (item: GeneratedImage) => void;
-    setShowWorkspaceRestoreNotice: Dispatch<SetStateAction<boolean>>;
-    getContinueActionLabel: (item: GeneratedImage) => string;
-    handleStartNewConversation: () => void;
     openPromptSheet: () => void;
     openPromptHistorySheet: () => void;
     openReferencesSheet: () => void;
@@ -85,7 +69,6 @@ type UseWorkspaceOverlayAuxiliaryPropsArgs = {
 
 export function useWorkspaceOverlayAuxiliaryProps({
     currentLanguage,
-    onLanguageChange,
     isSurfaceWorkspaceOpen,
     isSurfaceSharedControlsOpen,
     isAdvancedSettingsOpen,
@@ -109,19 +92,6 @@ export function useWorkspaceOverlayAuxiliaryProps({
     openSurfacePickerSheet,
     getStyleLabel,
     getModelLabel,
-    showWorkspaceRestoreNotice,
-    historyCount,
-    stagedAssetCount,
-    viewerImageCount,
-    activeBranchLabel,
-    latestRestorableTurn,
-    latestSuccessfulRestorableTurn,
-    handleHistorySelect,
-    handleContinueFromHistoryTurn,
-    handleBranchFromHistoryTurn,
-    setShowWorkspaceRestoreNotice,
-    getContinueActionLabel,
-    handleStartNewConversation,
     openPromptSheet,
     openPromptHistorySheet,
     openReferencesSheet,
@@ -151,8 +121,7 @@ export function useWorkspaceOverlayAuxiliaryProps({
                       workspaceLabel: getTranslation(currentLanguage, isEditing ? 'editorTitle' : 'sketchTitle'),
                       activeSheetLabel: activeSurfaceSheetLabel,
                       activePickerSheet:
-                          activePickerSheet === 'history' ||
-                          activePickerSheet === 'templates'
+                          activePickerSheet === 'history' || activePickerSheet === 'templates'
                               ? null
                               : activePickerSheet,
                       isAdvancedSettingsOpen,
@@ -177,48 +146,6 @@ export function useWorkspaceOverlayAuxiliaryProps({
                           setIsAdvancedSettingsOpen(true);
                       },
                   } satisfies SurfaceSharedControlsProps)
-                : null,
-            restoreNoticeProps: showWorkspaceRestoreNotice
-                ? ({
-                      currentLanguage,
-                      onLanguageChange,
-                      historyCount,
-                      stagedAssetCount,
-                      viewerImageCount,
-                      activeBranchLabel,
-                      onOpenLatestTurn: latestRestorableTurn
-                          ? () => {
-                                handleHistorySelect(latestRestorableTurn);
-                                setShowWorkspaceRestoreNotice(false);
-                            }
-                          : undefined,
-                      onContinueRestoredChain: latestSuccessfulRestorableTurn
-                          ? () => {
-                                handleContinueFromHistoryTurn(latestSuccessfulRestorableTurn);
-                                setShowWorkspaceRestoreNotice(false);
-                            }
-                          : undefined,
-                      continueActionLabel: latestSuccessfulRestorableTurn
-                          ? (() => {
-                                const resolvedLabel = getContinueActionLabel(latestSuccessfulRestorableTurn);
-                                const genericContinueLabel = getTranslation(currentLanguage, 'lineageActionContinue');
-                                return resolvedLabel !== genericContinueLabel
-                                    ? resolvedLabel
-                                    : getTranslation(currentLanguage, 'workspaceRestoreContinueChain');
-                            })()
-                          : undefined,
-                      onBranchFromRestore: latestSuccessfulRestorableTurn
-                          ? () => {
-                                handleBranchFromHistoryTurn(latestSuccessfulRestorableTurn);
-                                setShowWorkspaceRestoreNotice(false);
-                            }
-                          : undefined,
-                      onUseSettingsClearChain: () => {
-                          handleStartNewConversation();
-                          setShowWorkspaceRestoreNotice(false);
-                      },
-                      onDismiss: () => setShowWorkspaceRestoreNotice(false),
-                  } satisfies WorkspaceRestoreNoticeProps)
                 : null,
             importReviewProps: workspaceImportReview
                 ? ({
@@ -255,7 +182,6 @@ export function useWorkspaceOverlayAuxiliaryProps({
                 : null,
         }),
         [
-            activeBranchLabel,
             activePickerSheet,
             activeSurfaceSheetLabel,
             aspectRatio,
@@ -266,20 +192,14 @@ export function useWorkspaceOverlayAuxiliaryProps({
             closeBranchRenameDialog,
             currentLanguage,
             floatingControlsZIndex,
-            getContinueActionLabel,
             getImportedContinueActionLabel,
             getModelLabel,
             getShortTurnId,
             getStyleLabel,
             handleApplyImportedWorkspaceSnapshot,
-            handleBranchFromHistoryTurn,
             handleCloseWorkspaceImportReview,
-            handleContinueFromHistoryTurn,
-            handleHistorySelect,
             handleMergeImportedWorkspaceSnapshot,
-            handleStartNewConversation,
             handleSubmitBranchRename,
-            historyCount,
             imageModel,
             imageSize,
             imageStyle,
@@ -292,12 +212,9 @@ export function useWorkspaceOverlayAuxiliaryProps({
             isImportedPromotedContinuationSource,
             isSurfaceSharedControlsOpen,
             isSurfaceWorkspaceOpen,
-            latestRestorableTurn,
-            latestSuccessfulRestorableTurn,
             maxCharacters,
             maxObjects,
             objectImageCount,
-            onLanguageChange,
             openPromptHistorySheet,
             openPromptSheet,
             openReferencesSheet,
@@ -305,12 +222,8 @@ export function useWorkspaceOverlayAuxiliaryProps({
             setBranchRenameDraft,
             setIsAdvancedSettingsOpen,
             setIsSurfaceSharedControlsOpen,
-            setShowWorkspaceRestoreNotice,
-            showWorkspaceRestoreNotice,
-            stagedAssetCount,
             surfacePromptPreview,
             totalReferenceCount,
-            viewerImageCount,
             workspaceImportReview,
         ],
     );

@@ -1151,15 +1151,12 @@ const assertComposerChromeLocalized = async (page: Page) => {
 };
 
 const dismissRestoreNotice = async (page: Page) => {
-    await page.getByRole('button', { name: tt('workspaceRestoreDismiss') }).click();
+    await expect(page.getByTestId('workspace-restore-notice')).toHaveCount(0);
     await ensureWorkspaceInsightsExpanded(page);
 };
 
 const dismissRestoreNoticeIfPresent = async (page: Page) => {
-    const restoreNotice = page.getByTestId('workspace-restore-notice');
-    if ((await restoreNotice.count()) > 0) {
-        await restoreNotice.getByRole('button', { name: tt('workspaceRestoreDismiss') }).click();
-    }
+    await expect(page.getByTestId('workspace-restore-notice')).toHaveCount(0);
     await ensureWorkspaceInsightsExpanded(page);
 };
 
@@ -1695,6 +1692,8 @@ const replaceWithImportedWorkspace = async (
         .getByTestId('workspace-import-review')
         .getByRole('button', { name: tt('workspaceImportReviewReplaceCurrentWorkspace') })
         .evaluate((button: HTMLButtonElement) => button.click());
+    await expect(page.getByTestId('workspace-import-review')).toHaveCount(0);
+    await expect(page.getByTestId('workspace-restore-notice')).toHaveCount(0);
     await expect(page.getByText(tt('workspaceRestoreTitle'))).toBeVisible();
 };
 
@@ -1969,20 +1968,17 @@ test.describe('workspace restore flows', () => {
         await expect(page.getByText(tt('historyFilmstripSummary', '2', '2'))).toBeVisible();
     });
 
-    test('replace then continue restored chain reopens the imported branch', async ({ page }) => {
+    test('replace restores the imported workspace directly without an extra restore step', async ({ page }) => {
         await openFreshWorkspace(page);
         await replaceWithImportedWorkspace(page);
 
-        await page.getByTestId('workspace-restore-continue').click();
-
-        await expect(page.getByText(tt('workspaceRestoreTitle'))).toHaveCount(0);
-        await assertStageSourceSurfaces(page, {
-            composerValue: 'Imported branch turn',
-            followUpSource: 'Continue',
-            toastMessage: 'History turn is now the active continuation source.',
-            timelineText: 'History turn aligned as active continuation source',
+        await expect(composer(page)).toHaveValue('Imported workspace prompt');
+        await assertCurrentStageSourceCard(page, {
+            sourceLabel: tt('stageOriginHistory'),
+            actionLabel: 'Branch',
             branchLabel: 'Imported Branch',
         });
+        await expect(visibleFilmstripStageSourceBadge(page)).toContainText(localizedText('Stage Source'));
     });
 
     test('import review replace plus open latest skips the restore notice and reopens the imported turn immediately', async ({
@@ -2116,56 +2112,12 @@ test.describe('workspace restore flows', () => {
         });
     });
 
-    test('replace then open latest turn marks the stage as a reopen source', async ({ page }) => {
-        await openFreshWorkspace(page);
-        await replaceWithImportedWorkspace(page);
-
-        await page
-            .getByTestId('workspace-restore-notice')
-            .getByRole('button', { name: tt('workspaceRestoreOpenLatest') })
-            .click();
-
-        await expect(page.getByTestId('workspace-restore-notice')).toHaveCount(0);
-        await expect(
-            page.getByText(localizedText('History turn reopened as the current stage source.'), { exact: true }),
-        ).toBeVisible();
-        await assertStageSourceSurfaces(page, {
-            composerValue: 'Imported branch turn',
-            followUpSource: 'Reopen',
-            toastMessage: 'History turn reopened as the current stage source.',
-            timelineText: 'History turn reopened as current stage source',
-            branchLabel: 'Imported Branch',
-        });
-        await assertCurrentStageSourceCard(page, {
-            sourceLabel: tt('stageOriginHistory'),
-            actionLabel: 'Reopen',
-            branchLabel: 'Imported Branch',
-            expectOpenAction: true,
-        });
-        await withWorkflowDetailModal(page, async (workflowModal) => {
-            const stageSourceCard = currentStageSourceCard(workflowModal);
-            await expect(stageSourceCard.getByTestId('current-stage-source-continue')).toHaveCount(0);
-            await expect(stageSourceCard.getByTestId('current-stage-source-branch')).toHaveCount(0);
-            await expect(workflowModal.getByTestId('session-continuity-stage-badge').first()).toContainText(
-                localizedText('Current Stage Source'),
-            );
-            await expect(workflowModal.getByTestId('session-continuity-open')).toBeVisible();
-        });
-        await expect(page.getByTestId('global-log-stage-source-pill')).toHaveCount(0);
-        await expect(page.getByTestId('global-log-stage-source-badge')).toHaveCount(0);
-        await expect(page.getByTestId('global-log-stage-source-entry')).toHaveCount(0);
-        await expect(page.getByTestId('global-log-source-open')).toHaveCount(0);
-    });
-
     test('restored batch variants remain candidates until explicitly promoted, and only one source stays active per branch', async ({
         page,
     }) => {
         await openFreshWorkspace(page);
         await replaceWithImportedWorkspace(page, variantSnapshotFilePath, 'ui-import-variant-workspace.json');
 
-        const restoreNotice = page.getByTestId('workspace-restore-notice');
-        await expect(restoreNotice.getByRole('button', { name: localizedText('Promote Variant') })).toBeVisible();
-        await dismissRestoreNotice(page);
         const bravoVariantCard = page.locator('[data-testid="filmstrip-card-bravo-v2-turn"]:visible').first();
         const alphaVariantCard = page.locator('[data-testid="filmstrip-card-alpha-v1-turn"]:visible').first();
 
@@ -2264,33 +2216,6 @@ test.describe('workspace restore flows', () => {
         await firstFilmstripCard.click();
         await expect(page.getByTestId('selected-item-action-continue')).toContainText(tt('historyContinueFromTurn'));
         await expect(page.getByTestId('selected-item-action-branch')).toContainText(tt('historyActionBranch'));
-    });
-
-    test('restore notice stays open while its language switch updates both the notice and the main-page language state', async ({
-        page,
-    }) => {
-        await openFreshWorkspace(page);
-        await replaceWithImportedWorkspace(page);
-
-        const targetLanguage: Language = TEST_LANGUAGE === 'en' ? 'ja' : TEST_LANGUAGE;
-        const restoreNotice = page.getByTestId('workspace-restore-notice');
-        const targetShortLabel = SUPPORTED_LANGUAGES.find((item) => item.value === targetLanguage)?.shortLabel || 'En';
-
-        await expect(restoreNotice).toContainText(getTranslation('en', 'workspaceRestoreTitle'));
-        await expect(page.getByTestId('language-selector-toggle')).toHaveCount(2);
-
-        await setWorkspaceLanguageWithin(restoreNotice, targetLanguage);
-
-        await expect(restoreNotice).toContainText(getTranslation(targetLanguage, 'workspaceRestoreTitle'));
-        await expect(
-            restoreNotice.getByText(getTranslation(targetLanguage, 'workspaceRestoreActionsTitle'), { exact: true }),
-        ).toBeVisible();
-        await expect(page.getByTestId('workspace-restore-notice')).toBeVisible();
-        await expect(page.getByTestId('language-selector-toggle').nth(0)).toContainText(targetShortLabel);
-        await expect(page.getByTestId('language-selector-toggle').nth(1)).toContainText(targetShortLabel);
-        await expect(page.locator('body')).toContainText(
-            getTranslation(targetLanguage, 'workspaceTopHeaderReferenceTray'),
-        );
     });
 
     test('filmstrip branch preserves the composer while syncing stage-source surfaces and header hint', async ({
@@ -2445,37 +2370,6 @@ test.describe('workspace restore flows', () => {
         });
     });
 
-    test('replace then branch from restore preserves composer settings', async ({ page }) => {
-        await openFreshWorkspace(page);
-        await replaceWithImportedWorkspace(page);
-
-        await page.getByRole('button', { name: tt('workspaceRestoreBranch') }).click();
-
-        await expect(page.getByText(tt('workspaceRestoreTitle'))).toHaveCount(0);
-        await expect(composer(page)).toHaveValue('Imported workspace prompt');
-        await expect(
-            page.getByText(
-                localizedText('History turn staged as a new branch source. Composer settings were preserved.'),
-            ),
-        ).toBeVisible();
-    });
-
-    test('replace then clear chain keeps settings but resets the stage', async ({ page }) => {
-        await openFreshWorkspace(page);
-        await replaceWithImportedWorkspace(page);
-
-        await page.getByRole('button', { name: tt('workspaceRestoreUseSettingsClear') }).click();
-
-        await expect(page.getByText(tt('workspaceRestoreTitle'))).toHaveCount(0);
-        await expect(composer(page)).toHaveValue('Imported workspace prompt');
-        await expect(page.getByText(tt('readyTitle'))).toBeVisible();
-        await openSourcesDetailModal(page);
-        await expect(page.getByTestId('workspace-sources-detail-modal')).toContainText(
-            tt('groundingProvenanceNoActiveSessionTurn'),
-        );
-        await closeSourcesDetailModal(page);
-    });
-
     test('branch rename updates the active branch label', async ({ page }) => {
         await openFreshWorkspace(page);
         await replaceWithImportedWorkspace(page);
@@ -2555,20 +2449,6 @@ test.describe('workspace restore flows', () => {
         await expect(page.getByTestId('workspace-restore-notice')).toHaveCount(0);
     });
 
-    test('dismiss restore notice closes it without changing the imported composer state', async ({ page }) => {
-        await openFreshWorkspace(page);
-        await replaceWithImportedWorkspace(page);
-
-        await expect(page.getByText(tt('workspaceRestoreTitle'))).toBeVisible();
-        await expect(composer(page)).toHaveValue('Imported workspace prompt');
-
-        await dismissRestoreNotice(page);
-
-        await expect(page.getByText(tt('workspaceRestoreTitle'))).toHaveCount(0);
-        await expect(composer(page)).toHaveValue('Imported workspace prompt');
-        await expect(page.getByText(tt('historyFilmstripSummary', '2', '2'))).toBeVisible();
-    });
-
     test('workspace snapshot quota errors do not white-screen the app', async ({ page }) => {
         const pageErrors: string[] = [];
         page.on('pageerror', (error) => {
@@ -2577,10 +2457,17 @@ test.describe('workspace restore flows', () => {
 
         await openWorkspaceWithSnapshotQuotaFailure(page, restoredOfficialConversationSnapshot);
 
-        await expect(page.getByTestId('workspace-restore-notice')).toBeVisible();
+        await expect(page.getByTestId('workspace-restore-notice')).toHaveCount(0);
         await expect(page.getByText(tt('workspaceRestoreTitle'))).toBeVisible();
         await expect(composer(page)).toHaveValue('Restored official conversation workspace');
-        await expect(page.locator('body')).toContainText(tt('workspaceRestoreTitle'));
+        await assertOfficialConversationSummary(page, {
+            branchLabel: 'Chat Branch',
+            turnCount: tt('workspaceInsightsTurnsCount', '1'),
+            conversationIdShort: 'chatconv',
+            activeSourceShortId: 'chat-fol',
+            prompt: 'Official chat follow-up turn',
+            expectStageBadge: true,
+        });
         expect(pageErrors).toEqual([]);
     });
 
@@ -3114,22 +3001,15 @@ test.describe('workspace restore flows', () => {
         await assertOfficialConversationPostGenerateState(page, prompt);
     });
 
-    test('restore notice continue path preserves restored official conversation continuity', async ({ page }) => {
+    test('startup restore preserves official conversation continuity without an extra restore action', async ({ page }) => {
         await openWorkspaceWithSnapshot(page, restoredOfficialConversationSnapshot);
 
-        const restoreNotice = page.getByTestId('workspace-restore-notice');
-        await expect(restoreNotice).toContainText(localizedText('Workspace Restored'));
-        await expect(restoreNotice).toContainText(tt('workspaceRestoreActiveBranch', 'Chat Branch'));
-
-        await composer(page).fill('Restore notice official conversation draft');
-        await restoreNotice.getByTestId('workspace-restore-continue').click();
-
         await expect(page.getByTestId('workspace-restore-notice')).toHaveCount(0);
-        await assertStageSourceSurfaces(page, {
-            composerValue: 'Official chat follow-up turn',
-            followUpSource: 'Continue',
-            toastMessage: 'History turn is now the active continuation source.',
-            timelineText: 'History turn aligned as active continuation source',
+        await expect(page.getByText(tt('workspaceRestoreTitle'))).toBeVisible();
+        await expect(composer(page)).toHaveValue('Restored official conversation workspace');
+        await assertCurrentStageSourceCard(page, {
+            sourceLabel: tt('stageOriginHistory'),
+            actionLabel: 'Continue',
             branchLabel: 'Chat Branch',
         });
         await assertOfficialConversationSummary(page, {
@@ -3142,16 +3022,13 @@ test.describe('workspace restore flows', () => {
         });
     });
 
-    test('restore-notice continue path sends the official conversation payload on the next browser generate request', async ({
+    test('startup restore sends the official conversation payload on the next browser generate request', async ({
         page,
     }) => {
         const capturedBodies = await installOfficialConversationGenerateCaptureRoute(page);
-        const prompt = 'Browser restore notice official continuation';
+        const prompt = 'Browser restored official continuation';
 
         await openWorkspaceWithSnapshot(page, restoredOfficialConversationSnapshot);
-
-        const restoreNotice = page.getByTestId('workspace-restore-notice');
-        await restoreNotice.getByTestId('workspace-restore-continue').click();
 
         await expect(page.getByTestId('workspace-restore-notice')).toHaveCount(0);
         await composer(page).fill(prompt);

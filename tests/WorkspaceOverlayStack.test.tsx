@@ -27,10 +27,6 @@ vi.mock('../components/WorkspacePickerSheet', () => ({
     default: () => <div data-testid="mock-workspace-picker-sheet" />,
 }));
 
-vi.mock('../components/WorkspaceRestoreNotice', () => ({
-    default: () => <div data-testid="mock-workspace-restore-notice" />,
-}));
-
 vi.mock('../components/WorkspaceViewerOverlay', () => ({
     default: () => <div data-testid="mock-workspace-viewer-overlay" />,
 }));
@@ -41,7 +37,6 @@ describe('WorkspaceOverlayStack', () => {
             <WorkspaceOverlayStack
                 notification={null}
                 surfaceSharedControlsProps={null}
-                restoreNoticeProps={null}
                 importReviewProps={null}
                 advancedSettingsDialogProps={null}
                 sketchPadSurface={null}
@@ -70,7 +65,6 @@ describe('WorkspaceOverlayStack', () => {
             <WorkspaceOverlayStack
                 notification={null}
                 surfaceSharedControlsProps={null}
-                restoreNoticeProps={null}
                 importReviewProps={null}
                 advancedSettingsDialogProps={null}
                 sketchPadSurface={null}
@@ -94,5 +88,32 @@ describe('WorkspaceOverlayStack', () => {
         expect(markup).toContain('Replace Sketch?');
         expect(markup).toContain('Choose next step');
         expect(markup).toContain('Only one sketch allowed. Replace the existing one?');
+    });
+
+    it('renders the top-center notification pill when a toast is active', () => {
+        const markup = renderToStaticMarkup(
+            <WorkspaceOverlayStack
+                notification={{ msg: 'Workspace Restored', type: 'info' }}
+                surfaceSharedControlsProps={null}
+                importReviewProps={null}
+                advancedSettingsDialogProps={null}
+                sketchPadSurface={null}
+                showSketchReplaceConfirm={false}
+                sketchReplaceTitle="Replace"
+                sketchReplaceMessage="Replace current sketch"
+                sketchReplaceActionsTitle="Choose next step"
+                sketchReplaceCancelLabel="Cancel"
+                sketchReplaceConfirmLabel="Confirm"
+                onSketchReplaceCancel={vi.fn()}
+                onSketchReplaceConfirm={vi.fn()}
+                branchRenameDialogProps={null}
+                imageEditorSurface={null}
+                pickerSheetProps={{} as any}
+                viewerOverlayProps={{} as any}
+            />,
+        );
+
+        expect(markup).toContain('Workspace Restored');
+        expect(markup).toContain('top-6');
     });
 });
