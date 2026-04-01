@@ -228,6 +228,18 @@ const clickButton = async (label: string) => {
     });
 };
 
+const clickButtonByAriaLabel = async (label: string) => {
+    const button = await waitFor(() =>
+        Array.from(document.querySelectorAll('button')).find(
+            (candidate) => candidate.getAttribute('aria-label') === label,
+        ),
+    );
+    expect(button).toBeTruthy();
+    await act(async () => {
+        (button as HTMLButtonElement).click();
+    });
+};
+
 const assertNoAdditionalRenders = (tracker: RenderTracker, initialRenderCount: number, label: string) => {
     if (tracker.renders !== initialRenderCount) {
         throw new Error(
@@ -355,6 +367,26 @@ describe('Phase B render stability', () => {
         );
     });
 
+    it('does not rerender stage/history memo surfaces when toggling theme', async () => {
+        const initialGeneratedImageRenders = trackers.generatedImage.renders;
+        const initialRecentHistoryRenders = trackers.recentHistoryFilmstrip.renders;
+        const initialHistoryCanvasRenders = trackers.workspaceHistoryCanvas.renders;
+
+        await clickButtonByAriaLabel('Switch to Dark Mode');
+
+        assertNoAdditionalRenders(trackers.generatedImage, initialGeneratedImageRenders, 'GeneratedImage');
+        assertNoAdditionalRenders(
+            trackers.recentHistoryFilmstrip,
+            initialRecentHistoryRenders,
+            'RecentHistoryFilmstrip',
+        );
+        assertNoAdditionalRenders(
+            trackers.workspaceHistoryCanvas,
+            initialHistoryCanvasRenders,
+            'WorkspaceHistoryCanvas',
+        );
+    });
+
     it('keeps image tools outside the history canvas and before the composer in the bottom row', async () => {
         const historyCanvas = await waitFor(() =>
             document.querySelector('[data-testid="mock-workspace-history-canvas"]'),
@@ -370,6 +402,8 @@ describe('Phase B render stability', () => {
         );
 
         expect(actionsComposerRow).toBeTruthy();
+        expect(actionsComposerRow?.getAttribute('class')).not.toContain('xl:max-w-[1320px]');
+        expect(actionsComposerRow?.getAttribute('class')).not.toContain('xl:mr-auto');
         expect(historyCanvas?.querySelector('[data-testid="mock-workspace-side-tool-panel"]')).toBeNull();
         expect(actionsComposerRow?.contains(sideToolPanel)).toBe(true);
         expect(actionsComposerRow?.contains(composerSettingsPanel)).toBe(true);
@@ -410,11 +444,11 @@ describe('Phase B render stability', () => {
         expect(sourceSignal?.innerHTML).not.toContain('animate-pulse');
         expect(sourceSignal?.innerHTML).toContain('bg-white/90');
         expect(topLauncherRow?.getAttribute('class')).toContain('lg:grid-cols-[minmax(0,1fr)_144px_176px]');
-        expect(workflowButton?.getAttribute('class')).toContain('lg:h-[54px]');
+        expect(workflowButton?.getAttribute('class')).toContain('h-[40px]');
         expect(workflowButton?.getAttribute('class')).toContain('hover:-translate-y-0.5');
-        expect(answerButton?.getAttribute('class')).toContain('lg:h-[54px]');
+        expect(answerButton?.getAttribute('class')).toContain('h-[40px]');
         expect(answerButton?.getAttribute('class')).toContain('hover:-translate-y-0.5');
-        expect(sourceButton?.getAttribute('class')).toContain('lg:h-[54px]');
+        expect(sourceButton?.getAttribute('class')).toContain('h-[40px]');
         expect(sourceButton?.getAttribute('class')).toContain('hover:-translate-y-0.5');
     });
 });

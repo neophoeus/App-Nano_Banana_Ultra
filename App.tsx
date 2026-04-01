@@ -882,6 +882,7 @@ const App: React.FC = () => {
         renderActiveBranchSummaryContent,
     } = useHistoryPresentationHelpers({
         history,
+        branchSummaryByOriginId,
         effectiveBranchContinuationSourceByBranchOriginId,
         getBranchAccentClassName,
         getContinueActionLabel,
@@ -1543,7 +1544,7 @@ const App: React.FC = () => {
     const stagePanelClassName =
         'min-w-0 nbu-shell-panel nbu-shell-surface-stage-hero min-h-[440px] overflow-hidden p-3 lg:min-h-0 lg:flex-1';
     const topLauncherCompactButtonClassName =
-        'group nbu-shell-panel flex h-full min-w-0 items-center justify-center px-3 py-2 text-center transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:hover:shadow-[0_18px_40px_rgba(2,6,23,0.38)] lg:h-[54px] lg:min-h-[54px]';
+        'group nbu-shell-panel flex h-[40px] min-w-0 items-center justify-center px-3 py-2 text-center transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:hover:shadow-[0_18px_40px_rgba(2,6,23,0.38)] min-h-[40px]';
     const topLauncherCompactLabelClassName =
         'whitespace-nowrap text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400';
     const responseTextPlaceholder =
@@ -2008,12 +2009,12 @@ const App: React.FC = () => {
             />
 
             <div className="relative z-10 mx-auto flex min-h-screen max-w-[1560px] flex-col px-4 pb-6 pt-0 lg:px-6 lg:pb-8">
-                <main className="mt-0 flex flex-1 flex-col gap-2.5">
+                <main className="mt-0 flex flex-1 flex-col gap-1.5">
                     <WorkspaceTopHeader {...workspaceTopHeaderProps} />
 
                     <section
                         data-testid="workspace-insights-collapsible"
-                        className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_144px_176px] lg:items-stretch"
+                        className="grid gap-1.5 lg:grid-cols-[minmax(0,1fr)_144px_176px] lg:items-stretch"
                     >
                         <WorkspaceWorkflowCard
                             currentLanguage={currentLang}
@@ -2052,8 +2053,8 @@ const App: React.FC = () => {
                         </button>
                     </section>
 
-                    <section className="grid gap-2.5">
-                        <div className="flex min-w-0 flex-col gap-2.5">
+                    <section className="grid gap-1.5">
+                        <div className="flex min-w-0 flex-col gap-1.5">
                             <WorkspaceHistoryCanvas
                                 currentLanguage={currentLang}
                                 selectedItemDock={selectedItemDock}
@@ -2083,7 +2084,7 @@ const App: React.FC = () => {
 
                     <section
                         data-testid="workspace-actions-composer-row"
-                        className="grid gap-2.5 xl:mr-auto xl:max-w-[1320px] xl:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] xl:items-start"
+                        className="grid gap-1.5 xl:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] xl:items-start"
                     >
                         <div className="order-2 xl:order-1">{sideToolPanel}</div>
                         <div className="order-1 min-w-0 xl:order-2">

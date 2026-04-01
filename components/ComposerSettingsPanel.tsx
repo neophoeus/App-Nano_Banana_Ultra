@@ -366,12 +366,17 @@ function ComposerSettingsPanel({
         (job) => job.state === 'JOB_STATE_SUCCEEDED' && !job.importedAt,
     ).length;
     const issueQueueCount = queuedJobs.filter(
-        (job) => job.state === 'JOB_STATE_FAILED' || job.state === 'JOB_STATE_CANCELLED' || job.state === 'JOB_STATE_EXPIRED',
+        (job) =>
+            job.state === 'JOB_STATE_FAILED' ||
+            job.state === 'JOB_STATE_CANCELLED' ||
+            job.state === 'JOB_STATE_EXPIRED',
     ).length;
     const trackedQueueCount = queuedJobs.length;
     const settledQueueCount = trackedQueueCount - runningQueueCount;
     const queueProgressPercent =
-        trackedQueueCount > 0 ? Math.max(0, Math.min(100, Math.round((settledQueueCount / trackedQueueCount) * 100))) : 0;
+        trackedQueueCount > 0
+            ? Math.max(0, Math.min(100, Math.round((settledQueueCount / trackedQueueCount) * 100)))
+            : 0;
 
     return (
         <section className="nbu-shell-panel nbu-shell-surface-composer-dock shrink-0 p-3 md:p-4">
@@ -492,8 +497,7 @@ function ComposerSettingsPanel({
                     <div className="nbu-subpanel overflow-hidden p-2.5">
                         <div className="mb-2.5 flex flex-wrap items-start justify-between gap-3 px-1">
                             <div>
-                                <p className="nbu-section-eyebrow">Compose</p>
-                                <h3 className="mt-1 text-[15px] font-black text-slate-900 dark:text-slate-100">
+                                <h3 className="text-[15px] font-black text-slate-900 dark:text-slate-100">
                                     {t('promptLabel')}
                                 </h3>
                             </div>
@@ -551,14 +555,6 @@ function ComposerSettingsPanel({
                 </div>
 
                 <div className="nbu-floating-panel p-2.5 text-slate-900 dark:text-white">
-                    <div className="nbu-subpanel mb-2.5 px-3 py-2.5">
-                        <p className="text-[11px] font-black uppercase tracking-[0.20em] text-amber-700 dark:text-amber-200/75">
-                            {t('composerActionPanelEyebrow')}
-                        </p>
-                        <h3 className="mt-1 text-[17px] font-black text-slate-900 dark:text-white">
-                            {t('composerActionPanelTitle')}
-                        </h3>
-                    </div>
                     {isGenerating ? (
                         <Button
                             onClick={onCancelGeneration}

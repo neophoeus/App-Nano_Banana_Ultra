@@ -91,7 +91,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                 e.stopPropagation();
                                 setShowConfirm(true);
                             }}
-                            className="p-1.5 text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all"
+                            className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                             title={t('clearHistory')}
                         >
                             <svg
@@ -188,7 +188,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                 }
                             }}
                             className={`
-              relative aspect-square rounded-xl overflow-hidden border bg-white/90 transition-all duration-200 animate-[fadeIn_0.3s_ease-out] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 dark:bg-slate-950/70
+              relative aspect-square rounded-xl overflow-hidden border bg-white/90 transition-[border-color,box-shadow,background-color] duration-200 animate-[fadeIn_0.3s_ease-out] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 dark:bg-slate-950/70
               ${
                   isSelected && !isFailed
                       ? 'border-amber-500 ring-2 ring-amber-500/30 ring-offset-2 ring-offset-white dark:ring-offset-black z-10 shadow-[0_10px_24px_rgba(15,23,42,0.18)]'

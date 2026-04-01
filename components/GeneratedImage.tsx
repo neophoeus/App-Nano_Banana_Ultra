@@ -71,14 +71,25 @@ interface GeneratedImageProps {
 }
 
 const stageTopRightChipClassNameByTone: Record<StageTopRightChipTone, string> = {
-    source: 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/25 dark:bg-amber-950/30 dark:text-amber-100',
-    branch: 'border-slate-200/80 bg-white/92 text-slate-700 dark:border-slate-700/80 dark:bg-slate-900/88 dark:text-slate-100',
+    source: 'border-amber-600 bg-amber-500 text-white shadow-[0_8px_18px_rgba(217,119,6,0.34)] dark:border-amber-500 dark:bg-amber-400 dark:text-slate-950',
+    branch: 'border-slate-800 bg-slate-700 text-white shadow-[0_8px_18px_rgba(15,23,42,0.32)] dark:border-slate-500 dark:bg-slate-200 dark:text-slate-950',
     divergence:
-        'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/25 dark:bg-emerald-950/30 dark:text-emerald-100',
+        'border-emerald-700 bg-emerald-600 text-white shadow-[0_8px_18px_rgba(5,150,105,0.32)] dark:border-emerald-500 dark:bg-emerald-400 dark:text-slate-950',
     warning:
-        'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/25 dark:bg-amber-950/30 dark:text-amber-100',
+        'border-amber-700 bg-amber-600 text-white shadow-[0_8px_18px_rgba(180,83,9,0.34)] dark:border-amber-500 dark:bg-amber-400 dark:text-slate-950',
     success:
-        'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/25 dark:bg-emerald-950/30 dark:text-emerald-100',
+        'border-emerald-700 bg-emerald-600 text-white shadow-[0_8px_18px_rgba(5,150,105,0.32)] dark:border-emerald-500 dark:bg-emerald-400 dark:text-slate-950',
+};
+
+const stageTopRightOverflowChipClassNameByTone: Record<StageTopRightChipTone, string> = {
+    source: 'border-amber-500 bg-amber-300 text-slate-950 shadow-[0_5px_12px_rgba(217,119,6,0.18)] dark:border-amber-500 dark:bg-amber-300 dark:text-slate-950',
+    branch: 'border-slate-400 bg-slate-300 text-slate-800 shadow-[0_5px_12px_rgba(71,85,105,0.16)] dark:border-slate-500 dark:bg-slate-300 dark:text-slate-950',
+    divergence:
+        'border-emerald-500 bg-emerald-300 text-slate-950 shadow-[0_5px_12px_rgba(5,150,105,0.18)] dark:border-emerald-500 dark:bg-emerald-300 dark:text-slate-950',
+    warning:
+        'border-amber-500 bg-amber-300 text-slate-950 shadow-[0_5px_12px_rgba(217,119,6,0.18)] dark:border-amber-500 dark:bg-amber-300 dark:text-slate-950',
+    success:
+        'border-emerald-500 bg-emerald-300 text-slate-950 shadow-[0_5px_12px_rgba(5,150,105,0.18)] dark:border-emerald-500 dark:bg-emerald-300 dark:text-slate-950',
 };
 
 const stageTopRightVisibleActionClassNameByEmphasis: Record<
@@ -86,20 +97,26 @@ const stageTopRightVisibleActionClassNameByEmphasis: Record<
     string
 > = {
     primary:
-        'border-amber-500 bg-amber-500 text-white shadow-[0_10px_24px_rgba(217,119,6,0.28)] hover:border-amber-600 hover:bg-amber-600',
+        'border-amber-500 bg-amber-300 text-slate-950 hover:border-amber-600 hover:bg-amber-400 dark:border-amber-600 dark:bg-amber-500 dark:text-white dark:hover:border-amber-500 dark:hover:bg-amber-400',
     secondary:
-        'border-slate-200/80 bg-white/92 text-slate-700 hover:border-amber-300 hover:text-amber-700 dark:border-slate-700/80 dark:bg-slate-900/88 dark:text-slate-100 dark:hover:border-amber-500/35 dark:hover:text-amber-200',
+        'border-gray-300 bg-gray-200 text-gray-800 hover:border-gray-400 hover:bg-gray-300 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:hover:border-gray-400 dark:hover:bg-gray-500',
     passive:
-        'cursor-default border-slate-200/80 bg-slate-50 text-slate-500 dark:border-slate-700/80 dark:bg-slate-900/88 dark:text-slate-300',
+        'cursor-default border-gray-300 bg-gray-200 text-gray-700 dark:border-gray-500 dark:bg-gray-600 dark:text-white',
 };
+
+const stageTopRightOverflowTriggerClassName =
+    'inline-flex h-7 w-7 cursor-pointer list-none items-center justify-center rounded-full border border-gray-300 bg-gray-200 text-sm font-semibold text-gray-800 transition-colors hover:border-gray-400 hover:bg-gray-300 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:hover:border-gray-400 dark:hover:bg-gray-500 [&::-webkit-details-marker]:hidden';
+
+const stageTopRightOverflowMenuClassName =
+    'absolute right-0 top-full mt-2 grid min-w-[220px] gap-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl dark:border-slate-700 dark:bg-slate-950';
 
 const resolveStageOverflowActionClassName = (action: StageTopRightAction) =>
     action.emphasis === 'destructive'
-        ? 'text-rose-700 hover:bg-rose-50 dark:text-rose-200 dark:hover:bg-rose-950/30'
+        ? 'text-rose-700 hover:bg-rose-50 dark:text-rose-700 dark:hover:bg-rose-50'
         : 'text-slate-700 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800/70';
 
 const resolveStageOverflowChipClassName = (chip: StageTopRightChip) =>
-    `inline-flex w-fit items-center rounded-full border px-2 py-1 text-[10px] font-semibold leading-none whitespace-nowrap ${stageTopRightChipClassNameByTone[chip.tone]}`;
+    `inline-flex w-fit items-center rounded-full border px-2 py-1 text-[10px] font-semibold leading-none whitespace-nowrap ${stageTopRightOverflowChipClassNameByTone[chip.tone]}`;
 
 const GeneratedImage: React.FC<GeneratedImageProps> = ({
     imageUrls,
@@ -243,13 +260,13 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
                                     data-testid="stage-top-right-overflow-trigger"
                                     aria-label={t('stageActionMore')}
                                     title={t('stageActionMore')}
-                                    className="inline-flex h-7 w-7 cursor-pointer list-none items-center justify-center rounded-full border border-slate-200/80 bg-white/92 text-sm font-semibold text-slate-700 transition-colors hover:border-amber-300 hover:text-amber-700 dark:border-slate-700/80 dark:bg-slate-900/88 dark:text-slate-100 dark:hover:border-amber-500/35 dark:hover:text-amber-200 [&::-webkit-details-marker]:hidden"
+                                    className={stageTopRightOverflowTriggerClassName}
                                 >
                                     •••
                                 </summary>
                                 <div
                                     data-testid="stage-top-right-overflow-menu"
-                                    className="nbu-overlay-shell absolute right-0 top-full mt-2 grid min-w-[220px] gap-1 rounded-2xl border p-2 shadow-2xl"
+                                    className={stageTopRightOverflowMenuClassName}
                                 >
                                     {stageTopRight.overflowContextChips.length > 0 ? (
                                         <div
@@ -290,7 +307,7 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
     // --- FULL LOADING SCREEN (0 images yet) ---
     if (showFullLoading) {
         return (
-            <div className="flex min-w-0 h-full w-full flex-col transition-colors duration-500">
+            <div className="flex min-w-0 h-full w-full flex-col">
                 <StageFrame>
                     <div className="nbu-stage-surface group relative flex h-full w-full flex-col items-center justify-center p-8">
                         <style>{`
@@ -309,7 +326,7 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-200 via-gray-100 to-gray-50 dark:from-gray-900 dark:via-black dark:to-black animate-pulse opacity-50 dark:opacity-100"></div>
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent animate-[shimmer_2s_infinite]"></div>
 
-                        <div className="flex flex-col items-center z-10 scale-100 transition-all duration-500 w-full max-w-md">
+                        <div className="z-10 flex w-full max-w-md scale-100 flex-col items-center transition-transform duration-500">
                             {/* Mode Badge */}
                             <div
                                 className={`mb-8 px-4 py-1.5 rounded-full border text-xs font-bold uppercase tracking-[0.2em] shadow-lg animate-bounce ${getModeColor(generationMode)}`}
@@ -336,7 +353,7 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
     // --- ERROR STATE (For when a failed history item is selected) ---
     if (error && imageUrls.length === 0) {
         return (
-            <div className="flex min-w-0 h-full w-full flex-col transition-colors duration-500">
+            <div className="flex min-w-0 h-full w-full flex-col">
                 <StageFrame>
                     <div className="nbu-stage-surface relative flex h-full w-full flex-col items-center justify-center p-8">
                         {/* Subtle Background Pattern for Errors */}
@@ -397,15 +414,15 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
     // --- EMPTY STATE ---
     if (!activeImage && !isLoading) {
         return (
-            <div className="flex min-w-0 h-full w-full flex-col transition-colors duration-500">
+            <div className="flex min-w-0 h-full w-full flex-col">
                 <StageFrame>
                     <div className="nbu-empty-state-panel group relative flex h-full w-full flex-col items-center justify-center overflow-hidden border-2 border-dashed text-gray-500">
                         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-200/50 dark:to-black/40 pointer-events-none"></div>
 
                         <div className="z-10 flex flex-col items-center text-center px-6">
-                            <div className="w-24 h-24 bg-gradient-to-br from-white to-gray-100 dark:from-gray-900 dark:to-black rounded-3xl flex items-center justify-center mb-6 border border-gray-200 dark:border-gray-800 shadow-xl dark:shadow-2xl group-hover:scale-110 group-hover:border-amber-500/40 group-hover:shadow-[0_0_30px_rgba(245,158,11,0.15)] transition-all duration-500 relative">
+                            <div className="relative mb-6 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-200 bg-gradient-to-br from-white to-gray-100 shadow-xl transition-[transform,border-color,box-shadow] duration-500 group-hover:scale-110 group-hover:border-amber-500/40 group-hover:shadow-[0_0_30px_rgba(245,158,11,0.15)] dark:border-gray-800 dark:from-gray-900 dark:to-black dark:shadow-2xl">
                                 <div className="absolute inset-0 bg-amber-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse"></div>
-                                <span className="text-5xl filter grayscale group-hover:grayscale-0 transition-all duration-500 drop-shadow-lg">
+                                <span className="text-5xl filter grayscale drop-shadow-lg transition-[filter] duration-500 group-hover:grayscale-0">
                                     🍌
                                 </span>
                             </div>
@@ -453,7 +470,7 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
 
     // --- MAIN DISPLAY (Result + Partial Loading/Scanning Effect) ---
     return (
-        <div className="flex min-w-0 h-full w-full flex-col transition-colors duration-500">
+        <div className="flex min-w-0 h-full w-full flex-col">
             {/* Main Image Display */}
             <StageFrame>
                 <div className="nbu-stage-surface relative h-full w-full group shadow-2xl">
@@ -475,7 +492,7 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
                     {isLoading && (
                         <div className="absolute inset-0 z-40 pointer-events-none animate-[fadeIn_0.3s_ease-out]">
                             {/* 1. Darken Background slightly to focus on scan */}
-                            <div className="nbu-stage-hero-overlay-veil absolute inset-0 backdrop-blur-[2px] transition-all duration-500"></div>
+                            <div className="nbu-stage-hero-overlay-veil absolute inset-0 backdrop-blur-[2px] transition-[background-color,backdrop-filter] duration-500"></div>
 
                             {/* 2. Scanline Animation */}
                             <div className="absolute left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-amber-400 to-transparent shadow-[0_0_25px_rgba(251,191,36,1)] animate-scan z-10"></div>
@@ -524,7 +541,7 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
                             key={idx}
                             onClick={() => onSelectImage && onSelectImage(url)}
                             className={`
-                            relative aspect-square h-full rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 animate-[fadeIn_0.3s_ease-out]
+                            relative aspect-square h-full flex-shrink-0 overflow-hidden rounded-xl border-2 transition-[border-color,box-shadow,opacity,transform] duration-200 animate-[fadeIn_0.3s_ease-out]
                             ${
                                 activeImage === url
                                     ? 'border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.4)] scale-[0.98]'

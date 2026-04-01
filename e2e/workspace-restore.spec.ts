@@ -1142,7 +1142,7 @@ const assertComposerChromeLocalized = async (page: Page) => {
 
     const advancedToggle = page.getByRole('button', { name: tt('composerToolbarAdvancedSettings') }).first();
     await expect(advancedToggle).toBeVisible();
-    await expect(page.getByRole('heading', { name: tt('composerActionPanelTitle') }).first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: tt('promptLabel') }).first()).toBeVisible();
     await expect(page.getByRole('button', { name: tt('composerQueueBatchJob') })).toBeVisible();
 
     await advancedToggle.click();

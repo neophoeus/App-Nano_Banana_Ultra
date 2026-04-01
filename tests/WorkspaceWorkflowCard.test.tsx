@@ -26,6 +26,7 @@ describe('WorkspaceWorkflowCard', () => {
         expect(markup).toContain('Processing queued import.');
         expect(markup).toContain('workspace-workflow-thoughts-indicator');
         expect(markup).toContain('border-amber-300/70');
+        expect(markup).toContain('dark:text-amber-100');
         expect(markup).toContain('workspace-workflow-open-details');
         expect(markup).toContain('View details');
         expect(markup).not.toContain('workspace-workflow-card-summary');

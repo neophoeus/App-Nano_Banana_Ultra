@@ -8,6 +8,9 @@ interface ThemeToggleProps {
 
 const THEME_STORAGE_KEY = 'theme';
 const THEME_EVENT_NAME = 'nbu-theme-change';
+const THEME_SWITCHING_CLASS = 'nbu-theme-switching';
+
+let themeSwitchCleanupTimeout: number | null = null;
 
 const getPreferredDarkMode = () => {
     if (typeof window === 'undefined') {
@@ -27,6 +30,33 @@ const syncDocumentTheme = (isDark: boolean) => {
     document.documentElement.classList.toggle('dark', isDark);
 };
 
+const applyThemeWithTransitionSuppression = (isDark: boolean) => {
+    if (typeof document === 'undefined') {
+        return;
+    }
+
+    const root = document.documentElement;
+
+    root.classList.add(THEME_SWITCHING_CLASS);
+    syncDocumentTheme(isDark);
+
+    void root.offsetWidth;
+
+    if (typeof window === 'undefined') {
+        root.classList.remove(THEME_SWITCHING_CLASS);
+        return;
+    }
+
+    if (themeSwitchCleanupTimeout !== null) {
+        window.clearTimeout(themeSwitchCleanupTimeout);
+    }
+
+    themeSwitchCleanupTimeout = window.setTimeout(() => {
+        root.classList.remove(THEME_SWITCHING_CLASS);
+        themeSwitchCleanupTimeout = null;
+    }, 0);
+};
+
 const ThemeToggle: React.FC<ThemeToggleProps> = ({ currentLanguage = 'en' as Language, className = '' }) => {
     const t = (key: string) => getTranslation(currentLanguage, key);
     const [isDark, setIsDark] = useState(() => getPreferredDarkMode());
@@ -34,7 +64,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ currentLanguage = 'en' as Lan
     useEffect(() => {
         const syncThemeState = () => {
             const nextIsDark = getPreferredDarkMode();
-            syncDocumentTheme(nextIsDark);
+            applyThemeWithTransitionSuppression(nextIsDark);
             setIsDark(nextIsDark);
         };
 
@@ -69,7 +99,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ currentLanguage = 'en' as Lan
         const newDark = !isDark;
         setIsDark(newDark);
 
-        syncDocumentTheme(newDark);
+        applyThemeWithTransitionSuppression(newDark);
 
         if (typeof window !== 'undefined') {
             window.localStorage.setItem(THEME_STORAGE_KEY, newDark ? 'dark' : 'light');

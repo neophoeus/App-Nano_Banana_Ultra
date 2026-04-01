@@ -95,7 +95,7 @@ describe('WorkspaceHistoryCanvas', () => {
         expect(markup).toContain('nbu-stage-hero-filmstrip-shell');
         expect(markup).not.toContain('xl:h-[264px]');
         expect(markup).toContain('history-versions-header');
-        expect(markup).toContain('mb-2.5 flex min-w-0 items-start justify-end gap-3 xl:justify-between');
+        expect(markup).toContain('mb-1.5 flex min-w-0 items-start justify-end gap-3 xl:justify-between');
         expect(markup).toContain('history-versions-toolbar');
         expect(markup).toContain('history-versions-branch-row');
         expect(markup).toContain('history-versions-quick-actions');
@@ -119,6 +119,8 @@ describe('WorkspaceHistoryCanvas', () => {
         expect(markup.indexOf('focus-surface-content')).toBeLessThan(markup.indexOf('recent-lane-content'));
         expect(markup.indexOf('selected-item-dock-content')).toBeLessThan(markup.indexOf('recent-lane-content'));
         expect(markup.indexOf('recent-lane-content')).toBeLessThan(markup.indexOf('history-versions-shell'));
+        expect(markup.indexOf('workspaceInsightsVersions')).toBe(-1);
+        expect(markup.indexOf('Versions')).toBeLessThan(markup.indexOf('history-versions-open-details'));
         expect(markup.indexOf('history-versions-open-details')).toBeLessThan(
             markup.indexOf('history-import-workspace'),
         );

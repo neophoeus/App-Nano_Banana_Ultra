@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { getExecutionModeLabel, inferExecutionModeFromHistoryItem } from '../utils/executionMode';
-import { BranchSummary, buildBranchSummaries } from '../utils/lineage';
+import { BranchSummary } from '../utils/lineage';
 import {
     GeneratedImage,
     SelectedItemActionBarAction,
@@ -54,6 +54,7 @@ type RenderHistoryTurnBadgesArgs = {
 
 type UseHistoryPresentationHelpersArgs = {
     history: GeneratedImage[];
+    branchSummaryByOriginId: Record<string, BranchSummary | undefined>;
     effectiveBranchContinuationSourceByBranchOriginId: Record<string, string>;
     getBranchAccentClassName: (branchOriginId: string, branchLabel: string) => string;
     getContinueActionLabel: (item: GeneratedImage) => string;
@@ -83,6 +84,7 @@ const compactSelectedItemModelLabelByModel: Record<GeneratedImage['model'], stri
 
 export function useHistoryPresentationHelpers({
     history,
+    branchSummaryByOriginId,
     effectiveBranchContinuationSourceByBranchOriginId,
     getBranchAccentClassName,
     getContinueActionLabel,
@@ -155,15 +157,6 @@ export function useHistoryPresentationHelpers({
 
         return labels;
     }, [history]);
-
-    const branchSummaryByOriginId = useMemo(
-        () =>
-            buildBranchSummaries(history).reduce<Record<string, BranchSummary>>((accumulator, branchSummary) => {
-                accumulator[branchSummary.branchOriginId] = branchSummary;
-                return accumulator;
-            }, {}),
-        [history],
-    );
 
     const getQueuedBatchPositionLabel = useCallback(
         (historyId?: string | null) => {

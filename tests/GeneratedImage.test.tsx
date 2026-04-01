@@ -189,6 +189,95 @@ describe('GeneratedImage', () => {
         expect(visibleText).not.toContain('Test prompt');
     });
 
+    it('uses solid high-contrast stage top-right chip fills so labels stay readable over bright and dark images', () => {
+        const markup = renderToStaticMarkup(
+            <GeneratedImage
+                imageUrls={['https://example.com/result.png']}
+                isLoading={false}
+                onGenerate={() => {}}
+                stageTopRight={{
+                    contextChips: [
+                        { key: 'stage-source', label: 'Stage source', tone: 'source' },
+                        { key: 'origin', label: 'Upload', tone: 'warning' },
+                        { key: 'branch', label: 'Main', tone: 'branch' },
+                        { key: 'continuation-differs', label: 'Continuation differs', tone: 'divergence' },
+                        { key: 'result-status', label: 'Saved', tone: 'success' },
+                    ],
+                    overflowContextChips: [],
+                    visibleActions: [],
+                    overflowActions: [],
+                }}
+            />,
+        );
+
+        expect(markup).toContain(
+            'border-amber-600 bg-amber-500 text-white shadow-[0_8px_18px_rgba(217,119,6,0.34)] dark:border-amber-500 dark:bg-amber-400 dark:text-slate-950',
+        );
+        expect(markup).toContain(
+            'border-slate-800 bg-slate-700 text-white shadow-[0_8px_18px_rgba(15,23,42,0.32)] dark:border-slate-500 dark:bg-slate-200 dark:text-slate-950',
+        );
+        expect(markup).toContain(
+            'border-emerald-700 bg-emerald-600 text-white shadow-[0_8px_18px_rgba(5,150,105,0.32)] dark:border-emerald-500 dark:bg-emerald-400 dark:text-slate-950',
+        );
+        expect(markup).not.toContain('bg-amber-100');
+        expect(markup).not.toContain('bg-emerald-100');
+        expect(markup).not.toContain('bg-slate-100');
+    });
+
+    it('uses neutral gray second-row styling and white labels in dark theme', () => {
+        const markup = renderToStaticMarkup(
+            <GeneratedImage
+                imageUrls={['https://example.com/result.png']}
+                isLoading={false}
+                onGenerate={() => {}}
+                currentLanguage="en"
+                stageTopRight={{
+                    contextChips: [{ key: 'stage-source', label: 'Stage source', tone: 'source' }],
+                    visibleActions: [
+                        {
+                            key: 'continue-from-here',
+                            label: 'Continue From Here',
+                            emphasis: 'primary',
+                            onClick: () => {},
+                        },
+                        { key: 'edit', label: 'Edit', emphasis: 'secondary', onClick: () => {} },
+                        { key: 'generating', label: 'Generating…', emphasis: 'passive' },
+                    ],
+                    overflowContextChips: [{ key: 'result-status', label: 'Grounded result', tone: 'warning' }],
+                    overflowActions: [
+                        { key: 'open-viewer', label: 'Open Viewer', emphasis: 'secondary', onClick: () => {} },
+                        { key: 'clear', label: 'Clear', emphasis: 'destructive', onClick: () => {} },
+                    ],
+                }}
+            />,
+        );
+
+        expect(markup).toContain(
+            'border-amber-500 bg-amber-300 text-slate-950 hover:border-amber-600 hover:bg-amber-400 dark:border-amber-600 dark:bg-amber-500 dark:text-white dark:hover:border-amber-500 dark:hover:bg-amber-400',
+        );
+        expect(markup).toContain(
+            'border-gray-300 bg-gray-200 text-gray-800 hover:border-gray-400 hover:bg-gray-300 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:hover:border-gray-400 dark:hover:bg-gray-500',
+        );
+        expect(markup).toContain(
+            'cursor-default border-gray-300 bg-gray-200 text-gray-700 dark:border-gray-500 dark:bg-gray-600 dark:text-white',
+        );
+        expect(markup).toContain(
+            'border-amber-500 bg-amber-300 text-slate-950 shadow-[0_5px_12px_rgba(217,119,6,0.18)] dark:border-amber-500 dark:bg-amber-300 dark:text-slate-950',
+        );
+        expect(markup).toContain('data-testid="stage-top-right-overflow-trigger"');
+        expect(markup).toContain(
+            'border-gray-300 bg-gray-200 text-sm font-semibold text-gray-800 transition-colors hover:border-gray-400 hover:bg-gray-300 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:hover:border-gray-400 dark:hover:bg-gray-500',
+        );
+        expect(markup).toContain(
+            'absolute right-0 top-full mt-2 grid min-w-[220px] gap-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl dark:border-slate-700 dark:bg-slate-950',
+        );
+        expect(markup).toContain('text-rose-700 hover:bg-rose-50 dark:text-rose-700 dark:hover:bg-rose-50');
+        expect(markup).not.toContain('bg-amber-500/78');
+        expect(markup).not.toContain('bg-slate-300 text-slate-900');
+        expect(markup).not.toContain('dark:text-rose-200 dark:hover:bg-rose-950/30');
+        expect(markup).not.toContain('dark:text-white/90');
+    });
+
     it('renders active generation with preserved stage context and a passive stage status only', () => {
         const markup = renderToStaticMarkup(
             <GeneratedImage

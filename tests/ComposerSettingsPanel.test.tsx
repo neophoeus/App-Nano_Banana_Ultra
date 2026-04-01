@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import ComposerAdvancedSettingsDialog from '../components/ComposerAdvancedSettingsDialog';
 import ComposerSettingsPanel from '../components/ComposerSettingsPanel';
 import { MODEL_CAPABILITIES } from '../constants';
+import { getTranslation } from '../utils/translations';
 
 const baseProps = {
     prompt: 'Test prompt',
@@ -100,6 +101,9 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).toContain('Objects 1/4');
         expect(markup).toContain('Characters 1/2');
         expect(markup).toContain('Advanced settings');
+        expect(markup).not.toContain('Compose');
+        expect(markup).not.toContain(getTranslation('en', 'composerActionPanelEyebrow'));
+        expect(markup).not.toContain(getTranslation('en', 'composerActionPanelTitle'));
         expect(markup).not.toContain('Gallery');
         expect(markup).toContain('composer-queue-batch-mode-hint-trigger');
         expect(markup).toContain('composer-queue-batch-mode-hint');
@@ -117,36 +121,38 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         const markup = renderToStaticMarkup(
             <ComposerSettingsPanel
                 {...baseProps}
-                queuedJobs={[
-                    {
-                        localId: 'job-running',
-                        name: 'batches/job-running',
-                        displayName: 'Running queue job',
-                        state: 'JOB_STATE_RUNNING',
-                        model: 'gemini-3.1-flash-image-preview',
-                        prompt: 'Track the queue',
-                        generationMode: 'Text to Image',
-                        aspectRatio: '1:1',
-                        imageSize: '1K',
-                        style: 'None',
-                        outputFormat: 'images-only',
-                        temperature: 1,
-                        thinkingLevel: 'minimal',
-                        includeThoughts: true,
-                        googleSearch: false,
-                        imageSearch: false,
-                        batchSize: 1,
-                        objectImageCount: 0,
-                        characterImageCount: 0,
-                        createdAt: 1710400000000,
-                        updatedAt: 1710400010000,
-                        startedAt: 1710400005000,
-                        completedAt: null,
-                        lastPolledAt: 1710400010000,
-                        importedAt: null,
-                        error: null,
-                    },
-                ] as any}
+                queuedJobs={
+                    [
+                        {
+                            localId: 'job-running',
+                            name: 'batches/job-running',
+                            displayName: 'Running queue job',
+                            state: 'JOB_STATE_RUNNING',
+                            model: 'gemini-3.1-flash-image-preview',
+                            prompt: 'Track the queue',
+                            generationMode: 'Text to Image',
+                            aspectRatio: '1:1',
+                            imageSize: '1K',
+                            style: 'None',
+                            outputFormat: 'images-only',
+                            temperature: 1,
+                            thinkingLevel: 'minimal',
+                            includeThoughts: true,
+                            googleSearch: false,
+                            imageSearch: false,
+                            batchSize: 1,
+                            objectImageCount: 0,
+                            characterImageCount: 0,
+                            createdAt: 1710400000000,
+                            updatedAt: 1710400010000,
+                            startedAt: 1710400005000,
+                            completedAt: null,
+                            lastPolledAt: 1710400010000,
+                            importedAt: null,
+                            error: null,
+                        },
+                    ] as any
+                }
                 groundingMode="off"
                 imageModel="gemini-3.1-flash-image-preview"
                 capability={MODEL_CAPABILITIES['gemini-3.1-flash-image-preview']}

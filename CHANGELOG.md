@@ -4,6 +4,17 @@ This changelog is compiled from the repository's local git tags plus the publish
 
 ## Unreleased
 
+
+## v3.1.7 - 2026-04-01
+
+- Release title: Nano Banana Ultra 3.1.7 - Shell Density, Theme Stability & Composer Cleanup
+- Release prep summary:
+    - tightened the main workspace shell into a denser contract by moving the top launcher strip, history canvas support flow, and bottom composer row onto the shared tighter spacing baseline, keeping the launcher cards at a 40px desktop height and bringing the composer row back to the same full-width alignment as the rest of the layout
+    - reduced unnecessary UI churn by suppressing whole-document transitions during theme flips, narrowing several broad `transition-all` surfaces across stage, history, and filmstrip flows, and removing the redundant history branch-summary rebuild so shell interactions stay lighter under real workspace load
+    - upgraded visual readability across the stage and language surfaces by switching stage top-right chips and overflow actions to higher-contrast solid treatments, improving dark-theme signal contrast, and moving the language selector off the frosted overlay shell onto a clearer solid panel contract
+    - simplified composer chrome by removing the prompt-panel `Compose` eyebrow plus the separate right-side `Actions` / `Create` heading block, while keeping the action controls in place so the composer reads as one cleaner workspace-owned surface
+    - revalidated the release with focused Vitest coverage around composer, stage, workflow, history-canvas, language-selector, render-stability, and lineage-helper paths, then reran a production `npm run build`
+
 ## v3.1.6 - 2026-04-01
 
 - Release title: Nano Banana Ultra 3.1.6 - Compact Thumbnail & Stage Context Completion

@@ -133,15 +133,15 @@ function WorkspaceHistoryCanvas(props: WorkspaceHistoryCanvasProps) {
     );
 
     return (
-        <section data-testid="workspace-history-canvas" className="grid min-w-0 gap-2.5 lg:min-h-0">
+        <section data-testid="workspace-history-canvas" className="grid min-w-0 gap-1.5 lg:min-h-0">
             <div
                 data-testid="workspace-history-focus-grid"
-                className="grid gap-2.5 lg:min-h-0 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+                className="grid gap-1.5 lg:min-h-0 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
             >
                 <div data-testid="workspace-history-focus-state" className="min-w-0">
                     {focusSurface}
                 </div>
-                <aside data-testid="workspace-history-support-rail" className="grid min-w-0 content-start gap-2.5">
+                <aside data-testid="workspace-history-support-rail" className="grid min-w-0 content-start gap-1.5">
                     {selectedItemDock ? (
                         <div data-testid="workspace-history-selected-item-dock" className="min-w-0">
                             {selectedItemDock}
@@ -191,17 +191,12 @@ function WorkspaceHistoryCanvas(props: WorkspaceHistoryCanvasProps) {
                         >
                             <div
                                 data-testid="history-versions-header"
-                                className="mb-2.5 flex min-w-0 items-start justify-end gap-3 xl:justify-between"
+                                className="mb-1.5 flex min-w-0 items-start justify-end gap-3 xl:justify-between"
                             >
-                                <div className="hidden min-w-0 flex-1 xl:block">
-                                    <h2 className="text-[15px] font-black text-slate-900 dark:text-slate-100">
+                                <div className="min-w-0 flex flex-1 items-center gap-2">
+                                    <h2 className="hidden text-[15px] font-black text-slate-900 dark:text-slate-100 xl:block">
                                         {t('workspaceInsightsVersions')}
                                     </h2>
-                                </div>
-                                <div
-                                    data-testid="history-versions-toolbar"
-                                    className="flex min-w-0 flex-wrap items-center justify-end gap-2 text-right"
-                                >
                                     <button
                                         type="button"
                                         data-testid="history-versions-open-details"
@@ -210,6 +205,11 @@ function WorkspaceHistoryCanvas(props: WorkspaceHistoryCanvasProps) {
                                     >
                                         {t('workspacePanelViewDetails')}
                                     </button>
+                                </div>
+                                <div
+                                    data-testid="history-versions-toolbar"
+                                    className="flex min-w-0 flex-wrap items-center justify-end gap-2 text-right"
+                                >
                                     <span className={versionsSummaryChipClassName}>{sessionUpdatedLabel}</span>
                                     <span className={versionsSummaryChipClassName}>
                                         {t('workspaceInsightsBranchesCount').replace(
@@ -222,8 +222,8 @@ function WorkspaceHistoryCanvas(props: WorkspaceHistoryCanvasProps) {
 
                             <div className="flex flex-1 min-h-0 flex-col">
                                 <div className="nbu-scrollbar-subtle min-h-0 flex-1 overflow-x-hidden overflow-y-auto pr-0.5">
-                                    <div className="space-y-2.5 px-0.5 py-0.5">
-                                        <div className="grid gap-2.5 sm:grid-cols-3">
+                                    <div className="space-y-1.5 px-0.5 py-0.5">
+                                        <div className="grid gap-1.5 sm:grid-cols-3">
                                             <div className={versionsStatCardClassName}>
                                                 <div className={versionsStatLabelClassName}>
                                                     {t('workspaceInsightsActiveBranch')}

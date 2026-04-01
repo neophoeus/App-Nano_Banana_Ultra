@@ -142,7 +142,7 @@ function RecentHistoryFilmstrip({
                                         }}
                                         role="button"
                                         tabIndex={0}
-                                        className={`relative h-24 w-24 shrink-0 overflow-hidden rounded-[18px] border bg-white/90 transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 dark:bg-slate-950/70 ${isSelected ? 'border-amber-500 shadow-[0_10px_22px_rgba(15,23,42,0.18)]' : isFailed ? 'border-red-300 dark:border-red-800' : 'border-gray-200/80 dark:border-gray-800 hover:border-gray-400 dark:hover:border-gray-600'}`}
+                                        className={`relative h-24 w-24 shrink-0 overflow-hidden rounded-[18px] border bg-white/90 transition-[border-color,box-shadow,background-color] duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 dark:bg-slate-950/70 ${isSelected ? 'border-amber-500 shadow-[0_10px_22px_rgba(15,23,42,0.18)]' : isFailed ? 'border-red-300 dark:border-red-800' : 'border-gray-200/80 dark:border-gray-800 hover:border-gray-400 dark:hover:border-gray-600'}`}
                                     >
                                         {isFailed ? (
                                             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-red-50 to-rose-100 px-2 text-center text-[10px] font-bold uppercase tracking-[0.14em] text-red-600 dark:from-red-950/30 dark:to-rose-950/20 dark:text-red-300">

@@ -22,7 +22,7 @@ const LightbulbIcon = ({ hasThoughts }: { hasThoughts: boolean }) => (
         data-testid="workspace-workflow-thoughts-indicator"
         className={`inline-flex h-7 w-7 items-center justify-center rounded-lg border transition-all ${
             hasThoughts
-                ? 'border-amber-300/70 bg-amber-100/90 text-amber-500 shadow-[0_0_18px_rgba(251,191,36,0.42)] dark:border-amber-400/40 dark:bg-amber-500/12 dark:text-amber-300 dark:shadow-[0_0_20px_rgba(251,191,36,0.28)]'
+                ? 'border-amber-300/70 bg-amber-100/90 text-amber-500 shadow-[0_0_18px_rgba(251,191,36,0.42)] dark:border-amber-200/70 dark:bg-amber-300/20 dark:text-amber-100 dark:shadow-[0_0_24px_rgba(251,191,36,0.46)]'
                 : 'border-slate-200 bg-slate-100 text-slate-400 grayscale dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-500'
         }`}
         aria-hidden="true"
@@ -58,7 +58,7 @@ function WorkspaceWorkflowCard({
             type="button"
             data-testid="workspace-workflow-card"
             onClick={onOpenDetails}
-            className="group min-w-0 nbu-shell-panel nbu-shell-surface-context-rail flex h-full w-full items-center gap-2.5 overflow-hidden px-3 py-2 text-left transition-all hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:hover:border-amber-500/30 dark:hover:shadow-[0_18px_40px_rgba(2,6,23,0.38)] lg:h-[54px] lg:min-h-[54px]"
+            className="group min-w-0 nbu-shell-panel nbu-shell-surface-context-rail flex h-[40px] min-h-[40px] w-full items-center gap-2.5 overflow-hidden px-3 py-2 text-left transition-all hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:hover:border-amber-500/30 dark:hover:shadow-[0_18px_40px_rgba(2,6,23,0.38)]"
         >
             <div className="min-w-0 flex flex-1 items-center gap-2">
                 <div className="shrink-0 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
