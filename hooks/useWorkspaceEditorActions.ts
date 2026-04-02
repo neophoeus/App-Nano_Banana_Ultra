@@ -1,6 +1,15 @@
 import { ChangeEvent, Dispatch, MutableRefObject, SetStateAction, useCallback } from 'react';
 import { prepareImageAssetFromFile } from '../utils/imageSaveUtils';
-import { AspectRatio, ImageModel, ImageSize, StageAsset } from '../types';
+import {
+    AspectRatio,
+    ImageModel,
+    ImageSize,
+    ImageStyle,
+    OutputFormat,
+    StageAsset,
+    StructuredOutputMode,
+    ThinkingLevel,
+} from '../types';
 
 export type EditorContextSnapshot = {
     prompt: string;
@@ -9,6 +18,15 @@ export type EditorContextSnapshot = {
     ratio: AspectRatio;
     size: ImageSize;
     batchSize: number;
+    model: ImageModel;
+    style: ImageStyle;
+    outputFormat: OutputFormat;
+    structuredOutputMode: StructuredOutputMode;
+    temperature: number;
+    thinkingLevel: ThinkingLevel;
+    includeThoughts: boolean;
+    googleSearch: boolean;
+    imageSearch: boolean;
 };
 
 type PickerSheet =
@@ -16,6 +34,7 @@ type PickerSheet =
     | 'history'
     | 'templates'
     | 'styles'
+    | 'settings'
     | 'model'
     | 'ratio'
     | 'size'
@@ -24,19 +43,25 @@ type PickerSheet =
     | null;
 
 type UseWorkspaceEditorActionsArgs = {
-    prompt: string;
     objectImages: string[];
     characterImages: string[];
     aspectRatio: AspectRatio;
     imageSize: ImageSize;
     batchSize: number;
     imageModel: ImageModel;
+    imageStyle: ImageStyle;
+    outputFormat: OutputFormat;
+    structuredOutputMode: StructuredOutputMode;
+    temperature: number;
+    thinkingLevel: ThinkingLevel;
+    includeThoughts: boolean;
+    googleSearch: boolean;
+    imageSearch: boolean;
     capability: {
         maxObjects: number;
         maxCharacters: number;
     };
     currentStageAsset: StageAsset | undefined;
-    editorBaseAsset: StageAsset | undefined;
     editorContextSnapshot: EditorContextSnapshot | null;
     hasSketch: boolean;
     isEditing: boolean;
@@ -46,6 +71,7 @@ type UseWorkspaceEditorActionsArgs = {
     setIsEditing: Dispatch<SetStateAction<boolean>>;
     setEditingImageSource: Dispatch<SetStateAction<string | null>>;
     setEditorContextSnapshot: Dispatch<SetStateAction<EditorContextSnapshot | null>>;
+    setEditorPrompt: Dispatch<SetStateAction<string>>;
     setActivePickerSheet: Dispatch<SetStateAction<PickerSheet>>;
     setError: Dispatch<SetStateAction<string | null>>;
     setIsSketchPadOpen: Dispatch<SetStateAction<boolean>>;
@@ -53,7 +79,7 @@ type UseWorkspaceEditorActionsArgs = {
     restoreEditorComposerState: (snapshot: EditorContextSnapshot) => void;
     getActiveImageUrl: () => string;
     addWorkspaceAsset: (args: {
-        role: 'object' | 'character' | 'editor-base' | 'stage-source';
+        role: 'object' | 'character' | 'stage-source';
         origin: 'upload' | 'sketch' | 'generated' | 'history' | 'editor';
         url: string;
         maxAssets?: number;
@@ -62,8 +88,8 @@ type UseWorkspaceEditorActionsArgs = {
         sourceHistoryId?: string;
         lineageAction?: 'root' | 'continue' | 'branch' | 'editor-follow-up' | 'reopen';
     }) => void;
-    removeAssetAtRoleIndex: (role: 'object' | 'character' | 'editor-base' | 'stage-source', index: number) => void;
-    clearAssetRoles: (roles: Array<'object' | 'character' | 'editor-base' | 'stage-source'>) => void;
+    removeAssetAtRoleIndex: (role: 'object' | 'character', index: number) => void;
+    clearAssetRoles: (roles: Array<'object' | 'character' | 'stage-source'>) => void;
     showNotification: (message: string, type?: 'info' | 'error') => void;
     addLog: (message: string) => void;
     t: (key: string) => string;
@@ -81,19 +107,35 @@ type UseWorkspaceEditorActionsArgs = {
         objectImageInputs?: string[],
         characterImageInputs?: string[],
     ) => void;
+    queueBatchJobFromEditor: (submission: {
+        prompt: string;
+        editingInput: string;
+        batchSize: number;
+        imageSize: ImageSize;
+        aspectRatio: AspectRatio;
+        objectImageInputs?: string[];
+        characterImageInputs?: string[];
+        generationMode?: string;
+    }) => Promise<void>;
 };
 
 export function useWorkspaceEditorActions({
-    prompt,
     objectImages,
     characterImages,
     aspectRatio,
     imageSize,
     batchSize,
     imageModel,
+    imageStyle,
+    outputFormat,
+    structuredOutputMode,
+    temperature,
+    thinkingLevel,
+    includeThoughts,
+    googleSearch,
+    imageSearch,
     capability,
     currentStageAsset,
-    editorBaseAsset,
     editorContextSnapshot,
     hasSketch,
     isEditing,
@@ -103,6 +145,7 @@ export function useWorkspaceEditorActions({
     setIsEditing,
     setEditingImageSource,
     setEditorContextSnapshot,
+    setEditorPrompt,
     setActivePickerSheet,
     setError,
     setIsSketchPadOpen,
@@ -117,6 +160,7 @@ export function useWorkspaceEditorActions({
     t,
     primePendingProvenanceContinuation,
     performGeneration,
+    queueBatchJobFromEditor,
 }: UseWorkspaceEditorActionsArgs) {
     const closeEditor = useCallback(
         (options?: { discardSharedContext?: boolean }) => {
@@ -142,13 +186,23 @@ export function useWorkspaceEditorActions({
     const openEditorWithSource = useCallback(
         (nextImageSource: string) => {
             setEditorContextSnapshot({
-                prompt,
+                prompt: '',
                 objectImages: [...objectImages],
                 characterImages: [...characterImages],
                 ratio: aspectRatio,
                 size: imageSize,
                 batchSize,
+                model: imageModel,
+                style: imageStyle,
+                outputFormat,
+                structuredOutputMode,
+                temperature,
+                thinkingLevel,
+                includeThoughts,
+                googleSearch,
+                imageSearch,
             });
+            setEditorPrompt('');
             setEditingImageSource(nextImageSource);
             setIsEditing(true);
             setActivePickerSheet(null);
@@ -158,14 +212,23 @@ export function useWorkspaceEditorActions({
             aspectRatio,
             batchSize,
             characterImages,
+            googleSearch,
+            imageModel,
             imageSize,
+            imageSearch,
+            imageStyle,
+            includeThoughts,
+            outputFormat,
             objectImages,
-            prompt,
             setActivePickerSheet,
+            setEditorPrompt,
             setEditingImageSource,
             setEditorContextSnapshot,
             setError,
             setIsEditing,
+            structuredOutputMode,
+            temperature,
+            thinkingLevel,
         ],
     );
 
@@ -263,12 +326,6 @@ export function useWorkspaceEditorActions({
 
             prepareImageAssetFromFile(file)
                 .then((prepared) => {
-                    addWorkspaceAsset({
-                        role: 'editor-base',
-                        origin: 'upload',
-                        url: prepared.dataUrl,
-                        lineageAction: 'editor-follow-up',
-                    });
                     openEditorWithSource(prepared.dataUrl);
 
                     if (prepared.wasResized) {
@@ -286,70 +343,24 @@ export function useWorkspaceEditorActions({
                 uploadInputRef.current.value = '';
             }
         },
-        [addLog, addWorkspaceAsset, openEditorWithSource, showNotification, t, uploadInputRef],
+        [addLog, openEditorWithSource, showNotification, t, uploadInputRef],
     );
 
     const handleOpenEditor = useCallback(() => {
         const activeUrl = getActiveImageUrl();
         if (activeUrl) {
-            addWorkspaceAsset({
-                role: 'editor-base',
-                origin: currentStageAsset?.origin || 'generated',
-                url: activeUrl,
-                sourceHistoryId: currentStageAsset?.sourceHistoryId,
-                lineageAction: currentStageAsset?.lineageAction,
-            });
             openEditorWithSource(activeUrl);
             return;
         }
 
-        if (editorBaseAsset?.url) {
-            openEditorWithSource(editorBaseAsset.url);
-            return;
-        }
-
         uploadInputRef.current?.click();
-    }, [
-        addWorkspaceAsset,
-        currentStageAsset?.lineageAction,
-        currentStageAsset?.origin,
-        currentStageAsset?.sourceHistoryId,
-        editorBaseAsset?.url,
-        getActiveImageUrl,
-        openEditorWithSource,
-        uploadInputRef,
-    ]);
+    }, [getActiveImageUrl, openEditorWithSource, uploadInputRef]);
 
-    const handleStageCurrentImageAsEditorBase = useCallback(() => {
-        const activeUrl = getActiveImageUrl();
-        if (!activeUrl) {
-            return;
-        }
-
-        addWorkspaceAsset({
-            role: 'editor-base',
-            origin: currentStageAsset?.origin || 'generated',
-            url: activeUrl,
-            sourceHistoryId: currentStageAsset?.sourceHistoryId,
-            lineageAction: currentStageAsset?.lineageAction,
-        });
-        showNotification(t('editorBaseStageNotice'), 'info');
-    }, [
-        addWorkspaceAsset,
-        currentStageAsset?.lineageAction,
-        currentStageAsset?.origin,
-        currentStageAsset?.sourceHistoryId,
-        getActiveImageUrl,
-        showNotification,
-        t,
-    ]);
-
-    const handleClearEditorBaseAsset = useCallback(() => {
-        clearAssetRoles(['editor-base']);
-        if (!isEditing) {
-            setEditingImageSource(null);
-        }
-    }, [clearAssetRoles, isEditing, setEditingImageSource]);
+    const returnToWorkspaceFromEditor = useCallback(() => {
+        setActivePickerSheet(null);
+        setIsEditing(false);
+        setEditingImageSource(null);
+    }, [setActivePickerSheet, setEditingImageSource, setIsEditing]);
 
     const handleEditorGenerate = useCallback(
         (
@@ -362,9 +373,8 @@ export function useWorkspaceEditorActions({
             extraCharacterImages?: string[],
             targetRatio?: AspectRatio,
         ) => {
-            primePendingProvenanceContinuation(
-                editorBaseAsset?.sourceHistoryId ?? currentStageAsset?.sourceHistoryId ?? null,
-            );
+            primePendingProvenanceContinuation(currentStageAsset?.sourceHistoryId ?? null);
+            returnToWorkspaceFromEditor();
             performGeneration(
                 editPrompt,
                 targetRatio,
@@ -381,10 +391,40 @@ export function useWorkspaceEditorActions({
         },
         [
             currentStageAsset?.sourceHistoryId,
-            editorBaseAsset?.sourceHistoryId,
             imageModel,
             performGeneration,
             primePendingProvenanceContinuation,
+            returnToWorkspaceFromEditor,
+        ],
+    );
+
+    const handleEditorQueueBatch = useCallback(
+        async (
+            editPrompt: string,
+            imageBase64: string,
+            editBatchSize: number,
+            editSize: ImageSize,
+            _mode: string,
+            extraObjectImages?: string[],
+            extraCharacterImages?: string[],
+            targetRatio?: AspectRatio,
+        ) => {
+            returnToWorkspaceFromEditor();
+            await queueBatchJobFromEditor({
+                prompt: editPrompt,
+                editingInput: imageBase64,
+                batchSize: editBatchSize,
+                imageSize: editSize,
+                aspectRatio: targetRatio || aspectRatio,
+                objectImageInputs: extraObjectImages,
+                characterImageInputs: extraCharacterImages,
+                generationMode: 'Editor Edit',
+            });
+        },
+        [
+            aspectRatio,
+            queueBatchJobFromEditor,
+            returnToWorkspaceFromEditor,
         ],
     );
 
@@ -411,9 +451,8 @@ export function useWorkspaceEditorActions({
         handleRemoveCharacterReference,
         handleUploadForEdit,
         handleOpenEditor,
-        handleStageCurrentImageAsEditorBase,
-        handleClearEditorBaseAsset,
         handleEditorGenerate,
+        handleEditorQueueBatch,
         handleSketchReplaceCancel,
         handleSketchReplaceConfirm,
         handleCloseSketchPad,

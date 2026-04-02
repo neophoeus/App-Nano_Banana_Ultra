@@ -35,7 +35,6 @@ describe('useWorkspaceTransientUiState', () => {
                         typeof value === 'function' ? value(latestFocusLinkedGroundingItems) : value;
                 },
                 isEditing: props.isEditing,
-                prompt: 'live prompt',
                 objectImages: ['object-a'],
                 characterImages: ['character-a'],
                 aspectRatio: '16:9',
@@ -91,9 +90,20 @@ describe('useWorkspaceTransientUiState', () => {
                 ratio: '1:1',
                 size: '1K',
                 batchSize: 1,
+                model: 'gemini-3.1-flash-image-preview',
+                style: 'None',
+                outputFormat: 'images-only',
+                structuredOutputMode: 'off',
+                temperature: 1,
+                thinkingLevel: 'minimal',
+                includeThoughts: true,
+                googleSearch: false,
+                imageSearch: false,
             });
+            latestHook?.setEditorPrompt('temporary editor prompt');
         });
         expect(latestHook?.editorInitialState.prompt).toBe('snapshot prompt');
+        expect(latestHook?.editorPrompt).toBe('temporary editor prompt');
 
         act(() => {
             latestActiveGroundingSelection = null;
@@ -103,7 +113,8 @@ describe('useWorkspaceTransientUiState', () => {
 
         expect(latestFocusLinkedGroundingItems).toBe(false);
         expect(latestHook?.editorContextSnapshot).toBeNull();
-        expect(latestHook?.editorInitialState.prompt).toBe('live prompt');
+        expect(latestHook?.editorInitialState.prompt).toBe('');
+        expect(latestHook?.editorPrompt).toBe('');
         expect(latestHook?.editorInitialState.batchSize).toBe(3);
     });
 });

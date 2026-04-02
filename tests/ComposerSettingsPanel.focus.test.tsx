@@ -5,6 +5,7 @@ import { createRoot, Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ComposerSettingsPanel from '../components/ComposerSettingsPanel';
 import { MODEL_CAPABILITIES } from '../constants';
+import { getTranslation } from '../utils/translations';
 
 const baseProps = {
     prompt: 'Test prompt',
@@ -14,7 +15,7 @@ const baseProps = {
     isEnhancingPrompt: false,
     currentLanguage: 'en' as const,
     imageStyleLabel: 'None',
-    modelLabel: 'Gemini 3.1 Flash',
+    modelLabel: getTranslation('en', 'modelGemini31Flash'),
     aspectRatio: '1:1' as const,
     imageSize: '2K' as const,
     batchSize: 3,
@@ -56,6 +57,7 @@ const baseProps = {
     onOpenPromptHistory: vi.fn(),
     onOpenTemplates: vi.fn(),
     onOpenStyles: vi.fn(),
+    onOpenSettings: vi.fn(),
     onOpenModelPicker: vi.fn(),
     onOpenRatioPicker: vi.fn(),
     onOpenSizePicker: vi.fn(),
@@ -111,47 +113,21 @@ describe('ComposerSettingsPanel prompt focus wiring', () => {
         expect(promptTextareaRef.current?.value).toBe('Test prompt');
     });
 
-    it('routes settings and reference strip actions through the composer-owned openers', () => {
-        const onOpenModelPicker = vi.fn();
-        const onOpenRatioPicker = vi.fn();
-        const onOpenSizePicker = vi.fn();
-        const onOpenBatchPicker = vi.fn();
-        const onOpenReferences = vi.fn();
+    it('routes the unified settings strip through the composer-owned opener', () => {
+        const onOpenSettings = vi.fn();
 
         act(() => {
-            root.render(
-                <ComposerSettingsPanel
-                    {...baseProps}
-                    onOpenModelPicker={onOpenModelPicker}
-                    onOpenRatioPicker={onOpenRatioPicker}
-                    onOpenSizePicker={onOpenSizePicker}
-                    onOpenBatchPicker={onOpenBatchPicker}
-                    onOpenReferences={onOpenReferences}
-                />,
-            );
+            root.render(<ComposerSettingsPanel {...baseProps} onOpenSettings={onOpenSettings} />);
         });
 
-        const modelButton = container.querySelector('[data-testid="composer-settings-model"]') as HTMLButtonElement;
-        const ratioButton = container.querySelector('[data-testid="composer-settings-ratio"]') as HTMLButtonElement;
-        const sizeButton = container.querySelector('[data-testid="composer-settings-size"]') as HTMLButtonElement;
-        const qtyButton = container.querySelector('[data-testid="composer-settings-qty"]') as HTMLButtonElement;
-        const referenceButton = container.querySelector(
-            '[data-testid="composer-reference-context-button"]',
-        ) as HTMLButtonElement;
+        const settingsButton = container.querySelector('[data-testid="composer-settings-button"]') as HTMLButtonElement;
 
         act(() => {
-            modelButton.click();
-            ratioButton.click();
-            sizeButton.click();
-            qtyButton.click();
-            referenceButton.click();
+            settingsButton.click();
         });
 
-        expect(onOpenModelPicker).toHaveBeenCalledTimes(1);
-        expect(onOpenRatioPicker).toHaveBeenCalledTimes(1);
-        expect(onOpenSizePicker).toHaveBeenCalledTimes(1);
-        expect(onOpenBatchPicker).toHaveBeenCalledTimes(1);
-        expect(onOpenReferences).toHaveBeenCalledTimes(1);
+        expect(onOpenSettings).toHaveBeenCalledTimes(1);
+        expect(container.querySelector('[data-testid="composer-reference-context-button"]')).toBeNull();
     });
 
     it('opens the queued jobs modal from the status button when tracked jobs exist', () => {

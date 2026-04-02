@@ -294,8 +294,8 @@ describe('usePerformGeneration', () => {
         expect(latestBatchProgress).toEqual({ completed: 0, total: 0 });
         expect(latestError).toBeNull();
         expect(latestIsGenerating).toBe(false);
-        expect(latestIsEditing).toBe(false);
-        expect(latestEditingImageSource).toBeNull();
+        expect(latestIsEditing).toBe(true);
+        expect(latestEditingImageSource).toBe('data:image/png;base64,EDIT');
         expect(promptHistory).toEqual(['A minimal yellow banana icon on a clean white card']);
         expect(notifications).toEqual([]);
     });

@@ -9,7 +9,6 @@ import {
 import { buildConversationRequestContext, resolveConversationSelectionState } from '../utils/conversationState';
 
 type UseWorkspaceGenerationContextArgs = {
-    editorBaseAsset: StageAsset | null;
     currentStageAsset: StageAsset | null;
     workspaceSession: WorkspaceSessionState;
     history: GeneratedImage[];
@@ -19,7 +18,6 @@ type UseWorkspaceGenerationContextArgs = {
 };
 
 export function useWorkspaceGenerationContext({
-    editorBaseAsset,
     currentStageAsset,
     workspaceSession,
     history,
@@ -30,12 +28,11 @@ export function useWorkspaceGenerationContext({
     const getGenerationLineageContext = useCallback(
         ({ mode, editingInput }: { mode: string; editingInput?: string }) => {
             const sourceHistoryId =
-                editorBaseAsset?.sourceHistoryId ??
                 currentStageAsset?.sourceHistoryId ??
                 workspaceSession.sourceHistoryId ??
                 null;
             const sourceTurn = getHistoryTurnById(sourceHistoryId);
-            const inheritedAction = editorBaseAsset?.lineageAction ?? currentStageAsset?.lineageAction;
+            const inheritedAction = currentStageAsset?.lineageAction;
 
             if (!sourceHistoryId) {
                 return {
@@ -67,8 +64,6 @@ export function useWorkspaceGenerationContext({
         [
             currentStageAsset?.lineageAction,
             currentStageAsset?.sourceHistoryId,
-            editorBaseAsset?.lineageAction,
-            editorBaseAsset?.sourceHistoryId,
             getHistoryTurnById,
             workspaceSession.sourceHistoryId,
         ],
@@ -81,7 +76,6 @@ export function useWorkspaceGenerationContext({
             }
 
             const activeSourceHistoryId =
-                editorBaseAsset?.sourceHistoryId ??
                 currentStageAsset?.sourceHistoryId ??
                 workspaceSession.sourceHistoryId ??
                 null;
@@ -110,7 +104,6 @@ export function useWorkspaceGenerationContext({
             branchOriginIdByTurnId,
             conversationState,
             currentStageAsset?.sourceHistoryId,
-            editorBaseAsset?.sourceHistoryId,
             history,
             workspaceSession.conversationBranchOriginId,
             workspaceSession.sourceHistoryId,

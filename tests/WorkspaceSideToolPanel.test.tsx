@@ -4,85 +4,67 @@ import { describe, expect, it, vi } from 'vitest';
 import WorkspaceSideToolPanel from '../components/WorkspaceSideToolPanel';
 
 describe('WorkspaceSideToolPanel', () => {
-    it('surfaces the canonical side-tool actions and current staged summaries', () => {
+    it('surfaces the canonical side-tool actions and embedded reference uploaders', () => {
         const markup = renderToStaticMarkup(
             <WorkspaceSideToolPanel
                 currentLanguage="en"
-                editorBaseAsset={{
-                    id: 'editor-base',
-                    url: 'editor-base.png',
-                    role: 'editor-base',
-                    origin: 'history',
-                    createdAt: Date.now(),
-                }}
-                currentStageAsset={{
-                    id: 'stage-source',
-                    url: 'stage.png',
-                    role: 'stage-source',
-                    origin: 'generated',
-                    createdAt: Date.now(),
-                    lineageAction: 'continue',
-                }}
-                onUploadBaseImage={vi.fn()}
+                canEditCurrentImage={true}
                 onOpenSketchPad={vi.fn()}
                 onOpenEditor={vi.fn()}
-                getStageOriginLabel={(origin) => origin || 'not-staged'}
-                getLineageActionLabel={(action) => action || 'root'}
+                objectImages={['object.png']}
+                characterImages={['character.png']}
+                maxObjects={4}
+                maxCharacters={2}
+                setObjectImages={vi.fn()}
+                setCharacterImages={vi.fn()}
+                isGenerating={false}
+                showNotification={vi.fn()}
+                handleRemoveObjectReference={vi.fn()}
+                handleRemoveCharacterReference={vi.fn()}
             />,
         );
 
-        expect(markup).toContain('Actions');
         expect(markup).toContain('Image Tools');
-        expect(markup).toContain('Upload Base Image');
         expect(markup).toContain('Edit Current Image');
         expect(markup).toContain('Open SketchPad');
+        expect(markup).toContain('Object References');
+        expect(markup).toContain('Character References');
+        expect(markup).toContain('1 / 4');
+        expect(markup).toContain('1 / 2');
+        expect(markup).toContain('workspace-side-tools-actions-card');
+        expect(markup).toContain('workspace-side-tools-references-card');
         expect(markup).toContain('workspace-side-tools-actions');
-        expect(markup).toContain('Base image: history');
-        expect(markup).toContain('Current image');
-        expect(markup).toContain('generated');
-        expect(markup).toContain('continue');
+        expect(markup).toContain('workspace-side-tool-references');
         expect(markup).toContain('workspace-side-tool-panel');
+        expect(markup).not.toContain('Actions');
+        expect(markup).not.toContain('Upload Base Image');
+        expect(markup).not.toContain('Base image');
         expect(markup).not.toContain('Reference Tray');
         expect(markup).not.toContain('side-tools-open-references');
+        expect(markup).not.toContain('Rec. < 2');
     });
 
-    it('shows continue editing when only an editor base exists', () => {
+    it('shows upload image to edit when no current image is available', () => {
         const markup = renderToStaticMarkup(
             <WorkspaceSideToolPanel
                 currentLanguage="en"
-                editorBaseAsset={{
-                    id: 'editor-base',
-                    url: 'editor-base.png',
-                    role: 'editor-base',
-                    origin: 'history',
-                    createdAt: Date.now(),
-                }}
-                currentStageAsset={null}
-                onUploadBaseImage={vi.fn()}
+                canEditCurrentImage={false}
                 onOpenSketchPad={vi.fn()}
                 onOpenEditor={vi.fn()}
-                getStageOriginLabel={(origin) => origin || 'not-staged'}
-                getLineageActionLabel={(action) => action || 'root'}
+                objectImages={[]}
+                characterImages={[]}
+                maxObjects={4}
+                maxCharacters={2}
+                setObjectImages={vi.fn()}
+                setCharacterImages={vi.fn()}
+                isGenerating={false}
+                showNotification={vi.fn()}
+                handleRemoveObjectReference={vi.fn()}
+                handleRemoveCharacterReference={vi.fn()}
             />,
         );
 
-        expect(markup).toContain('Continue Editing');
-    });
-
-    it('shows upload base to edit when no stage image or editor base exists', () => {
-        const markup = renderToStaticMarkup(
-            <WorkspaceSideToolPanel
-                currentLanguage="en"
-                editorBaseAsset={null}
-                currentStageAsset={null}
-                onUploadBaseImage={vi.fn()}
-                onOpenSketchPad={vi.fn()}
-                onOpenEditor={vi.fn()}
-                getStageOriginLabel={(origin) => origin || 'not-staged'}
-                getLineageActionLabel={(action) => action || 'root'}
-            />,
-        );
-
-        expect(markup).toContain('Upload Base To Edit');
+        expect(markup).toContain('Upload Image To Edit');
+        expect(markup).not.toContain('Continue Editing');
     });
 });

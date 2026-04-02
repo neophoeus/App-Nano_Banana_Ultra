@@ -57,10 +57,18 @@ type UseComposerStateReturn = {
     setGroundingMode: (mode: GroundingMode) => void;
     restoreEditorComposerState: (
         snapshot: {
-            prompt: string;
             ratio: AspectRatio;
             size: ImageSize;
             batchSize: number;
+            model?: ImageModel;
+            style?: ImageStyle;
+            outputFormat?: OutputFormat;
+            structuredOutputMode?: StructuredOutputMode;
+            temperature?: number;
+            thinkingLevel?: ThinkingLevel;
+            includeThoughts?: boolean;
+            googleSearch?: boolean;
+            imageSearch?: boolean;
         } | null,
     ) => void;
 };
@@ -164,20 +172,55 @@ export function useComposerState({
     const restoreEditorComposerState = useCallback(
         (
             snapshot: {
-                prompt: string;
                 ratio: AspectRatio;
                 size: ImageSize;
                 batchSize: number;
+                model?: ImageModel;
+                style?: ImageStyle;
+                outputFormat?: OutputFormat;
+                structuredOutputMode?: StructuredOutputMode;
+                temperature?: number;
+                thinkingLevel?: ThinkingLevel;
+                includeThoughts?: boolean;
+                googleSearch?: boolean;
+                imageSearch?: boolean;
             } | null,
         ) => {
             if (!snapshot) {
                 return;
             }
 
-            setPrompt(snapshot.prompt);
             setAspectRatio(snapshot.ratio);
             setImageSize(snapshot.size);
             setBatchSize(snapshot.batchSize);
+
+            if (snapshot.model) {
+                setImageModel(snapshot.model);
+            }
+            if (snapshot.style) {
+                setImageStyle(snapshot.style);
+            }
+            if (snapshot.outputFormat) {
+                setOutputFormat(snapshot.outputFormat);
+            }
+            if (snapshot.structuredOutputMode) {
+                setStructuredOutputMode(snapshot.structuredOutputMode);
+            }
+            if (typeof snapshot.temperature === 'number') {
+                setTemperature(snapshot.temperature);
+            }
+            if (snapshot.thinkingLevel) {
+                setThinkingLevel(snapshot.thinkingLevel);
+            }
+            if (typeof snapshot.includeThoughts === 'boolean') {
+                setIncludeThoughts(snapshot.includeThoughts);
+            }
+            if (typeof snapshot.googleSearch === 'boolean') {
+                setGoogleSearch(snapshot.googleSearch);
+            }
+            if (typeof snapshot.imageSearch === 'boolean') {
+                setImageSearch(snapshot.imageSearch);
+            }
         },
         [],
     );

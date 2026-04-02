@@ -138,7 +138,6 @@ export const ja = {
     branchRenameSavedLog: '分岐名を {0} ({1}) に変更しました。',
     uploadAdd: '追加',
     uploadRefIndex: 'Ref',
-    safeLimitTip: '推奨 {0} 枚以内',
     ratioPortrait: 'ポートレート (9:16)',
     ratioClassicV: '縦長 (2:3)',
     ratioVertical: '縦 (3:4)',
@@ -422,7 +421,6 @@ export const ja = {
         '画像検索グラウンディングでは、帰属メタデータを返せるよう出力が自動で Images & text に切り替わります。',
     composerStructuredOutputUpgradeNotice:
         '構造化出力を有効にすると、画像と一緒に JSON を返せるよう出力は画像とテキストに自動で切り替わります。',
-    composerActionPanelEyebrow: 'アクション',
     composerActionPanelTitle: '作成',
     composerActionPanelDesc:
         '生成を主役に置いたまま、フォローアップとワークスペース操作を近くにまとめつつ控えめに扱います。',
@@ -570,6 +568,8 @@ export const ja = {
         'この設定ではテキスト応答を受け取れます。モデルが説明文を返すと、ここに表示されます。',
     workspacePanelResultTextReserved:
         '画像とテキストの両方に対応したモデルへ切り替えると、応答の説明文がここに表示されます。',
+    surfaceSharedControlsStateDescEditor:
+        '{0} の表示中も共有設定はここで同期されたままです。プロンプトはエディター専用のローカル状態を維持します。',
     workspaceConstraintTrimObjects: 'モデルの制約により、オブジェクト画像は {0} 枚に調整されました。',
     workspaceConstraintTrimCharacters: 'モデルの制約により、キャラクター画像は {0} 枚に調整されました。',
     workspacePickerSharedPrompt: '共有プロンプト',
@@ -588,8 +588,6 @@ export const ja = {
     workspacePickerNoSketchAsset: 'スケッチ資産はまだステージされていません。',
     workspacePickerCharacters: 'キャラクター',
     workspacePickerCharacterHint: 'キャラクター参照は同じステージ済み入力モデルを維持します。',
-    workspacePickerEditorBase: 'エディターベース',
-    workspacePickerEditorBaseHint: '直接アップロードするか、現在のステージ画像を再利用できます。',
     workspacePickerPromptHistoryTitle: 'プロンプト履歴',
     workspacePickerStageSource: 'ステージソース',
     workspacePickerHistoryLinked: '履歴にリンク済み',
@@ -597,11 +595,7 @@ export const ja = {
         '現在のステージと履歴から再開した画像は、編集アクションで再利用できる同じ後続ソースモデルに送られます。',
     workspaceSideToolTitle: '画像ツール',
     workspaceSideToolCurrentImage: '現在の画像',
-    workspaceSideToolBaseImage: 'ベース画像',
     workspacePickerOpenSketchPad: 'スケッチパッドを開く',
-    workspacePickerUploadBaseImage: 'ベース画像をアップロード',
-    workspacePickerUseCurrentStageAsEditorBase: '現在のステージをエディターベースとして使う',
-    workspacePickerClearEditorBase: 'エディターベースをクリア',
     workspacePickerLoading: 'ピッカーシートを読み込み中...',
     workspacePickerCapabilityHint: 'モデルが対応しない機能のコントロールは自動的に非表示になります。',
     workspaceSheetTitlePrompt: '共有プロンプト',
@@ -613,6 +607,11 @@ export const ja = {
     workspaceSheetTitleRatio: 'アスペクト比',
     workspaceSheetTitleSize: '出力サイズ',
     workspaceSheetTitleBatch: '数量',
+    workspaceSheetTitleGenerationSettings: 'Generation Settings',
+    generationSettingsApply: 'Apply',
+    generationSettingsModalDesc: 'Review model, ratio, output size, and quantity together before applying them.',
+    generationSettingsModalDescSketch:
+        'SketchPad only exposes model and aspect ratio here. Output size stays fixed while sketching.',
     workspaceSheetTitleReferences: '参照トレイ',
     workspaceSurfaceReady: '準備完了',
     workspaceSurfacePromptEmpty: 'まだプロンプトはありません',
@@ -639,8 +638,7 @@ export const ja = {
     workspaceViewerAddToReferences: '参照に追加',
     workspaceViewerOpenEditor: 'エディターを開く',
     workspaceViewerEditCurrentImage: '現在の画像を編集',
-    workspaceViewerContinueEditing: '編集を再開',
-    workspaceViewerUploadBaseToEdit: 'ベース画像をアップロードして編集',
+    workspaceViewerUploadBaseToEdit: '画像をアップロードして編集',
     workspaceImportReviewEyebrow: 'インポート確認',
     workspaceImportReviewTitle: '現在のワークスペースを置き換える前に、インポート内容を確認してください。',
     workspaceImportReviewDesc:

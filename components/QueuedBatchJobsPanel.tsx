@@ -166,6 +166,7 @@ export default function QueuedBatchJobsPanel({
     const getTranslatedGenerationModeLabel = (mode?: string | null) => {
         if (!mode) return t('modeTextToImg');
         if (mode.includes('Inpaint') || mode.includes('Retouch')) return t('modeInpaint');
+        if (mode.includes('Editor Edit')) return 'Editor Edit';
         if (mode.includes('Text')) return t('modeTextToImg');
         if (mode.includes('Image to')) return t('modeImgToImg');
         if (mode.includes('Follow-up')) return t('workspaceViewerFollowUpEdit');

@@ -20,7 +20,7 @@ type UseWorkspaceResetActionsArgs = {
     handleClearResults: () => void;
     handleClearHistory: () => void;
     resetSelectedOutputState: () => void;
-    clearAssetRoles: (roles: Array<'object' | 'character' | 'editor-base' | 'stage-source'>) => void;
+    clearAssetRoles: (roles: Array<'object' | 'character' | 'stage-source'>) => void;
     resetWorkspaceSession: () => void;
     closePickerSheet: () => void;
     setBranchNameOverrides: Dispatch<SetStateAction<Record<string, string>>>;

@@ -140,7 +140,6 @@ export const ru = {
     branchRenameSavedLog: 'Ветка переименована в {0} ({1}).',
     uploadAdd: 'Добавить',
     uploadRefIndex: 'Реф',
-    safeLimitTip: 'Рек. < {0}',
     ratioPortrait: 'Портрет',
     ratioClassicV: 'Классик В',
     ratioVertical: 'Вертикаль',
@@ -429,7 +428,6 @@ export const ru = {
         'Граундинг через поиск изображений теперь автоматически переводит вывод в Images & text, чтобы можно было вернуть метаданные атрибуции.',
     composerStructuredOutputUpgradeNotice:
         'Структурированный вывод теперь автоматически переключает результат в режим Изображения и текст, чтобы JSON можно было вернуть вместе с изображением.',
-    composerActionPanelEyebrow: 'Действия',
     composerActionPanelTitle: 'Создать',
     composerActionPanelDesc:
         'Генерация остается основным действием. Последующие и рабочие действия остаются рядом, но звучат тише.',
@@ -553,6 +551,8 @@ export const ru = {
     surfaceSharedControlsRefsCount: 'рефов {0}',
     surfaceSharedControlsStateTitle: 'Общее состояние композера',
     surfaceSharedControlsStateDesc: 'Пока открыт {0}, основные настройки страницы остаются активными здесь.',
+    surfaceSharedControlsStateDescEditor:
+        'Пока открыт {0}, общие настройки остаются активными здесь. Промпт остается локальным для редактора.',
     surfaceSharedControlsCurrentPrompt: 'Текущий промпт',
     surfaceSharedControlsPromptDetail: 'Шаблоны, переписывание, история',
     surfaceSharedControlsQuantityDetail: '{0} изображ.',
@@ -603,8 +603,6 @@ export const ru = {
     workspacePickerNoSketchAsset: 'Скетч-ресурс не подготовлен.',
     workspacePickerCharacters: 'Персонажи',
     workspacePickerCharacterHint: 'Референсы персонажей остаются в той же подготовленной модели приема.',
-    workspacePickerEditorBase: 'База редактора',
-    workspacePickerEditorBaseHint: 'Загрузите изображение напрямую или повторно используйте текущее изображение сцены.',
     workspacePickerPromptHistoryTitle: 'История промптов',
     workspacePickerStageSource: 'Источник сцены',
     workspacePickerHistoryLinked: 'связано с историей',
@@ -612,11 +610,7 @@ export const ru = {
         'Текущая сцена и повторно открытые из истории изображения теперь подают данные в одну и ту же модель источника продолжения, которую могут повторно использовать действия редактора.',
     workspaceSideToolTitle: 'Инструменты изображения',
     workspaceSideToolCurrentImage: 'Текущее изображение',
-    workspaceSideToolBaseImage: 'Базовое изображение',
     workspacePickerOpenSketchPad: 'Открыть SketchPad',
-    workspacePickerUploadBaseImage: 'Загрузить базовое изображение',
-    workspacePickerUseCurrentStageAsEditorBase: 'Использовать текущую сцену как базу редактора',
-    workspacePickerClearEditorBase: 'Очистить базу редактора',
     workspacePickerLoading: 'Загрузка панели выбора...',
     workspacePickerCapabilityHint:
         'Элементы управления по возможностям автоматически скрываются, если модель их не поддерживает.',
@@ -629,6 +623,11 @@ export const ru = {
     workspaceSheetTitleRatio: 'Формат',
     workspaceSheetTitleSize: 'Размер вывода',
     workspaceSheetTitleBatch: 'Количество',
+    workspaceSheetTitleGenerationSettings: 'Generation Settings',
+    generationSettingsApply: 'Apply',
+    generationSettingsModalDesc: 'Review model, ratio, output size, and quantity together before applying them.',
+    generationSettingsModalDescSketch:
+        'SketchPad only exposes model and aspect ratio here. Output size stays fixed while sketching.',
     workspaceSheetTitleReferences: 'Лоток референсов',
     workspaceSurfaceReady: 'Готово',
     workspaceSurfacePromptEmpty: 'Промпта пока нет',
@@ -656,8 +655,7 @@ export const ru = {
     workspaceViewerAddToReferences: 'Добавить в референсы',
     workspaceViewerOpenEditor: 'Открыть редактор',
     workspaceViewerEditCurrentImage: 'Редактировать текущее изображение',
-    workspaceViewerContinueEditing: 'Продолжить редактирование',
-    workspaceViewerUploadBaseToEdit: 'Загрузить базу для редактирования',
+    workspaceViewerUploadBaseToEdit: 'Загрузить изображение для редактирования',
     workspaceImportReviewEyebrow: 'Проверка импорта',
     workspaceImportReviewTitle: 'Проверьте импортированный workspace перед заменой текущего.',
     workspaceImportReviewDesc:

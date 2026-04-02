@@ -137,7 +137,6 @@ export const ko = {
     branchRenameSavedLog: '브랜치 이름을 {0} ({1})로 변경했습니다.',
     uploadAdd: '추가',
     uploadRefIndex: '참조',
-    safeLimitTip: '권장 {0} 장 이내',
     ratioPortrait: '인물 (9:16)',
     ratioClassicV: '클래식 세로 (2:3)',
     ratioVertical: '세로 (3:4)',
@@ -420,7 +419,6 @@ export const ko = {
         '이미지 검색 그라운딩은 귀속 메타데이터를 반환할 수 있도록 출력을 자동으로 Images & text로 올립니다.',
     composerStructuredOutputUpgradeNotice:
         '구조화 출력을 켜면 이미지와 함께 JSON을 반환할 수 있도록 출력이 자동으로 이미지와 텍스트로 올라갑니다.',
-    composerActionPanelEyebrow: '작업',
     composerActionPanelTitle: '생성',
     composerActionPanelDesc:
         '생성을 중심에 두고, 후속 편집과 워크스페이스 작업은 가까이에 두되 더 조용하게 유지합니다.',
@@ -568,6 +566,8 @@ export const ko = {
     workspacePanelResultTextReady:
         '현재 설정은 텍스트 응답을 받을 수 있습니다. 모델이 설명을 반환하면 여기에 표시됩니다.',
     workspacePanelResultTextReserved: '이미지와 텍스트를 모두 지원하는 모델로 전환하면 응답 설명이 여기에 표시됩니다.',
+    surfaceSharedControlsStateDescEditor:
+        '{0} 이(가) 열려 있는 동안 공유 설정은 여기서 계속 유지됩니다. 프롬프트는 에디터 로컬 상태로 남습니다.',
     workspaceConstraintTrimObjects: '모델 제약으로 인해 오브젝트 이미지는 {0}장으로 줄였습니다.',
     workspaceConstraintTrimCharacters: '모델 제약으로 인해 캐릭터 이미지는 {0}장으로 줄였습니다.',
     workspacePickerSharedPrompt: '공유 프롬프트',
@@ -586,8 +586,6 @@ export const ko = {
     workspacePickerNoSketchAsset: '스케치 자산이 아직 스테이징되지 않았습니다.',
     workspacePickerCharacters: '캐릭터',
     workspacePickerCharacterHint: '캐릭터 참조는 같은 스테이징 입력 모델을 유지합니다.',
-    workspacePickerEditorBase: '에디터 베이스',
-    workspacePickerEditorBaseHint: '직접 업로드하거나 현재 스테이지 이미지를 재사용할 수 있습니다.',
     workspacePickerPromptHistoryTitle: '프롬프트 기록',
     workspacePickerStageSource: '스테이지 소스',
     workspacePickerHistoryLinked: '기록 연동됨',
@@ -595,11 +593,7 @@ export const ko = {
         '현재 스테이지와 기록에서 다시 연 이미지는 이제 편집 동작에서 재사용할 수 있는 동일한 후속 소스 모델로 전달됩니다.',
     workspaceSideToolTitle: '이미지 도구',
     workspaceSideToolCurrentImage: '현재 이미지',
-    workspaceSideToolBaseImage: '베이스 이미지',
     workspacePickerOpenSketchPad: '스케치패드 열기',
-    workspacePickerUploadBaseImage: '베이스 이미지 업로드',
-    workspacePickerUseCurrentStageAsEditorBase: '현재 스테이지를 에디터 베이스로 사용',
-    workspacePickerClearEditorBase: '에디터 베이스 지우기',
     workspacePickerLoading: '피커 시트를 불러오는 중...',
     workspacePickerCapabilityHint: '모델이 지원하지 않는 기능 제어는 자동으로 숨겨집니다.',
     workspaceSheetTitlePrompt: '공유 프롬프트',
@@ -611,6 +605,11 @@ export const ko = {
     workspaceSheetTitleRatio: '화면 비율',
     workspaceSheetTitleSize: '출력 크기',
     workspaceSheetTitleBatch: '수량',
+    workspaceSheetTitleGenerationSettings: 'Generation Settings',
+    generationSettingsApply: 'Apply',
+    generationSettingsModalDesc: 'Review model, ratio, output size, and quantity together before applying them.',
+    generationSettingsModalDescSketch:
+        'SketchPad only exposes model and aspect ratio here. Output size stays fixed while sketching.',
     workspaceSheetTitleReferences: '참조 트레이',
     workspaceSurfaceReady: '준비됨',
     workspaceSurfacePromptEmpty: '아직 프롬프트가 없습니다',
@@ -637,8 +636,7 @@ export const ko = {
     workspaceViewerAddToReferences: '참조에 추가',
     workspaceViewerOpenEditor: '에디터 열기',
     workspaceViewerEditCurrentImage: '현재 이미지 편집',
-    workspaceViewerContinueEditing: '편집 이어서 하기',
-    workspaceViewerUploadBaseToEdit: '베이스 이미지를 업로드해 편집',
+    workspaceViewerUploadBaseToEdit: '이미지를 업로드해 편집',
     workspaceImportReviewEyebrow: '가져오기 검토',
     workspaceImportReviewTitle: '현재 워크스페이스를 교체하기 전에 가져온 내용을 검토하세요.',
     workspaceImportReviewDesc:

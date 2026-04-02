@@ -8,6 +8,7 @@ type PickerSheet =
     | 'history'
     | 'templates'
     | 'styles'
+    | 'settings'
     | 'model'
     | 'ratio'
     | 'size'
@@ -20,6 +21,7 @@ type UseWorkspaceShellViewModelArgs = {
     isGenerating: boolean;
     displaySettings: GenerationSettings;
     prompt: string;
+    surfacePrompt: string;
     aspectRatio: GenerationSettings['aspectRatio'];
     imageSize: GenerationSettings['size'];
     imageStyle: GenerationSettings['style'];
@@ -49,6 +51,7 @@ export function useWorkspaceShellViewModel({
     isGenerating,
     displaySettings,
     prompt,
+    surfacePrompt,
     aspectRatio,
     imageSize,
     imageStyle,
@@ -139,6 +142,8 @@ export function useWorkspaceShellViewModel({
                 return t('workspaceSheetTitleTemplates');
             case 'styles':
                 return t('workspaceSheetTitleStyles');
+            case 'settings':
+                return t('workspaceSheetTitleGenerationSettings');
             case 'model':
                 return t('workspaceSheetTitleModel');
             case 'ratio':
@@ -166,7 +171,9 @@ export function useWorkspaceShellViewModel({
           ? WORKSPACE_SURFACE_Z_INDEX.pickerSheet.editor
           : WORKSPACE_SURFACE_Z_INDEX.pickerSheet.shell;
     const activeSurfaceSheetLabel = activePickerSheet ? activeSheetTitle : t('workspaceSurfaceReady');
-    const surfacePromptPreview = prompt.trim() ? prompt.trim().slice(0, 64) : t('workspaceSurfacePromptEmpty');
+    const surfacePromptPreview = surfacePrompt.trim()
+        ? surfacePrompt.trim().slice(0, 64)
+        : t('workspaceSurfacePromptEmpty');
     const totalReferenceCount = objectImageCount + characterImageCount;
 
     useEffect(() => {

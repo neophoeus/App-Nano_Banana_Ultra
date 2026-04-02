@@ -3,7 +3,6 @@ import {
     ImageSize,
     ImageStyle,
     ImageStyleCategory,
-    ImageModel,
     OutputFormat,
     StructuredOutputMode,
     ThinkingLevel,
@@ -52,13 +51,6 @@ export const THINKING_LEVELS: Array<{ value: ThinkingLevel; label: string }> = [
     { value: 'minimal', label: 'Minimal' },
     { value: 'high', label: 'High' },
 ];
-
-// Editor-specific limits: fewer refs = more precise edits
-export const EDITOR_MAX_REFS: Record<ImageModel, { maxObjects: number; maxCharacters: number }> = {
-    'gemini-3.1-flash-image-preview': { maxObjects: 3, maxCharacters: 2 },
-    'gemini-3-pro-image-preview': { maxObjects: 3, maxCharacters: 2 },
-    'gemini-2.5-flash-image': { maxObjects: 1, maxCharacters: 0 },
-};
 
 export const STYLE_CATEGORIES: { id: ImageStyleCategory; label: string }[] = [
     { id: 'All', label: 'All' },

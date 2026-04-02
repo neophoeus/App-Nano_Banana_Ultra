@@ -10,7 +10,6 @@ type UseWorkspaceTransientUiStateArgs = {
     setActiveGroundingSelection: Dispatch<SetStateAction<GroundingSelection>>;
     setFocusLinkedGroundingItems: Dispatch<SetStateAction<boolean>>;
     isEditing: boolean;
-    prompt: string;
     objectImages: string[];
     characterImages: string[];
     aspectRatio: AspectRatio;
@@ -21,6 +20,8 @@ type UseWorkspaceTransientUiStateArgs = {
 type UseWorkspaceTransientUiStateReturn = {
     editorContextSnapshot: EditorContextSnapshot | null;
     setEditorContextSnapshot: Dispatch<SetStateAction<EditorContextSnapshot | null>>;
+    editorPrompt: string;
+    setEditorPrompt: Dispatch<SetStateAction<string>>;
     editorInitialState: EditorContextSnapshot;
 };
 
@@ -31,7 +32,6 @@ export function useWorkspaceTransientUiState({
     setActiveGroundingSelection,
     setFocusLinkedGroundingItems,
     isEditing,
-    prompt,
     objectImages,
     characterImages,
     aspectRatio,
@@ -39,6 +39,7 @@ export function useWorkspaceTransientUiState({
     batchSize,
 }: UseWorkspaceTransientUiStateArgs): UseWorkspaceTransientUiStateReturn {
     const [editorContextSnapshot, setEditorContextSnapshot] = useState<EditorContextSnapshot | null>(null);
+    const [editorPrompt, setEditorPrompt] = useState('');
 
     useEffect(() => {
         setActiveGroundingSelection(null);
@@ -53,24 +54,27 @@ export function useWorkspaceTransientUiState({
     useEffect(() => {
         if (!isEditing) {
             setEditorContextSnapshot(null);
+            setEditorPrompt('');
         }
     }, [isEditing]);
 
     const editorInitialState = useMemo(
         () => ({
-            prompt: editorContextSnapshot?.prompt || prompt,
+            prompt: editorContextSnapshot?.prompt ?? '',
             objectImages: editorContextSnapshot?.objectImages || objectImages,
             characterImages: editorContextSnapshot?.characterImages || characterImages,
             ratio: editorContextSnapshot?.ratio || aspectRatio,
             size: editorContextSnapshot?.size || imageSize,
             batchSize: editorContextSnapshot?.batchSize || batchSize,
         }),
-        [aspectRatio, batchSize, characterImages, editorContextSnapshot, imageSize, objectImages, prompt],
+        [aspectRatio, batchSize, characterImages, editorContextSnapshot, imageSize, objectImages],
     );
 
     return {
         editorContextSnapshot,
         setEditorContextSnapshot,
+        editorPrompt,
+        setEditorPrompt,
         editorInitialState,
     };
 }

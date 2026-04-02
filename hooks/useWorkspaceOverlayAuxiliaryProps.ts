@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useMemo } from 'react';
 import BranchRenameDialog from '../components/BranchRenameDialog';
-import SurfaceSharedControls from '../components/SurfaceSharedControls';
+import SurfaceSharedControls, { SurfaceSharedControlsVariant } from '../components/SurfaceSharedControls';
 import WorkspaceImportReview from '../components/WorkspaceImportReview';
 import { AspectRatio, ImageModel, ImageSize, ImageStyle } from '../types';
 import { getTranslation, Language } from '../utils/translations';
@@ -27,6 +27,7 @@ type UseWorkspaceOverlayAuxiliaryPropsArgs = {
     activeSurfaceSheetLabel: string;
     activePickerSheet: SurfaceSharedControlsProps['activePickerSheet'] | 'history' | 'templates';
     surfacePromptPreview: string;
+    settingsVariant: SurfaceSharedControlsVariant;
     totalReferenceCount: number;
     imageStyle: ImageStyle;
     imageModel: ImageModel;
@@ -76,6 +77,7 @@ export function useWorkspaceOverlayAuxiliaryProps({
     activeSurfaceSheetLabel,
     activePickerSheet,
     surfacePromptPreview,
+    settingsVariant,
     totalReferenceCount,
     imageStyle,
     imageModel,
@@ -119,6 +121,10 @@ export function useWorkspaceOverlayAuxiliaryProps({
                       currentLanguage,
                       isOpen: isSurfaceSharedControlsOpen,
                       workspaceLabel: getTranslation(currentLanguage, isEditing ? 'editorTitle' : 'sketchTitle'),
+                      stateDescription: getTranslation(
+                          currentLanguage,
+                          isEditing ? 'surfaceSharedControlsStateDescEditor' : 'surfaceSharedControlsStateDesc',
+                      ).replace('{0}', getTranslation(currentLanguage, isEditing ? 'editorTitle' : 'sketchTitle')),
                       activeSheetLabel: activeSurfaceSheetLabel,
                       activePickerSheet:
                           activePickerSheet === 'history' || activePickerSheet === 'templates'
@@ -136,6 +142,7 @@ export function useWorkspaceOverlayAuxiliaryProps({
                       characterImageCount,
                       maxObjects,
                       maxCharacters,
+                      settingsVariant,
                       containerClassName: 'fixed right-4 top-20 flex flex-col items-end gap-3 md:right-5 md:top-24',
                       containerStyle: { zIndex: floatingControlsZIndex },
                       onToggleOpen: () => setIsSurfaceSharedControlsOpen((previous) => !previous),
@@ -219,6 +226,7 @@ export function useWorkspaceOverlayAuxiliaryProps({
             openPromptSheet,
             openReferencesSheet,
             openSurfacePickerSheet,
+            settingsVariant,
             setBranchRenameDraft,
             setIsAdvancedSettingsOpen,
             setIsSurfaceSharedControlsOpen,

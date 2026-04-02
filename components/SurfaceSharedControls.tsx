@@ -1,12 +1,23 @@
 import React from 'react';
 import { getTranslation, Language } from '../utils/translations';
 
-export type SurfaceSharedControlSheet = 'prompt' | 'styles' | 'model' | 'ratio' | 'size' | 'batch' | 'references';
+export type SurfaceSharedControlSheet =
+    | 'prompt'
+    | 'styles'
+    | 'settings'
+    | 'model'
+    | 'ratio'
+    | 'size'
+    | 'batch'
+    | 'references';
+
+export type SurfaceSharedControlsVariant = 'full' | 'sketch';
 
 type SurfaceSharedControlsProps = {
     currentLanguage: Language;
     isOpen: boolean;
     workspaceLabel: string;
+    stateDescription: string;
     activeSheetLabel: string;
     activePickerSheet: SurfaceSharedControlSheet | null;
     isAdvancedSettingsOpen: boolean;
@@ -21,6 +32,7 @@ type SurfaceSharedControlsProps = {
     characterImageCount: number;
     maxObjects: number;
     maxCharacters: number;
+    settingsVariant: SurfaceSharedControlsVariant;
     containerClassName: string;
     containerStyle?: React.CSSProperties;
     onToggleOpen: () => void;
@@ -51,6 +63,7 @@ const SurfaceSharedControls: React.FC<SurfaceSharedControlsProps> = ({
     currentLanguage,
     isOpen,
     workspaceLabel,
+    stateDescription,
     activeSheetLabel,
     activePickerSheet,
     isAdvancedSettingsOpen,
@@ -65,6 +78,7 @@ const SurfaceSharedControls: React.FC<SurfaceSharedControlsProps> = ({
     characterImageCount,
     maxObjects,
     maxCharacters,
+    settingsVariant,
     containerClassName,
     containerStyle,
     onToggleOpen,
@@ -93,6 +107,10 @@ const SurfaceSharedControls: React.FC<SurfaceSharedControlsProps> = ({
         }
         return `${trimmedValue.slice(0, limit).trimEnd()}...`;
     };
+    const settingsDetail =
+        settingsVariant === 'sketch'
+            ? `${modelLabel} · ${aspectRatio}`
+            : `${modelLabel} · ${aspectRatio} · ${imageSize} · ${t('surfaceSharedControlsQuantityDetail').replace('{0}', String(batchSize))}`;
     const sheetButtons: SheetButtonConfig[] = [
         {
             id: 'prompt',
@@ -110,32 +128,12 @@ const SurfaceSharedControls: React.FC<SurfaceSharedControlsProps> = ({
             onClick: () => onOpenSheet('styles'),
         },
         {
-            id: 'model',
-            title: t('modelSelect'),
-            detail: modelLabel,
-            isActive: activePickerSheet === 'model',
-            onClick: () => onOpenSheet('model'),
-        },
-        {
-            id: 'ratio',
-            title: t('aspectRatio'),
-            detail: aspectRatio,
-            isActive: activePickerSheet === 'ratio',
-            onClick: () => onOpenSheet('ratio'),
-        },
-        {
-            id: 'size',
-            title: t('workspaceSheetTitleSize'),
-            detail: imageSize,
-            isActive: activePickerSheet === 'size',
-            onClick: () => onOpenSheet('size'),
-        },
-        {
-            id: 'batch',
-            title: t('batchSize'),
-            detail: t('surfaceSharedControlsQuantityDetail').replace('{0}', String(batchSize)),
-            isActive: activePickerSheet === 'batch',
-            onClick: () => onOpenSheet('batch'),
+            id: 'settings',
+            title: t('workspaceSheetTitleGenerationSettings'),
+            detail: settingsDetail,
+            isActive: activePickerSheet === 'settings',
+            onClick: () => onOpenSheet('settings'),
+            testId: 'shared-control-settings',
         },
         {
             id: 'advanced-settings',
@@ -208,7 +206,7 @@ const SurfaceSharedControls: React.FC<SurfaceSharedControlsProps> = ({
                                     data-testid="shared-controls-state-body"
                                     className="mt-3 border-t border-gray-200/80 pt-3 text-sm text-gray-700 dark:border-gray-800 dark:text-gray-200"
                                 >
-                                    {t('surfaceSharedControlsStateDesc').replace('{0}', workspaceLabel)}
+                                    {stateDescription}
                                 </div>
                             </details>
                         </div>

@@ -27,11 +27,7 @@ export type ComposerSettingsPanelPickerEntryProps = {
     characterCount: number;
     maxObjects: number;
     maxCharacters: number;
-    onOpenModelPicker: () => void;
-    onOpenRatioPicker: () => void;
-    onOpenSizePicker: () => void;
-    onOpenBatchPicker: () => void;
-    onOpenReferences: () => void;
+    onOpenSettings: () => void;
 };
 type ComposerSettingsPanelOwnedProps = ComposerSettingsPanelProps & ComposerSettingsPanelPickerEntryProps;
 
@@ -184,11 +180,7 @@ export function useComposerSettingsPanelProps({
         },
         [t],
     );
-    const openModelPicker = useCallback(() => setActivePickerSheet('model'), [setActivePickerSheet]);
-    const openRatioPicker = useCallback(() => setActivePickerSheet('ratio'), [setActivePickerSheet]);
-    const openSizePicker = useCallback(() => setActivePickerSheet('size'), [setActivePickerSheet]);
-    const openBatchPicker = useCallback(() => setActivePickerSheet('batch'), [setActivePickerSheet]);
-    const openReferencesPicker = useCallback(() => setActivePickerSheet('references'), [setActivePickerSheet]);
+    const openSettings = useCallback(() => setActivePickerSheet('settings'), [setActivePickerSheet]);
     const latestHandlersRef = useRef({
         setPrompt,
         toggleEnterToSubmit,
@@ -222,8 +214,6 @@ export function useComposerSettingsPanelProps({
         handleRemoveQueuedJob,
         getImportedQueuedResultCount,
         getImportedQueuedHistoryItems,
-        getStageOriginLabel,
-        getLineageActionLabel,
     });
 
     useLayoutEffect(() => {
@@ -260,8 +250,6 @@ export function useComposerSettingsPanelProps({
             handleRemoveQueuedJob,
             getImportedQueuedResultCount,
             getImportedQueuedHistoryItems,
-            getStageOriginLabel,
-            getLineageActionLabel,
         };
     }, [
         setPrompt,
@@ -296,8 +284,6 @@ export function useComposerSettingsPanelProps({
         handleRemoveQueuedJob,
         getImportedQueuedResultCount,
         getImportedQueuedHistoryItems,
-        getStageOriginLabel,
-        getLineageActionLabel,
     ]);
 
     return useMemo(
@@ -353,11 +339,7 @@ export function useComposerSettingsPanelProps({
             onOpenPromptHistory: () => latestHandlersRef.current.setActivePickerSheet('history'),
             onOpenTemplates: () => latestHandlersRef.current.setActivePickerSheet('templates'),
             onOpenStyles: () => latestHandlersRef.current.setActivePickerSheet('styles'),
-            onOpenModelPicker: openModelPicker,
-            onOpenRatioPicker: openRatioPicker,
-            onOpenSizePicker: openSizePicker,
-            onOpenBatchPicker: openBatchPicker,
-            onOpenReferences: openReferencesPicker,
+            onOpenSettings: openSettings,
             onToggleAdvancedSettings: () => {
                 latestHandlersRef.current.setActivePickerSheet(null);
                 latestHandlersRef.current.setIsAdvancedSettingsOpen(true);
@@ -398,10 +380,8 @@ export function useComposerSettingsPanelProps({
             onOpenImportedQueuedHistoryItem: (historyId: string) =>
                 latestHandlersRef.current.handleOpenImportedQueuedHistoryItem(historyId),
             onRemoveQueuedJob: (localId: string) => latestHandlersRef.current.handleRemoveQueuedJob(localId),
-            getStageOriginLabel: (origin?: StageAsset['origin']) =>
-                latestHandlersRef.current.getStageOriginLabel(origin),
-            getLineageActionLabel: (action?: TurnLineageAction) =>
-                latestHandlersRef.current.getLineageActionLabel(action),
+            getStageOriginLabel,
+            getLineageActionLabel,
         }),
         [
             prompt,
@@ -438,11 +418,9 @@ export function useComposerSettingsPanelProps({
             activeImportedQueuedHistoryId,
             promptTextareaRef,
             getModelLabel,
-            openModelPicker,
-            openRatioPicker,
-            openSizePicker,
-            openBatchPicker,
-            openReferencesPicker,
+            getStageOriginLabel,
+            getLineageActionLabel,
+            openSettings,
         ],
     );
 }

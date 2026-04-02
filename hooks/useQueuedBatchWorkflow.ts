@@ -129,7 +129,6 @@ type UseQueuedBatchWorkflowArgs = {
     googleSearch: boolean;
     imageSearch: boolean;
     currentStageAsset: StageAsset | null;
-    editorBaseAsset: StageAsset | null;
     objectImages: string[];
     characterImages: string[];
     getModelLabel: (model: ImageModel) => string;
@@ -142,10 +141,44 @@ type UseQueuedBatchWorkflowArgs = {
     t: (key: string) => string;
 };
 
+type QueuedBatchJobGenerationDraft = {
+    finalPrompt: string;
+    editingInput?: string;
+    generationMode: string;
+    lineageContext: GenerationLineageContext;
+    finalObjectInputs: string[];
+    finalCharacterInputs: string[];
+    batchSize: number;
+    aspectRatio: QueuedBatchJob['aspectRatio'];
+    imageSize: QueuedBatchJob['imageSize'];
+    style: QueuedBatchJob['style'];
+    model: ImageModel;
+    outputFormat: QueuedBatchJob['outputFormat'];
+    structuredOutputMode: StructuredOutputMode;
+    temperature: number;
+    thinkingLevel: QueuedBatchJob['thinkingLevel'];
+    includeThoughts: boolean;
+    googleSearch: boolean;
+    imageSearch: boolean;
+    displayName: string;
+};
+
+type EditorQueuedBatchJobSubmission = {
+    prompt: string;
+    editingInput: string;
+    batchSize: number;
+    imageSize: QueuedBatchJob['imageSize'];
+    aspectRatio: QueuedBatchJob['aspectRatio'];
+    objectImageInputs?: string[];
+    characterImageInputs?: string[];
+    generationMode?: string;
+};
+
 type UseQueuedBatchWorkflowReturn = {
     queuedJobs: QueuedBatchJob[];
     setQueuedJobs: Dispatch<SetStateAction<QueuedBatchJob[]>>;
     handleQueueBatchJob: () => Promise<void>;
+    handleQueueBatchJobFromEditor: (submission: EditorQueuedBatchJobSubmission) => Promise<void>;
     handlePollQueuedJob: (localId: string) => Promise<void>;
     handlePollAllQueuedJobs: (options?: { silent?: boolean; reason?: 'manual' | 'auto' }) => Promise<void>;
     handleCancelQueuedJob: (localId: string) => Promise<void>;
@@ -177,7 +210,6 @@ export function useQueuedBatchWorkflow({
     googleSearch,
     imageSearch,
     currentStageAsset,
-    editorBaseAsset,
     objectImages,
     characterImages,
     getModelLabel,
@@ -200,8 +232,14 @@ export function useQueuedBatchWorkflow({
     });
     const queuedJobRefreshInFlightRef = useRef<Set<string>>(new Set());
 
-    const buildQueuedJobGenerationDraft = useCallback(() => {
-        const editingInput = editorBaseAsset?.url ?? currentStageAsset?.url ?? undefined;
+    const buildQueuedBatchDisplayName = useCallback(
+        (model: ImageModel) =>
+            `${getModelLabel(model)} queued ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+        [getModelLabel],
+    );
+
+    const buildQueuedJobGenerationDraft = useCallback((): QueuedBatchJobGenerationDraft | null => {
+        const editingInput = currentStageAsset?.url ?? undefined;
         const isStyleTransfer =
             !editingInput && (objectImages.length > 0 || characterImages.length > 0) && imageStyle !== 'None';
         if (!prompt.trim() && !editingInput && !isStyleTransfer) {
@@ -213,13 +251,11 @@ export function useQueuedBatchWorkflow({
             : editingInput
               ? 'High resolution, seamless integration with surrounding context, maintain consistent lighting and texture.'
               : `Transform the visual content of the reference image into ${imageStyle} style. Maintain the original composition but apply the ${imageStyle} aesthetic characteristics strongly.`;
-        const generationMode = editorBaseAsset?.url
-            ? 'Editor Edit'
-            : currentStageAsset?.url
-              ? 'Follow-up Edit'
-              : objectImages.length > 0 || characterImages.length > 0
-                ? 'Image to Image/Mixing'
-                : 'Text to Image';
+        const generationMode = currentStageAsset?.url
+            ? 'Follow-up Edit'
+            : objectImages.length > 0 || characterImages.length > 0
+              ? 'Image to Image/Mixing'
+              : 'Text to Image';
         const lineageContext = getGenerationLineageContext({ mode: generationMode, editingInput });
 
         return {
@@ -229,15 +265,39 @@ export function useQueuedBatchWorkflow({
             lineageContext,
             finalObjectInputs: objectImages,
             finalCharacterInputs: characterImages,
+            batchSize,
+            aspectRatio,
+            imageSize,
+            style: imageStyle,
+            model: imageModel,
+            outputFormat,
+            structuredOutputMode,
+            temperature,
+            thinkingLevel,
+            includeThoughts,
+            googleSearch,
+            imageSearch,
+            displayName: buildQueuedBatchDisplayName(imageModel),
         };
     }, [
+        aspectRatio,
+        batchSize,
+        buildQueuedBatchDisplayName,
         characterImages,
         currentStageAsset?.url,
-        editorBaseAsset?.url,
         getGenerationLineageContext,
+        googleSearch,
+        imageModel,
+        imageSearch,
+        imageSize,
         imageStyle,
+        includeThoughts,
         objectImages,
+        outputFormat,
         prompt,
+        structuredOutputMode,
+        temperature,
+        thinkingLevel,
     ]);
 
     const mapRemoteQueuedJobToLocal = useCallback(
@@ -287,6 +347,94 @@ export function useQueuedBatchWorkflow({
         [],
     );
 
+    const submitQueuedBatchDraft = useCallback(
+        async (draft: QueuedBatchJobGenerationDraft) => {
+            if (!apiKeyReady) {
+                const connected = await handleApiKeyConnect();
+                if (!connected) {
+                    return;
+                }
+                const ready = await checkApiKey();
+                if (!ready) {
+                    return;
+                }
+                setApiKeyReady(true);
+            }
+
+            const localId = crypto.randomUUID();
+            const seed = {
+                localId,
+                prompt: draft.finalPrompt,
+                restoredFromSnapshot: false,
+                generationMode: draft.generationMode,
+                aspectRatio: draft.aspectRatio,
+                imageSize: draft.imageSize,
+                style: draft.style,
+                outputFormat: draft.outputFormat,
+                structuredOutputMode: draft.structuredOutputMode,
+                temperature: draft.temperature,
+                thinkingLevel: draft.thinkingLevel,
+                includeThoughts: draft.includeThoughts,
+                googleSearch: draft.googleSearch,
+                imageSearch: draft.imageSearch,
+                batchSize: draft.batchSize,
+                objectImageCount: draft.finalObjectInputs.length,
+                characterImageCount: draft.finalCharacterInputs.length,
+                importedAt: null,
+                parentHistoryId: draft.lineageContext?.parentHistoryId || null,
+                rootHistoryId: draft.lineageContext?.rootHistoryId || null,
+                sourceHistoryId: draft.lineageContext?.sourceHistoryId || null,
+                lineageAction: draft.lineageContext?.lineageAction || 'root',
+                lineageDepth: draft.lineageContext?.lineageDepth || 0,
+            } as const;
+
+            try {
+                const remoteJob = await submitQueuedBatchJob({
+                    prompt: draft.finalPrompt,
+                    aspectRatio: draft.aspectRatio,
+                    imageSize: draft.imageSize,
+                    style: draft.style,
+                    model: draft.model,
+                    editingInput: draft.editingInput,
+                    objectImageInputs: draft.finalObjectInputs,
+                    characterImageInputs: draft.finalCharacterInputs,
+                    outputFormat: draft.outputFormat,
+                    structuredOutputMode: draft.structuredOutputMode,
+                    temperature: draft.temperature,
+                    thinkingLevel: draft.thinkingLevel,
+                    includeThoughts: draft.includeThoughts,
+                    googleSearch: draft.googleSearch,
+                    imageSearch: draft.imageSearch,
+                    requestCount: draft.batchSize,
+                    displayName: draft.displayName,
+                });
+
+                upsertQueuedJob(mapRemoteQueuedJobToLocal(remoteJob, seed));
+                addLog(formatMessage('queuedBatchSubmittedLog', remoteJob.name));
+                showNotification(t('queuedBatchSubmittedNotice'), 'info');
+                if (draft.finalPrompt) {
+                    addPromptToHistory(draft.finalPrompt);
+                }
+            } catch (error: any) {
+                const message = error?.message || 'Queued batch job submission failed.';
+                addLog(formatMessage('queuedBatchSubmissionFailedLog', message));
+                showNotification(message, 'error');
+            }
+        },
+        [
+            addLog,
+            addPromptToHistory,
+            apiKeyReady,
+            formatMessage,
+            handleApiKeyConnect,
+            mapRemoteQueuedJobToLocal,
+            setApiKeyReady,
+            showNotification,
+            t,
+            upsertQueuedJob,
+        ],
+    );
+
     const handleQueueBatchJob = useCallback(async () => {
         const draft = buildQueuedJobGenerationDraft();
         if (!draft) {
@@ -294,55 +442,38 @@ export function useQueuedBatchWorkflow({
             return;
         }
 
-        if (!apiKeyReady) {
-            const connected = await handleApiKeyConnect();
-            if (!connected) {
+        await submitQueuedBatchDraft(draft);
+    }, [buildQueuedJobGenerationDraft, showNotification, submitQueuedBatchDraft, t]);
+
+    const handleQueueBatchJobFromEditor = useCallback(
+        async ({
+            prompt: editorPrompt,
+            editingInput,
+            batchSize: editorBatchSize,
+            imageSize: editorImageSize,
+            aspectRatio: editorAspectRatio,
+            objectImageInputs = [],
+            characterImageInputs = [],
+            generationMode = 'Editor Edit',
+        }: EditorQueuedBatchJobSubmission) => {
+            if (!editorPrompt.trim() || !editingInput) {
+                showNotification(t('errorNoPrompt'), 'error');
                 return;
             }
-            const ready = await checkApiKey();
-            if (!ready) {
-                return;
-            }
-            setApiKeyReady(true);
-        }
 
-        const localId = crypto.randomUUID();
-        const seed = {
-            localId,
-            prompt: draft.finalPrompt,
-            restoredFromSnapshot: false,
-            generationMode: draft.generationMode,
-            aspectRatio,
-            imageSize,
-            style: imageStyle,
-            outputFormat,
-            structuredOutputMode,
-            temperature,
-            thinkingLevel,
-            includeThoughts,
-            googleSearch,
-            imageSearch,
-            batchSize,
-            objectImageCount: draft.finalObjectInputs.length,
-            characterImageCount: draft.finalCharacterInputs.length,
-            importedAt: null,
-            parentHistoryId: draft.lineageContext?.parentHistoryId || null,
-            rootHistoryId: draft.lineageContext?.rootHistoryId || null,
-            sourceHistoryId: draft.lineageContext?.sourceHistoryId || null,
-            lineageAction: draft.lineageContext?.lineageAction || 'root',
-            lineageDepth: draft.lineageContext?.lineageDepth || 0,
-        } as const;
-
-        try {
-            const remoteJob = await submitQueuedBatchJob({
-                prompt: draft.finalPrompt,
-                aspectRatio,
-                imageSize,
-                style: imageStyle,
+            const lineageContext = getGenerationLineageContext({ mode: generationMode, editingInput });
+            await submitQueuedBatchDraft({
+                finalPrompt: editorPrompt,
+                editingInput,
+                generationMode,
+                lineageContext,
+                finalObjectInputs: objectImageInputs,
+                finalCharacterInputs: characterImageInputs,
+                batchSize: editorBatchSize,
+                aspectRatio: editorAspectRatio,
+                imageSize: editorImageSize,
+                style: 'None',
                 model: imageModel,
-                editingInput: draft.editingInput,
-                objectImageInputs: draft.finalObjectInputs,
-                characterImageInputs: draft.finalCharacterInputs,
                 outputFormat,
                 structuredOutputMode,
                 temperature,
@@ -350,47 +481,25 @@ export function useQueuedBatchWorkflow({
                 includeThoughts,
                 googleSearch,
                 imageSearch,
-                requestCount: batchSize,
-                displayName: `${getModelLabel(imageModel)} queued ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+                displayName: buildQueuedBatchDisplayName(imageModel),
             });
-
-            upsertQueuedJob(mapRemoteQueuedJobToLocal(remoteJob, seed));
-            addLog(formatMessage('queuedBatchSubmittedLog', remoteJob.name));
-            showNotification(t('queuedBatchSubmittedNotice'), 'info');
-            if (draft.finalPrompt) {
-                addPromptToHistory(draft.finalPrompt);
-            }
-        } catch (error: any) {
-            const message = error?.message || 'Queued batch job submission failed.';
-            addLog(formatMessage('queuedBatchSubmissionFailedLog', message));
-            showNotification(message, 'error');
-        }
-    }, [
-        addLog,
-        addPromptToHistory,
-        apiKeyReady,
-        aspectRatio,
-        batchSize,
-        buildQueuedJobGenerationDraft,
-        formatMessage,
-        getModelLabel,
-        googleSearch,
-        handleApiKeyConnect,
-        imageModel,
-        imageSearch,
-        imageSize,
-        imageStyle,
-        includeThoughts,
-        mapRemoteQueuedJobToLocal,
-        outputFormat,
-        structuredOutputMode,
-        setApiKeyReady,
-        showNotification,
-        t,
-        temperature,
-        thinkingLevel,
-        upsertQueuedJob,
-    ]);
+        },
+        [
+            buildQueuedBatchDisplayName,
+            getGenerationLineageContext,
+            googleSearch,
+            imageModel,
+            imageSearch,
+            includeThoughts,
+            outputFormat,
+            showNotification,
+            structuredOutputMode,
+            submitQueuedBatchDraft,
+            t,
+            temperature,
+            thinkingLevel,
+        ],
+    );
 
     const pollQueuedJob = useCallback(
         async (localId: string, options?: { silent?: boolean; reason?: 'manual' | 'auto' }) => {
@@ -760,6 +869,7 @@ export function useQueuedBatchWorkflow({
         queuedJobs,
         setQueuedJobs,
         handleQueueBatchJob,
+        handleQueueBatchJobFromEditor,
         handlePollQueuedJob,
         handlePollAllQueuedJobs,
         handleCancelQueuedJob,

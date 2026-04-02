@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { IMAGE_MODELS, MODEL_CAPABILITIES } from '../constants';
 import { MAX_DISPLAY_HISTORY, PROMPT_TEMPLATES, PromptHistoryItem } from '../hooks/usePromptHistory';
 import { Language } from '../utils/translations';
-import { AspectRatio, GeneratedImage, ImageModel, ImageSize, ImageStyle, StageAsset } from '../types';
-import Button from './Button';
+import { AspectRatio, GeneratedImage, ImageModel, ImageSize, ImageStyle } from '../types';
 import BatchSelector from './BatchSelector';
+import Button from './Button';
 import InfoTooltip from './InfoTooltip';
 import ImageUploader from './ImageUploader';
 import RatioSelector from './RatioSelector';
@@ -19,12 +19,15 @@ export type PickerSheet =
     | 'history'
     | 'templates'
     | 'styles'
+    | 'settings'
     | 'model'
     | 'ratio'
     | 'size'
     | 'batch'
     | 'references'
     | null;
+
+export type GenerationSettingsSheetVariant = 'full' | 'sketch';
 
 type WorkspacePickerSheetProps = {
     activePickerSheet: PickerSheet;
@@ -39,6 +42,7 @@ type WorkspacePickerSheetProps = {
     openPromptSheet: () => void;
     openTemplatesSheet: () => void;
     openHistorySheet: () => void;
+    openStylesSheet: () => void;
     openReferencesSheet: () => void;
     promptHistory: PromptHistoryItem[];
     removePrompt: (prompt: string) => void;
@@ -66,18 +70,9 @@ type WorkspacePickerSheetProps = {
     setImageSize: (size: ImageSize) => void;
     batchSize: number;
     setBatchSize: (size: number) => void;
+    settingsVariant: GenerationSettingsSheetVariant;
     objectImages: string[];
     characterImages: string[];
-    hasSketch: boolean;
-    editorBaseAsset: StageAsset | null;
-    currentStageAsset: StageAsset | null;
-    getStageOriginLabel: (origin?: StageAsset['origin']) => string;
-    getLineageActionLabel: (action?: GeneratedImage['lineageAction']) => string;
-    handleOpenSketchPad: () => void;
-    openUploadDialog: () => void;
-    activeViewerImage: string | null;
-    handleStageCurrentImageAsEditorBase: () => void;
-    handleClearEditorBaseAsset: () => void;
     setObjectImages: (nextImages: string[] | ((prev: string[]) => string[])) => void;
     isGenerating: boolean;
     showNotification: (message: string, type?: 'info' | 'error') => void;
@@ -110,6 +105,7 @@ export default function WorkspacePickerSheet({
     openPromptSheet,
     openTemplatesSheet,
     openHistorySheet,
+    openStylesSheet,
     openReferencesSheet,
     promptHistory,
     removePrompt,
@@ -137,18 +133,9 @@ export default function WorkspacePickerSheet({
     setImageSize,
     batchSize,
     setBatchSize,
+    settingsVariant,
     objectImages,
     characterImages,
-    hasSketch,
-    editorBaseAsset,
-    currentStageAsset,
-    getStageOriginLabel,
-    getLineageActionLabel,
-    handleOpenSketchPad,
-    openUploadDialog,
-    activeViewerImage,
-    handleStageCurrentImageAsEditorBase,
-    handleClearEditorBaseAsset,
     setObjectImages,
     isGenerating,
     showNotification,
@@ -156,6 +143,61 @@ export default function WorkspacePickerSheet({
     setCharacterImages,
     handleRemoveCharacterReference,
 }: WorkspacePickerSheetProps) {
+    const [settingsDraft, setSettingsDraft] = useState({
+        imageModel,
+        aspectRatio,
+        imageSize,
+        batchSize,
+    });
+
+    useEffect(() => {
+        if (activePickerSheet !== 'settings') {
+            return;
+        }
+
+        setSettingsDraft({
+            imageModel,
+            aspectRatio,
+            imageSize,
+            batchSize,
+        });
+    }, [activePickerSheet, aspectRatio, batchSize, imageModel, imageSize]);
+
+    const settingsDraftCapability = useMemo(
+        () => MODEL_CAPABILITIES[settingsDraft.imageModel],
+        [settingsDraft.imageModel],
+    );
+
+    useEffect(() => {
+        if (activePickerSheet !== 'settings') {
+            return;
+        }
+
+        setSettingsDraft((previous) => {
+            let nextDraft = previous;
+
+            if (!settingsDraftCapability.supportedRatios.includes(previous.aspectRatio)) {
+                nextDraft = {
+                    ...nextDraft,
+                    aspectRatio: settingsDraftCapability.supportedRatios[0] || '1:1',
+                };
+            }
+
+            if (
+                settingsVariant === 'full' &&
+                settingsDraftCapability.supportedSizes.length > 0 &&
+                !settingsDraftCapability.supportedSizes.includes(previous.imageSize)
+            ) {
+                nextDraft = {
+                    ...nextDraft,
+                    imageSize: settingsDraftCapability.supportedSizes[0],
+                };
+            }
+
+            return nextDraft;
+        });
+    }, [activePickerSheet, settingsDraftCapability, settingsVariant]);
+
     if (!activePickerSheet) {
         return null;
     }
@@ -180,6 +222,12 @@ export default function WorkspacePickerSheet({
             isActive: activePickerSheet === 'templates',
         },
         {
+            id: 'styles',
+            label: t('workspaceSheetTitleStyles'),
+            onClick: openStylesSheet,
+            isActive: activePickerSheet === 'styles',
+        },
+        {
             id: 'references',
             label: t('workspaceSheetTitleReferences'),
             onClick: openReferencesSheet,
@@ -197,6 +245,8 @@ export default function WorkspacePickerSheet({
         return t('modelGemini25Flash');
     };
 
+    const getModelTitleLabel = (model: ImageModel) => getModelLabel(model).replace(` (${model})`, '');
+
     const getModelSupportLabel = (model: ImageModel) => {
         if (MODEL_CAPABILITIES[model].supportsImageSearch) {
             return t('workspacePickerModelSupportImageSearch');
@@ -206,6 +256,30 @@ export default function WorkspacePickerSheet({
         }
         return t('workspacePickerModelSupportImageOnly');
     };
+
+    const handleApplyGenerationSettings = () => {
+        setImageModel(settingsDraft.imageModel);
+        setAspectRatio(settingsDraft.aspectRatio);
+
+        if (settingsVariant === 'full') {
+            if (settingsDraftCapability.supportedSizes.length > 0) {
+                setImageSize(settingsDraft.imageSize);
+            }
+            setBatchSize(settingsDraft.batchSize);
+        }
+
+        closePickerSheet();
+    };
+
+    const renderModelOptionContent = (model: ImageModel) => (
+        <>
+            <div className="font-semibold leading-tight">{getModelTitleLabel(model)}</div>
+            <div className="mt-1 text-xs font-semibold leading-tight opacity-80">{model}</div>
+            <div className="mt-2 text-[11px] leading-5 text-gray-500 dark:text-gray-400">
+                {getModelSupportLabel(model)}
+            </div>
+        </>
+    );
 
     const renderPickerSheetContent = () => {
         if (activePickerSheet === 'prompt') {
@@ -236,6 +310,9 @@ export default function WorkspacePickerSheet({
                         </Button>
                         <Button variant="secondary" onClick={openHistorySheet}>
                             {t('workspacePickerPromptHistoryTitle')}
+                        </Button>
+                        <Button variant="secondary" onClick={openStylesSheet}>
+                            {t('workspaceSheetTitleStyles')}
                         </Button>
                     </div>
                 </div>
@@ -333,6 +410,106 @@ export default function WorkspacePickerSheet({
             );
         }
 
+        if (activePickerSheet === 'settings') {
+            return (
+                <div data-testid="workspace-generation-settings-sheet" className="space-y-4">
+                    <div className="flex flex-col gap-4 lg:flex-row">
+                        <div
+                            data-testid="workspace-generation-settings-model-pane"
+                            className="nbu-overlay-card-neutral w-full rounded-[28px] border p-4 lg:w-[320px] lg:shrink-0"
+                        >
+                            <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
+                                {t('modelSelect')}
+                            </div>
+                            <div className="mt-3 space-y-2">
+                                {IMAGE_MODELS.map((model) => {
+                                    const isActive = model === settingsDraft.imageModel;
+                                    return (
+                                        <button
+                                            key={model}
+                                            type="button"
+                                            onClick={() =>
+                                                setSettingsDraft((previous) => ({
+                                                    ...previous,
+                                                    imageModel: model,
+                                                }))
+                                            }
+                                            className={`w-full rounded-2xl border px-4 py-4 text-left transition-colors ${
+                                                isActive
+                                                    ? 'border-amber-500 bg-amber-50 text-amber-700 dark:border-amber-500 dark:bg-amber-950/30 dark:text-amber-200'
+                                                    : 'nbu-overlay-card-neutral text-gray-800 hover:border-gray-300 dark:text-gray-200 dark:hover:border-gray-700'
+                                            }`}
+                                        >
+                                            {renderModelOptionContent(model)}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div
+                            data-testid="workspace-generation-settings-controls-pane"
+                            className="flex min-w-0 flex-1 flex-col gap-4"
+                        >
+                            <div className="nbu-overlay-card-neutral rounded-[28px] border p-4">
+                                <RatioSelector
+                                    selectedRatio={settingsDraft.aspectRatio}
+                                    onSelect={(nextRatio) =>
+                                        setSettingsDraft((previous) => ({
+                                            ...previous,
+                                            aspectRatio: nextRatio,
+                                        }))
+                                    }
+                                    currentLanguage={currentLanguage}
+                                    supportedRatios={settingsDraftCapability.supportedRatios}
+                                    label=""
+                                />
+                            </div>
+
+                            {settingsVariant === 'full' && settingsDraftCapability.supportedSizes.length > 0 ? (
+                                <div className="nbu-overlay-card-neutral rounded-[28px] border p-4">
+                                    <SizeSelector
+                                        selectedSize={settingsDraft.imageSize}
+                                        onSelect={(nextSize) =>
+                                            setSettingsDraft((previous) => ({
+                                                ...previous,
+                                                imageSize: nextSize,
+                                            }))
+                                        }
+                                        currentLanguage={currentLanguage}
+                                        supportedSizes={settingsDraftCapability.supportedSizes}
+                                        label=""
+                                    />
+                                </div>
+                            ) : null}
+
+                            {settingsVariant === 'full' ? (
+                                <div className="nbu-overlay-card-neutral rounded-[28px] border p-4">
+                                    <BatchSelector
+                                        batchSize={settingsDraft.batchSize}
+                                        onSelect={(nextBatchSize) =>
+                                            setSettingsDraft((previous) => ({
+                                                ...previous,
+                                                batchSize: nextBatchSize,
+                                            }))
+                                        }
+                                        currentLanguage={currentLanguage}
+                                        label=""
+                                    />
+                                </div>
+                            ) : null}
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                        <Button data-testid="generation-settings-apply" onClick={handleApplyGenerationSettings}>
+                            {t('generationSettingsApply')}
+                        </Button>
+                    </div>
+                </div>
+            );
+        }
+
         if (activePickerSheet === 'model') {
             return (
                 <div className="space-y-2">
@@ -347,10 +524,7 @@ export default function WorkspacePickerSheet({
                                 }}
                                 className={`w-full rounded-2xl border px-4 py-4 text-left transition-colors ${isActive ? 'border-amber-500 bg-amber-50 text-amber-700 dark:border-amber-500 dark:bg-amber-950/30 dark:text-amber-200' : 'nbu-overlay-card-neutral text-gray-800 hover:border-gray-300 dark:text-gray-200 dark:hover:border-gray-700'}`}
                             >
-                                <div className="font-semibold">{getModelLabel(model)}</div>
-                                <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                    {getModelSupportLabel(model)}
-                                </div>
+                                {renderModelOptionContent(model)}
                             </button>
                         );
                     })}
@@ -405,107 +579,6 @@ export default function WorkspacePickerSheet({
         if (activePickerSheet === 'references') {
             return (
                 <div className="space-y-4">
-                    <div className="grid gap-3 md:grid-cols-3">
-                        <div className="nbu-overlay-card-neutral rounded-2xl border px-3 py-2.5 text-sm">
-                            <div className="text-xs font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
-                                {t('workspacePickerObjects')}
-                            </div>
-                            <div className="mt-2 text-[17px] font-semibold text-gray-900 dark:text-gray-100">
-                                {objectImages.length} / {capability.maxObjects}
-                            </div>
-                            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                {hasSketch ? t('workspacePickerHasSketchAsset') : t('workspacePickerNoSketchAsset')}
-                            </div>
-                        </div>
-                        <div
-                            data-testid="picker-references-character-card"
-                            className="nbu-overlay-card-neutral rounded-2xl border px-3 py-2.5 text-sm"
-                        >
-                            <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
-                                    <span>{t('workspacePickerCharacters')}</span>
-                                    <InfoTooltip
-                                        dataTestId="picker-references-character-hint"
-                                        buttonLabel={t('workspacePickerCharacterHint')}
-                                        content={t('workspacePickerCharacterHint')}
-                                    />
-                                </div>
-                                <div className="mt-2 text-[17px] font-semibold text-gray-900 dark:text-gray-100">
-                                    {characterImages.length} / {capability.maxCharacters}
-                                </div>
-                            </div>
-                        </div>
-                        <div
-                            data-testid="picker-references-editor-base-card"
-                            className="nbu-overlay-card-neutral rounded-2xl border px-4 py-3 text-sm"
-                        >
-                            <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
-                                    <span>{t('workspacePickerEditorBase')}</span>
-                                    <InfoTooltip
-                                        dataTestId="picker-references-editor-base-hint"
-                                        buttonLabel={t('workspacePickerEditorBaseHint')}
-                                        content={t('workspacePickerEditorBaseHint')}
-                                    />
-                                </div>
-                                <div className="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                    {editorBaseAsset
-                                        ? getStageOriginLabel(editorBaseAsset.origin)
-                                        : t('stageOriginNotStaged')}
-                                </div>
-                            </div>
-                        </div>
-                        <div
-                            data-testid="picker-references-stage-source-card"
-                            className="nbu-overlay-card-neutral rounded-2xl border px-4 py-3 text-sm md:col-span-3"
-                        >
-                            <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
-                                    <span>{t('workspacePickerStageSource')}</span>
-                                    <InfoTooltip
-                                        dataTestId="picker-references-stage-source-hint"
-                                        buttonLabel={t('workspacePickerStageSourceHint')}
-                                        content={t('workspacePickerStageSourceHint')}
-                                    />
-                                </div>
-                                <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-900 dark:text-gray-100">
-                                    <span className="rounded-full border border-gray-200 px-2.5 py-1 text-xs dark:border-gray-700">
-                                        {getStageOriginLabel(currentStageAsset?.origin)}
-                                    </span>
-                                    {currentStageAsset?.sourceHistoryId && (
-                                        <span className="rounded-full border border-gray-200 px-2.5 py-1 text-xs dark:border-gray-700">
-                                            {t('workspacePickerHistoryLinked')}
-                                        </span>
-                                    )}
-                                    {currentStageAsset?.lineageAction && (
-                                        <span className="rounded-full border border-gray-200 px-2.5 py-1 text-xs dark:border-gray-700">
-                                            {getLineageActionLabel(currentStageAsset.lineageAction)}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                        <Button variant="secondary" onClick={handleOpenSketchPad}>
-                            {t('workspacePickerOpenSketchPad')}
-                        </Button>
-                        <Button variant="secondary" onClick={openUploadDialog}>
-                            {t('workspacePickerUploadBaseImage')}
-                        </Button>
-                        {activeViewerImage && (
-                            <Button variant="secondary" onClick={handleStageCurrentImageAsEditorBase}>
-                                {t('workspacePickerUseCurrentStageAsEditorBase')}
-                            </Button>
-                        )}
-                        {editorBaseAsset && (
-                            <Button variant="secondary" onClick={handleClearEditorBaseAsset}>
-                                {t('workspacePickerClearEditorBase')}
-                            </Button>
-                        )}
-                    </div>
-
                     <ImageUploader
                         images={objectImages}
                         onImagesChange={setObjectImages}
@@ -549,10 +622,12 @@ export default function WorkspacePickerSheet({
             closeButtonTestId="picker-sheet-close"
             title={activeSheetTitle}
             headerExtra={
-                <div className="mt-3 flex flex-wrap items-start justify-between gap-2.5">
-                    <WorkspaceSecondaryNav items={secondaryNavItems} className="min-w-0 flex-1" />
-                    <ThemeToggle currentLanguage={currentLanguage} className="h-8 w-8 shadow-none" />
-                </div>
+                activePickerSheet === 'settings' ? undefined : (
+                    <div className="mt-3 flex flex-wrap items-start justify-between gap-2.5">
+                        <WorkspaceSecondaryNav items={secondaryNavItems} className="min-w-0 flex-1" />
+                        <ThemeToggle currentLanguage={currentLanguage} className="h-8 w-8 shadow-none" />
+                    </div>
+                )
             }
             backdropClassName="bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.18),_transparent_34%),rgba(15,23,42,0.74)] backdrop-blur-md"
             panelClassName="nbu-overlay-panel-neutral max-h-[85vh]"

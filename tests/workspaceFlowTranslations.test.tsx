@@ -207,7 +207,6 @@ const composerControlChromeKeys = [
     'composerEnterNewline',
     'composerVisibilityVisible',
     'composerVisibilityHidden',
-    'composerActionPanelEyebrow',
     'composerActionPanelTitle',
     'composerActionPanelDesc',
     'composerAdvancedEyebrow',
@@ -334,7 +333,6 @@ const phaseEGroup2ShellParityKeys = [
     'composerEnterNewline',
     'composerVisibilityVisible',
     'composerVisibilityHidden',
-    'composerActionPanelEyebrow',
     'composerActionPanelTitle',
     'composerActionPanelDesc',
     'composerAdvancedEyebrow',
@@ -404,13 +402,9 @@ const phaseEGroup2ShellParityKeys = [
 ] as const;
 
 const phaseEGroup3ShellParityKeys = [
-    'composerActionPanelEyebrow',
     'workspacePickerStageSource',
     'workspacePickerStageSourceHint',
-    'workspacePickerEditorBase',
-    'workspacePickerEditorBaseHint',
     'workspaceViewerEditCurrentImage',
-    'workspaceViewerContinueEditing',
     'workspaceViewerUploadBaseToEdit',
     'surfaceSharedControlsReferenceDetail',
     'stageOriginNotStaged',
@@ -419,7 +413,6 @@ const phaseEGroup3ShellParityKeys = [
     'stageOriginGenerated',
     'stageOriginHistory',
     'stageOriginEditor',
-    'workspacePickerUploadBaseImage',
     'workspacePickerOpenSketchPad',
     'workspacePickerObjects',
     'workspacePickerCharacters',
@@ -476,11 +469,7 @@ const historyFilmstripFallbackSensitiveKeys = [
     'historyFilmstripEmpty',
 ] as const;
 
-const workspaceSideToolFallbackSensitiveKeys = [
-    'workspaceSideToolTitle',
-    'workspaceSideToolCurrentImage',
-    'workspaceSideToolBaseImage',
-] as const;
+const workspaceSideToolFallbackSensitiveKeys = ['workspaceSideToolTitle', 'workspaceSideToolCurrentImage'] as const;
 
 const workspaceInsightsSidebarLabelFallbackSensitiveKeys = [
     'workspaceInsightsEyebrow',
@@ -1370,7 +1359,6 @@ const zhTwComposerControlsBaseline = {
     composerEnterSends: '按輸入鍵送出',
     composerEnterNewline: '按輸入鍵換行',
     composerQueueBatchJob: '排入批次工作',
-    composerActionPanelEyebrow: '操作',
     composerActionPanelTitle: '建立',
     composerActionPanelDesc: '生成仍是主要動作，後續編修與工作區操作保持靠近，但語氣更收斂。',
     composerAdvancedEyebrow: '深度控制',
@@ -1380,7 +1368,6 @@ const zhCnComposerControlsBaseline = {
     composerEnterSends: '按回车键发送',
     composerEnterNewline: '按回车键换行',
     composerQueueBatchJob: '加入批处理队列',
-    composerActionPanelEyebrow: '操作',
     composerActionPanelTitle: '创建',
     composerActionPanelDesc: '生成仍然是主动作，后续编辑和工作区操作保持靠近，但语气更克制。',
     composerAdvancedEyebrow: '深度控制',
@@ -1394,7 +1381,6 @@ const jaComposerControlChromeBaseline = {
     composerEnterNewline: 'Enterで改行',
     composerVisibilityVisible: '表示',
     composerVisibilityHidden: '非表示',
-    composerActionPanelEyebrow: 'アクション',
     composerActionPanelTitle: '作成',
     composerActionPanelDesc:
         '生成を主役に置いたまま、フォローアップとワークスペース操作を近くにまとめつつ控えめに扱います。',
@@ -1409,7 +1395,6 @@ const koComposerControlChromeBaseline = {
     composerEnterNewline: 'Enter로 줄바꿈',
     composerVisibilityVisible: '표시',
     composerVisibilityHidden: '숨김',
-    composerActionPanelEyebrow: '작업',
     composerActionPanelTitle: '생성',
     composerActionPanelDesc:
         '생성을 중심에 두고, 후속 편집과 워크스페이스 작업은 가까이에 두되 더 조용하게 유지합니다.',
@@ -1424,7 +1409,6 @@ const esComposerControlChromeBaseline = {
     composerEnterNewline: 'Enter inserta salto de linea',
     composerVisibilityVisible: 'Se muestra',
     composerVisibilityHidden: 'Oculto',
-    composerActionPanelEyebrow: 'Acciones',
     composerActionPanelTitle: 'Crear',
     composerActionPanelDesc:
         'Generar sigue siendo lo principal. Las acciones de seguimiento y del espacio de trabajo se mantienen cerca, pero mas discretas.',
@@ -1439,7 +1423,6 @@ const frComposerControlChromeBaseline = {
     composerEnterNewline: 'Entrer pour un saut de ligne',
     composerVisibilityVisible: 'Affiché',
     composerVisibilityHidden: 'Masque',
-    composerActionPanelEyebrow: 'Commandes',
     composerActionPanelTitle: 'Creer',
     composerActionPanelDesc:
         'La generation reste prioritaire. Les actions de suivi et d espace de travail restent proches, mais plus discretes.',
@@ -1454,7 +1437,6 @@ const deComposerControlChromeBaseline = {
     composerEnterNewline: 'Enter fur Zeilenumbruch',
     composerVisibilityVisible: 'Sichtbar',
     composerVisibilityHidden: 'Ausgeblendet',
-    composerActionPanelEyebrow: 'Aktionen',
     composerActionPanelTitle: 'Erstellen',
     composerActionPanelDesc:
         'Generieren bleibt die Hauptaktion. Folgeaktionen und Arbeitsbereichsaktionen bleiben nah dran, aber leiser.',
@@ -1469,7 +1451,6 @@ const ruComposerControlChromeBaseline = {
     composerEnterNewline: 'Enter переводит строку',
     composerVisibilityVisible: 'Видимо',
     composerVisibilityHidden: 'Скрыто',
-    composerActionPanelEyebrow: 'Действия',
     composerActionPanelTitle: 'Создать',
     composerActionPanelDesc:
         'Генерация остается основным действием. Последующие и рабочие действия остаются рядом, но звучат тише.',
@@ -1565,7 +1546,7 @@ const zhCnGroundingGuideSentenceBaseline = {
 } as const;
 
 const zhTwQueuedBatchWordingBaseline = {
-    queueBatchModeEditor: '這會以目前的編輯底圖與已暫存參考圖送出一個官方編輯批次工作。',
+    queueBatchModeEditor: '這會以目前編輯輸入影像與已暫存參考圖送出一個官方編輯批次工作。',
     queueBatchModeStage: '這會以目前的階段圖像與已暫存參考圖送出一個官方後續延伸批次工作。',
     queueBatchModeReferences: '這會以目前提示詞與參考圖托盤送出一個官方參考驅動批次工作。',
     queueBatchModePromptOnly: '這會送出一個僅依提示詞的官方批次工作。',
@@ -1579,7 +1560,7 @@ const zhTwQueuedBatchWordingBaseline = {
 } as const;
 
 const zhCnQueuedBatchWordingBaseline = {
-    queueBatchModeEditor: '这会以当前编辑底图和已暂存参考图提交一个官方编辑批处理任务。',
+    queueBatchModeEditor: '这会以当前编辑输入图像和已暂存参考图提交一个官方编辑批处理任务。',
     queueBatchModeStage: '这会以当前阶段图像和已暂存参考图提交一个官方后续延展批处理任务。',
     queueBatchModeReferences: '这会以当前提示词和参考图托盘提交一个官方参考驱动批处理任务。',
     queueBatchModePromptOnly: '这会提交一个仅基于提示词的官方批处理任务。',
@@ -1762,19 +1743,15 @@ const zhCnWorkspacePickerSupportBaseline = {
 } as const;
 
 const zhTwWorkspacePickerStageSourceBaseline = {
-    workspacePickerEditorBaseHint: '可直接上傳一張，或重用目前的階段圖像。',
     workspacePickerStageSource: '階段來源',
     workspacePickerStageSourceHint:
         '目前階段與從歷史重新開啟的圖，現在都會進入同一套後續延伸來源模型，供編輯動作重用。',
-    workspacePickerUseCurrentStageAsEditorBase: '將目前階段設為編輯底圖',
 } as const;
 
 const zhCnWorkspacePickerStageSourceBaseline = {
-    workspacePickerEditorBaseHint: '可直接上传一张，或复用当前的阶段图像。',
     workspacePickerStageSource: '阶段来源',
     workspacePickerStageSourceHint:
         '当前阶段与从历史重新打开的图像，现在都会进入同一套后续延展来源模型，供编辑动作复用。',
-    workspacePickerUseCurrentStageAsEditorBase: '将当前阶段设为编辑底图',
 } as const;
 
 const zhTwWorkspacePickerHelperBaseline = {
@@ -2888,7 +2865,6 @@ const ruHistoryFilmstripBaseline = {
 const englishWorkspaceSideToolBaseline = {
     workspaceSideToolTitle: 'Image Tools',
     workspaceSideToolCurrentImage: 'Current image',
-    workspaceSideToolBaseImage: 'Base image',
 } as const;
 
 const jaWorkspaceInsightsSidebarLabelBaseline = {
@@ -3943,8 +3919,6 @@ const ruLineageRestoreBaseline = {
 const jaPickerViewerBaseline = {
     workspacePickerSharedPrompt: '共有プロンプト',
     workspacePickerSharedPromptPlaceholder: 'ここで共有コンポーザープロンプトを更新します。',
-    workspacePickerEditorBase: 'エディターベース',
-    workspacePickerEditorBaseHint: '直接アップロードするか、現在のステージ画像を再利用できます。',
     workspaceViewerTitle: 'ビューアー',
     workspaceViewerDesc: '現在のステージ画像、結果テキスト、由来情報を一か所で確認します。',
     workspaceViewerResultText: '結果テキスト',
@@ -3959,8 +3933,6 @@ const jaPickerViewerBaseline = {
 const koPickerViewerBaseline = {
     workspacePickerSharedPrompt: '공유 프롬프트',
     workspacePickerSharedPromptPlaceholder: '여기에서 공유 컴포저 프롬프트를 업데이트합니다.',
-    workspacePickerEditorBase: '에디터 베이스',
-    workspacePickerEditorBaseHint: '직접 업로드하거나 현재 스테이지 이미지를 재사용할 수 있습니다.',
     workspaceViewerTitle: '뷰어',
     workspaceViewerDesc: '현재 스테이지 이미지, 결과 텍스트, 출처 정보를 한곳에서 확인합니다.',
     workspaceViewerResultText: '결과 텍스트',
@@ -3975,8 +3947,6 @@ const koPickerViewerBaseline = {
 const esPickerViewerBaseline = {
     workspacePickerSharedPrompt: 'Prompt compartido',
     workspacePickerSharedPromptPlaceholder: 'Actualiza aqui el prompt compartido del compositor.',
-    workspacePickerEditorBase: 'Base del editor',
-    workspacePickerEditorBaseHint: 'Sube una imagen directamente o reutiliza la imagen actual del escenario.',
     workspaceViewerTitle: 'Visor',
     workspaceViewerDesc:
         'Revisa en un solo lugar la imagen actual del escenario, el texto de resultado y la procedencia.',
@@ -3992,8 +3962,6 @@ const esPickerViewerBaseline = {
 const frPickerViewerBaseline = {
     workspacePickerSharedPrompt: 'Prompt partage',
     workspacePickerSharedPromptPlaceholder: 'Mettez a jour ici le prompt partage du compositeur.',
-    workspacePickerEditorBase: "Base de l'editeur",
-    workspacePickerEditorBaseHint: "Televersez-en une directement ou reutilisez l'image actuelle de la scene.",
     workspaceViewerTitle: 'Visualiseur',
     workspaceViewerDesc:
         "Inspectez en un seul endroit l'image actuelle de la scene, le texte de resultat et la provenance.",
@@ -4010,8 +3978,6 @@ const frPickerViewerBaseline = {
 const dePickerViewerBaseline = {
     workspacePickerSharedPrompt: 'Gemeinsamer Prompt',
     workspacePickerSharedPromptPlaceholder: 'Aktualisieren Sie hier den gemeinsamen Kompositions-Prompt.',
-    workspacePickerEditorBase: 'Editor-Basis',
-    workspacePickerEditorBaseHint: 'Laden Sie direkt ein Bild hoch oder verwenden Sie das aktuelle Stufenbild erneut.',
     workspaceViewerTitle: 'Betrachter',
     workspaceViewerDesc: 'Prufen Sie aktuelles Stufenbild, Ergebnistext und Herkunft an einem Ort.',
     workspaceViewerResultText: 'Ergebnistext',
@@ -4027,8 +3993,6 @@ const dePickerViewerBaseline = {
 const ruPickerViewerBaseline = {
     workspacePickerSharedPrompt: 'Общий промпт',
     workspacePickerSharedPromptPlaceholder: 'Обновите здесь общий промпт компоновщика.',
-    workspacePickerEditorBase: 'База редактора',
-    workspacePickerEditorBaseHint: 'Загрузите изображение напрямую или повторно используйте текущее изображение сцены.',
     workspaceViewerTitle: 'Просмотр',
     workspaceViewerDesc:
         'Просматривайте текущее изображение сцены, текст результата и сведения об источнике в одном месте.',
@@ -4061,9 +4025,6 @@ const jaPickerSheetSurfaceBaseline = {
     workspacePickerStageSourceHint:
         '現在のステージと履歴から再開した画像は、編集アクションで再利用できる同じ後続ソースモデルに送られます。',
     workspacePickerOpenSketchPad: 'スケッチパッドを開く',
-    workspacePickerUploadBaseImage: 'ベース画像をアップロード',
-    workspacePickerUseCurrentStageAsEditorBase: '現在のステージをエディターベースとして使う',
-    workspacePickerClearEditorBase: 'エディターベースをクリア',
     workspacePickerLoading: 'ピッカーシートを読み込み中...',
     workspacePickerCapabilityHint: 'モデルが対応しない機能のコントロールは自動的に非表示になります。',
     workspaceSheetTitlePrompt: '共有プロンプト',
@@ -4099,9 +4060,6 @@ const koPickerSheetSurfaceBaseline = {
     workspacePickerStageSourceHint:
         '현재 스테이지와 기록에서 다시 연 이미지는 이제 편집 동작에서 재사용할 수 있는 동일한 후속 소스 모델로 전달됩니다.',
     workspacePickerOpenSketchPad: '스케치패드 열기',
-    workspacePickerUploadBaseImage: '베이스 이미지 업로드',
-    workspacePickerUseCurrentStageAsEditorBase: '현재 스테이지를 에디터 베이스로 사용',
-    workspacePickerClearEditorBase: '에디터 베이스 지우기',
     workspacePickerLoading: '피커 시트를 불러오는 중...',
     workspacePickerCapabilityHint: '모델이 지원하지 않는 기능 제어는 자동으로 숨겨집니다.',
     workspaceSheetTitlePrompt: '공유 프롬프트',
@@ -4137,9 +4095,6 @@ const esPickerSheetSurfaceBaseline = {
     workspacePickerStageSourceHint:
         'El escenario actual y las reaperturas desde el historial ahora alimentan el mismo modelo de origen para seguimientos que pueden reutilizar las acciones del editor.',
     workspacePickerOpenSketchPad: 'Abrir SketchPad',
-    workspacePickerUploadBaseImage: 'Subir imagen base',
-    workspacePickerUseCurrentStageAsEditorBase: 'Usar el escenario actual como base del editor',
-    workspacePickerClearEditorBase: 'Limpiar base del editor',
     workspacePickerLoading: 'Cargando panel del selector...',
     workspacePickerCapabilityHint: 'Los controles segun capacidad se ocultan cuando el modelo no los admite.',
     workspaceSheetTitlePrompt: 'Prompt compartido',
@@ -4175,9 +4130,6 @@ const frPickerSheetSurfaceBaseline = {
     workspacePickerStageSourceHint:
         "La scene actuelle et les reouvertures depuis l'historique alimentent maintenant le meme modele source de suivi, reutilisable par les actions de l'editeur.",
     workspacePickerOpenSketchPad: 'Ouvrir SketchPad',
-    workspacePickerUploadBaseImage: "Televerser l'image de base",
-    workspacePickerUseCurrentStageAsEditorBase: "Utiliser la scene actuelle comme base de l'editeur",
-    workspacePickerClearEditorBase: "Effacer la base de l'editeur",
     workspacePickerLoading: 'Chargement du panneau du selecteur...',
     workspacePickerCapabilityHint:
         'Les controles adaptes aux capacites restent caches quand le modele ne les prend pas en charge.',
@@ -4214,9 +4166,6 @@ const dePickerSheetSurfaceBaseline = {
     workspacePickerStageSourceHint:
         'Aktuelle Stufe und erneut aus dem Verlauf geoffnete Bilder speisen jetzt dasselbe Folgequellmodell, das Editor-Aktionen wiederverwenden konnen.',
     workspacePickerOpenSketchPad: 'SketchPad offnen',
-    workspacePickerUploadBaseImage: 'Basisbild hochladen',
-    workspacePickerUseCurrentStageAsEditorBase: 'Aktuelle Stufe als Editor-Basis verwenden',
-    workspacePickerClearEditorBase: 'Editor-Basis loschen',
     workspacePickerLoading: 'Picker-Fenster wird geladen...',
     workspacePickerCapabilityHint:
         'Fahigkeitsbezogene Steuerelemente bleiben verborgen, wenn das Modell sie nicht unterstutzt.',
@@ -4253,9 +4202,6 @@ const ruPickerSheetSurfaceBaseline = {
     workspacePickerStageSourceHint:
         'Текущая сцена и повторно открытые из истории изображения теперь подают данные в одну и ту же модель источника продолжения, которую могут повторно использовать действия редактора.',
     workspacePickerOpenSketchPad: 'Открыть SketchPad',
-    workspacePickerUploadBaseImage: 'Загрузить базовое изображение',
-    workspacePickerUseCurrentStageAsEditorBase: 'Использовать текущую сцену как базу редактора',
-    workspacePickerClearEditorBase: 'Очистить базу редактора',
     workspacePickerLoading: 'Загрузка панели выбора...',
     workspacePickerCapabilityHint:
         'Элементы управления по возможностям автоматически скрываются, если модель их не поддерживает.',

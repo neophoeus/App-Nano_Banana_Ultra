@@ -2,7 +2,6 @@ import { useCallback, useMemo } from 'react';
 import { GeneratedImage, QueuedBatchJob, StageAsset, WorkspaceSessionState } from '../types';
 
 type UseQueuedBatchPresentationArgs = {
-    editorBaseAsset: StageAsset | null;
     currentStageAsset: StageAsset | null;
     objectImageCount: number;
     characterImageCount: number;
@@ -26,7 +25,6 @@ const sortQueuedBatchHistoryItems = (left: GeneratedImage, right: GeneratedImage
 };
 
 export function useQueuedBatchPresentation({
-    editorBaseAsset,
     currentStageAsset,
     objectImageCount,
     characterImageCount,
@@ -35,10 +33,6 @@ export function useQueuedBatchPresentation({
     t,
 }: UseQueuedBatchPresentationArgs) {
     const queueBatchModeSummary = useMemo(() => {
-        if (editorBaseAsset?.url) {
-            return t('queueBatchModeEditor');
-        }
-
         if (currentStageAsset?.url) {
             return t('queueBatchModeStage');
         }
@@ -48,7 +42,7 @@ export function useQueuedBatchPresentation({
         }
 
         return t('queueBatchModePromptOnly');
-    }, [characterImageCount, currentStageAsset?.url, editorBaseAsset?.url, objectImageCount, t]);
+    }, [characterImageCount, currentStageAsset?.url, objectImageCount, t]);
 
     const queueBatchConversationNotice = useMemo(
         () =>

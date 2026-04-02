@@ -1522,6 +1522,8 @@ const openFreshWorkspace = async (page: Page) => {
 };
 
 const installQueuedBatchGetFixtureRoute = async (page: Page, snapshot: Record<string, unknown>) => {
+    await page.unroute('**/api/batches/get');
+
     const queuedJobs = Array.isArray(snapshot.queuedJobs)
         ? (snapshot.queuedJobs as Array<Record<string, unknown>>)
         : [];
@@ -1551,10 +1553,19 @@ const installQueuedBatchGetFixtureRoute = async (page: Page, snapshot: Record<st
 
     await page.route('**/api/batches/get', async (route) => {
         const payload = route.request().postDataJSON() as { name?: string } | null;
-        const job = payload?.name ? jobByName.get(payload.name) : undefined;
+        const requestedName = typeof payload?.name === 'string' ? payload.name : null;
+        const job = requestedName ? jobByName.get(requestedName) : undefined;
 
         if (!job) {
-            await route.fallback();
+            await route.fulfill({
+                status: 404,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    error: requestedName
+                        ? `Missing queued batch fixture for ${requestedName}.`
+                        : 'Missing batch job name.',
+                }),
+            });
             return;
         }
 
@@ -1567,6 +1578,7 @@ const installQueuedBatchGetFixtureRoute = async (page: Page, snapshot: Record<st
 };
 
 const openWorkspaceWithSnapshot = async (page: Page, snapshot: Record<string, unknown>) => {
+    await installQueuedBatchGetFixtureRoute(page, snapshot);
     await page.addInitScript((nextSnapshot) => {
         localStorage.clear();
         localStorage.setItem('nbu_workspaceSnapshot', JSON.stringify(nextSnapshot));
@@ -1577,6 +1589,7 @@ const openWorkspaceWithSnapshot = async (page: Page, snapshot: Record<string, un
 };
 
 const openWorkspaceWithSnapshotQuotaFailure = async (page: Page, snapshot: Record<string, unknown>) => {
+    await installQueuedBatchGetFixtureRoute(page, snapshot);
     await page.addInitScript((nextSnapshot) => {
         localStorage.clear();
 
@@ -1614,7 +1627,7 @@ const openEditorFromUpload = async (page: Page, promptValue: string) => {
     await expect(page.getByTestId('image-editor')).toBeVisible();
     await openSharedControlsFromSurface(page);
     await page.getByTestId('shared-control-prompt').click();
-    await expect(page.getByTestId('shared-prompt-input')).toHaveValue(promptValue);
+    await expect(page.getByTestId('shared-prompt-input')).toHaveValue('');
 };
 
 const closeSharedPromptSheet = async (page: Page) => {
@@ -1716,10 +1729,10 @@ test.describe('workspace restore flows', () => {
         await expect(page.getByTestId('image-editor')).toBeVisible();
         await openSharedControlsFromSurface(page);
         await expect(page.getByTestId('shared-controls-panel')).toContainText(
-            tt('surfaceSharedControlsStateDesc', tt('editorTitle')),
+            tt('surfaceSharedControlsStateDescEditor', tt('editorTitle')),
         );
         await expect(page.getByTestId('shared-controls-panel')).toContainText(tt('surfaceSharedControlsCurrentPrompt'));
-        await expect(page.getByTestId('shared-controls-panel')).toContainText(editorSharedControlsPrompt);
+        await expect(page.getByTestId('shared-controls-panel')).toContainText(tt('workspaceSurfacePromptEmpty'));
         await expect(page.getByTestId('shared-controls-panel')).toContainText(tt('surfaceSharedControlsWorkspace'));
         await expect(page.getByTestId('shared-controls-panel')).toContainText(tt('editorTitle'));
     });
@@ -1857,13 +1870,16 @@ test.describe('workspace restore flows', () => {
         await page.getByTestId('editor-close').click();
 
         await expect(page.getByTestId('image-editor')).toHaveCount(0);
-        await expect(composer(page)).toHaveValue('Updated prompt from editor');
+        await expect(composer(page)).toHaveValue('Shared prompt from main composer');
 
-        await page.locator('[data-testid="side-tools-open-editor"]:visible').click();
+        await expect(page.locator('[data-testid="side-tools-open-editor"]:visible')).toContainText(
+            tt('workspaceViewerUploadBaseToEdit'),
+        );
+        await page.locator('#global-upload-input').setInputFiles(editorSharedContextFixturePath);
         await expect(page.getByTestId('image-editor')).toBeVisible();
         await page.getByTestId('shared-controls-toggle').click();
         await page.getByTestId('shared-control-prompt').click();
-        await expect(page.getByTestId('shared-prompt-input')).toHaveValue('Updated prompt from editor');
+        await expect(page.getByTestId('shared-prompt-input')).toHaveValue('');
     });
 
     test('editor discard restores shared composer context after local canvas edits', async ({ page }) => {
@@ -1920,8 +1936,10 @@ test.describe('workspace restore flows', () => {
             },
         });
 
-        await expect(page.getByRole('button', { name: /21:9/ }).first()).toBeVisible();
-        await expect(page.getByRole('button', { name: /4K/ }).first()).toBeVisible();
+        const generationSettingsButton = page.getByTestId('composer-settings-button');
+        await expect(generationSettingsButton).toBeVisible();
+        await expect(generationSettingsButton).toContainText('Aspect Ratio: 21:9');
+        await expect(generationSettingsButton).toContainText('Output Size: 4K');
 
         const composerStateBeforeOpen = await page.evaluate(() => {
             const raw = localStorage.getItem('nbu_workspaceSnapshot');
@@ -2545,6 +2563,14 @@ test.describe('workspace restore flows', () => {
         page,
     }) => {
         let queuedBatchRequestBody: Record<string, unknown> | null = null;
+        const fileBackedQueuedJob = {
+            name: 'batches/file-backed-queued-job',
+            displayName: 'File-backed queue job',
+            state: 'JOB_STATE_PENDING',
+            model: 'gemini-3.1-flash-image-preview',
+            createTime: '2025-03-31T09:20:00.000Z',
+            updateTime: '2025-03-31T09:20:00.000Z',
+        };
 
         await page.route('**/api/batches/create', async (route) => {
             queuedBatchRequestBody = JSON.parse(route.request().postData() || '{}') as Record<string, unknown>;
@@ -2553,20 +2579,31 @@ test.describe('workspace restore flows', () => {
                 status: 200,
                 contentType: 'application/json',
                 body: JSON.stringify({
-                    job: {
-                        name: 'batches/file-backed-queued-job',
-                        displayName: 'File-backed queue job',
-                        state: 'JOB_STATE_PENDING',
-                        model: 'gemini-3.1-flash-image-preview',
-                        createTime: '2025-03-31T09:20:00.000Z',
-                        updateTime: '2025-03-31T09:20:00.000Z',
-                    },
+                    job: fileBackedQueuedJob,
                 }),
             });
         });
 
         await openWorkspaceWithSnapshot(page, restoredFileBackedSnapshot);
         await dismissRestoreNoticeIfPresent(page);
+
+        await page.route('**/api/batches/get', async (route) => {
+            const payload = route.request().postDataJSON() as { name?: string } | null;
+            if (payload?.name !== fileBackedQueuedJob.name) {
+                await route.fulfill({
+                    status: 404,
+                    contentType: 'application/json',
+                    body: JSON.stringify({ error: `Missing queued batch fixture for ${payload?.name || 'unknown'}.` }),
+                });
+                return;
+            }
+
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({ job: fileBackedQueuedJob }),
+            });
+        });
 
         const queueBatchButton = page.getByRole('button', { name: tt('composerQueueBatchJob') }).first();
         await expect(queueBatchButton).toBeVisible();
@@ -2587,6 +2624,77 @@ test.describe('workspace restore flows', () => {
         await expect(
             page.getByTestId('workspace-queued-batch-detail-modal').getByTestId('queued-batch-panel'),
         ).toContainText('File-backed queue job');
+    });
+
+    test('editor queue batch submits explicit Editor Edit jobs and returns to the workspace', async ({ page }) => {
+        let queuedBatchRequestBody: Record<string, unknown> | null = null;
+        const editorQueuedJob = {
+            name: 'batches/editor-queued-job',
+            displayName: 'Editor queue job',
+            state: 'JOB_STATE_PENDING',
+            model: 'gemini-3.1-flash-image-preview',
+            createTime: '2025-04-02T09:20:00.000Z',
+            updateTime: '2025-04-02T09:20:00.000Z',
+        };
+
+        await page.route('**/api/batches/create', async (route) => {
+            queuedBatchRequestBody = JSON.parse(route.request().postData() || '{}') as Record<string, unknown>;
+
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    job: editorQueuedJob,
+                }),
+            });
+        });
+
+        await page.route('**/api/batches/get', async (route) => {
+            const payload = route.request().postDataJSON() as { name?: string } | null;
+            if (payload?.name !== editorQueuedJob.name) {
+                await route.fulfill({
+                    status: 404,
+                    contentType: 'application/json',
+                    body: JSON.stringify({ error: `Missing queued batch fixture for ${payload?.name || 'unknown'}.` }),
+                });
+                return;
+            }
+
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({ job: editorQueuedJob }),
+            });
+        });
+
+        await openFreshWorkspace(page);
+        await openEditorFromUpload(page, 'Composer prompt stays outside editor');
+        await closeSharedPromptSheet(page);
+        await page.getByTestId('shared-controls-toggle').click();
+
+        const editorQueueButton = page.getByTestId('editor-queue-batch');
+        await expect(editorQueueButton).toBeVisible();
+        await editorQueueButton.click();
+
+        await expect.poll(() => queuedBatchRequestBody).not.toBeNull();
+        expect(queuedBatchRequestBody).toMatchObject({
+            model: 'gemini-3.1-flash-image-preview',
+            executionMode: 'queued-batch-job',
+            requestCount: 1,
+        });
+        expect(String(queuedBatchRequestBody?.editingInput || '')).toMatch(/^data:image\/png;base64,/);
+        expect(String(queuedBatchRequestBody?.editingInput || '')).not.toContain('/api/load-image?filename=');
+        expect(String(queuedBatchRequestBody?.prompt || '')).toContain('Seamlessly inpaint the masked area');
+        expect(String(queuedBatchRequestBody?.prompt || '')).not.toContain('Composer prompt stays outside editor');
+
+        await expect(page.getByTestId('image-editor')).toHaveCount(0);
+        await expect(composer(page)).toHaveValue('Composer prompt stays outside editor');
+        await expect(page.getByText(tt('queuedBatchSubmittedNotice'), { exact: true })).toBeVisible();
+
+        await openQueuedBatchDetailModal(page);
+        const panel = page.getByTestId('workspace-queued-batch-detail-modal').getByTestId('queued-batch-panel');
+        await expect(panel).toContainText('Editor queue job');
+        await expect(panel).toContainText('Editor Edit');
     });
 
     test('replace imported inherited provenance exposes continuity summary and recovered sources', async ({ page }) => {
@@ -2781,7 +2889,6 @@ test.describe('workspace restore flows', () => {
     test('queued batch panel restores localized counts, states, and job actions from the workspace snapshot', async ({
         page,
     }) => {
-        await installQueuedBatchGetFixtureRoute(page, queuedBatchPanelSnapshot);
         await openWorkspaceWithSnapshot(page, queuedBatchPanelSnapshot);
         await dismissRestoreNoticeIfPresent(page);
         await openQueuedBatchDetailModal(page);
@@ -3238,7 +3345,7 @@ test.describe('workspace restore flows', () => {
         );
     });
 
-    test('narrow shell owner routes keep actions, advanced settings, and workflow log reachable after import', async ({
+    test('narrow shell owner routes keep image tools, advanced settings, and workflow log reachable after import', async ({
         page,
     }) => {
         await page.setViewportSize({ width: 430, height: 932 });
@@ -3253,18 +3360,9 @@ test.describe('workspace restore flows', () => {
         const sideTools = page.locator('[data-testid="workspace-side-tool-panel"]:visible').first();
         await expect(sideTools).toBeVisible();
         await expect(sideTools.getByTestId('workspace-side-tools-actions')).toBeVisible();
-
-        await page.getByTestId('composer-reference-context-button').click();
-        const pickerSheet = page.getByRole('dialog').filter({ hasText: tt('workspaceSheetTitleReferences') });
-        await expect(pickerSheet).toBeVisible();
-        await expect(pickerSheet).toContainText(tt('workspacePickerEditorBase'));
-        await expect(pickerSheet).toContainText(tt('workspacePickerStageSource'));
-        await expect(pickerSheet.getByTestId('picker-references-character-hint-trigger')).toBeVisible();
-        await expect(pickerSheet.getByTestId('picker-references-editor-base-hint-trigger')).toBeVisible();
-        await expect(pickerSheet.getByTestId('picker-references-stage-source-hint-trigger')).toBeVisible();
-        await expect(pickerSheet.getByRole('button', { name: tt('workspacePickerOpenSketchPad') })).toBeVisible();
-        await pickerSheet.getByTestId('picker-sheet-close').click();
-        await expect(pickerSheet).toHaveCount(0);
+        await expect(sideTools.locator('label').filter({ hasText: tt('objectRefs') }).first()).toBeVisible();
+        await expect(sideTools.locator('label').filter({ hasText: tt('characterRefs') }).first()).toBeVisible();
+        await expect(page.getByTestId('composer-reference-context-button')).toHaveCount(0);
 
         await sideTools.getByTestId('side-tools-open-sketchpad').click();
         await expect(page.getByText(tt('loadingPrepareSketchPad'), { exact: true })).toBeVisible();

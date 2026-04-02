@@ -95,7 +95,7 @@ export type StructuredOutputMode =
     | 'variation-compare';
 export type GroundingMode = 'off' | 'google-search' | 'image-search' | 'google-search-plus-image-search';
 export type ExecutionMode = 'single-turn' | 'interactive-batch-variants' | 'chat-continuation' | 'queued-batch-job';
-export type StageAssetRole = 'object' | 'character' | 'editor-base' | 'stage-source';
+export type StageAssetRole = 'object' | 'character' | 'stage-source';
 export type StageAssetOrigin = 'upload' | 'sketch' | 'generated' | 'history' | 'editor';
 export type TurnLineageAction = 'root' | 'continue' | 'branch' | 'editor-follow-up' | 'reopen';
 export type BranchNameOverrides = Record<string, string>;

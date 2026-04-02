@@ -4,6 +4,42 @@ This changelog is compiled from the repository's local git tags plus the publish
 
 ## Unreleased
 
+## v3.2.0 - 2026-04-02
+
+- Release title: Nano Banana Ultra 3.2.0 - Shared Settings, Image Tools & Queue Workflow Refinement
+- Release prep summary:
+    - Image Tools secondary-card regrouping, reference-hint cleanup, and i18n follow-through:
+        - removed the `Actions` eyebrow from the left `Image Tools` surface, regrouped the panel into nested secondary cards so editor and SketchPad actions share the upper card while object and character references share the lower card, and kept the existing side-tool action selectors stable while adding explicit inner-card test ids for the new structure
+        - removed the `Rec. < x` recommendation text from the shared `ImageUploader` header so the hint disappears from both the main `Image Tools` panel and the shared-controls references sheet, while preserving the live count display plus the existing `safeLimit` thumbnail highlighting behavior
+        - deleted the stale `EDITOR_MAX_REFS` constant so editor and homepage reference limits now stay aligned through the already-shared `MODEL_CAPABILITIES` source of truth instead of leaving an unused divergent editor-only contract in the repo
+        - removed the now-unused `safeLimitTip` and `composerActionPanelEyebrow` translation keys from the maintained locale dictionaries, updated translation baselines and focused UI tests to the new contract, and kept the runtime/test surface aligned with the cleaned-up Image Tools wording
+        - revalidated the slice with focused Vitest coverage for `WorkspaceSideToolPanel`, `WorkspacePickerSheet`, `ComposerSettingsPanel`, `workspaceFlowTranslations`, and `capabilityTruth`, plus repeated `npm run build`, `npm run test:e2e:restore:shell-owners`, and `npm run test:e2e:restore:mainline-smoke`
+
+    - Composer reference-owner removal, upload-to-edit cleanup, and startup hardening:
+        - removed the composer-owned `Reference Tray` and stale references launcher flow, moved object and character reference ownership fully into the left `Image Tools` panel, and aligned the shared references sheet to the new uploader-only contract so the main workspace no longer splits reference management across composer and side surfaces
+        - removed the persistent editor-base/base-image concept from the active workspace flow, updated the side-tool editor entry to use the current stage image when available or fall back to `Upload Image To Edit`, and cleaned out the dead base-image wording and locale keys across the maintained translations instead of leaving orphaned editor terminology behind
+        - fixed the startup white-screen regressions introduced by the refactor by removing stale `openReferencesPicker` and `handleOpenUploadDialog` runtime references, restoring the missing `Button` import in the picker sheet, and realigning the editor-close restore expectation so reopening editing after close now follows the upload-to-edit contract instead of assuming a removed persistent editor base
+        - refreshed the focused regression coverage for composer settings, side tools, picker-sheet behavior, queued-batch editor handoff, workspace-flow translations, and restore flows, updated the restore npm grep scripts to the renamed shell-owner coverage, and revalidated the session with focused Vitest, `npm run build`, `npm run test:e2e:restore:shell-owners`, `npm run test:e2e:restore:mainline-smoke`, and full `npm run test:e2e` at `58 passed`
+
+    - Composer / editor shared-settings refactor:
+        - rebuilt the composer dock around a left-rail quick-tool stack (`Inspiration`, `AI Enhance`, `Templates`, `Saved Prompts`, `Styles`) plus a single `Generation Settings` status bar that now owns model, aspect ratio, output size, and quantity, while active follow-up source context can surface beside it instead of living under the prompt
+        - compacted the composer settings chrome into 40px summary strips by keeping `Generation Settings` in the top row and moving `Advanced settings` below the prompt as a matching strip with label-plus-value state chips instead of the old inline helper copy or separate short button, highlighted the primary generation chips with stronger accent pill styling plus higher-contrast dark-theme fills, and switched both strips to the shared horizontal-scroll treatment used by the history summary strip so long summaries scroll instead of truncating while the strip itself grows taller to accommodate any visible horizontal scrollbar
+        - aligned shared-controls across composer, editor, and SketchPad to the same unified settings-sheet contract, with SketchPad limited to model and ratio while editor keeps the full shared settings set without inheriting the main composer prompt, and with the floating shared-controls surface now collapsing model / ratio / size / quantity into a single `Generation Settings` entry that switches its detail summary by surface
+        - removed the duplicate current-image lineage summaries from the left `Image Tools` panel so the composer `Follow-up source` strip is now the single place that surfaces `History · Reopen` style follow-up context, while `Base image` only appears there when an actual editor base is staged
+        - continued simplifying the `Generation Settings` modal by removing the secondary topic tabs, removing the local theme toggle and intro explainer, reshaping the content into a model-left / controls-right layout on wide screens with a stacked narrow-screen fallback, upgrading model cards to a three-line title / formal-model-name / capability hierarchy, and adding a `Quantity 3` option beside the existing batch-size choices
+        - moved editor prompt ownership into editor-local transient state, split `Inspiration` / `AI Enhance` / shared prompt editing so those tools now target the active surface prompt, preserved mode-specific auto-prompt fallbacks and blank-prompt submit behavior, and removed the editor-local loading HUD so edit submits hand back to the main stage/workflow immediately
+        - expanded editor context snapshots and restore plumbing to carry model, style, output, thinking, and grounding settings so returning from editor flows restores the shared generation configuration instead of only ratio / size / quantity
+        - added generation-settings and editor-shared-state translation coverage across the maintained locales, expanded focused Vitest coverage for composer/shared-controls/picker-sheet behavior, and revalidated the slice with `npx vitest run tests/WorkspacePickerSheet.test.tsx`, `npm run test:e2e:restore`, and full `npm run test:e2e`
+
+    - Editor-side queued batch handoff:
+        - moved editor-origin queued submissions into the editor surface itself with side-by-side `Repaint` and `Queue Batch Job` actions, made both actions share the same exported editor-canvas pipeline, and made the queue path return control to the main workspace the same way immediate editor generation already does
+        - isolated editor queued payloads to the editor-local prompt plus exported canvas data, so queued submissions no longer leak the main composer prompt or reuse stale file-backed image URLs
+        - changed queued waiting-list wording for editor-origin jobs to exact `Editor Edit` while stopping the main composer queue path from inferring editor mode from leftover `editorBaseAsset` state, so main-page queue now stays limited to prompt-only, staged follow-up, and reference-driven flows
+        - added focused Vitest coverage for explicit editor queue draft submission plus waiting-list label rendering, added a dedicated restore Playwright regression for the editor-owned queue path, expanded the queued-batch / restore regression npm scripts to include that case, and revalidated the slice with `npx vitest run tests/useQueuedBatchWorkflow.test.tsx tests/QueuedBatchJobsPanel.test.tsx`, `npm run build`, `npm run test:e2e:restore:queued-batch`, and full `npm run test:e2e`
+
+    - Restore queued-batch Playwright fixture hardening:
+        - centralized snapshot-backed `/api/batches/get` fixture routing inside the restore helpers, cleared stale route handlers before reinstalling snapshot fixtures, and stopped unknown queued-job fixture names from falling through to the real backend, removing expected `Could not parse the batch name` noise from Playwright regression runs
+        - added explicit file-backed and editor-owned queued-job fixture responses inside the restore specs so queued-batch coverage now stays deterministic
 
 ## v3.1.8 - 2026-04-01
 
@@ -14,7 +50,6 @@ This changelog is compiled from the repository's local git tags plus the publish
     - preserved last-used startup preferences by restoring theme and language immediately on launch, persisting user language changes into local storage, and extracting shared theme persistence helpers so launch-time UI state comes back before restore feedback is announced
     - cleaned up restore-era translation surface area across all supported locales by removing modal-only restore action strings, retaining the shared restore keys still used by toast and import-review flows, and realigning the locale baseline tests with the new contract
     - rewrote the restore Playwright coverage around direct-restore behavior, removed obsolete modal-only restore tests, updated official-conversation restore assertions to the new no-click startup path, and revalidated the slice with focused Playwright, focused translation Vitest coverage, and a production `npm run build`
-
 
 ## v3.1.7 - 2026-04-01
 

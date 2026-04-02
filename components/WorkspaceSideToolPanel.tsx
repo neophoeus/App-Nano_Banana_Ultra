@@ -1,44 +1,45 @@
 import React from 'react';
-import { StageAsset, TurnLineageAction } from '../types';
 import { getTranslation, Language } from '../utils/translations';
 import Button from './Button';
+import ImageUploader from './ImageUploader';
 
 type WorkspaceSideToolPanelProps = {
     currentLanguage: Language;
-    editorBaseAsset: StageAsset | null;
-    currentStageAsset: StageAsset | null;
-    onUploadBaseImage: () => void;
+    canEditCurrentImage: boolean;
     onOpenSketchPad: () => void;
     onOpenEditor: () => void;
-    getStageOriginLabel: (origin?: StageAsset['origin']) => string;
-    getLineageActionLabel: (action?: TurnLineageAction) => string;
+    objectImages: string[];
+    characterImages: string[];
+    maxObjects: number;
+    maxCharacters: number;
+    setObjectImages: (nextImages: string[] | ((prev: string[]) => string[])) => void;
+    setCharacterImages: (nextImages: string[] | ((prev: string[]) => string[])) => void;
+    isGenerating: boolean;
+    showNotification: (message: string, type?: 'info' | 'error') => void;
+    handleRemoveObjectReference: (index: number) => void;
+    handleRemoveCharacterReference: (index: number) => void;
 };
 
 function WorkspaceSideToolPanel({
     currentLanguage,
-    editorBaseAsset,
-    currentStageAsset,
-    onUploadBaseImage,
+    canEditCurrentImage,
     onOpenSketchPad,
     onOpenEditor,
-    getStageOriginLabel,
-    getLineageActionLabel,
+    objectImages,
+    characterImages,
+    maxObjects,
+    maxCharacters,
+    setObjectImages,
+    setCharacterImages,
+    isGenerating,
+    showNotification,
+    handleRemoveObjectReference,
+    handleRemoveCharacterReference,
 }: WorkspaceSideToolPanelProps) {
     const t = (key: string) => getTranslation(currentLanguage, key);
-    const editorEntryLabel = currentStageAsset
+    const editorEntryLabel = canEditCurrentImage
         ? t('workspaceViewerEditCurrentImage')
-        : editorBaseAsset
-          ? t('workspaceViewerContinueEditing')
-          : t('workspaceViewerUploadBaseToEdit');
-    const stageSourceDetail = currentStageAsset
-        ? [
-              getStageOriginLabel(currentStageAsset.origin),
-              currentStageAsset.lineageAction ? getLineageActionLabel(currentStageAsset.lineageAction) : null,
-          ]
-              .filter(Boolean)
-              .join(' · ')
-        : t('stageOriginNotStaged');
-    const editorBaseDetail = editorBaseAsset ? getStageOriginLabel(editorBaseAsset.origin) : t('stageOriginNotStaged');
+        : t('workspaceViewerUploadBaseToEdit');
 
     return (
         <aside
@@ -47,68 +48,66 @@ function WorkspaceSideToolPanel({
         >
             <div className="min-w-0">
                 <div className="min-w-0 flex-1">
-                    <p className="nbu-section-eyebrow">{t('composerActionPanelEyebrow')}</p>
-                    <h2 className="mt-1 text-[15px] font-black text-gray-900 dark:text-gray-100">
+                    <h2 className="text-[15px] font-black text-gray-900 dark:text-gray-100">
                         {t('workspaceSideToolTitle')}
                     </h2>
-                    <p className="mt-2 break-words text-sm font-semibold text-gray-900 dark:text-gray-100">
-                        {stageSourceDetail}
-                    </p>
-                    <div className="mt-2.5 flex flex-wrap gap-2 text-[11px] text-gray-500 dark:text-gray-400">
-                        <span className="nbu-chip">
-                            {t('workspaceSideToolBaseImage')}: {editorBaseDetail}
-                        </span>
-                    </div>
                 </div>
             </div>
 
-            <div data-testid="workspace-side-tools-actions" className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-2">
-                <Button
-                    variant="secondary"
-                    onClick={onUploadBaseImage}
-                    className="min-w-0 justify-center rounded-[16px] whitespace-normal text-center"
-                    data-testid="side-tools-upload-base"
-                >
-                    {t('workspacePickerUploadBaseImage')}
-                </Button>
-                <Button
-                    variant="secondary"
-                    onClick={onOpenEditor}
-                    className="min-w-0 justify-center rounded-[16px] whitespace-normal text-center"
-                    data-testid="side-tools-open-editor"
-                >
-                    {editorEntryLabel}
-                </Button>
-                <Button
-                    variant="secondary"
-                    onClick={onOpenSketchPad}
-                    className="min-w-0 justify-center rounded-[16px] whitespace-normal text-center"
-                    data-testid="side-tools-open-sketchpad"
-                >
-                    {t('workspacePickerOpenSketchPad')}
-                </Button>
-            </div>
-
-            <div className="mt-3 grid gap-2.5 xl:grid-cols-2">
-                <div className="nbu-inline-panel px-3 py-2.5">
-                    <div className="min-w-0">
-                        <div className="text-xs uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
-                            {t('workspaceSideToolBaseImage')}
-                        </div>
-                        <div className="mt-2 break-words text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            {editorBaseDetail}
-                        </div>
+            <div className="mt-3 space-y-3">
+                <div data-testid="workspace-side-tools-actions-card" className="nbu-inline-panel p-3">
+                    <div
+                        data-testid="workspace-side-tools-actions"
+                        className="grid gap-2 sm:grid-cols-2 xl:grid-cols-2"
+                    >
+                        <Button
+                            variant="secondary"
+                            onClick={onOpenEditor}
+                            className="min-w-0 justify-center rounded-[16px] whitespace-normal text-center"
+                            data-testid="side-tools-open-editor"
+                        >
+                            {editorEntryLabel}
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            onClick={onOpenSketchPad}
+                            className="min-w-0 justify-center rounded-[16px] whitespace-normal text-center"
+                            data-testid="side-tools-open-sketchpad"
+                        >
+                            {t('workspacePickerOpenSketchPad')}
+                        </Button>
                     </div>
                 </div>
 
-                <div className="nbu-inline-panel px-3 py-2.5">
-                    <div className="min-w-0">
-                        <div className="text-xs uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
-                            {t('workspaceSideToolCurrentImage')}
-                        </div>
-                        <div className="mt-2 break-words text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            {stageSourceDetail}
-                        </div>
+                <div data-testid="workspace-side-tools-references-card" className="nbu-inline-panel p-3">
+                    <div data-testid="workspace-side-tool-references" className="space-y-4">
+                        <ImageUploader
+                            images={objectImages}
+                            onImagesChange={setObjectImages}
+                            disabled={isGenerating}
+                            label={t('objectRefs')}
+                            currentLanguage={currentLanguage}
+                            onWarning={(message) => showNotification(message, 'error')}
+                            maxImages={maxObjects}
+                            prefixTag="Obj"
+                            safeLimit={Math.max(1, Math.floor(maxObjects / 2))}
+                            onRemove={handleRemoveObjectReference}
+                        />
+
+                        {maxCharacters > 0 && (
+                            <ImageUploader
+                                images={characterImages}
+                                onImagesChange={setCharacterImages}
+                                disabled={isGenerating}
+                                label={t('characterRefs')}
+                                currentLanguage={currentLanguage}
+                                onWarning={(message) => showNotification(message, 'error')}
+                                maxImages={maxCharacters}
+                                prefixTag="Char"
+                                safeLimit={Math.max(1, Math.floor(maxCharacters / 2))}
+                                onRemove={handleRemoveCharacterReference}
+                            />
+                        )}
                     </div>
                 </div>
             </div>

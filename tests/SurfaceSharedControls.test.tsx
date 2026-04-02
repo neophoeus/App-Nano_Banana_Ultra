@@ -12,6 +12,7 @@ describe('SurfaceSharedControls', () => {
                 currentLanguage="en"
                 isOpen={true}
                 workspaceLabel="Workspace A"
+                stateDescription="Shared settings stay live here while Workspace A is open."
                 activeSheetLabel="Prompt"
                 activePickerSheet="prompt"
                 isAdvancedSettingsOpen={false}
@@ -26,6 +27,7 @@ describe('SurfaceSharedControls', () => {
                 characterImageCount={1}
                 maxObjects={10}
                 maxCharacters={4}
+                settingsVariant="full"
                 containerClassName="shared-shell"
                 onToggleOpen={vi.fn()}
                 onClosePanel={vi.fn()}
@@ -45,12 +47,14 @@ describe('SurfaceSharedControls', () => {
         expect(markup).toContain('group-open:rotate-180');
         expect(markup).toContain('Shared Composer State');
         expect(markup).toContain('Workspace A');
-        expect(markup).toContain('Main-page settings stay live here while Workspace A is open.');
+        expect(markup).toContain('Shared settings stay live here while Workspace A is open.');
         expect(markup).toContain(preview);
         expect(markup).toContain(longPrompt);
         expect(markup).toContain('shared-control-prompt');
+        expect(markup).toContain('shared-control-settings');
         expect(markup).toContain('shared-control-advanced-settings');
         expect(markup).toContain('Advanced settings');
+        expect(markup).toContain('Generation Settings');
         expect(markup).toContain('Reference Tray');
     });
 });

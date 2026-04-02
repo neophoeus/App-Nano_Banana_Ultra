@@ -29,7 +29,6 @@ type UseWorkspaceAssetsReturn = {
     setStagedAssets: Dispatch<SetStateAction<StageAsset[]>>;
     objectImages: string[];
     characterImages: string[];
-    editorBaseAsset: StageAsset | null;
     currentStageAsset: StageAsset | null;
     hasSketch: boolean;
     setObjectImages: (nextImages: string[] | ((prev: string[]) => string[])) => void;
@@ -46,12 +45,21 @@ type UseWorkspaceAssetsReturn = {
     }) => void;
 };
 
+const sanitizeStagedAssets = (assets: StageAsset[]) =>
+    assets.filter((asset) => asset.role === 'object' || asset.role === 'character' || asset.role === 'stage-source');
+
 export function useWorkspaceAssets({ initialStagedAssets }: UseWorkspaceAssetsArgs): UseWorkspaceAssetsReturn {
-    const [stagedAssets, setStagedAssets] = useState<StageAsset[]>(() => initialStagedAssets);
+    const [stagedAssets, setStagedAssetsState] = useState<StageAsset[]>(() => sanitizeStagedAssets(initialStagedAssets));
+
+    const setStagedAssets = useCallback((nextState: SetStateAction<StageAsset[]>) => {
+        setStagedAssetsState((previous) => {
+            const resolved = typeof nextState === 'function' ? nextState(previous) : nextState;
+            return sanitizeStagedAssets(resolved);
+        });
+    }, []);
 
     const objectImages = useMemo(() => getStageAssetUrlsByRole(stagedAssets, 'object'), [stagedAssets]);
     const characterImages = useMemo(() => getStageAssetUrlsByRole(stagedAssets, 'character'), [stagedAssets]);
-    const editorBaseAsset = useMemo(() => getStageAssetsByRole(stagedAssets, 'editor-base')[0] || null, [stagedAssets]);
     const currentStageAsset = useMemo(
         () => getStageAssetsByRole(stagedAssets, 'stage-source')[0] || null,
         [stagedAssets],
@@ -138,7 +146,6 @@ export function useWorkspaceAssets({ initialStagedAssets }: UseWorkspaceAssetsAr
         setStagedAssets,
         objectImages,
         characterImages,
-        editorBaseAsset,
         currentStageAsset,
         hasSketch,
         setObjectImages,

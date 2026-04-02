@@ -55,7 +55,7 @@ type UseHistorySourceOrchestrationArgs = {
     handleClearResults: () => void;
     resetSelectedOutputState: () => void;
     resetWorkspaceSession: () => void;
-    clearAssetRoles: (roles: Array<'object' | 'character' | 'editor-base' | 'stage-source'>) => void;
+    clearAssetRoles: (roles: Array<'object' | 'character' | 'stage-source'>) => void;
     buildResultArtifacts: (
         item: Pick<GeneratedImageType, 'text' | 'thoughts' | 'grounding' | 'metadata' | 'sessionHints' | 'id'>,
     ) => ResultArtifacts;
@@ -170,7 +170,7 @@ export function useHistorySourceOrchestration({
         resetWorkspaceSession();
         setConversationState(EMPTY_WORKSPACE_CONVERSATION_STATE);
         setEditingImageSource(null);
-        clearAssetRoles(['stage-source', 'editor-base']);
+        clearAssetRoles(['stage-source']);
         showNotification(t('historySourceStartConversationNotice'), 'info');
         addLog(encodeWorkflowMessage('historySourceStartConversationLog'));
     }, [
@@ -308,7 +308,7 @@ export function useHistorySourceOrchestration({
                 applyComposerState(buildWorkspaceComposerStateFromHistoryItem(item));
             }
 
-            clearAssetRoles(['object', 'character', 'editor-base']);
+            clearAssetRoles(['object', 'character']);
             setIsGenerating(false);
         },
         [

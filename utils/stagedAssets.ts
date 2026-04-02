@@ -78,7 +78,7 @@ export const addStageAsset = (assets: StageAsset[], options: AddStageAssetOption
     const { role, origin, url, savedFilename, isSketch, sourceHistoryId, lineageAction, maxAssets, preferFront } =
         options;
 
-    if (role === 'editor-base' || role === 'stage-source') {
+    if (role === 'stage-source') {
         const existingSingletonAsset = assets.find((asset) => asset.role === role);
         if (
             existingSingletonAsset &&

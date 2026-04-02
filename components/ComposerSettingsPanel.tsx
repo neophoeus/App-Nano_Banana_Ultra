@@ -69,11 +69,11 @@ export type ComposerSettingsPanelProps = {
     onOpenPromptHistory: () => void;
     onOpenTemplates: () => void;
     onOpenStyles: () => void;
-    onOpenModelPicker: () => void;
-    onOpenRatioPicker: () => void;
-    onOpenSizePicker: () => void;
-    onOpenBatchPicker: () => void;
-    onOpenReferences: () => void;
+    onOpenSettings: () => void;
+    onOpenModelPicker?: () => void;
+    onOpenRatioPicker?: () => void;
+    onOpenSizePicker?: () => void;
+    onOpenBatchPicker?: () => void;
     onToggleAdvancedSettings: () => void;
     onOutputFormatChange: (value: OutputFormat) => void;
     onStructuredOutputModeChange: (value: StructuredOutputMode) => void;
@@ -198,11 +198,7 @@ function ComposerSettingsPanel({
     onOpenPromptHistory,
     onOpenTemplates,
     onOpenStyles,
-    onOpenModelPicker,
-    onOpenRatioPicker,
-    onOpenSizePicker,
-    onOpenBatchPicker,
-    onOpenReferences,
+    onOpenSettings,
     onToggleAdvancedSettings,
     onOutputFormatChange,
     onStructuredOutputModeChange,
@@ -241,6 +237,22 @@ function ComposerSettingsPanel({
                 return t('structuredOutputModeVariationCompare');
             default:
                 return t('structuredOutputModeOff');
+        }
+    };
+    const getOutputFormatSummaryLabel = (value: OutputFormat) =>
+        OUTPUT_FORMATS.find((option) => option.value === value)?.label ?? value;
+    const getThinkingLevelSummaryLabel = (value: ThinkingLevel) =>
+        THINKING_LEVELS.find((option) => option.value === value)?.label ?? value;
+    const getGroundingModeSummaryLabel = (value: GroundingMode) => {
+        switch (value) {
+            case 'google-search':
+                return 'Web';
+            case 'image-search':
+                return 'Image';
+            case 'google-search-plus-image-search':
+                return 'Web + image';
+            default:
+                return getGroundingModeLabel(value);
         }
     };
     const getStructuredOutputModeGuide = (value: StructuredOutputMode) => {
@@ -346,11 +358,152 @@ function ComposerSettingsPanel({
             '}',
         ];
     };
-    const toolbarGroupClassName = 'nbu-subpanel flex flex-wrap items-center gap-1.5 p-1.5 sm:gap-2 sm:p-2';
-    const toolbarButtonClassName =
-        'nbu-control-button px-2.5 py-1.5 text-[12px] transition-all hover:-translate-y-0.5 hover:shadow-md sm:px-3 sm:py-1.5 sm:text-[13px]';
-    const settingsButtonClassName =
-        'nbu-control-button rounded-[20px] px-3.5 py-2.5 text-left transition-all hover:-translate-y-0.5 hover:shadow-md disabled:hover:translate-y-0 disabled:hover:shadow-none';
+    const quickToolButtonClassName =
+        'nbu-control-button group flex h-[68px] w-full flex-col items-center justify-center gap-1.5 rounded-[22px] px-2 py-2.5 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-slate-600 transition-all hover:-translate-y-0.5 hover:shadow-md sm:h-[74px] sm:text-[11px] dark:text-slate-200';
+    const compactModelLabel = modelLabel.replace(/\s*\([^)]*\)$/, '');
+    const followUpSourceSummary = currentStageAsset
+        ? `${getStageOriginLabel(currentStageAsset.origin)}${currentStageAsset.lineageAction ? ` · ${getLineageActionLabel(currentStageAsset.lineageAction)}` : ''}`
+        : null;
+    const settingsSummaryItems = [
+        {
+            key: 'model',
+            value: `${t('modelSelect')}: ${compactModelLabel}`,
+            className:
+                'border-sky-200 bg-sky-50 text-sky-700 shadow-sm shadow-sky-100/80 dark:border-sky-400/45 dark:bg-sky-500/18 dark:text-sky-100 dark:shadow-[0_10px_24px_rgba(14,165,233,0.16)]',
+        },
+        {
+            key: 'ratio',
+            value: `${t('aspectRatio')}: ${aspectRatio}`,
+            className:
+                'border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-100/80 dark:border-emerald-400/45 dark:bg-emerald-500/18 dark:text-emerald-100 dark:shadow-[0_10px_24px_rgba(16,185,129,0.16)]',
+        },
+        {
+            key: 'size',
+            value: `${t('workspaceSheetTitleSize')}: ${imageSize}`,
+            className:
+                'border-amber-200 bg-amber-50 text-amber-700 shadow-sm shadow-amber-100/80 dark:border-amber-300/50 dark:bg-amber-400/18 dark:text-amber-50 dark:shadow-[0_10px_24px_rgba(251,191,36,0.16)]',
+        },
+        {
+            key: 'qty',
+            value: `${t('batchSize')}: ${t('qtyX').replace('{0}', String(batchSize))}`,
+            className:
+                'border-violet-200 bg-violet-50 text-violet-700 shadow-sm shadow-violet-100/80 dark:border-violet-400/45 dark:bg-violet-500/18 dark:text-violet-100 dark:shadow-[0_10px_24px_rgba(168,85,247,0.16)]',
+        },
+    ];
+    const advancedSummaryItems = [
+        {
+            key: 'output',
+            value: `${t('groundingProvenanceInsightOutputFormat')}: ${getOutputFormatSummaryLabel(outputFormat)}`,
+            className: '',
+        },
+        {
+            key: 'thinking',
+            value: `${t('groundingProvenanceInsightThinkingLevel')}: ${getThinkingLevelSummaryLabel(thinkingLevel)}`,
+            className: '',
+        },
+        {
+            key: 'thoughts',
+            value: `${t('groundingProvenanceInsightReturnThoughts')}: ${includeThoughts ? t('composerVisibilityVisible') : t('composerVisibilityHidden')}`,
+            className: '',
+        },
+        {
+            key: 'grounding',
+            value: `${t('groundingProvenanceInsightGrounding')}: ${getGroundingModeSummaryLabel(groundingMode)}`,
+            className: '',
+        },
+        ...(structuredOutputMode !== 'off'
+            ? [
+                  {
+                      key: 'structured-output',
+                      value: `${t('composerAdvancedStructuredOutput')}: ${getStructuredOutputModeLabel(structuredOutputMode)}`,
+                      className: '',
+                  },
+              ]
+            : []),
+    ];
+    const summaryStripAnchorClassName =
+        'inline-flex h-6 shrink-0 items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 text-[10px] font-black uppercase tracking-[0.16em] text-amber-700 dark:border-amber-500/25 dark:bg-amber-950/25 dark:text-amber-200';
+    const summaryStripChipClassName =
+        'inline-flex h-6 shrink-0 items-center rounded-full border border-slate-200/80 bg-white/88 px-2 text-[10px] font-semibold leading-none whitespace-nowrap text-slate-700 dark:border-slate-700/80 dark:bg-slate-900/80 dark:text-slate-200';
+    const quickToolButtons = [
+        {
+            id: 'inspiration',
+            label: t('workspacePickerInspiration'),
+            onClick: onSurpriseMe,
+            disabled: isEnhancingPrompt,
+            icon: (
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.8}
+                        d="m12 3 1.7 5.3H19l-4.3 3.1 1.7 5.3L12 13.6 7.6 16.7l1.7-5.3L5 8.3h5.3L12 3Z"
+                    />
+                </svg>
+            ),
+        },
+        {
+            id: 'rewrite',
+            label: t('rewrite'),
+            onClick: onSmartRewrite,
+            disabled: isEnhancingPrompt,
+            icon: (
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.8}
+                        d="M12 4v4m0 8v4m8-8h-4M8 12H4m13.657-5.657-2.829 2.829M9.172 14.828l-2.829 2.829m11.314 0-2.829-2.829M9.172 9.172 6.343 6.343"
+                    />
+                </svg>
+            ),
+        },
+        {
+            id: 'templates',
+            label: t('workspaceSheetTitleTemplates'),
+            onClick: onOpenTemplates,
+            icon: (
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.8}
+                        d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5v-11ZM8 8h8M8 12h8m-8 4h5"
+                    />
+                </svg>
+            ),
+        },
+        {
+            id: 'history',
+            label: t('workspacePickerPromptHistoryTitle'),
+            onClick: onOpenPromptHistory,
+            icon: (
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.8}
+                        d="M12 8v4l2.5 2.5M20 12a8 8 0 1 1-2.343-5.657M20 4v6h-6"
+                    />
+                </svg>
+            ),
+        },
+        {
+            id: 'styles',
+            label: t('workspaceSheetTitleStyles'),
+            onClick: onOpenStyles,
+            icon: (
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.8}
+                        d="M7 16a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm10-8a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM7 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm2 2h6m-6 12h6m-8-6h10"
+                    />
+                </svg>
+            ),
+        },
+    ];
     const showGroundingResolutionWarning =
         imageModel === 'gemini-3.1-flash-image-preview' &&
         (groundingMode === 'image-search' || groundingMode === 'google-search-plus-image-search');
@@ -380,119 +533,60 @@ function ComposerSettingsPanel({
 
     return (
         <section className="nbu-shell-panel nbu-shell-surface-composer-dock shrink-0 p-3 md:p-4">
-            <div data-testid="composer-settings-row" className="mb-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+            <div data-testid="composer-settings-row" className="mb-3 flex flex-wrap items-center gap-2">
                 <button
                     type="button"
-                    data-testid="composer-settings-model"
-                    onClick={onOpenModelPicker}
-                    className={settingsButtonClassName}
+                    data-testid="composer-settings-button"
+                    aria-label={t('workspaceSheetTitleGenerationSettings')}
+                    onClick={onOpenSettings}
+                    className="nbu-inline-panel group flex min-h-10 min-w-0 flex-1 items-center overflow-hidden rounded-[20px] px-2.5 py-2 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
                 >
-                    <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                        {t('modelSelect')}
+                    <div className="nbu-scrollbar-subtle -mx-0.5 min-w-0 flex-1 overflow-x-auto pb-0">
+                        <div className="inline-flex min-w-max items-center gap-1.5 px-0.5">
+                            <span className={summaryStripAnchorClassName}>{t('workspaceSheetTitleGenerationSettings')}</span>
+                            {settingsSummaryItems.map((item) => (
+                                <span key={item.key} className={`${summaryStripChipClassName} ${item.className}`.trim()}>
+                                    {item.value}
+                                </span>
+                            ))}
+                        </div>
                     </div>
-                    <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{modelLabel}</div>
                 </button>
-                <button
-                    type="button"
-                    data-testid="composer-settings-ratio"
-                    onClick={onOpenRatioPicker}
-                    className={settingsButtonClassName}
-                >
-                    <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                        {t('aspectRatio')}
+                {followUpSourceSummary && (
+                    <div
+                        data-testid="composer-follow-up-source-strip"
+                        className="nbu-inline-panel flex h-10 w-full min-w-0 items-center gap-2 overflow-hidden rounded-[20px] px-2.5 sm:w-auto sm:max-w-[18rem]"
+                    >
+                        <span className="inline-flex h-6 shrink-0 items-center rounded-full border border-slate-200/80 bg-white/92 px-2.5 text-[10px] font-black uppercase tracking-[0.16em] text-slate-700 dark:border-slate-700/80 dark:bg-slate-900/88 dark:text-slate-200">
+                            {t('composerFollowUpSource')}
+                        </span>
+                        <span className="inline-flex h-6 min-w-0 flex-1 items-center rounded-full border border-slate-200/80 bg-white/88 px-2 text-[10px] font-semibold leading-none text-slate-700 dark:border-slate-700/80 dark:bg-slate-900/80 dark:text-slate-200">
+                            <span className="truncate">{followUpSourceSummary}</span>
+                        </span>
                     </div>
-                    <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{aspectRatio}</div>
-                </button>
-                <button
-                    type="button"
-                    data-testid="composer-settings-size"
-                    onClick={onOpenSizePicker}
-                    disabled={!hasSizePicker}
-                    className={settingsButtonClassName}
-                >
-                    <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                        {t('workspaceSheetTitleSize')}
-                    </div>
-                    <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{imageSize}</div>
-                </button>
-                <button
-                    type="button"
-                    data-testid="composer-settings-qty"
-                    onClick={onOpenBatchPicker}
-                    className={settingsButtonClassName}
-                >
-                    <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                        {t('batchSize')}
-                    </div>
-                    <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">{batchSize}</div>
-                </button>
+                )}
             </div>
 
-            <div className="mb-2.5 flex flex-wrap items-start gap-2.5">
-                <div data-testid="composer-quick-tools" className={`${toolbarGroupClassName} flex-1`}>
-                    <button
-                        onClick={onSurpriseMe}
-                        disabled={isEnhancingPrompt}
-                        className={`${toolbarButtonClassName} disabled:opacity-50`}
-                    >
-                        {t('workspacePickerInspiration')}
-                    </button>
-                    <button
-                        onClick={onSmartRewrite}
-                        disabled={isEnhancingPrompt}
-                        className={`${toolbarButtonClassName} disabled:opacity-50`}
-                    >
-                        {t('rewrite')}
-                    </button>
-                    <button onClick={onOpenPromptHistory} className={toolbarButtonClassName}>
-                        {t('workspacePickerPromptHistoryTitle')}
-                    </button>
-                    <button onClick={onOpenTemplates} className={toolbarButtonClassName}>
-                        {t('workspaceSheetTitleTemplates')}
-                    </button>
-                    <button onClick={onOpenStyles} className={toolbarButtonClassName}>
-                        {t('workspaceSheetTitleStyles')}: {imageStyleLabel}
-                    </button>
-                    <button
-                        type="button"
-                        aria-haspopup="dialog"
-                        aria-expanded={isAdvancedSettingsOpen}
-                        onClick={onToggleAdvancedSettings}
-                        className={toolbarButtonClassName}
-                    >
-                        {t('composerToolbarAdvancedSettings')}
-                    </button>
+            <div className="grid grid-cols-[76px_minmax(0,1fr)] gap-3 lg:grid-cols-[76px_minmax(0,1fr)_240px] xl:grid-cols-[76px_minmax(0,1fr)_270px]">
+                <div data-testid="composer-quick-tools" className="grid gap-2 self-start">
+                    {quickToolButtons.map((button) => (
+                        <button
+                            key={button.id}
+                            type="button"
+                            onClick={button.onClick}
+                            disabled={button.disabled}
+                            title={button.label}
+                            aria-label={button.label}
+                            className={`${quickToolButtonClassName} ${button.disabled ? 'opacity-50' : ''}`}
+                        >
+                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100/80 text-amber-700 transition-colors group-hover:bg-amber-200 dark:bg-amber-500/12 dark:text-amber-200 dark:group-hover:bg-amber-500/20">
+                                {button.icon}
+                            </span>
+                            <span className="leading-tight">{button.label}</span>
+                        </button>
+                    ))}
                 </div>
-            </div>
 
-            <div
-                data-testid="composer-reference-context-strip"
-                className="nbu-inline-panel mb-3 flex flex-wrap items-center justify-between gap-3 px-3 py-2.5"
-            >
-                <button
-                    type="button"
-                    data-testid="composer-reference-context-button"
-                    onClick={onOpenReferences}
-                    className="nbu-control-button flex items-center gap-3 rounded-[18px] px-3 py-2 text-left"
-                >
-                    <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-700 dark:bg-amber-500/15 dark:text-amber-200">
-                        {totalReferenceCount}
-                    </span>
-                    <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                        {t('workspaceTopHeaderReferenceTray')}
-                    </span>
-                </button>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                    <span className="nbu-chip">
-                        {t('workspacePickerObjects')} {objectCount}/{maxObjects}
-                    </span>
-                    <span className="nbu-chip">
-                        {t('workspacePickerCharacters')} {characterCount}/{maxCharacters}
-                    </span>
-                </div>
-            </div>
-
-            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_240px] xl:grid-cols-[minmax(0,1fr)_270px]">
                 <div>
                     <div className="nbu-subpanel overflow-hidden p-2.5">
                         <div className="mb-2.5 flex flex-wrap items-start justify-between gap-3 px-1">
@@ -518,33 +612,30 @@ function ComposerSettingsPanel({
                                 }
                             }}
                         />
-                        <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                            {currentStageAsset && (
-                                <span className="nbu-chip">
-                                    {t('composerFollowUpSource')}: {getStageOriginLabel(currentStageAsset.origin)}
-                                    {currentStageAsset.lineageAction
-                                        ? ` · ${getLineageActionLabel(currentStageAsset.lineageAction)}`
-                                        : ''}
-                                </span>
-                            )}
-                            <span className="nbu-chip">
-                                {t('groundingProvenanceInsightOutputFormat')}: {outputFormat}
-                            </span>
-                            <span className="nbu-chip">
-                                {t('groundingProvenanceInsightThinkingLevel')}: {thinkingLevel}
-                            </span>
-                            <span className="nbu-chip">
-                                {t('groundingProvenanceInsightReturnThoughts')}:{' '}
-                                {includeThoughts ? t('composerVisibilityVisible') : t('composerVisibilityHidden')}
-                            </span>
-                            <span className="nbu-chip">
-                                {t('groundingProvenanceInsightGrounding')}: {getGroundingModeLabel(groundingMode)}
-                            </span>
-                            {structuredOutputMode !== 'off' && (
-                                <span className="nbu-chip">
-                                    {t('composerAdvancedStructuredOutput')}: {structuredOutputMode}
-                                </span>
-                            )}
+                        <div className="mt-2.5 space-y-2">
+                            <button
+                                type="button"
+                                data-testid="composer-advanced-settings-button"
+                                aria-label={t('composerToolbarAdvancedSettings')}
+                                aria-haspopup="dialog"
+                                aria-expanded={isAdvancedSettingsOpen}
+                                onClick={onToggleAdvancedSettings}
+                                className="nbu-inline-panel group flex min-h-10 w-full min-w-0 items-center overflow-hidden rounded-[20px] px-2.5 py-2 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
+                            >
+                                <div className="nbu-scrollbar-subtle -mx-0.5 min-w-0 flex-1 overflow-x-auto pb-0">
+                                    <div className="inline-flex min-w-max items-center gap-1.5 px-0.5">
+                                        <span className={summaryStripAnchorClassName}>{t('composerToolbarAdvancedSettings')}</span>
+                                        {advancedSummaryItems.map((item) => (
+                                            <span
+                                                key={item.key}
+                                                className={`${summaryStripChipClassName} ${item.className}`.trim()}
+                                            >
+                                                {item.value}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </button>
                         </div>
                     </div>
                     <div className="mt-2.5 flex flex-wrap items-center gap-2.5 text-xs text-gray-500 dark:text-gray-400">
@@ -554,7 +645,7 @@ function ComposerSettingsPanel({
                     </div>
                 </div>
 
-                <div className="nbu-floating-panel p-2.5 text-slate-900 dark:text-white">
+                <div className="col-span-2 nbu-floating-panel p-2.5 text-slate-900 dark:text-white lg:col-span-1">
                     {isGenerating ? (
                         <Button
                             onClick={onCancelGeneration}

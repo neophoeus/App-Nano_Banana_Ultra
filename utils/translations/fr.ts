@@ -140,7 +140,6 @@ export const fr = {
     branchRenameSavedLog: 'La branche a ete renommee en {0} ({1}).',
     uploadAdd: 'Ajouter',
     uploadRefIndex: 'Réf',
-    safeLimitTip: 'Rec. < {0}',
     ratioPortrait: 'Portrait',
     ratioClassicV: 'Classique V',
     ratioVertical: 'Vertical',
@@ -427,7 +426,6 @@ export const fr = {
         'Le grounding par recherche d images fait maintenant passer la sortie en Images & text afin de renvoyer les metadonnees d attribution.',
     composerStructuredOutputUpgradeNotice:
         'La sortie structurée fait maintenant passer la sortie en Images et texte afin que le JSON puisse être renvoyé avec l’image.',
-    composerActionPanelEyebrow: 'Commandes',
     composerActionPanelTitle: 'Creer',
     composerActionPanelDesc:
         'La generation reste prioritaire. Les actions de suivi et d espace de travail restent proches, mais plus discretes.',
@@ -555,6 +553,8 @@ export const fr = {
     surfaceSharedControlsRefsCount: '{0} refs',
     surfaceSharedControlsStateTitle: 'Etat partage du composeur',
     surfaceSharedControlsStateDesc: 'Les reglages principaux restent actifs ici tant que {0} est ouvert.',
+    surfaceSharedControlsStateDescEditor:
+        "Les reglages partages restent actifs ici tant que {0} est ouvert. Le prompt reste local a l'editeur.",
     surfaceSharedControlsCurrentPrompt: 'Prompt actuel',
     surfaceSharedControlsPromptDetail: 'Modeles, reecriture, historique',
     surfaceSharedControlsQuantityDetail: '{0} image(s)',
@@ -606,8 +606,6 @@ export const fr = {
     workspacePickerNoSketchAsset: "Aucune ressource de croquis n'est preparee.",
     workspacePickerCharacters: 'Personnages',
     workspacePickerCharacterHint: "Les references de personnage restent dans le meme modele d'ingestion prepare.",
-    workspacePickerEditorBase: "Base de l'editeur",
-    workspacePickerEditorBaseHint: "Televersez-en une directement ou reutilisez l'image actuelle de la scene.",
     workspacePickerPromptHistoryTitle: 'Historique des prompts',
     workspacePickerStageSource: 'Source de la scene',
     workspacePickerHistoryLinked: "lie a l'historique",
@@ -615,11 +613,7 @@ export const fr = {
         "La scene actuelle et les reouvertures depuis l'historique alimentent maintenant le meme modele source de suivi, reutilisable par les actions de l'editeur.",
     workspaceSideToolTitle: 'Outils d image',
     workspaceSideToolCurrentImage: 'Image actuelle',
-    workspaceSideToolBaseImage: 'Image de base',
     workspacePickerOpenSketchPad: 'Ouvrir SketchPad',
-    workspacePickerUploadBaseImage: "Televerser l'image de base",
-    workspacePickerUseCurrentStageAsEditorBase: "Utiliser la scene actuelle comme base de l'editeur",
-    workspacePickerClearEditorBase: "Effacer la base de l'editeur",
     workspacePickerLoading: 'Chargement du panneau du selecteur...',
     workspacePickerCapabilityHint:
         'Les controles adaptes aux capacites restent caches quand le modele ne les prend pas en charge.',
@@ -632,6 +626,11 @@ export const fr = {
     workspaceSheetTitleRatio: 'Format',
     workspaceSheetTitleSize: 'Taille de sortie',
     workspaceSheetTitleBatch: 'Quantite',
+    workspaceSheetTitleGenerationSettings: 'Generation Settings',
+    generationSettingsApply: 'Apply',
+    generationSettingsModalDesc: 'Review model, ratio, output size, and quantity together before applying them.',
+    generationSettingsModalDescSketch:
+        'SketchPad only exposes model and aspect ratio here. Output size stays fixed while sketching.',
     workspaceSheetTitleReferences: 'Plateau de references',
     workspaceSurfaceReady: 'Pret',
     workspaceSurfacePromptEmpty: 'Pas encore de prompt',
@@ -660,8 +659,7 @@ export const fr = {
     workspaceViewerAddToReferences: 'Ajouter aux references',
     workspaceViewerOpenEditor: "Ouvrir l'editeur",
     workspaceViewerEditCurrentImage: "Modifier l'image actuelle",
-    workspaceViewerContinueEditing: "Continuer l'edition",
-    workspaceViewerUploadBaseToEdit: 'Importer une base pour modifier',
+    workspaceViewerUploadBaseToEdit: 'Importer une image pour modifier',
     workspaceImportReviewEyebrow: "Verification d'import",
     workspaceImportReviewTitle: "Verifiez l'espace de travail importe avant de remplacer l'actuel.",
     workspaceImportReviewDesc:

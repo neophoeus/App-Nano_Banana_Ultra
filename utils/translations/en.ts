@@ -129,7 +129,6 @@ export const en = {
     workflowStatusIdle: 'Idle',
     uploadAdd: 'Add',
     uploadRefIndex: 'Ref',
-    safeLimitTip: 'Rec. < {0}',
     ratioPortrait: 'Portrait',
     ratioClassicV: 'Classic V',
     ratioVertical: 'Vertical',
@@ -269,7 +268,7 @@ export const en = {
     styleFlatDesign: 'Flat Design',
     styleMiniature: 'Miniature',
     queueBatchModeEditor:
-        'Queue Batch Job will submit an editor-based image-conditioned batch using the current editor base plus any staged references.',
+        'Queue Batch Job will submit an editor-origin image-conditioned batch using the current editor input plus any staged references.',
     queueBatchModeStage:
         'Queue Batch Job will submit a staged follow-up image-conditioned batch using the current stage image plus any staged references.',
     queueBatchModeReferences:
@@ -369,6 +368,8 @@ export const en = {
     surfaceSharedControlsRefsCount: '{0} refs',
     surfaceSharedControlsStateTitle: 'Shared Composer State',
     surfaceSharedControlsStateDesc: 'Main-page settings stay live here while {0} is open.',
+    surfaceSharedControlsStateDescEditor:
+        'Shared settings stay live here while {0} is open. Prompt stays local to the editor.',
     surfaceSharedControlsCurrentPrompt: 'Current Prompt',
     surfaceSharedControlsPromptDetail: 'Templates, rewrite, history',
     surfaceSharedControlsQuantityDetail: '{0} image(s)',
@@ -392,19 +393,13 @@ export const en = {
     workspacePickerNoSketchAsset: 'No sketch asset staged.',
     workspacePickerCharacters: 'Characters',
     workspacePickerCharacterHint: 'Character references stay in the same staged intake model.',
-    workspacePickerEditorBase: 'Editor base',
-    workspacePickerEditorBaseHint: 'Upload one directly or reuse the current stage image.',
     workspacePickerStageSource: 'Stage source',
     workspacePickerHistoryLinked: 'history-linked',
     workspacePickerStageSourceHint:
         'Current stage and history reopen now feed the same follow-up source model that editor actions can reuse.',
     workspaceSideToolTitle: 'Image Tools',
     workspaceSideToolCurrentImage: 'Current image',
-    workspaceSideToolBaseImage: 'Base image',
     workspacePickerOpenSketchPad: 'Open SketchPad',
-    workspacePickerUploadBaseImage: 'Upload Base Image',
-    workspacePickerUseCurrentStageAsEditorBase: 'Use Current Stage As Editor Base',
-    workspacePickerClearEditorBase: 'Clear Editor Base',
     workspacePickerLoading: 'Loading picker sheet...',
     workspacePickerCapabilityHint: 'Controls stay hidden when the model does not support them.',
     workspaceSheetTitlePrompt: 'Prompt',
@@ -416,6 +411,11 @@ export const en = {
     workspaceSheetTitleRatio: 'Aspect Ratio',
     workspaceSheetTitleSize: 'Output Size',
     workspaceSheetTitleBatch: 'Quantity',
+    workspaceSheetTitleGenerationSettings: 'Generation Settings',
+    generationSettingsApply: 'Apply',
+    generationSettingsModalDesc: 'Review model, ratio, output size, and quantity together before applying them.',
+    generationSettingsModalDescSketch:
+        'SketchPad only exposes model and aspect ratio here. Output size stays fixed while sketching.',
     workspaceSheetTitleReferences: 'References',
     workspaceSurfaceReady: 'Ready',
     workspaceSurfacePromptEmpty: 'No prompt yet',
@@ -443,8 +443,7 @@ export const en = {
     workspaceViewerAddToReferences: 'Add To References',
     workspaceViewerOpenEditor: 'Open Editor',
     workspaceViewerEditCurrentImage: 'Edit Current Image',
-    workspaceViewerContinueEditing: 'Continue Editing',
-    workspaceViewerUploadBaseToEdit: 'Upload Base To Edit',
+    workspaceViewerUploadBaseToEdit: 'Upload Image To Edit',
     workspaceImportReviewEyebrow: 'Import Review',
     workspaceImportReviewTitle: 'Review the imported workspace before replacing the current one.',
     workspaceImportReviewDesc:
@@ -680,7 +679,6 @@ export const en = {
         'Image search grounding now upgrades output to Images & text so attribution metadata can be returned.',
     composerStructuredOutputUpgradeNotice:
         'Structured output now upgrades output to Images & text so JSON can be returned alongside the image.',
-    composerActionPanelEyebrow: 'Actions',
     composerActionPanelTitle: 'Create',
     composerActionPanelDesc: 'Generate stays primary. Follow-up and workspace actions stay close, but quieter.',
     composerAdvancedEyebrow: 'Deep Controls',

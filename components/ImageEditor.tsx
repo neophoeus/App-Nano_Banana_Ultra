@@ -53,6 +53,16 @@ interface ImageEditorProps {
         characterImages?: string[],
         targetRatio?: AspectRatio,
     ) => void;
+    onQueueBatch?: (
+        prompt: string,
+        imageBase64: string,
+        batchSize: number,
+        size: ImageSize,
+        mode: string,
+        objectImages?: string[],
+        characterImages?: string[],
+        targetRatio?: AspectRatio,
+    ) => void | Promise<void>;
     onCancel: (options?: { discardSharedContext?: boolean }) => void;
     isGenerating: boolean;
     currentLanguage?: Language;
@@ -94,8 +104,6 @@ interface ViewportState {
 const MAX_DIMENSION = 4096;
 const DOODLE_COLORS = ['#ef4444', '#eab308', '#3b82f6', '#22c55e', '#ffffff']; // Red, Yellow, Blue, Green, White
 
-import HexagonHUD from './HexagonHUD';
-
 const ImageEditor: React.FC<ImageEditorProps> = ({
     initialImageUrl,
     initialPrompt,
@@ -117,10 +125,10 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     batchSize,
     onBatchSizeChange,
     onGenerate,
+    onQueueBatch,
     onCancel,
     isGenerating,
     currentLanguage = 'en' as Language,
-    currentLog = '',
     error,
     onErrorClear,
     imageModel,
@@ -645,7 +653,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     };
 
     // --- Final Generation ---
-    const handleGenerateClick = () => {
+    const buildEditorSubmissionPayload = () => {
         if (!imgElement || originalDims.w === 0) return;
 
         const canvas = document.createElement('canvas');
@@ -733,7 +741,45 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         }
 
         const base64 = canvas.toDataURL('image/png');
-        onGenerate(finalPrompt, base64, batchSize, size, finalModeLabel, objectImages, characterImages, ratio);
+        return {
+            finalPrompt,
+            base64,
+            finalModeLabel,
+        };
+    };
+
+    const handleGenerateClick = () => {
+        const submission = buildEditorSubmissionPayload();
+        if (!submission) return;
+
+        onGenerate(
+            submission.finalPrompt,
+            submission.base64,
+            batchSize,
+            size,
+            submission.finalModeLabel,
+            objectImages,
+            characterImages,
+            ratio,
+        );
+    };
+
+    const handleQueueBatchClick = () => {
+        if (!onQueueBatch) return;
+
+        const submission = buildEditorSubmissionPayload();
+        if (!submission) return;
+
+        onQueueBatch(
+            submission.finalPrompt,
+            submission.base64,
+            batchSize,
+            size,
+            submission.finalModeLabel,
+            objectImages,
+            characterImages,
+            ratio,
+        );
     };
 
     return (
@@ -742,12 +788,6 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
             className="fixed inset-0 flex flex-row bg-gray-100 dark:bg-[#050505] animate-[fadeIn_0.2s_ease-out] select-none overflow-hidden text-gray-900 transition-colors duration-300 dark:text-gray-200"
             style={{ zIndex: WORKSPACE_EDITOR_Z_INDEX.root }}
         >
-            <style>{`
-          @keyframes scan { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
-          .animate-scan { animation: scan 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
-          @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-        `}</style>
-
             {toast && (
                 <div
                     className="fixed top-8 left-1/2 -translate-x-1/2 pointer-events-none"
@@ -758,20 +798,6 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                     >
                         {toast.msg}
                     </div>
-                </div>
-            )}
-
-            {/* === LOADING OVERLAY === */}
-            {isGenerating && (
-                <div
-                    className="absolute inset-0 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm animate-[fadeIn_0.3s_ease-out]"
-                    style={{ zIndex: WORKSPACE_EDITOR_Z_INDEX.loading }}
-                >
-                    {/* Scanline Animation */}
-                    <div className="absolute left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-amber-400 to-transparent shadow-[0_0_25px_rgba(251,191,36,1)] animate-scan z-10 top-1/2"></div>
-
-                    {/* HUD */}
-                    <HexagonHUD statusText={t('statusProcessing')} logText={currentLog} />
                 </div>
             )}
 
@@ -874,9 +900,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
             {/* === MAIN WORKSPACE === */}
             <div className="flex-1 relative bg-gray-200 dark:bg-[#050505] overflow-hidden flex flex-col transition-colors">
                 {/* UI LAYER */}
-                <div
-                    className={`absolute inset-0 z-50 pointer-events-none flex flex-col justify-between p-4 ${isGenerating ? 'opacity-0' : ''}`}
-                >
+                <div className="absolute inset-0 z-50 pointer-events-none flex flex-col justify-between p-4">
                     <div className="flex justify-between items-start">
                         {/* Top Actions */}
                         <div className="nbu-toolbar-shell pointer-events-auto flex gap-2 p-1.5 transition-colors">
@@ -1296,22 +1320,32 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                         </div>
                     </div>
 
-                    <div className="pointer-events-auto mx-auto pb-4 flex flex-col items-center gap-2">
+                    <div className="pointer-events-auto mx-auto flex w-full max-w-[560px] items-center gap-3 px-4 pb-4">
                         <Button
+                            data-testid="editor-generate"
                             onClick={handleGenerateClick}
-                            isLoading={isGenerating}
+                            disabled={isGenerating}
                             className={`
+                            flex-1 min-w-0
                             shadow-[0_0_40px_rgba(245,158,11,0.6)] border border-yellow-200/60 
                             bg-gradient-to-r from-amber-600 via-yellow-500 to-orange-600 
-                            bg-[length:200%_auto] px-8 py-3.5 rounded-full text-lg font-black tracking-widest min-w-[240px] 
-                            relative group overflow-hidden transition-all duration-300
-                            ${isGenerating ? 'animate-pulse opacity-80 cursor-wait' : 'animate-gradient-xy hover:scale-105'}
+                            bg-[length:200%_auto] px-5 py-3.5 rounded-full text-sm font-black tracking-[0.18em] sm:text-base sm:tracking-widest
+                            relative group overflow-hidden transition-all duration-300 animate-gradient-xy hover:scale-105
                         `}
                         >
-                            <span className="relative z-10 drop-shadow-md">
-                                {isGenerating ? t('statusProcessing') : t('btnRender')}
-                            </span>
+                            <span className="text-center leading-tight drop-shadow-md">{t('btnRender')}</span>
                         </Button>
+                        {onQueueBatch ? (
+                            <Button
+                                data-testid="editor-queue-batch"
+                                variant="secondary"
+                                onClick={handleQueueBatchClick}
+                                disabled={isGenerating}
+                                className="flex-1 min-w-0 rounded-full border border-gray-300/70 px-5 py-3.5 text-sm font-extrabold tracking-[0.12em] text-gray-800 shadow-[0_12px_30px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-0.5 dark:border-gray-600/70 dark:text-gray-100 sm:text-base"
+                            >
+                                <span className="text-center leading-tight">{t('composerQueueBatchJob')}</span>
+                            </Button>
+                        ) : null}
                     </div>
                 </div>
 
@@ -1357,13 +1391,11 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                     height={originalDims.h}
                                     className={`absolute inset-0 w-full h-full mix-blend-normal ${retouchMode === 'mask' ? 'opacity-60' : 'opacity-100'}`}
                                 />
-                                <div
-                                    className={`absolute inset-0 border pointer-events-none transition-colors duration-500 ${isGenerating ? 'border-amber-500/50' : 'border-white/20'}`}
-                                />
+                                <div className="absolute inset-0 border border-white/20 pointer-events-none transition-colors duration-500" />
                             </div>
                         ) : (
                             <div
-                                className={`relative shadow-2xl bg-checkerboard overflow-hidden border transition-colors duration-500 ${isGenerating ? 'border-amber-500/50' : 'border-gray-400 dark:border-gray-700'}`}
+                                className="relative overflow-hidden border border-gray-400 bg-checkerboard shadow-2xl transition-colors duration-500 dark:border-gray-700"
                                 style={{ width: frameDims.w, height: frameDims.h }}
                             >
                                 <div
@@ -1379,9 +1411,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                         className="w-full h-full object-cover shadow-xl"
                                         alt="Source"
                                     />
-                                    <div
-                                        className={`absolute inset-0 border-2 transition-colors ${isGenerating ? 'border-amber-500/30' : 'border-blue-500/50'}`}
-                                    />
+                                    <div className="absolute inset-0 border-2 border-blue-500/50 transition-colors" />
                                 </div>
                             </div>
                         )}

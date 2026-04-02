@@ -39,6 +39,7 @@ vi.mock('../utils/imageSaveUtils', () => ({
 }));
 
 type HookHandle = ReturnType<typeof useQueuedBatchWorkflow>;
+type HookOverrides = Partial<Parameters<typeof useQueuedBatchWorkflow>[0]>;
 
 const buildQueuedJob = (overrides: Partial<QueuedBatchJob> = {}): QueuedBatchJob => ({
     localId: overrides.localId || 'job-ready',
@@ -84,49 +85,58 @@ describe('useQueuedBatchWorkflow', () => {
     let promptHistory: string[];
     let selectedHistoryIds: string[];
 
-    const renderHook = (initialQueuedJobs: QueuedBatchJob[], initialHistory: GeneratedImage[] = []) => {
+    const renderHook = (
+        initialQueuedJobs: QueuedBatchJob[],
+        initialHistory: GeneratedImage[] = [],
+        overrides: HookOverrides = {},
+    ) => {
         const historySelectRef = { current: (item: GeneratedImage) => selectedHistoryIds.push(item.id) };
 
         function Harness() {
             latestHook = useQueuedBatchWorkflow({
                 initialQueuedJobs,
-                apiKeyReady: true,
-                setApiKeyReady: vi.fn(),
-                handleApiKeyConnect: vi.fn().mockResolvedValue(true),
-                prompt: 'Queued test prompt',
-                imageStyle: 'None',
-                imageModel: 'gemini-3.1-flash-image-preview',
-                batchSize: 1,
-                aspectRatio: '1:1',
-                imageSize: '1K',
-                outputFormat: 'images-only',
-                temperature: 1,
-                thinkingLevel: 'minimal',
-                includeThoughts: true,
-                googleSearch: false,
-                imageSearch: false,
-                currentStageAsset: null,
-                editorBaseAsset: null,
-                objectImages: [],
-                characterImages: [],
-                getModelLabel: (model) => model,
-                getGenerationLineageContext: () => ({
+                apiKeyReady: overrides.apiKeyReady ?? true,
+                setApiKeyReady: overrides.setApiKeyReady ?? vi.fn(),
+                handleApiKeyConnect: overrides.handleApiKeyConnect ?? vi.fn().mockResolvedValue(true),
+                prompt: overrides.prompt ?? 'Queued test prompt',
+                imageStyle: overrides.imageStyle ?? 'None',
+                imageModel: overrides.imageModel ?? 'gemini-3.1-flash-image-preview',
+                batchSize: overrides.batchSize ?? 1,
+                aspectRatio: overrides.aspectRatio ?? '1:1',
+                imageSize: overrides.imageSize ?? '1K',
+                outputFormat: overrides.outputFormat ?? 'images-only',
+                structuredOutputMode: overrides.structuredOutputMode ?? 'off',
+                temperature: overrides.temperature ?? 1,
+                thinkingLevel: overrides.thinkingLevel ?? 'minimal',
+                includeThoughts: overrides.includeThoughts ?? true,
+                googleSearch: overrides.googleSearch ?? false,
+                imageSearch: overrides.imageSearch ?? false,
+                currentStageAsset: overrides.currentStageAsset ?? null,
+                objectImages: overrides.objectImages ?? [],
+                characterImages: overrides.characterImages ?? [],
+                getModelLabel: overrides.getModelLabel ?? ((model) => model),
+                getGenerationLineageContext: overrides.getGenerationLineageContext ?? (() => ({
                     parentHistoryId: 'parent-turn-1',
                     rootHistoryId: 'root-turn-1',
                     sourceHistoryId: 'source-turn-1',
                     lineageAction: 'continue',
                     lineageDepth: 1,
-                }),
-                addLog: (message) => logs.push(message),
-                addPromptToHistory: (value) => promptHistory.push(value),
-                showNotification: (message, type) => notifications.push({ message, type }),
+                })),
+                addLog: overrides.addLog ?? ((message) => logs.push(message)),
+                addPromptToHistory: overrides.addPromptToHistory ?? ((value) => promptHistory.push(value)),
+                showNotification:
+                    overrides.showNotification ?? ((message, type) => notifications.push({ message, type })),
                 setHistory: (updater) => {
                     latestHistory = typeof updater === 'function' ? updater(latestHistory) : updater;
                 },
                 history: latestHistory,
                 historySelectRef,
-                t: (key) => {
+                t: overrides.t ?? ((key) => {
                     const translations: Record<string, string> = {
+                        errorNoPrompt: 'Please enter a prompt to start!',
+                        queuedBatchSubmittedNotice: 'Queued batch job submitted to the official Batch API.',
+                        queuedBatchSubmittedLog: 'Queued official batch job {0}.',
+                        queuedBatchSubmissionFailedLog: 'Queued batch submission failed: {0}',
                         queuedBatchNoImportableResultsNotice: 'No importable queued results.',
                         queuedBatchImportedNotice: 'Imported {0} queued batch results.',
                         queuedBatchImportedLog: 'Imported {0} queued batch results from {1}.',
@@ -146,7 +156,7 @@ describe('useQueuedBatchWorkflow', () => {
                         queuedBatchCancelFailedLog: 'Queued batch cancel failed for {0}: {1}',
                     };
                     return translations[key] || key;
-                },
+                }),
             });
             return null;
         }
@@ -188,6 +198,94 @@ describe('useQueuedBatchWorkflow', () => {
         container.remove();
         (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = false;
         vi.restoreAllMocks();
+    });
+
+    it('submits explicit editor queue drafts as Editor Edit jobs', async () => {
+        submitQueuedBatchJobMock.mockResolvedValue({
+            name: 'batches/job-editor-queue',
+            displayName: 'Editor queue job',
+            state: 'JOB_STATE_PENDING',
+            model: 'gemini-3.1-flash-image-preview',
+            createTime: '2025-01-01T00:00:00.000Z',
+            updateTime: '2025-01-01T00:00:00.000Z',
+            error: null,
+            batchStats: null,
+        });
+
+        renderHook([]);
+
+        await act(async () => {
+            await latestHook!.handleQueueBatchJobFromEditor({
+                prompt: 'Queue this editor revision',
+                editingInput: 'data:image/png;base64,editor-canvas',
+                batchSize: 3,
+                imageSize: '2K',
+                aspectRatio: '16:9',
+                objectImageInputs: ['data:image/png;base64,object-ref'],
+                characterImageInputs: ['data:image/png;base64,character-ref'],
+            });
+        });
+
+        expect(submitQueuedBatchJobMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                prompt: 'Queue this editor revision',
+                editingInput: 'data:image/png;base64,editor-canvas',
+                requestCount: 3,
+                imageSize: '2K',
+                aspectRatio: '16:9',
+                style: 'None',
+                objectImageInputs: ['data:image/png;base64,object-ref'],
+                characterImageInputs: ['data:image/png;base64,character-ref'],
+            }),
+        );
+        expect(latestHook!.queuedJobs[0]).toEqual(
+            expect.objectContaining({
+                name: 'batches/job-editor-queue',
+                generationMode: 'Editor Edit',
+                batchSize: 3,
+                imageSize: '2K',
+                aspectRatio: '16:9',
+            }),
+        );
+        expect(promptHistory).toEqual(['Queue this editor revision']);
+        expect(notifications).toContainEqual({
+            message: 'Queued batch job submitted to the official Batch API.',
+            type: 'info',
+        });
+    });
+
+    it('keeps main queue submissions as Text to Image without stale editor state', async () => {
+        submitQueuedBatchJobMock.mockResolvedValue({
+            name: 'batches/job-main-queue',
+            displayName: 'Main queue job',
+            state: 'JOB_STATE_PENDING',
+            model: 'gemini-3.1-flash-image-preview',
+            createTime: '2025-01-01T00:00:00.000Z',
+            updateTime: '2025-01-01T00:00:00.000Z',
+            error: null,
+            batchStats: null,
+        });
+
+        renderHook([], [], {
+            prompt: 'Queue from the main composer',
+        });
+
+        await act(async () => {
+            await latestHook!.handleQueueBatchJob();
+        });
+
+        expect(submitQueuedBatchJobMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                prompt: 'Queue from the main composer',
+                editingInput: undefined,
+            }),
+        );
+        expect(latestHook!.queuedJobs[0]).toEqual(
+            expect.objectContaining({
+                name: 'batches/job-main-queue',
+                generationMode: 'Text to Image',
+            }),
+        );
     });
 
     it('imports a ready queued job into workspace history and marks it imported', async () => {

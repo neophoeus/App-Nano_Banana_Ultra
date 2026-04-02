@@ -323,11 +323,6 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                     setError(results[0].error || t('errorAllFailed'));
                 }
 
-                if (editingInput && successCount > 0) {
-                    setIsEditing(false);
-                    setEditingImageSource(null);
-                }
-
                 addLog(
                     t('logSuccessFail').replace('{0}', successCount.toString()).replace('{1}', failCount.toString()),
                 );

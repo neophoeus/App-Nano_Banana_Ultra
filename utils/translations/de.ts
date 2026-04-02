@@ -141,7 +141,6 @@ export const de = {
     branchRenameSavedLog: 'Die Branch wurde in {0} ({1}) umbenannt.',
     uploadAdd: 'Plus',
     uploadRefIndex: 'Ref',
-    safeLimitTip: 'Empf. < {0}',
     ratioPortrait: 'Porträt',
     ratioClassicV: 'Klassisch V',
     ratioVertical: 'Vertikal',
@@ -431,7 +430,6 @@ export const de = {
         'Grounding per Bildsuche stellt die Ausgabe jetzt automatisch auf Images & text um, damit Zuordnungsmetadaten zurueckgegeben werden koennen.',
     composerStructuredOutputUpgradeNotice:
         'Strukturierte Ausgabe stellt die Ausgabe jetzt auf Bilder und Text um, damit JSON zusammen mit dem Bild zurueckgegeben werden kann.',
-    composerActionPanelEyebrow: 'Aktionen',
     composerActionPanelTitle: 'Erstellen',
     composerActionPanelDesc:
         'Generieren bleibt die Hauptaktion. Folgeaktionen und Arbeitsbereichsaktionen bleiben nah dran, aber leiser.',
@@ -558,6 +556,8 @@ export const de = {
     surfaceSharedControlsRefsCount: '{0} Refs',
     surfaceSharedControlsStateTitle: 'Gemeinsamer Kompositionsstatus',
     surfaceSharedControlsStateDesc: 'Die Haupteinstellungen bleiben hier aktiv, solange {0} geoffnet ist.',
+    surfaceSharedControlsStateDescEditor:
+        'Die gemeinsamen Einstellungen bleiben hier aktiv, solange {0} geoffnet ist. Der Prompt bleibt lokal im Editor.',
     surfaceSharedControlsCurrentPrompt: 'Aktueller Prompt',
     surfaceSharedControlsPromptDetail: 'Vorlagen, Umschreiben, Verlauf',
     surfaceSharedControlsQuantityDetail: '{0} Bild(er)',
@@ -608,8 +608,6 @@ export const de = {
     workspacePickerNoSketchAsset: 'Kein Skizzen-Asset vorbereitet.',
     workspacePickerCharacters: 'Charaktere',
     workspacePickerCharacterHint: 'Charakter-Referenzen bleiben im selben vorbereiteten Eingabemodell.',
-    workspacePickerEditorBase: 'Editor-Basis',
-    workspacePickerEditorBaseHint: 'Laden Sie direkt ein Bild hoch oder verwenden Sie das aktuelle Stufenbild erneut.',
     workspacePickerPromptHistoryTitle: 'Prompt-Verlauf',
     workspacePickerStageSource: 'Szenenquelle',
     workspacePickerHistoryLinked: 'mit Verlauf verknupft',
@@ -617,11 +615,7 @@ export const de = {
         'Aktuelle Stufe und erneut aus dem Verlauf geoffnete Bilder speisen jetzt dasselbe Folgequellmodell, das Editor-Aktionen wiederverwenden konnen.',
     workspaceSideToolTitle: 'Bildwerkzeuge',
     workspaceSideToolCurrentImage: 'Aktuelles Bild',
-    workspaceSideToolBaseImage: 'Basisbild',
     workspacePickerOpenSketchPad: 'SketchPad offnen',
-    workspacePickerUploadBaseImage: 'Basisbild hochladen',
-    workspacePickerUseCurrentStageAsEditorBase: 'Aktuelle Stufe als Editor-Basis verwenden',
-    workspacePickerClearEditorBase: 'Editor-Basis loschen',
     workspacePickerLoading: 'Picker-Fenster wird geladen...',
     workspacePickerCapabilityHint:
         'Fahigkeitsbezogene Steuerelemente bleiben verborgen, wenn das Modell sie nicht unterstutzt.',
@@ -634,6 +628,11 @@ export const de = {
     workspaceSheetTitleRatio: 'Seitenverhaltnis',
     workspaceSheetTitleSize: 'Ausgabegrosse',
     workspaceSheetTitleBatch: 'Menge',
+    workspaceSheetTitleGenerationSettings: 'Generation Settings',
+    generationSettingsApply: 'Apply',
+    generationSettingsModalDesc: 'Review model, ratio, output size, and quantity together before applying them.',
+    generationSettingsModalDescSketch:
+        'SketchPad only exposes model and aspect ratio here. Output size stays fixed while sketching.',
     workspaceSheetTitleReferences: 'Referenzablage',
     workspaceSurfaceReady: 'Bereit',
     workspaceSurfacePromptEmpty: 'Noch kein Prompt',
@@ -661,8 +660,7 @@ export const de = {
     workspaceViewerAddToReferences: 'Zu Referenzen hinzufugen',
     workspaceViewerOpenEditor: 'Editor offnen',
     workspaceViewerEditCurrentImage: 'Aktuelles Bild bearbeiten',
-    workspaceViewerContinueEditing: 'Bearbeitung fortsetzen',
-    workspaceViewerUploadBaseToEdit: 'Basis zum Bearbeiten hochladen',
+    workspaceViewerUploadBaseToEdit: 'Bild zum Bearbeiten hochladen',
     workspaceImportReviewEyebrow: 'Importprufung',
     workspaceImportReviewTitle: 'Prufen Sie den importierten Arbeitsbereich, bevor Sie den aktuellen ersetzen.',
     workspaceImportReviewDesc:

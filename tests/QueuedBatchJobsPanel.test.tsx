@@ -634,4 +634,58 @@ describe('QueuedBatchJobsPanel', () => {
         expect(markup).not.toContain('Follow-up Edit');
         expect(markup).not.toContain('Image to Image');
     });
+    
+    it('renders Editor Edit as the waiting-list mode label for editor-origin queue jobs', () => {
+        const markup = renderToStaticMarkup(
+            <QueuedBatchJobsPanel
+                currentLanguage="ja"
+                queueBatchConversationNotice={null}
+                queuedJobs={[
+                    {
+                        localId: 'job-editor-edit',
+                        name: 'batches/job-editor-edit',
+                        displayName: 'Editor queue job',
+                        state: 'JOB_STATE_PENDING',
+                        model: 'gemini-3.1-flash-image-preview',
+                        prompt: 'Queue editor edit',
+                        generationMode: 'Editor Edit',
+                        aspectRatio: '1:1',
+                        imageSize: '1K',
+                        style: 'None',
+                        outputFormat: 'images-only',
+                        temperature: 1,
+                        thinkingLevel: 'minimal',
+                        includeThoughts: true,
+                        googleSearch: false,
+                        imageSearch: false,
+                        batchSize: 1,
+                        objectImageCount: 0,
+                        characterImageCount: 0,
+                        createdAt: 1710400000000,
+                        updatedAt: 1710400000000,
+                        startedAt: null,
+                        completedAt: null,
+                        lastPolledAt: null,
+                        importedAt: null,
+                        error: null,
+                    },
+                ]}
+                getLineageActionLabel={() => 'root'}
+                getImportedQueuedResultCount={() => 0}
+                getImportedQueuedHistoryItems={() => []}
+                activeImportedQueuedHistoryId={null}
+                onImportAllQueuedJobs={vi.fn()}
+                onPollAllQueuedJobs={vi.fn()}
+                onPollQueuedJob={vi.fn()}
+                onCancelQueuedJob={vi.fn()}
+                onImportQueuedJob={vi.fn()}
+                onOpenImportedQueuedJob={vi.fn()}
+                onOpenLatestImportedQueuedJob={vi.fn()}
+                onOpenImportedQueuedHistoryItem={vi.fn()}
+                onRemoveQueuedJob={vi.fn()}
+            />,
+        );
+
+        expect(markup).toContain('Editor Edit');
+    });
 });

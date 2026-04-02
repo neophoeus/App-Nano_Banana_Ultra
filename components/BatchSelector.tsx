@@ -30,7 +30,7 @@ const BatchSelector: React.FC<BatchSelectorProps> = ({
                 </span>
             </label>
             <div className="nbu-segmented-tray mt-auto flex gap-1 p-1">
-                {[1, 2, 4].map((size) => (
+                {[1, 2, 3, 4].map((size) => (
                     <button
                         key={size}
                         onClick={() => onSelect(size)}

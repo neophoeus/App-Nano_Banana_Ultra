@@ -276,7 +276,6 @@ const App: React.FC = () => {
         setStagedAssets,
         objectImages,
         characterImages,
-        editorBaseAsset,
         currentStageAsset,
         hasSketch,
         setObjectImages,
@@ -334,20 +333,20 @@ const App: React.FC = () => {
     } = useWorkspaceShellUtilities({
         setApiKeyReady,
     });
-    const { editorContextSnapshot, setEditorContextSnapshot, editorInitialState } = useWorkspaceTransientUiState({
+    const { editorContextSnapshot, setEditorContextSnapshot, editorPrompt, setEditorPrompt, editorInitialState } =
+        useWorkspaceTransientUiState({
         selectedGrounding,
         activeResultGrounding: workspaceSession.activeResult?.grounding || null,
         activeGroundingSelection,
         setActiveGroundingSelection,
         setFocusLinkedGroundingItems,
         isEditing,
-        prompt,
         objectImages,
         characterImages,
         aspectRatio,
         imageSize,
         batchSize,
-    });
+        });
 
     const handleLanguageChange = useCallback(
         (nextLanguage: Language) => {
@@ -456,7 +455,6 @@ const App: React.FC = () => {
     });
 
     const { getGenerationLineageContext, getConversationRequestContext } = useWorkspaceGenerationContext({
-        editorBaseAsset,
         currentStageAsset,
         workspaceSession,
         history,
@@ -501,10 +499,28 @@ const App: React.FC = () => {
         getConversationRequestContext,
     });
 
-    const { isEnhancingPrompt, handleSmartRewrite, handleSurpriseMe } = usePromptTools({
+    const {
+        isEnhancingPrompt: isEnhancingComposerPrompt,
+        handleSmartRewrite: handleComposerSmartRewrite,
+        handleSurpriseMe: handleComposerSurpriseMe,
+    } = usePromptTools({
         currentLanguage: currentLang,
         prompt,
         setPrompt,
+        addLog,
+        showNotification,
+        t,
+        apiKeyReady,
+        handleApiKeyConnect,
+    });
+    const {
+        isEnhancingPrompt: isEnhancingEditorPrompt,
+        handleSmartRewrite: handleEditorSmartRewrite,
+        handleSurpriseMe: handleEditorSurpriseMe,
+    } = usePromptTools({
+        currentLanguage: currentLang,
+        prompt: editorPrompt,
+        setPrompt: setEditorPrompt,
         addLog,
         showNotification,
         t,
@@ -598,6 +614,7 @@ const App: React.FC = () => {
         queuedJobs,
         setQueuedJobs,
         handleQueueBatchJob,
+        handleQueueBatchJobFromEditor,
         handlePollQueuedJob,
         handlePollAllQueuedJobs,
         handleCancelQueuedJob,
@@ -627,7 +644,6 @@ const App: React.FC = () => {
         googleSearch,
         imageSearch,
         currentStageAsset,
-        editorBaseAsset,
         objectImages,
         characterImages,
         getModelLabel,
@@ -646,7 +662,6 @@ const App: React.FC = () => {
         getImportedQueuedResultCount,
         getQueuedBatchPositionLabel,
     } = useQueuedBatchPresentation({
-        editorBaseAsset,
         currentStageAsset,
         objectImageCount: objectImages.length,
         characterImageCount: characterImages.length,
@@ -733,23 +748,28 @@ const App: React.FC = () => {
         handleRemoveCharacterReference,
         handleUploadForEdit,
         handleOpenEditor,
-        handleStageCurrentImageAsEditorBase,
-        handleClearEditorBaseAsset,
         handleEditorGenerate,
+        handleEditorQueueBatch,
         handleSketchReplaceCancel,
         handleSketchReplaceConfirm,
         handleCloseSketchPad,
     } = useWorkspaceEditorActions({
-        prompt,
         objectImages,
         characterImages,
         aspectRatio,
         imageSize,
         batchSize,
         imageModel,
+        imageStyle,
+        outputFormat,
+        structuredOutputMode,
+        temperature,
+        thinkingLevel,
+        includeThoughts,
+        googleSearch,
+        imageSearch,
         capability,
         currentStageAsset,
-        editorBaseAsset,
         editorContextSnapshot,
         hasSketch,
         isEditing,
@@ -759,6 +779,7 @@ const App: React.FC = () => {
         setIsEditing,
         setEditingImageSource,
         setEditorContextSnapshot,
+        setEditorPrompt,
         setActivePickerSheet,
         setError,
         setIsSketchPadOpen,
@@ -773,6 +794,7 @@ const App: React.FC = () => {
         t,
         primePendingProvenanceContinuation,
         performGeneration,
+        queueBatchJobFromEditor: handleQueueBatchJobFromEditor,
     });
 
     const { handleClearCurrentStage, handleClearGalleryHistory } = useWorkspaceResetActions({
@@ -933,6 +955,7 @@ const App: React.FC = () => {
         isGenerating,
         displaySettings,
         prompt,
+        surfacePrompt: isEditing ? editorPrompt : prompt,
         aspectRatio,
         imageSize,
         imageStyle,
@@ -1088,6 +1111,7 @@ const App: React.FC = () => {
             activeSurfaceSheetLabel,
             activePickerSheet,
             surfacePromptPreview,
+            settingsVariant: isSketchPadOpen ? 'sketch' : 'full',
             totalReferenceCount,
             imageStyle,
             imageModel,
@@ -1125,12 +1149,6 @@ const App: React.FC = () => {
             closeBranchRenameDialog,
             handleSubmitBranchRename,
         });
-    const handleOpenUploadDialog = useCallback(() => {
-        uploadInputRef.current?.click();
-    }, []);
-    const handleOpenReferencesSheet = useCallback(() => {
-        setActivePickerSheet('references');
-    }, [setActivePickerSheet]);
     const handleCloseWorkspaceDetailModal = useCallback(() => {
         setActiveWorkspaceDetailModal(null);
     }, []);
@@ -1154,7 +1172,7 @@ const App: React.FC = () => {
         placeholder: t('placeholder'),
         enterToSubmit,
         isGenerating,
-        isEnhancingPrompt,
+        isEnhancingPrompt: isEnhancingComposerPrompt,
         currentLanguage: currentLang,
         imageStyleLabel: getStyleLabel(imageStyle),
         outputFormat,
@@ -1194,8 +1212,8 @@ const App: React.FC = () => {
         handleStartNewConversation,
         handleFollowUpGenerate,
         handleOpenEditor,
-        handleSurpriseMe,
-        handleSmartRewrite,
+        handleSurpriseMe: handleComposerSurpriseMe,
+        handleSmartRewrite: handleComposerSmartRewrite,
         setActivePickerSheet,
         setIsAdvancedSettingsOpen,
         setOutputFormat,
@@ -1385,7 +1403,7 @@ const App: React.FC = () => {
         executionMode,
         onGenerate: handleGenerate,
         onEdit: handleOpenEditor,
-        onUpload: handleOpenUploadDialog,
+        onUpload: handleOpenEditor,
         onClear: handleClearCurrentStage,
         onAddToObjectReference: handleAddToObjectReference,
         onAddToCharacterReference: capability.maxCharacters > 0 ? handleAddToCharacterReference : undefined,
@@ -1416,15 +1434,16 @@ const App: React.FC = () => {
         activePickerSheet,
         activeSheetTitle,
         pickerSheetZIndex,
-        prompt,
-        setPrompt,
-        handleSurpriseMe,
-        handleSmartRewrite,
-        isEnhancingPrompt,
+        prompt: isEditing ? editorPrompt : prompt,
+        setPrompt: isEditing ? setEditorPrompt : setPrompt,
+        handleSurpriseMe: isEditing ? handleEditorSurpriseMe : handleComposerSurpriseMe,
+        handleSmartRewrite: isEditing ? handleEditorSmartRewrite : handleComposerSmartRewrite,
+        isEnhancingPrompt: isEditing ? isEnhancingEditorPrompt : isEnhancingComposerPrompt,
         closePickerSheet,
         openPromptSheet: () => setActivePickerSheet('prompt'),
         openTemplatesSheet: () => setActivePickerSheet('templates'),
         openHistorySheet: () => setActivePickerSheet('history'),
+        openStylesSheet: () => setActivePickerSheet('styles'),
         openReferencesSheet: () => setActivePickerSheet('references'),
         promptHistory,
         removePrompt,
@@ -1452,18 +1471,9 @@ const App: React.FC = () => {
         setImageSize,
         batchSize,
         setBatchSize,
+        settingsVariant: isSketchPadOpen ? 'sketch' : 'full',
         objectImages,
         characterImages,
-        hasSketch,
-        editorBaseAsset,
-        currentStageAsset,
-        getStageOriginLabel,
-        getLineageActionLabel,
-        handleOpenSketchPad,
-        openUploadDialog: handleOpenUploadDialog,
-        activeViewerImage,
-        handleStageCurrentImageAsEditorBase,
-        handleClearEditorBaseAsset,
         setObjectImages,
         isGenerating,
         showNotification,
@@ -1707,24 +1717,36 @@ const App: React.FC = () => {
         () => (
             <WorkspaceSideToolPanel
                 currentLanguage={currentLang}
-                editorBaseAsset={editorBaseAsset}
-                currentStageAsset={currentStageAsset}
-                onUploadBaseImage={handleOpenUploadDialog}
+                canEditCurrentImage={Boolean(activeViewerImage)}
                 onOpenSketchPad={handleOpenSketchPad}
                 onOpenEditor={handleOpenEditor}
-                getStageOriginLabel={getStageOriginLabel}
-                getLineageActionLabel={getLineageActionLabel}
+                objectImages={objectImages}
+                characterImages={characterImages}
+                maxObjects={capability.maxObjects}
+                maxCharacters={capability.maxCharacters}
+                setObjectImages={setObjectImages}
+                setCharacterImages={setCharacterImages}
+                isGenerating={isGenerating}
+                showNotification={showNotification}
+                handleRemoveObjectReference={handleRemoveObjectReference}
+                handleRemoveCharacterReference={handleRemoveCharacterReference}
             />
         ),
         [
+            activeViewerImage,
+            capability.maxCharacters,
+            capability.maxObjects,
+            characterImages,
             currentLang,
-            currentStageAsset,
-            editorBaseAsset,
-            getLineageActionLabel,
-            getStageOriginLabel,
             handleOpenEditor,
             handleOpenSketchPad,
-            handleOpenUploadDialog,
+            handleRemoveCharacterReference,
+            handleRemoveObjectReference,
+            isGenerating,
+            objectImages,
+            setCharacterImages,
+            setObjectImages,
+            showNotification,
         ],
     );
     const contextProvenanceDetailPanel = useMemo(
@@ -1959,8 +1981,8 @@ const App: React.FC = () => {
                                 initialRatio={editorInitialState.ratio}
                                 initialSize={editorInitialState.size}
                                 initialBatchSize={editorInitialState.batchSize}
-                                prompt={prompt}
-                                onPromptChange={setPrompt}
+                                prompt={editorPrompt}
+                                onPromptChange={setEditorPrompt}
                                 objectImages={objectImages}
                                 onObjectImagesChange={setObjectImages}
                                 characterImages={characterImages}
@@ -1972,6 +1994,7 @@ const App: React.FC = () => {
                                 batchSize={batchSize}
                                 onBatchSizeChange={setBatchSize}
                                 onGenerate={handleEditorGenerate}
+                                onQueueBatch={handleEditorQueueBatch}
                                 onCancel={closeEditor}
                                 isGenerating={isGenerating}
                                 currentLanguage={currentLang}

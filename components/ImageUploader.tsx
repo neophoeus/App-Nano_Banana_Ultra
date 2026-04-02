@@ -159,11 +159,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                         )}
                     </div>
                     <div className="flex items-center gap-2">
-                        {safeLimit && (
-                            <span className="text-[9px] text-emerald-600 dark:text-emerald-500/80 font-mono hidden sm:inline-block">
-                                {t('safeLimitTip').replace('{0}', safeLimit.toString())}
-                            </span>
-                        )}
                         <span
                             className={`text-[10px] ${images.length >= maxImages ? 'text-red-500 dark:text-red-400' : 'text-gray-500'}`}
                         >

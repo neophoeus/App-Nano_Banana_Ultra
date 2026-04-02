@@ -14,7 +14,7 @@ const baseProps = {
     isEnhancingPrompt: false,
     currentLanguage: 'en' as const,
     imageStyleLabel: 'None',
-    modelLabel: 'Gemini 3.1 Flash',
+    modelLabel: getTranslation('en', 'modelGemini31Flash'),
     aspectRatio: '1:1' as const,
     imageSize: '2K' as const,
     batchSize: 3,
@@ -53,6 +53,7 @@ const baseProps = {
     onOpenPromptHistory: vi.fn(),
     onOpenTemplates: vi.fn(),
     onOpenStyles: vi.fn(),
+    onOpenSettings: vi.fn(),
     onOpenModelPicker: vi.fn(),
     onOpenRatioPicker: vi.fn(),
     onOpenSizePicker: vi.fn(),
@@ -78,7 +79,7 @@ const baseProps = {
 };
 
 describe('ComposerSettingsPanel toolbar layout', () => {
-    it('keeps settings ownership above helper tools and the reference strip below them', () => {
+    it('keeps settings ownership above helper tools without a separate reference strip', () => {
         const markup = renderToStaticMarkup(
             <ComposerSettingsPanel
                 {...baseProps}
@@ -90,19 +91,44 @@ describe('ComposerSettingsPanel toolbar layout', () => {
 
         expect(markup).toContain('composer-settings-row');
         expect(markup).toContain('composer-quick-tools');
-        expect(markup).toContain('composer-reference-context-strip');
+        expect(markup).toContain('composer-settings-button');
+        expect(markup).toContain('composer-advanced-settings-button');
         expect(markup.indexOf('composer-settings-row')).toBeLessThan(markup.indexOf('composer-quick-tools'));
-        expect(markup.indexOf('composer-quick-tools')).toBeLessThan(markup.indexOf('composer-reference-context-strip'));
-        expect(markup).toContain('Model');
-        expect(markup).toContain('Aspect Ratio');
-        expect(markup).toContain('Output Size');
-        expect(markup).toContain('Quantity');
-        expect(markup).toContain('Reference Tray');
-        expect(markup).toContain('Objects 1/4');
-        expect(markup).toContain('Characters 1/2');
+        expect(markup).toContain('Generation Settings');
+        expect(markup).toContain(
+            `Model: ${getTranslation('en', 'modelGemini31Flash').replace(' (gemini-3.1-flash-image-preview)', '')}`,
+        );
+        expect(markup).toContain('Aspect Ratio: 1:1');
+        expect(markup).toContain('Output Size: 2K');
+        expect(markup).toContain(`Quantity: ${getTranslation('en', 'qtyX').replace('{0}', '3')}`);
+        expect(markup).toContain('bg-sky-50');
+        expect(markup).toContain('bg-emerald-50');
+        expect(markup).toContain('bg-amber-50');
+        expect(markup).toContain('bg-violet-50');
+        expect(markup).toContain('dark:bg-sky-500/18');
+        expect(markup).toContain('dark:bg-emerald-500/18');
+        expect(markup).toContain('dark:bg-amber-400/18');
+        expect(markup).toContain('dark:bg-violet-500/18');
+        expect(markup).toContain('Inspiration');
+        expect(markup).toContain('AI Enhance');
+        expect(markup).toContain('Templates');
+        expect(markup).toContain('Saved Prompts');
+        expect(markup).toContain('Styles');
         expect(markup).toContain('Advanced settings');
+        expect(markup).toContain('Output format: Images only');
+        expect(markup).toContain('Thinking level: High');
+        expect(markup).toContain('Return thoughts: Visible');
+        expect(markup).toContain('Grounding: Off');
+        expect((markup.match(/nbu-scrollbar-subtle/g) || []).length).toBeGreaterThanOrEqual(2);
+        expect((markup.match(/overflow-x-auto/g) || []).length).toBeGreaterThanOrEqual(2);
+        expect(markup).not.toContain(getTranslation('en', 'composerAdvancedDesc'));
+        expect(markup).not.toContain('Output format: images-only');
+        expect(markup).not.toContain('Thinking level: high');
+        expect(markup).not.toContain('composer-settings-model');
+        expect(markup).not.toContain('composer-settings-ratio');
+        expect(markup).not.toContain('composer-settings-size');
+        expect(markup).not.toContain('composer-settings-qty');
         expect(markup).not.toContain('Compose');
-        expect(markup).not.toContain(getTranslation('en', 'composerActionPanelEyebrow'));
         expect(markup).not.toContain(getTranslation('en', 'composerActionPanelTitle'));
         expect(markup).not.toContain('Gallery');
         expect(markup).toContain('composer-queue-batch-mode-hint-trigger');
@@ -111,10 +137,43 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).not.toContain('composer-queue-summary-details');
         expect(markup).not.toContain('composer-queue-summary-summary');
         expect(markup).not.toContain('composer-queue-summary-notice');
+        expect(markup).not.toContain('composer-reference-context-strip');
+        expect(markup).not.toContain('Reference Tray');
         expect(markup).not.toContain('composer-workspace-tools');
         expect(markup).not.toContain('Export Workspace');
         expect(markup).not.toContain('Import Workspace');
-        expect(markup).not.toContain('border-amber-200 bg-amber-50');
+        expect(markup).toContain('min-h-10');
+        expect(markup).toContain('py-2');
+        expect(markup).toContain('border-amber-200 bg-amber-50');
+    });
+
+    it('keeps the follow-up source summary beside generation settings instead of below the prompt', () => {
+        const markup = renderToStaticMarkup(
+            <ComposerSettingsPanel
+                {...baseProps}
+                currentStageAsset={{
+                    id: 'stage-source-1',
+                    url: 'https://example.com/stage-source.png',
+                    role: 'stage-source',
+                    origin: 'history',
+                    createdAt: 1710400010000,
+                    lineageAction: 'reopen',
+                }}
+                getStageOriginLabel={() => 'History'}
+                getLineageActionLabel={() => 'Reopen'}
+                groundingMode="off"
+                imageModel="gemini-3.1-flash-image-preview"
+                capability={MODEL_CAPABILITIES['gemini-3.1-flash-image-preview']}
+            />,
+        );
+
+        expect(markup).toContain('composer-follow-up-source-strip');
+        expect(markup).toContain('Follow-up source');
+        expect(markup).toContain('History · Reopen');
+        expect(markup.indexOf('composer-settings-button')).toBeLessThan(
+            markup.indexOf('composer-follow-up-source-strip'),
+        );
+        expect(markup.indexOf('composer-follow-up-source-strip')).toBeLessThan(markup.indexOf('composer-quick-tools'));
     });
 
     it('replaces the inline queued jobs panel with a compact status button when tracked jobs exist', () => {
