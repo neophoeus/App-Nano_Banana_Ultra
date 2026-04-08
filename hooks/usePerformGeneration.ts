@@ -21,6 +21,7 @@ import {
     persistHistoryThumbnail,
     saveImageToLocal,
 } from '../utils/imageSaveUtils';
+import { buildImageSidecarMetadata } from '../utils/imageSidecarMetadata';
 import { deriveExecutionMode } from '../utils/executionMode';
 import { sanitizeSessionHintsForStorage } from '../utils/inlineImageDisplay';
 
@@ -250,13 +251,24 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                 addLog(t('logRequesting').replace('{0}', currentBatchSize.toString()).replace('{1}', currentImageSize));
 
                 const handleImageReceived = async (url: string, slotIndex: number): Promise<ImageReceivedResult> => {
-                    const metadata = {
+                    const metadata = buildImageSidecarMetadata({
                         prompt: finalPrompt,
+                        model: targetModel,
                         style: targetStyle,
                         aspectRatio: effectiveAspectRatio || '1:1',
-                        size: currentImageSize,
-                        mode: currentMode,
-                    };
+                        requestedImageSize: currentImageSize,
+                        outputFormat,
+                        structuredOutputMode,
+                        temperature,
+                        thinkingLevel,
+                        includeThoughts,
+                        googleSearch,
+                        imageSearch,
+                        generationMode: currentMode,
+                        executionMode: currentExecutionMode,
+                        batchSize: currentBatchSize,
+                        batchResultIndex: slotIndex,
+                    });
                     const prefix = editingInput ? `${targetModel}-edit` : `${targetModel}-gen`;
                     const savedPath = await saveImageToLocal(url, prefix, metadata);
                     const filename = extractSavedFilename(savedPath);
@@ -340,9 +352,27 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                     let thumbnailSavedFilename: string | undefined;
                     let thumbnailInline: boolean | undefined;
                     const sanitizedSessionHints = sanitizeSessionHintsForStorage(res.sessionHints || null);
+                    const sidecarMetadata = buildImageSidecarMetadata({
+                        prompt: finalPrompt,
+                        model: targetModel,
+                        style: targetStyle,
+                        aspectRatio: effectiveAspectRatio || '1:1',
+                        requestedImageSize: currentImageSize,
+                        outputFormat,
+                        structuredOutputMode,
+                        temperature,
+                        thinkingLevel,
+                        includeThoughts,
+                        googleSearch,
+                        imageSearch,
+                        generationMode: currentMode,
+                        executionMode: currentExecutionMode,
+                        batchSize: currentBatchSize,
+                        batchResultIndex,
+                    });
                     if (res.status === 'success' && res.url) {
                         const prefix = editingInput ? `${targetModel}-edit` : `${targetModel}-gen`;
-                        const persistedThumbnail = await persistHistoryThumbnail(res.url, prefix);
+                        const persistedThumbnail = await persistHistoryThumbnail(res.url, prefix, res.savedFilename);
                         thumbnailUrl = persistedThumbnail.url;
                         thumbnailSavedFilename = persistedThumbnail.thumbnailSavedFilename;
                         thumbnailInline = persistedThumbnail.thumbnailInline;
@@ -370,8 +400,8 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                         thoughts: res.thoughts,
                         structuredData: res.structuredData,
                         metadata: {
+                            ...sidecarMetadata,
                             ...(res.metadata || {}),
-                            batchResultIndex,
                         },
                         grounding: res.grounding,
                         sessionHints: sanitizedSessionHints || undefined,

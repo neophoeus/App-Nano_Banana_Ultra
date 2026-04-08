@@ -303,8 +303,7 @@ export const ko = {
         '최근 원격 배치 작업은 이미 목록에서 추적 중이며 {0}개 항목을 새로고침했습니다.',
     queuedBatchRecoverRecentNoneNotice: '추가로 복구할 최근 원격 배치 작업을 찾지 못했습니다.',
     queuedBatchRecoverRecentLog: '배치 목록에서 최근 원격 배치 작업 {0}개를 복구했습니다.',
-    queuedBatchRecoverRecentRefreshedLog:
-        '배치 목록에서 이미 추적 중인 원격 배치 작업 {0}개를 새로고침했습니다.',
+    queuedBatchRecoverRecentRefreshedLog: '배치 목록에서 이미 추적 중인 원격 배치 작업 {0}개를 새로고침했습니다.',
     queuedBatchRecoverRecentFailedLog: '최근 배치 작업 복구 실패: {0}',
     queuedBatchRecoverRecentMetadataHint:
         '복구된 원격 작업은 다시 가져올 수 있지만, Gemini batch 목록은 원래 프롬프트나 참조 이미지를 돌려주지 않으므로 이 항목들에는 축약된 로컬 정보만 남습니다.',
@@ -448,6 +447,10 @@ export const ko = {
     composerActionPanelDesc:
         '생성을 중심에 두고, 후속 편집과 워크스페이스 작업은 가까이에 두되 더 조용하게 유지합니다.',
     composerAdvancedEyebrow: '심화 제어',
+    composerAdvancedTemperatureGuideDefault: '기본값 1.0은 안정성과 변동성의 균형을 맞춥니다.',
+    composerAdvancedTemperatureGuideHigher:
+        '1.0보다 크면 변화와 의외성이 커지지만 일관성과 프롬프트 충실도는 떨어질 수 있습니다.',
+    composerAdvancedTemperatureGuideLower: '1.0보다 작으면 결과가 더 안정적이고 직관적이지만 탐색성은 보통 낮아집니다.',
     composerAdvancedStructuredOutputGuideOff: '일반 응답 텍스트와 이미지 결과만 원하면 끔을 선택합니다.',
     composerAdvancedStructuredOutputGuideSceneBrief:
         '피사체, 스타일, 색, 구도를 짧은 제작 요약으로 보고 싶을 때 장면 브리프를 사용합니다.',
@@ -653,6 +656,8 @@ export const ko = {
     workspaceViewerSize: '크기',
     workspaceViewerStyle: '스타일',
     workspaceViewerModel: '모델',
+    workspaceViewerMetadataLoading: '불러오는 중...',
+    workspaceViewerMetadataUnavailable: '사용할 수 없음',
     workspaceViewerResultText: '결과 텍스트',
     workspaceViewerResultTextEmpty: '선택한 모델이 이미지와 텍스트를 함께 반환하면 여기에 결과가 표시됩니다.',
     workspaceViewerThoughts: '생각',

@@ -533,7 +533,11 @@ describe('useQueuedBatchWorkflow', () => {
                 batchResultIndex: 0,
             }),
         );
-        expect(persistHistoryThumbnailMock).toHaveBeenCalledWith('data:image/png;base64,AAA', `${readyJob.model}-batch`);
+        expect(persistHistoryThumbnailMock).toHaveBeenCalledWith(
+            'data:image/png;base64,AAA',
+            `${readyJob.model}-batch`,
+            'job.png',
+        );
         expect(latestHistory).toHaveLength(1);
         expect(latestHistory[0]).toEqual(
             expect.objectContaining({

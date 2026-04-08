@@ -457,6 +457,8 @@ export const en = {
     workspaceViewerSize: 'Size',
     workspaceViewerStyle: 'Style',
     workspaceViewerModel: 'Model',
+    workspaceViewerMetadataLoading: 'Loading...',
+    workspaceViewerMetadataUnavailable: 'Unavailable',
     workspaceViewerResultText: 'Result Text',
     workspaceViewerResultTextEmpty:
         'This viewer is ready for images-plus-text responses when the selected model returns them.',
@@ -706,6 +708,12 @@ export const en = {
     composerActionPanelTitle: 'Create',
     composerActionPanelDesc: 'Generate stays primary. Follow-up and workspace actions stay close, but quieter.',
     composerAdvancedEyebrow: 'Deep Controls',
+    composerAdvancedTemperatureGuideDefault:
+        'Default 1.0 keeps the model balanced between predictability and variation.',
+    composerAdvancedTemperatureGuideHigher:
+        'Above 1.0 increases variation and surprise, but can reduce consistency and prompt fidelity.',
+    composerAdvancedTemperatureGuideLower:
+        'Below 1.0 makes results more stable and literal, but usually less exploratory.',
     composerAdvancedStructuredOutputGuideOff: 'Choose Off for the normal text-plus-image response.',
     composerAdvancedStructuredOutputGuideSceneBrief:
         'Use Scene brief for a compact subject, style, color, and composition summary.',

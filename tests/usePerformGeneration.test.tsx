@@ -271,6 +271,7 @@ describe('usePerformGeneration', () => {
         expect(persistHistoryThumbnailMock).toHaveBeenCalledWith(
             'data:image/png;base64,AAA',
             'gemini-3.1-flash-image-preview-edit',
+            'generated.png',
         );
         expect(latestGeneratedImageUrls).toEqual([]);
         expect(latestSelectedImageIndex).toBe(0);

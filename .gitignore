@@ -16,7 +16,6 @@ test-results/
 playwright-report/
 
 # Local workspace content
-Archive/
 docs/
 .env*.local
 e2e-global-log-focus.txt

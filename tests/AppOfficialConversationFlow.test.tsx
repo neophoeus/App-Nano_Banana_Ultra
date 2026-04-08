@@ -8,12 +8,14 @@ import { WORKSPACE_SNAPSHOT_STORAGE_KEY } from '../utils/workspacePersistence';
 import { LANGUAGE_STORAGE_KEY } from '../utils/translations';
 import { THEME_STORAGE_KEY } from '../utils/theme';
 
-const { saveImageToLocalMock, generateThumbnailMock, persistHistoryThumbnailMock, loadFullImageMock } = vi.hoisted(() => ({
-    saveImageToLocalMock: vi.fn(),
-    generateThumbnailMock: vi.fn(),
-    persistHistoryThumbnailMock: vi.fn(),
-    loadFullImageMock: vi.fn(),
-}));
+const { saveImageToLocalMock, generateThumbnailMock, persistHistoryThumbnailMock, loadFullImageMock } = vi.hoisted(
+    () => ({
+        saveImageToLocalMock: vi.fn(),
+        generateThumbnailMock: vi.fn(),
+        persistHistoryThumbnailMock: vi.fn(),
+        loadFullImageMock: vi.fn(),
+    }),
+);
 
 vi.mock('../components/GeneratedImage', () => ({
     default: () => <div data-testid="mock-generated-image" />,
@@ -243,6 +245,13 @@ describe('App official conversation flow', () => {
             if (url === '/api/save-image') {
                 return new Response(JSON.stringify({ success: true, path: 'D:/output/conversation.png' }), {
                     status: 200,
+                    headers: { 'Content-Type': 'application/json' },
+                });
+            }
+
+            if (url.startsWith('/api/load-image-metadata?')) {
+                return new Response(JSON.stringify({ error: 'Metadata not found' }), {
+                    status: 404,
                     headers: { 'Content-Type': 'application/json' },
                 });
             }

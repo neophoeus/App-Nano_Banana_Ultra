@@ -232,9 +232,12 @@ export default function ComposerAdvancedSettingsContent({
 
                     {capability.supportsTemperature && (
                         <div className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
-                            <span className="block text-xs font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
-                                {t('groundingProvenanceInsightTemperature')}
-                            </span>
+                            <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
+                                <span>{t('groundingProvenanceInsightTemperature')}</span>
+                                <span className="rounded-full border border-gray-200 bg-white/80 px-2 py-0.5 text-[10px] font-semibold normal-case tracking-normal text-gray-500 dark:border-gray-700 dark:bg-gray-900/70 dark:text-gray-300">
+                                    {t('composerDefaultTemp').replace('{0}', '= 1.0')}
+                                </span>
+                            </div>
                             <div className="nbu-input-surface flex items-center gap-3 px-4 py-3">
                                 <input
                                     data-testid="composer-advanced-temperature-range"
@@ -258,6 +261,10 @@ export default function ComposerAdvancedSettingsContent({
                                     }
                                     className="nbu-input-surface w-20 rounded-xl px-2 py-1.5 text-right"
                                 />
+                            </div>
+                            <div className="rounded-2xl border border-amber-200/80 bg-amber-50/70 px-4 py-3 text-xs leading-6 text-amber-900 dark:border-amber-500/20 dark:bg-amber-950/20 dark:text-amber-100">
+                                <div>{t('composerAdvancedTemperatureGuideHigher')}</div>
+                                <div>{t('composerAdvancedTemperatureGuideLower')}</div>
                             </div>
                         </div>
                     )}

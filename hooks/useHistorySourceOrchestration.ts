@@ -190,9 +190,11 @@ export function useHistorySourceOrchestration({
                 const persistedThumbnail = await persistHistoryThumbnail(
                     resolvedFullImageUrl,
                     `${item.model}-history`,
+                    item.savedFilename,
                 );
                 const hasSafePreview =
-                    Boolean(persistedThumbnail.thumbnailSavedFilename) || persistedThumbnail.url !== resolvedFullImageUrl;
+                    Boolean(persistedThumbnail.thumbnailSavedFilename) ||
+                    persistedThumbnail.url !== resolvedFullImageUrl;
 
                 if (!hasSafePreview) {
                     return;
@@ -208,7 +210,7 @@ export function useHistorySourceOrchestration({
                                   url: persistedThumbnail.url,
                                   thumbnailSavedFilename:
                                       persistedThumbnail.thumbnailSavedFilename || historyItem.thumbnailSavedFilename,
-                                                                    thumbnailInline: persistedThumbnail.thumbnailInline || historyItem.thumbnailInline,
+                                  thumbnailInline: persistedThumbnail.thumbnailInline || historyItem.thumbnailInline,
                               }
                             : historyItem,
                     ),
@@ -407,7 +409,13 @@ export function useHistorySourceOrchestration({
         }
 
         void repairLegacyHistoryThumbnail(candidateHistoryItem);
-    }, [currentStageSourceHistoryId, getHistoryTurnById, isGenerating, repairLegacyHistoryThumbnail, selectedHistoryId]);
+    }, [
+        currentStageSourceHistoryId,
+        getHistoryTurnById,
+        isGenerating,
+        repairLegacyHistoryThumbnail,
+        selectedHistoryId,
+    ]);
 
     const handleContinueFromHistoryTurn = useCallback(
         (item: GeneratedImageType) => {

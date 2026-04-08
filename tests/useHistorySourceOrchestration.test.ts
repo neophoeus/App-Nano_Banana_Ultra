@@ -329,6 +329,7 @@ describe('useHistorySourceOrchestration', () => {
         expect(persistHistoryThumbnailMock).toHaveBeenCalledWith(
             'data:image/png;base64,FULL',
             'gemini-3.1-flash-image-preview-history',
+            'legacy-turn.png',
         );
         expect(setHistory).toHaveBeenCalledTimes(1);
         expect(getHistoryState()[0]).toEqual(

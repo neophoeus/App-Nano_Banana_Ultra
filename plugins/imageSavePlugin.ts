@@ -14,6 +14,14 @@ type ImageSavePluginOptions = {
     geminiApiKey?: string;
 };
 
+const resolveSafeOutputFilePath = (resolvedDir: string, filename: string) =>
+    path.join(resolvedDir, path.basename(filename));
+
+const resolveSidecarPath = (filePath: string) => {
+    const parsedPath = path.parse(filePath);
+    return path.join(parsedPath.dir, `${parsedPath.name}.json`);
+};
+
 function registerMiddlewares(server: any, resolvedDir: string, geminiApiKey?: string): void {
     let aiClient: GoogleGenAI | null = null;
 
@@ -84,13 +92,13 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
                         const imageDetails = extractImageDetailsFromDataUrl(data);
                         // Prevent directory traversal attacks
                         const safeFilename = path.basename(filename);
-                        const filePath = path.join(resolvedDir, safeFilename);
+                        const filePath = resolveSafeOutputFilePath(resolvedDir, safeFilename);
 
                         fs.writeFileSync(filePath, buffer);
 
                         // F5: Write metadata sidecar JSON if provided
                         if (metadata && typeof metadata === 'object') {
-                            const jsonPath = filePath.replace(/\.\w+$/, '.json');
+                            const jsonPath = resolveSidecarPath(filePath);
                             const sidecar = {
                                 ...metadata,
                                 actualOutput: imageDetails?.dimensions
@@ -100,7 +108,7 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
                                           mimeType: imageDetails.mimeType,
                                       }
                                     : null,
-                                filename,
+                                filename: safeFilename,
                                 timestamp: new Date().toISOString(),
                             };
                             fs.writeFileSync(jsonPath, JSON.stringify(sidecar, null, 2), 'utf-8');
@@ -133,7 +141,7 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
 
                 // Security: Prevent directory traversal
                 const safeFilename = path.basename(filename);
-                const filePath = path.join(resolvedDir, safeFilename);
+                const filePath = resolveSafeOutputFilePath(resolvedDir, safeFilename);
 
                 // Ensure file exists and is within output dir
                 if (!fs.existsSync(filePath) || !filePath.startsWith(resolvedDir)) {
@@ -154,6 +162,41 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
                     res.end(fileBuffer);
                 } catch (err: any) {
                     sendClassifiedApiError(res, '/api/load-image', err, 'Failed to load image', {
+                        basePayload: { success: false },
+                        defaultStatus: 500,
+                    });
+                }
+            });
+
+            server.middlewares.use('/api/load-image-metadata', (req, res) => {
+                if (req.method !== 'GET') {
+                    sendJson(res, 405, { success: false, error: 'Method not allowed' });
+                    return;
+                }
+
+                const url = new URL(req.url!, `http://${req.headers.host}`);
+                const filename = url.searchParams.get('filename');
+
+                if (!filename) {
+                    sendJson(res, 400, { success: false, error: 'Missing filename' });
+                    return;
+                }
+
+                const safeFilename = path.basename(filename);
+                const filePath = resolveSafeOutputFilePath(resolvedDir, safeFilename);
+                const sidecarPath = resolveSidecarPath(filePath);
+
+                if (!fs.existsSync(sidecarPath) || !sidecarPath.startsWith(resolvedDir)) {
+                    sendJson(res, 404, { success: false, error: 'Metadata not found' });
+                    return;
+                }
+
+                try {
+                    const sidecar = fs.readFileSync(sidecarPath, 'utf-8');
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(sidecar);
+                } catch (err: any) {
+                    sendClassifiedApiError(res, '/api/load-image-metadata', err, 'Failed to load image metadata', {
                         basePayload: { success: false },
                         defaultStatus: 500,
                     });

@@ -305,8 +305,7 @@ export const es = {
     queuedBatchRecoverRecentAlreadyTrackedNotice:
         'Los trabajos por lotes remotos recientes ya estan siendo seguidos. Se actualizaron {0} entradas.',
     queuedBatchRecoverRecentNoneNotice: 'No se encontraron trabajos por lotes remotos recientes adicionales.',
-    queuedBatchRecoverRecentLog:
-        'Se recuperaron {0} trabajos por lotes remotos recientes desde la lista de lotes.',
+    queuedBatchRecoverRecentLog: 'Se recuperaron {0} trabajos por lotes remotos recientes desde la lista de lotes.',
     queuedBatchRecoverRecentRefreshedLog:
         'Se actualizaron {0} trabajos por lotes remotos ya seguidos desde la lista de lotes.',
     queuedBatchRecoverRecentFailedLog: 'Error al recuperar trabajos por lotes recientes: {0}',
@@ -459,6 +458,12 @@ export const es = {
     composerActionPanelDesc:
         'Generar sigue siendo lo principal. Las acciones de seguimiento y del espacio de trabajo se mantienen cerca, pero mas discretas.',
     composerAdvancedEyebrow: 'Controles profundos',
+    composerAdvancedTemperatureGuideDefault:
+        'El valor predeterminado 1.0 mantiene un equilibrio entre previsibilidad y variacion.',
+    composerAdvancedTemperatureGuideHigher:
+        'Por encima de 1.0 aumenta la variacion y la sorpresa, pero puede reducir la consistencia y la fidelidad al prompt.',
+    composerAdvancedTemperatureGuideLower:
+        'Por debajo de 1.0 hace los resultados mas estables y literales, pero normalmente menos exploratorios.',
     composerAdvancedStructuredOutputGuideOff:
         'Elige Desactivado cuando solo quieras la respuesta normal en texto y la imagen resultante.',
     composerAdvancedStructuredOutputGuideSceneBrief:
@@ -678,6 +683,8 @@ export const es = {
     workspaceViewerSize: 'Tamano',
     workspaceViewerStyle: 'Estilo',
     workspaceViewerModel: 'Modelo',
+    workspaceViewerMetadataLoading: 'Cargando...',
+    workspaceViewerMetadataUnavailable: 'No disponible',
     workspaceViewerResultText: 'Texto de resultado',
     workspaceViewerResultTextEmpty: 'Si el modelo seleccionado devuelve imagenes y texto, el resultado aparecera aqui.',
     workspaceViewerThoughts: 'Pensamientos',

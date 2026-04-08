@@ -304,8 +304,7 @@ export const ja = {
         '最近のリモートバッチジョブはすでに一覧で追跡中です。{0} 件を更新しました。',
     queuedBatchRecoverRecentNoneNotice: '追加で復旧できる最近のリモートバッチジョブは見つかりませんでした。',
     queuedBatchRecoverRecentLog: 'バッチ一覧から最近のリモートバッチジョブを {0} 件復旧しました。',
-    queuedBatchRecoverRecentRefreshedLog:
-        'バッチ一覧から追跡中のリモートバッチジョブ {0} 件を更新しました。',
+    queuedBatchRecoverRecentRefreshedLog: 'バッチ一覧から追跡中のリモートバッチジョブ {0} 件を更新しました。',
     queuedBatchRecoverRecentFailedLog: '最近のバッチジョブの復旧に失敗しました: {0}',
     queuedBatchRecoverRecentMetadataHint:
         '復旧したリモートジョブは再インポートできますが、Gemini の batch 一覧は元の prompt や参照画像を返さないため、これらの項目には簡略化されたローカル情報のみが入ります。',
@@ -451,6 +450,11 @@ export const ja = {
     composerActionPanelDesc:
         '生成を主役に置いたまま、フォローアップとワークスペース操作を近くにまとめつつ控えめに扱います。',
     composerAdvancedEyebrow: '詳細操作',
+    composerAdvancedTemperatureGuideDefault: '既定値 1.0 は、安定性と変化のバランスを取ります。',
+    composerAdvancedTemperatureGuideHigher:
+        '1.0 を超えると変化や意外性が増えますが、一貫性やプロンプト忠実度は下がることがあります。',
+    composerAdvancedTemperatureGuideLower:
+        '1.0 未満にすると結果はより安定して字義どおりになりやすい一方、探索性は下がります。',
     composerAdvancedStructuredOutputGuideOff: '通常の結果テキストと画像だけで十分なときはオフを選びます。',
     composerAdvancedStructuredOutputGuideSceneBrief:
         '被写体、スタイル、色、構図を短い制作向け要約にしたいときはシーン要約を使います。',
@@ -656,6 +660,8 @@ export const ja = {
     workspaceViewerSize: 'サイズ',
     workspaceViewerStyle: 'スタイル',
     workspaceViewerModel: 'モデル',
+    workspaceViewerMetadataLoading: '読み込み中...',
+    workspaceViewerMetadataUnavailable: '利用不可',
     workspaceViewerResultText: '結果テキスト',
     workspaceViewerResultTextEmpty: '選択中のモデルが画像とテキストを返した場合、ここに結果が表示されます。',
     workspaceViewerThoughts: '思考',

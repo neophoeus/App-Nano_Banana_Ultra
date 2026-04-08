@@ -305,10 +305,8 @@ export const ru = {
     queuedBatchRecoverRecentAlreadyTrackedNotice:
         'Недавние удаленные пакетные задания уже отслеживаются. Обновлено {0} записей.',
     queuedBatchRecoverRecentNoneNotice: 'Других недавних удаленных пакетных заданий не найдено.',
-    queuedBatchRecoverRecentLog:
-        'Восстановлено {0} недавних удаленных пакетных заданий из списка batch.',
-    queuedBatchRecoverRecentRefreshedLog:
-        'Обновлено {0} уже отслеживаемых удаленных пакетных заданий из списка batch.',
+    queuedBatchRecoverRecentLog: 'Восстановлено {0} недавних удаленных пакетных заданий из списка batch.',
+    queuedBatchRecoverRecentRefreshedLog: 'Обновлено {0} уже отслеживаемых удаленных пакетных заданий из списка batch.',
     queuedBatchRecoverRecentFailedLog: 'Не удалось восстановить недавние пакетные задания: {0}',
     queuedBatchRecoverRecentMetadataHint:
         'Восстановленные удаленные задания можно импортировать повторно, но список batch Gemini не возвращает исходный prompt или референсные изображения, поэтому эти записи содержат только упрощенные локальные сведения.',
@@ -459,6 +457,12 @@ export const ru = {
     composerActionPanelDesc:
         'Генерация остается основным действием. Последующие и рабочие действия остаются рядом, но звучат тише.',
     composerAdvancedEyebrow: 'Глубокие настройки',
+    composerAdvancedTemperatureGuideDefault:
+        'Значение по умолчанию 1.0 сохраняет баланс между предсказуемостью и вариативностью.',
+    composerAdvancedTemperatureGuideHigher:
+        'Выше 1.0 усиливает вариативность и неожиданность, но может снизить согласованность и точность следования промпту.',
+    composerAdvancedTemperatureGuideLower:
+        'Ниже 1.0 делает результаты стабильнее и буквальнее, но обычно менее исследовательскими.',
     composerAdvancedStructuredOutputGuideOff:
         'Выбирайте Выкл., если нужен только обычный текстовый ответ и итоговое изображение.',
     composerAdvancedStructuredOutputGuideSceneBrief:
@@ -674,6 +678,8 @@ export const ru = {
     workspaceViewerSize: 'Размер',
     workspaceViewerStyle: 'Стиль',
     workspaceViewerModel: 'Модель',
+    workspaceViewerMetadataLoading: 'Загрузка...',
+    workspaceViewerMetadataUnavailable: 'Недоступно',
     workspaceViewerResultText: 'Текст результата',
     workspaceViewerResultTextEmpty: 'Если выбранная модель возвращает изображения и текст, результат появится здесь.',
     workspaceViewerThoughts: 'Мысли',

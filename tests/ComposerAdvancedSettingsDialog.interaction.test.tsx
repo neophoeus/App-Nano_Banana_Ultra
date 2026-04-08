@@ -206,4 +206,15 @@ describe('ComposerAdvancedSettingsDialog draft flow', () => {
 
         expect(container.querySelector('[data-testid="composer-advanced-settings-open-generation"]')).toBeNull();
     });
+
+    it('renders the temperature guidance copy in the advanced settings body', () => {
+        act(() => {
+            root.render(<AdvancedSettingsHarness />);
+        });
+
+        expect(container.textContent).toContain(getTranslation('en', 'composerDefaultTemp').replace('{0}', '= 1.0'));
+        expect(container.textContent).toContain(getTranslation('en', 'composerAdvancedTemperatureGuideHigher'));
+        expect(container.textContent).toContain(getTranslation('en', 'composerAdvancedTemperatureGuideLower'));
+        expect(container.textContent).not.toContain(getTranslation('en', 'composerAdvancedTemperatureGuideDefault'));
+    });
 });

@@ -4,6 +4,31 @@ This changelog is compiled from the repository's local git tags plus the publish
 
 ## Unreleased
 
+## v3.3.1 - 2026-04-08
+
+- Release title: Nano Banana Ultra 3.3.1 - Sidecar Metadata Fidelity, Viewer Expansion & Temperature UX
+- Release prep summary:
+    - Per-image sidecar metadata contract, save-path enrichment, and thumbnail filename alignment:
+        - added a shared `ImageSidecarMetadata` / `SavedImageActualOutput` contract plus sidecar builder and normalizer helpers so interactive generation, queued-batch imports, and plugin save/load flows persist the same richer per-image JSON payload instead of loosely shaped metadata objects
+        - expanded output sidecars to record prompt, model, style, aspect ratio, requested size, output format, structured-output mode, temperature, thinking level, thought visibility, grounding flags and mode, execution mode, batch metadata, and actual output dimensions
+        - added `/api/load-image-metadata` plus client-side sidecar loading utilities so the app can inspect each image's sibling JSON by saved filename instead of depending on session-only in-memory metadata
+        - aligned persisted history thumbnails to the main saved image stem with a `-thumbnail` suffix across normal generation, queued-batch imports, and legacy thumbnail self-heal paths instead of writing unrelated thumbnail names
+
+    - Viewer metadata hydration, provenance fidelity, and sparse-sidecar fallback hardening:
+        - moved viewer metadata ownership to strict per-image sidecars with App-level hydration, loading and missing sentinel states, and no silent fallback to live composer/session state when the inspected image has no sidecar
+        - expanded the viewer right-rail metadata cards to show ratio, size, style, model, temperature, output format, thinking level, grounding, and return-thoughts state instead of the smaller earlier set
+        - hardened sparse or legacy sidecar handling by merging loaded sidecar values with already-known history metadata for the same image, preventing fields such as temperature from disappearing when an older sidecar omits newer keys
+        - aligned provenance insight rows to the same sidecar-backed rules for output format, temperature, thinking, grounding, requested size, and actual output so the inspected-history contract stays truthful across viewer and provenance surfaces
+
+    - Temperature UX and localized wording follow-through:
+        - added temperature to the prompt-side `Advanced settings` summary chip so the main composer summary now exposes that control alongside output format, thinking, and grounding
+        - revised the advanced temperature control copy so the title shows a compact `Default temp = 1.0` note while the guide body now focuses only on the `> 1.0` and `< 1.0` behavior requested in the follow-up pass
+        - added the new viewer metadata loading/unavailable strings and the advanced temperature wording across the maintained locales, then aligned focused viewer/composer regressions to the updated text contract
+
+    - Validation and release readiness:
+        - updated affected Vitest coverage for sidecar save/load behavior, thumbnail naming, viewer metadata cards, advanced-settings temperature wording, App-side metadata hydration, and the extra `persistHistoryThumbnail(...)` filename argument
+        - revalidated the session with the package Vitest run at `80 files / 688 tests`, the focused viewer stack at `3 files / 15 tests`, the focused advanced-settings slice at `2 files / 13 tests`, and `npm run build`
+
 ## v3.3.0 - 2026-04-07
 
 - Release title: Nano Banana Ultra 3.3.0 - Unified History Workspace, Restore Hardening & Shell Chrome

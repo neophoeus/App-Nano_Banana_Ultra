@@ -153,13 +153,13 @@ export const fr = {
     lblHistoryFailed: 'Échec',
     modeTextToImg: 'Texte vers Image',
     modeImgToImg: 'Image vers Image',
-    clearHistory: 'Effacer l\'espace de travail',
+    clearHistory: "Effacer l'espace de travail",
 
     // Clear History Dialog
-    clearHistoryTitle: 'Effacer l\'espace de travail',
+    clearHistoryTitle: "Effacer l'espace de travail",
     clearHistoryMsg:
-        'Réinitialiser cet espace de travail à son état vide par défaut ? L\'historique, la scène, les tâches en file d\'attente et le contexte de session seront supprimés. Cette action est irréversible.',
-    clearHistoryConfirm: 'Effacer l\'espace de travail',
+        "Réinitialiser cet espace de travail à son état vide par défaut ? L'historique, la scène, les tâches en file d'attente et le contexte de session seront supprimés. Cette action est irréversible.",
+    clearHistoryConfirm: "Effacer l'espace de travail",
     clearHistoryCancel: 'Annuler',
 
     // Sketch Pad
@@ -304,14 +304,13 @@ export const fr = {
     queuedBatchRecoverRecentNotice: '{0} taches batch recentes recuperees.',
     queuedBatchRecoverRecentAlreadyTrackedNotice:
         'Les taches batch distantes recentes sont deja suivies. {0} entrees ont ete actualisees.',
-    queuedBatchRecoverRecentNoneNotice: 'Aucune tache batch distante recente supplementaire n\'a ete trouvee.',
-    queuedBatchRecoverRecentLog:
-        '{0} taches batch distantes recentes recuperees depuis la liste des batchs.',
+    queuedBatchRecoverRecentNoneNotice: "Aucune tache batch distante recente supplementaire n'a ete trouvee.",
+    queuedBatchRecoverRecentLog: '{0} taches batch distantes recentes recuperees depuis la liste des batchs.',
     queuedBatchRecoverRecentRefreshedLog:
         '{0} taches batch distantes deja suivies ont ete actualisees depuis la liste des batchs.',
     queuedBatchRecoverRecentFailedLog: 'Echec de la recuperation des taches batch recentes : {0}',
     queuedBatchRecoverRecentMetadataHint:
-        'Les taches distantes recuperees peuvent etre importees a nouveau, mais la liste batch de Gemini ne renvoie ni le prompt d\'origine ni les images de reference, donc ces entrees n\'utilisent que des details locaux simplifies.',
+        "Les taches distantes recuperees peuvent etre importees a nouveau, mais la liste batch de Gemini ne renvoie ni le prompt d'origine ni les images de reference, donc ces entrees n'utilisent que des details locaux simplifies.",
     queuedBatchJobsRefreshAll: 'Tout actualiser',
     queuedBatchJobsTrackedCount: '{0} suivis',
     queuedBatchJobsImportedTag: 'Importe',
@@ -456,6 +455,12 @@ export const fr = {
     composerActionPanelDesc:
         'La generation reste prioritaire. Les actions de suivi et d espace de travail restent proches, mais plus discretes.',
     composerAdvancedEyebrow: 'Controles avances',
+    composerAdvancedTemperatureGuideDefault:
+        'La valeur par defaut 1.0 garde un equilibre entre previsibilite et variation.',
+    composerAdvancedTemperatureGuideHigher:
+        'Au-dessus de 1.0, la variation et la surprise augmentent, mais la coherence et la fidelite au prompt peuvent diminuer.',
+    composerAdvancedTemperatureGuideLower:
+        'En dessous de 1.0, les resultats sont plus stables et plus litteraux, mais generalement moins exploratoires.',
     composerAdvancedStructuredOutputGuideOff:
         'Choisissez Désactivé si vous voulez seulement la réponse normale en texte et l’image générée.',
     composerAdvancedStructuredOutputGuideSceneBrief:
@@ -676,6 +681,8 @@ export const fr = {
     workspaceViewerSize: 'Taille',
     workspaceViewerStyle: 'Style',
     workspaceViewerModel: 'Modele',
+    workspaceViewerMetadataLoading: 'Chargement...',
+    workspaceViewerMetadataUnavailable: 'Indisponible',
     workspaceViewerResultText: 'Texte de resultat',
     workspaceViewerResultTextEmpty:
         'Si le modele selectionne renvoie des images et du texte, le resultat apparait ici.',

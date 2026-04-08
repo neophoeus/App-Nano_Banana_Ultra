@@ -266,8 +266,8 @@ type UseWorkspaceStageViewerArgs = {
     currentStageBranchLabel: string | null;
     currentStageHasLinkedHistoryTurn: boolean;
     currentStageContinuationDiffers: boolean;
-    styleLabel: string;
-    modelLabel: string;
+    metadataItems: WorkspaceViewerOverlayProps['metadataItems'];
+    metadataStateMessage: string | null;
     effectiveResultText: string | null;
     structuredData: Record<string, unknown> | null;
     structuredOutputMode: StructuredOutputMode | null;
@@ -315,8 +315,8 @@ export function useWorkspaceStageViewer({
     currentStageBranchLabel,
     currentStageHasLinkedHistoryTurn,
     currentStageContinuationDiffers,
-    styleLabel,
-    modelLabel,
+    metadataItems,
+    metadataStateMessage,
     effectiveResultText,
     structuredData,
     structuredOutputMode,
@@ -445,10 +445,8 @@ export function useWorkspaceStageViewer({
                 activeViewerIsFresh: activeViewerHistoryItem?.isFresh || false,
                 generatedImageCount: viewerItems.length,
                 prompt,
-                aspectRatio: settings.aspectRatio,
-                size: settings.imageSize,
-                styleLabel,
-                model: modelLabel,
+                metadataItems,
+                metadataStateMessage,
                 effectiveResultText,
                 structuredData,
                 structuredOutputMode,
@@ -478,7 +476,7 @@ export function useWorkspaceStageViewer({
             formatSessionHintKey,
             formatSessionHintValue,
             isViewerOpen,
-            modelLabel,
+            metadataItems,
             moveViewer,
             onApplyPrompt,
             onAppendPrompt,
@@ -486,9 +484,7 @@ export function useWorkspaceStageViewer({
             prompt,
             provenancePanel,
             sessionHintEntries,
-            settings.aspectRatio,
-            settings.imageSize,
-            styleLabel,
+            metadataStateMessage,
             thoughtStateMessage,
             viewerItems.length,
         ],

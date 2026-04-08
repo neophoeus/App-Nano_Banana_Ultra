@@ -125,6 +125,7 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).toContain('History');
         expect(markup).toContain('Advanced settings');
         expect(markup).toContain('Output format: Images only');
+        expect(markup).toContain('Temperature: 1.0');
         expect(markup).toContain('Thinking level: High');
         expect(markup).toContain('Return thoughts: Visible');
         expect(markup).toContain('Grounding: Off');
@@ -416,7 +417,7 @@ describe('ComposerAdvancedSettingsDialog grounding warning', () => {
         expect(markup).not.toContain('composer-advanced-generation-hint');
         expect(markup).not.toContain('composer-advanced-grounding-section-hint');
         expect(markup).not.toContain('composer-advanced-grounding-guide-hint');
-        expect(markup).not.toContain('Default temp');
+        expect(markup).toContain(getTranslation('en', 'composerDefaultTemp').replace('{0}', '= 1.0'));
     });
 
     it('shows a structured output guide card when the selected model supports structured outputs', () => {

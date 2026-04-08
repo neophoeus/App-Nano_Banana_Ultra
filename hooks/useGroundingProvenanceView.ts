@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { GenerationSettings, GroundingMetadata, ResultArtifacts, WorkspaceSessionState } from '../types';
 import { deriveGroundingMode, getGroundingModeLabel } from '../utils/groundingMode';
 import { buildGroundingAttributionDetails, buildGroundingAttributionOverview } from '../utils/groundingProvenance';
+import { getImageSidecarMetadataState, isPersistedImageSidecarMetadata } from '../utils/imageSidecarMetadata';
 import {
     buildOmittedPayloadSummary,
     sanitizeInlineImageDisplayValue,
@@ -42,6 +43,13 @@ const normalizeOptionalDisplayString = (value: unknown) => {
     }
 
     return normalizedValue;
+};
+const hasRenderableMetadataValue = (value: unknown) => {
+    if (typeof value === 'string') {
+        return value.trim().length > 0;
+    }
+
+    return value !== null && value !== undefined;
 };
 const OUTPUT_DIMENSION_SIZE_LABELS: Record<string, string> = {
     '1024x1024': '1K',
@@ -91,12 +99,18 @@ export function useGroundingProvenanceView({
         },
         [t],
     );
+    const selectedMetadataState = getImageSidecarMetadataState(selectedMetadata);
+    const hasPersistedSelectedMetadata = isPersistedImageSidecarMetadata(selectedMetadata);
+    const metadataLoadingLabel = t('workspaceViewerMetadataLoading');
+    const metadataUnavailableLabel = t('workspaceViewerMetadataUnavailable');
     const effectiveResultText = selectedResultText ?? workspaceSession.activeResult?.text ?? null;
     const effectiveThoughts = selectedThoughts ?? workspaceSession.activeResult?.thoughts ?? null;
     const effectiveStructuredData = selectedStructuredData ?? workspaceSession.activeResult?.structuredData ?? null;
     const effectiveGrounding =
         selectedGrounding ?? workspaceSession.activeResult?.grounding ?? workspaceSession.continuityGrounding ?? null;
-    const effectiveMetadata = selectedMetadata ?? workspaceSession.activeResult?.metadata ?? null;
+    const effectiveMetadata = selectedMetadataState
+        ? null
+        : (selectedMetadata ?? workspaceSession.activeResult?.metadata ?? null);
     const effectiveSessionHints =
         selectedSessionHints ??
         workspaceSession.activeResult?.sessionHints ??
@@ -106,23 +120,43 @@ export function useGroundingProvenanceView({
         effectiveMetadata?.structuredOutputMode || viewSettings.structuredOutputMode,
     );
     const formattedStructuredOutput = formatStructuredOutputDisplay(effectiveStructuredData, effectiveResultText);
+    const resolveMetadataInsightValue = useCallback(
+        (metadataValue: unknown, fallbackValue: string) => {
+            if (selectedMetadataState === 'loading') {
+                return metadataLoadingLabel;
+            }
+
+            if (selectedMetadataState === 'missing') {
+                return metadataUnavailableLabel;
+            }
+
+            if (hasPersistedSelectedMetadata) {
+                return hasRenderableMetadataValue(metadataValue) ? String(metadataValue) : metadataUnavailableLabel;
+            }
+
+            return hasRenderableMetadataValue(metadataValue) ? String(metadataValue) : fallbackValue;
+        },
+        [hasPersistedSelectedMetadata, metadataLoadingLabel, metadataUnavailableLabel, selectedMetadataState],
+    );
     const sessionUpdatedLabel = workspaceSession.updatedAt
         ? new Date(workspaceSession.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : t('groundingProvenanceNoActiveSessionTurn');
     const normalizedSessionActualDimensions = normalizeOptionalDisplayString(
         effectiveSessionHints?.actualImageDimensions,
     );
-    const normalizedRequestedImageSize =
+    const metadataRequestedImageSize =
         normalizeOptionalDisplayString(effectiveMetadata?.requestedImageSize) ||
-        normalizeOptionalDisplayString(effectiveSessionHints?.imageSizeRequested);
-    const actualOutputDimensions = normalizedSessionActualDimensions
-        ? normalizedSessionActualDimensions
-        : typeof effectiveMetadata?.actualOutput === 'object' &&
-            effectiveMetadata?.actualOutput !== null &&
-            typeof (effectiveMetadata.actualOutput as Record<string, unknown>).width === 'number' &&
-            typeof (effectiveMetadata.actualOutput as Record<string, unknown>).height === 'number'
-          ? `${String((effectiveMetadata.actualOutput as Record<string, unknown>).width)}x${String((effectiveMetadata.actualOutput as Record<string, unknown>).height)}`
-          : null;
+        normalizeOptionalDisplayString(effectiveMetadata?.size);
+    const normalizedRequestedImageSize =
+        metadataRequestedImageSize || normalizeOptionalDisplayString(effectiveSessionHints?.imageSizeRequested);
+    const metadataActualOutputDimensions =
+        typeof effectiveMetadata?.actualOutput === 'object' &&
+        effectiveMetadata?.actualOutput !== null &&
+        typeof (effectiveMetadata.actualOutput as Record<string, unknown>).width === 'number' &&
+        typeof (effectiveMetadata.actualOutput as Record<string, unknown>).height === 'number'
+            ? `${String((effectiveMetadata.actualOutput as Record<string, unknown>).width)}x${String((effectiveMetadata.actualOutput as Record<string, unknown>).height)}`
+            : null;
+    const actualOutputDimensions = metadataActualOutputDimensions || normalizedSessionActualDimensions;
     const requestedImageSize = normalizedRequestedImageSize;
     const fallbackRequestedImageSize = normalizeOptionalDisplayString(viewSettings.size);
     const actualOutputSizeLabel = actualOutputDimensions
@@ -146,6 +180,15 @@ export function useGroundingProvenanceView({
             ? 'warning'
             : 'success'
         : null;
+    const metadataGroundingLabel =
+        typeof effectiveMetadata?.googleSearch === 'boolean' || typeof effectiveMetadata?.imageSearch === 'boolean'
+            ? getGroundingModeLabel(
+                  deriveGroundingMode(
+                      Boolean(effectiveMetadata?.googleSearch),
+                      Boolean(effectiveMetadata?.imageSearch),
+                  ),
+              )
+            : null;
 
     const sessionContinuitySignals = useMemo(() => {
         const sourceLabel = getSessionContinuitySourceLabel(workspaceSession.source);
@@ -193,7 +236,7 @@ export function useGroundingProvenanceView({
         () => [
             {
                 label: t('groundingProvenanceInsightOutputFormat'),
-                value: String(effectiveMetadata?.outputFormat || viewSettings.outputFormat),
+                value: resolveMetadataInsightValue(effectiveMetadata?.outputFormat, String(viewSettings.outputFormat)),
             },
             ...(effectiveStructuredOutputMode !== 'off'
                 ? [
@@ -205,27 +248,42 @@ export function useGroundingProvenanceView({
                 : []),
             {
                 label: t('groundingProvenanceInsightTemperature'),
-                value: String(effectiveMetadata?.temperature || viewSettings.temperature),
+                value: resolveMetadataInsightValue(effectiveMetadata?.temperature, String(viewSettings.temperature)),
             },
             {
                 label: t('groundingProvenanceInsightThinkingLevel'),
-                value: String(effectiveMetadata?.thinkingLevel || viewSettings.thinkingLevel),
+                value: resolveMetadataInsightValue(
+                    effectiveMetadata?.thinkingLevel,
+                    String(viewSettings.thinkingLevel),
+                ),
             },
             {
                 label: t('groundingProvenanceInsightReturnThoughts'),
-                value: String(Boolean(effectiveMetadata?.includeThoughts ?? viewSettings.includeThoughts)),
+                value: resolveMetadataInsightValue(
+                    effectiveMetadata?.includeThoughts,
+                    String(Boolean(viewSettings.includeThoughts)),
+                ),
             },
             {
                 label: t('groundingProvenanceInsightGrounding'),
-                value: getGroundingModeLabel(deriveGroundingMode(viewSettings.googleSearch, viewSettings.imageSearch)),
+                value: resolveMetadataInsightValue(
+                    metadataGroundingLabel,
+                    getGroundingModeLabel(deriveGroundingMode(viewSettings.googleSearch, viewSettings.imageSearch)),
+                ),
             },
             {
                 label: t('groundingProvenanceInsightRequestedSize'),
-                value: requestedImageSize || fallbackRequestedImageSize || t('groundingProvenanceNone'),
+                value: resolveMetadataInsightValue(
+                    metadataRequestedImageSize,
+                    requestedImageSize || fallbackRequestedImageSize || t('groundingProvenanceNone'),
+                ),
             },
             {
                 label: t('groundingProvenanceInsightActualOutput'),
-                value: actualOutputDimensions || t('groundingProvenanceNone'),
+                value: resolveMetadataInsightValue(
+                    metadataActualOutputDimensions,
+                    actualOutputDimensions || t('groundingProvenanceNone'),
+                ),
             },
         ],
         [
@@ -236,7 +294,11 @@ export function useGroundingProvenanceView({
             effectiveMetadata?.thinkingLevel,
             effectiveStructuredOutputMode,
             fallbackRequestedImageSize,
+            metadataActualOutputDimensions,
+            metadataGroundingLabel,
+            metadataRequestedImageSize,
             requestedImageSize,
+            resolveMetadataInsightValue,
             t,
             viewSettings.googleSearch,
             viewSettings.imageSearch,
@@ -429,8 +491,7 @@ export function useGroundingProvenanceView({
                 }
 
                 return (
-                    normalizeOptionalDisplayString(sanitizeSensitiveDisplayText(value)) ||
-                    t('groundingProvenanceNone')
+                    normalizeOptionalDisplayString(sanitizeSensitiveDisplayText(value)) || t('groundingProvenanceNone')
                 );
             }
             if (typeof value === 'number' || typeof value === 'boolean' || value == null) {

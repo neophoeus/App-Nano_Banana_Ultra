@@ -446,6 +446,11 @@ function ComposerSettingsPanel({
             className: '',
         },
         {
+            key: 'temperature',
+            value: `${t('groundingProvenanceInsightTemperature')}: ${temperature.toFixed(1)}`,
+            className: '',
+        },
+        {
             key: 'thinking',
             value: `${t('groundingProvenanceInsightThinkingLevel')}: ${getThinkingLevelSummaryLabel(thinkingLevel)}`,
             className: '',

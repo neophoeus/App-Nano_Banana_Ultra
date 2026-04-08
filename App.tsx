@@ -95,7 +95,12 @@ import { useWorkspaceShellUtilities } from './hooks/useWorkspaceShellUtilities';
 import { useWorkspaceTransientUiState } from './hooks/useWorkspaceTransientUiState';
 import { useLegacyWorkspaceSnapshotMigration } from './hooks/useLegacyWorkspaceSnapshotMigration';
 import { normalizeStructuredOutputMode } from './utils/structuredOutputs';
-import { buildSavedImageLoadUrl } from './utils/imageSaveUtils';
+import { buildSavedImageLoadUrl, loadImageMetadata } from './utils/imageSaveUtils';
+import {
+    createImageSidecarMetadataState,
+    getImageSidecarMetadataState,
+    isPersistedImageSidecarMetadata,
+} from './utils/imageSidecarMetadata';
 
 const ImageEditor = lazy(() => import('./components/ImageEditor'));
 const GeneratedImage = lazy(() => import('./components/GeneratedImage'));
@@ -321,6 +326,7 @@ const App: React.FC = () => {
         selectedStructuredData,
         selectedGrounding,
         selectedMetadata,
+        setSelectedMetadata,
         selectedSessionHints,
         selectedHistoryId,
         setSelectedHistoryId,
@@ -504,8 +510,19 @@ const App: React.FC = () => {
 
         return candidateHistoryItem?.status === 'success' ? candidateHistoryItem.id : null;
     }, [currentStageAsset?.sourceHistoryId, getHistoryTurnById, selectedHistoryId]);
+    const currentViewedCompletedHistoryItem = useMemo(
+        () => (currentViewedCompletedHistoryId ? getHistoryTurnById(currentViewedCompletedHistoryId) : null),
+        [currentViewedCompletedHistoryId, getHistoryTurnById],
+    );
+    const currentViewedCompletedHistoryMetadata = useMemo(() => {
+        const metadata = currentViewedCompletedHistoryItem?.metadata;
+        return metadata && typeof metadata === 'object' && !Array.isArray(metadata)
+            ? (metadata as Record<string, unknown>)
+            : null;
+    }, [currentViewedCompletedHistoryItem]);
 
     const previousViewedCompletedHistoryIdRef = useRef<string | null>(currentViewedCompletedHistoryId);
+    const hydratedSidecarHistoryIdRef = useRef<string | null>(null);
 
     useEffect(() => {
         const previousViewedCompletedHistoryId = previousViewedCompletedHistoryIdRef.current;
@@ -519,6 +536,44 @@ const App: React.FC = () => {
 
         previousViewedCompletedHistoryIdRef.current = currentViewedCompletedHistoryId;
     }, [currentViewedCompletedHistoryId, getHistoryTurnById, markHistoryItemOpened]);
+
+    useEffect(() => {
+        let isDisposed = false;
+
+        if (!currentViewedCompletedHistoryItem) {
+            if (hydratedSidecarHistoryIdRef.current) {
+                hydratedSidecarHistoryIdRef.current = null;
+                setSelectedMetadata(null);
+            }
+            return;
+        }
+
+        hydratedSidecarHistoryIdRef.current = currentViewedCompletedHistoryItem.id;
+
+        if (!currentViewedCompletedHistoryItem.savedFilename) {
+            setSelectedMetadata(createImageSidecarMetadataState('missing'));
+            return;
+        }
+
+        setSelectedMetadata(createImageSidecarMetadataState('loading'));
+
+        void loadImageMetadata(currentViewedCompletedHistoryItem.savedFilename).then((metadata) => {
+            if (isDisposed || hydratedSidecarHistoryIdRef.current !== currentViewedCompletedHistoryItem.id) {
+                return;
+            }
+
+            const mergedMetadata =
+                metadata && currentViewedCompletedHistoryMetadata
+                    ? ({ ...currentViewedCompletedHistoryMetadata, ...metadata } as Record<string, unknown>)
+                    : metadata;
+
+            setSelectedMetadata(mergedMetadata || createImageSidecarMetadataState('missing'));
+        });
+
+        return () => {
+            isDisposed = true;
+        };
+    }, [currentViewedCompletedHistoryItem, currentViewedCompletedHistoryMetadata, setSelectedMetadata]);
 
     const handleBatchPreviewStart = useCallback(
         ({ sessionId, batchSize }: { sessionId: string; batchSize: number }) => {
@@ -1975,6 +2030,186 @@ const App: React.FC = () => {
         },
         [focusComposerPromptTextarea, prompt, setPrompt, showNotification, t],
     );
+    const getOutputFormatSummaryLabel = useCallback(
+        (value: string) => OUTPUT_FORMATS.find((option) => option.value === value)?.label ?? value,
+        [],
+    );
+    const getThinkingLevelSummaryLabel = useCallback(
+        (value: string) =>
+            THINKING_LEVELS.find((option) => option.value === value)?.label ??
+            (value === 'disabled' ? t('structuredOutputModeOff') : value),
+        [t],
+    );
+    const getThoughtVisibilitySummaryLabel = useCallback(
+        (value: boolean) => t(value ? 'composerVisibilityVisible' : 'composerVisibilityHidden'),
+        [t],
+    );
+    const getMetadataGroundingModeLabel = useCallback((metadata: Record<string, unknown> | null | undefined) => {
+        if (typeof metadata?.groundingMode === 'string') {
+            switch (metadata.groundingMode) {
+                case 'off':
+                case 'google-search':
+                case 'image-search':
+                case 'google-search-plus-image-search':
+                    return getGroundingModeLabel(metadata.groundingMode as GroundingMode);
+                default:
+                    return metadata.groundingMode;
+            }
+        }
+
+        if (typeof metadata?.googleSearch === 'boolean' || typeof metadata?.imageSearch === 'boolean') {
+            return getGroundingModeLabel(
+                deriveGroundingMode(Boolean(metadata?.googleSearch), Boolean(metadata?.imageSearch)),
+            );
+        }
+
+        return null;
+    }, []);
+    const viewerMetadataSidecarState = getImageSidecarMetadataState(selectedMetadata);
+    const viewerHasPersistedSidecarMetadata = isPersistedImageSidecarMetadata(selectedMetadata);
+    const viewerMetadataStatus = useMemo(() => {
+        if (!currentViewedCompletedHistoryItem) {
+            return 'ready' as const;
+        }
+
+        if (viewerMetadataSidecarState) {
+            return viewerMetadataSidecarState;
+        }
+
+        if (viewerHasPersistedSidecarMetadata) {
+            return 'ready' as const;
+        }
+
+        return currentViewedCompletedHistoryItem.savedFilename ? ('loading' as const) : ('missing' as const);
+    }, [currentViewedCompletedHistoryItem, viewerHasPersistedSidecarMetadata, viewerMetadataSidecarState]);
+    const viewerMetadataLoadingLabel = t('workspaceViewerMetadataLoading');
+    const viewerMetadataUnavailableLabel = t('workspaceViewerMetadataUnavailable');
+    const viewerMetadataStateMessage =
+        viewerMetadataStatus === 'loading'
+            ? viewerMetadataLoadingLabel
+            : viewerMetadataStatus === 'missing'
+              ? viewerMetadataUnavailableLabel
+              : null;
+    const resolveViewerMetadataValue = useCallback(
+        (sidecarValue: string | null, fallbackValue: string) => {
+            if (viewerMetadataStatus === 'loading') {
+                return viewerMetadataLoadingLabel;
+            }
+
+            if (viewerMetadataStatus === 'missing') {
+                return viewerMetadataUnavailableLabel;
+            }
+
+            if (viewerHasPersistedSidecarMetadata) {
+                return sidecarValue || viewerMetadataUnavailableLabel;
+            }
+
+            return sidecarValue || fallbackValue;
+        },
+        [
+            viewerHasPersistedSidecarMetadata,
+            viewerMetadataLoadingLabel,
+            viewerMetadataStatus,
+            viewerMetadataUnavailableLabel,
+        ],
+    );
+    const viewerMetadataAspectRatio = resolveViewerMetadataValue(
+        typeof selectedMetadata?.aspectRatio === 'string' ? selectedMetadata.aspectRatio : null,
+        viewSettings.aspectRatio,
+    );
+    const viewerMetadataSize = resolveViewerMetadataValue(
+        typeof selectedMetadata?.requestedImageSize === 'string'
+            ? selectedMetadata.requestedImageSize
+            : typeof selectedMetadata?.size === 'string'
+              ? selectedMetadata.size
+              : null,
+        viewSettings.size,
+    );
+    const viewerMetadataStyleLabel = resolveViewerMetadataValue(
+        typeof selectedMetadata?.style === 'string' ? getStyleLabel(selectedMetadata.style as ImageStyle) : null,
+        getStyleLabel(viewSettings.style),
+    );
+    const viewerMetadataModelLabel = resolveViewerMetadataValue(
+        selectedMetadata?.model === 'gemini-3.1-flash-image-preview' ||
+            selectedMetadata?.model === 'gemini-3-pro-image-preview' ||
+            selectedMetadata?.model === 'gemini-2.5-flash-image'
+            ? getModelLabel(selectedMetadata.model as ImageModel)
+            : typeof selectedMetadata?.model === 'string'
+              ? selectedMetadata.model
+              : null,
+        getModelLabel(viewSettings.model),
+    );
+    const viewerMetadataTemperature = resolveViewerMetadataValue(
+        typeof selectedMetadata?.temperature === 'number' ? selectedMetadata.temperature.toFixed(1) : null,
+        viewSettings.temperature.toFixed(1),
+    );
+    const viewerMetadataOutputFormat = resolveViewerMetadataValue(
+        typeof selectedMetadata?.outputFormat === 'string'
+            ? getOutputFormatSummaryLabel(selectedMetadata.outputFormat)
+            : null,
+        getOutputFormatSummaryLabel(viewSettings.outputFormat),
+    );
+    const viewerMetadataThinkingLevel = resolveViewerMetadataValue(
+        typeof selectedMetadata?.thinkingLevel === 'string'
+            ? getThinkingLevelSummaryLabel(selectedMetadata.thinkingLevel)
+            : null,
+        getThinkingLevelSummaryLabel(viewSettings.thinkingLevel),
+    );
+    const viewerMetadataGrounding = resolveViewerMetadataValue(
+        getMetadataGroundingModeLabel(selectedMetadata),
+        getGroundingModeLabel(deriveGroundingMode(viewSettings.googleSearch, viewSettings.imageSearch)),
+    );
+    const viewerMetadataReturnThoughts = resolveViewerMetadataValue(
+        typeof selectedMetadata?.includeThoughts === 'boolean'
+            ? getThoughtVisibilitySummaryLabel(selectedMetadata.includeThoughts)
+            : null,
+        getThoughtVisibilitySummaryLabel(viewSettings.includeThoughts),
+    );
+    const viewerMetadataItems = useMemo(
+        () => [
+            { key: 'ratio', label: t('workspaceViewerRatio'), value: viewerMetadataAspectRatio },
+            { key: 'size', label: t('workspaceViewerSize'), value: viewerMetadataSize },
+            { key: 'style', label: t('workspaceViewerStyle'), value: viewerMetadataStyleLabel },
+            { key: 'model', label: t('workspaceViewerModel'), value: viewerMetadataModelLabel },
+            {
+                key: 'temperature',
+                label: t('groundingProvenanceInsightTemperature'),
+                value: viewerMetadataTemperature,
+            },
+            {
+                key: 'output-format',
+                label: t('groundingProvenanceInsightOutputFormat'),
+                value: viewerMetadataOutputFormat,
+            },
+            {
+                key: 'thinking-level',
+                label: t('groundingProvenanceInsightThinkingLevel'),
+                value: viewerMetadataThinkingLevel,
+            },
+            {
+                key: 'grounding',
+                label: t('groundingProvenanceInsightGrounding'),
+                value: viewerMetadataGrounding,
+            },
+            {
+                key: 'return-thoughts',
+                label: t('groundingProvenanceInsightReturnThoughts'),
+                value: viewerMetadataReturnThoughts,
+            },
+        ],
+        [
+            t,
+            viewerMetadataAspectRatio,
+            viewerMetadataGrounding,
+            viewerMetadataModelLabel,
+            viewerMetadataOutputFormat,
+            viewerMetadataReturnThoughts,
+            viewerMetadataSize,
+            viewerMetadataStyleLabel,
+            viewerMetadataTemperature,
+            viewerMetadataThinkingLevel,
+        ],
+    );
     const stageViewerSettings = useMemo(
         () => ({
             aspectRatio: viewSettings.aspectRatio,
@@ -2079,8 +2314,8 @@ const App: React.FC = () => {
         currentStageBranchLabel: currentStageLinkedBranchSummary?.branchLabel || null,
         currentStageHasLinkedHistoryTurn,
         currentStageContinuationDiffers,
-        styleLabel: getStyleLabel(viewSettings.style),
-        modelLabel: getModelLabel(viewSettings.model),
+        metadataItems: viewerMetadataItems,
+        metadataStateMessage: viewerMetadataStateMessage,
         effectiveResultText,
         structuredData: effectiveStructuredData,
         structuredOutputMode: effectiveStructuredOutputMode,

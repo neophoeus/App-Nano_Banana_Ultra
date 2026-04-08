@@ -12,6 +12,12 @@ import StructuredOutputDisplay from './StructuredOutputDisplay';
 
 type SessionHintEntry = [string, unknown];
 
+type ViewerMetadataItem = {
+    key: string;
+    label: string;
+    value: string;
+};
+
 type WorkspaceViewerOverlayProps = {
     currentLanguage: Language;
     isOpen: boolean;
@@ -19,10 +25,8 @@ type WorkspaceViewerOverlayProps = {
     activeViewerIsFresh?: boolean;
     generatedImageCount: number;
     prompt: string;
-    aspectRatio: string;
-    size: string;
-    styleLabel: string;
-    model: string;
+    metadataItems?: ViewerMetadataItem[];
+    metadataStateMessage?: string | null;
     effectiveResultText: string | null;
     structuredData: Record<string, unknown> | null;
     structuredOutputMode: StructuredOutputMode | null;
@@ -47,10 +51,8 @@ export default function WorkspaceViewerOverlay({
     activeViewerIsFresh = false,
     generatedImageCount,
     prompt,
-    aspectRatio,
-    size,
-    styleLabel,
-    model,
+    metadataItems = [],
+    metadataStateMessage = null,
     effectiveResultText,
     structuredData,
     structuredOutputMode,
@@ -95,6 +97,7 @@ export default function WorkspaceViewerOverlay({
         sessionHintEntries.length > 0
             ? `${formatSessionHintKey(sessionHintEntries[0][0])}: ${formatSessionHintValue(sessionHintEntries[0][0], sessionHintEntries[0][1])}`
             : t('workspaceViewerSessionHintsEmpty');
+    const renderedMetadataItems = metadataItems.filter((item) => item.value.trim().length > 0);
 
     return (
         <div
@@ -198,31 +201,27 @@ export default function WorkspaceViewerOverlay({
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-2 text-xs text-white/70">
-                                    <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5">
-                                        {t('workspaceViewerRatio')}
-                                        <br />
-                                        <span className="mt-1 block text-sm font-semibold text-white">
-                                            {aspectRatio}
-                                        </span>
-                                    </div>
-                                    <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5">
-                                        {t('workspaceViewerSize')}
-                                        <br />
-                                        <span className="mt-1 block text-sm font-semibold text-white">{size}</span>
-                                    </div>
-                                    <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5">
-                                        {t('workspaceViewerStyle')}
-                                        <br />
-                                        <span className="mt-1 block text-sm font-semibold text-white">
-                                            {styleLabel}
-                                        </span>
-                                    </div>
-                                    <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5">
-                                        {t('workspaceViewerModel')}
-                                        <br />
-                                        <span className="mt-1 block text-sm font-semibold text-white">{model}</span>
-                                    </div>
+                                    {renderedMetadataItems.map((item) => (
+                                        <div
+                                            key={item.key}
+                                            className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5"
+                                        >
+                                            {item.label}
+                                            <br />
+                                            <span className="mt-1 block text-sm font-semibold text-white">
+                                                {item.value}
+                                            </span>
+                                        </div>
+                                    ))}
                                 </div>
+                                {metadataStateMessage ? (
+                                    <div
+                                        data-testid="workspace-viewer-metadata-state"
+                                        className="rounded-2xl border border-amber-300/20 bg-amber-400/8 px-3 py-2 text-xs leading-5 text-amber-100/85"
+                                    >
+                                        {metadataStateMessage}
+                                    </div>
+                                ) : null}
 
                                 <div>
                                     <div className="flex flex-wrap items-start justify-between gap-3">

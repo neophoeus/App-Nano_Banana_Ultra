@@ -14,10 +14,17 @@ describe('WorkspaceViewerOverlay', () => {
                 activeViewerImage="https://example.com/result.png"
                 generatedImageCount={2}
                 prompt="Viewer prompt"
-                aspectRatio="1:1"
-                size="1K"
-                styleLabel="None"
-                model="Gemini 3.1 Flash"
+                metadataItems={[
+                    { key: 'ratio', label: 'Ratio', value: '1:1' },
+                    { key: 'size', label: 'Size', value: '1K' },
+                    { key: 'style', label: 'Style', value: 'None' },
+                    { key: 'model', label: 'Model', value: 'Gemini 3.1 Flash' },
+                    { key: 'temperature', label: 'Temperature', value: '1.2' },
+                    { key: 'output-format', label: 'Output format', value: 'Images & text' },
+                    { key: 'thinking-level', label: 'Thinking level', value: 'High' },
+                    { key: 'grounding', label: 'Grounding', value: 'Google Search' },
+                    { key: 'return-thoughts', label: 'Return thoughts', value: 'Visible' },
+                ]}
                 effectiveResultText="Viewer text"
                 structuredData={null}
                 structuredOutputMode={null}
@@ -64,6 +71,13 @@ describe('WorkspaceViewerOverlay', () => {
         expect(markup).toContain('workspace-viewer-thoughts-summary');
         expect(markup).toContain('workspace-viewer-session-hints-details');
         expect(markup).toContain('workspace-viewer-session-hints-summary');
+        expect(markup).toContain('Temperature');
+        expect(markup).toContain('>1.2<');
+        expect(markup).toContain('Output format');
+        expect(markup).toContain('Images &amp; text');
+        expect(markup).toContain('Thinking level');
+        expect(markup).toContain('Grounding');
+        expect(markup).toContain('Return thoughts');
         expect(markup).toContain(thoughtsPreview);
         expect(markup).toContain(longThoughts);
         expect(markup).toContain('mode: single-turn');

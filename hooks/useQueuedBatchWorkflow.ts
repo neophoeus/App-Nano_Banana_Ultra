@@ -19,6 +19,7 @@ import {
     StructuredOutputMode,
 } from '../types';
 import { extractSavedFilename, persistHistoryThumbnail, saveImageToLocal } from '../utils/imageSaveUtils';
+import { buildImageSidecarMetadata } from '../utils/imageSidecarMetadata';
 import { sanitizeSessionHintsForStorage } from '../utils/inlineImageDisplay';
 import {
     isQueuedBatchJobAutoImportReady,
@@ -952,17 +953,32 @@ export function useQueuedBatchWorkflow({
                         let savedFilename: string | undefined;
                         let thumbnailSavedFilename: string | undefined;
                         let thumbnailInline: boolean | undefined;
+                        const sidecarMetadata = buildImageSidecarMetadata({
+                            prompt: job.prompt,
+                            model: job.model,
+                            style: job.style,
+                            aspectRatio: job.aspectRatio,
+                            requestedImageSize: job.imageSize,
+                            outputFormat: job.outputFormat,
+                            structuredOutputMode: job.structuredOutputMode || 'off',
+                            temperature: job.temperature,
+                            thinkingLevel: job.thinkingLevel,
+                            includeThoughts: job.includeThoughts,
+                            googleSearch: job.googleSearch,
+                            imageSearch: job.imageSearch,
+                            generationMode: job.generationMode || 'Queued Batch Job',
+                            executionMode: 'queued-batch-job',
+                            batchSize: job.batchSize,
+                            batchJobName: job.name,
+                            batchResultIndex: result.index,
+                        });
 
                         try {
-                            const savedPath = await saveImageToLocal(result.imageUrl as string, `${job.model}-batch`, {
-                                prompt: job.prompt,
-                                style: job.style,
-                                aspectRatio: job.aspectRatio,
-                                size: job.imageSize,
-                                mode: job.generationMode || 'Queued Batch Job',
-                                batchJobName: job.name,
-                                batchResultIndex: result.index,
-                            });
+                            const savedPath = await saveImageToLocal(
+                                result.imageUrl as string,
+                                `${job.model}-batch`,
+                                sidecarMetadata,
+                            );
                             savedFilename = extractSavedFilename(savedPath);
                         } catch {
                             savedFilename = undefined;
@@ -971,6 +987,7 @@ export function useQueuedBatchWorkflow({
                         const persistedThumbnail = await persistHistoryThumbnail(
                             result.imageUrl as string,
                             `${job.model}-batch`,
+                            savedFilename,
                         );
                         thumbnailUrl = persistedThumbnail.url;
                         thumbnailSavedFilename = persistedThumbnail.thumbnailSavedFilename;
@@ -995,15 +1012,7 @@ export function useQueuedBatchWorkflow({
                             text: result.text,
                             thoughts: result.thoughts,
                             structuredData: result.structuredData,
-                            metadata: {
-                                batchJobName: job.name,
-                                batchResultIndex: result.index,
-                                outputFormat: job.outputFormat,
-                                structuredOutputMode: job.structuredOutputMode || 'off',
-                                temperature: job.temperature,
-                                thinkingLevel: job.thinkingLevel,
-                                includeThoughts: job.includeThoughts,
-                            },
+                            metadata: sidecarMetadata,
                             grounding: result.grounding,
                             sessionHints: sanitizeSessionHintsForStorage(result.sessionHints || null) || null,
                             conversationId: null,

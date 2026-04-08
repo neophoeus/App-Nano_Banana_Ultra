@@ -3,8 +3,12 @@
  * and generating thumbnails for lightweight history display.
  */
 
+import { ImageSidecarMetadata } from '../types';
+import { normalizeImageSidecarMetadata } from './imageSidecarMetadata';
+
 const THUMBNAIL_MAX_DIM = 300; // Max width or height for history thumbnails
 const LOAD_IMAGE_ENDPOINT = '/api/load-image';
+const LOAD_IMAGE_METADATA_ENDPOINT = '/api/load-image-metadata';
 
 export type PreparedImageAsset = {
     dataUrl: string;
@@ -25,6 +29,27 @@ export const buildSavedImageLoadUrl = (savedFilename: string): string =>
 
 export const extractSavedFilename = (savedPath: string | null | undefined): string | undefined =>
     savedPath ? savedPath.split(/[\\/]/).pop() : undefined;
+
+const getDataUrlExtension = (dataUrl: string): string =>
+    dataUrl.startsWith('data:image/png')
+        ? 'png'
+        : dataUrl.startsWith('data:image/jpeg')
+          ? 'jpg'
+          : dataUrl.startsWith('data:image/webp')
+            ? 'webp'
+            : 'png';
+
+const buildGeneratedFilenameStem = (prefix: string): string => {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    return `${prefix}_${timestamp}_${crypto.randomUUID().slice(0, 8)}`;
+};
+
+const buildFilename = (stem: string, ext: string) => `${stem}.${ext}`;
+
+const extractFilenameStem = (filename: string): string => filename.replace(/\.[^.]+$/, '');
+
+const deriveThumbnailFilenameStem = (savedFilename: string): string =>
+    `${extractFilenameStem(savedFilename)}-thumbnail`;
 
 export const constrainImageDimensions = (
     width: number,
@@ -129,16 +154,10 @@ export async function saveImageToLocal(
     dataUrl: string,
     prefix: string = 'gemini',
     metadata?: Record<string, unknown>,
+    filenameStem?: string,
 ): Promise<string | null> {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    const ext = dataUrl.startsWith('data:image/png')
-        ? 'png'
-        : dataUrl.startsWith('data:image/jpeg')
-          ? 'jpg'
-          : dataUrl.startsWith('data:image/webp')
-            ? 'webp'
-            : 'png';
-    const filename = `${prefix}_${timestamp}_${crypto.randomUUID().slice(0, 8)}.${ext}`;
+    const ext = getDataUrlExtension(dataUrl);
+    const filename = buildFilename(filenameStem || buildGeneratedFilenameStem(prefix), ext);
 
     try {
         const res = await fetch('/api/save-image', {
@@ -201,7 +220,11 @@ export const generateThumbnail = (dataUrl: string): Promise<string> => {
     });
 };
 
-export async function persistHistoryThumbnail(dataUrl: string, prefix: string): Promise<PersistedHistoryThumbnail> {
+export async function persistHistoryThumbnail(
+    dataUrl: string,
+    prefix: string,
+    sourceSavedFilename?: string,
+): Promise<PersistedHistoryThumbnail> {
     let thumbnailUrl = dataUrl;
 
     try {
@@ -211,7 +234,10 @@ export async function persistHistoryThumbnail(dataUrl: string, prefix: string): 
     }
 
     try {
-        const savedPath = await saveImageToLocal(thumbnailUrl, `${prefix}-thumb`);
+        const thumbnailFilenameStem = sourceSavedFilename
+            ? deriveThumbnailFilenameStem(sourceSavedFilename)
+            : undefined;
+        const savedPath = await saveImageToLocal(thumbnailUrl, `${prefix}-thumbnail`, undefined, thumbnailFilenameStem);
         const thumbnailSavedFilename = extractSavedFilename(savedPath);
 
         if (thumbnailSavedFilename) {
@@ -228,6 +254,23 @@ export async function persistHistoryThumbnail(dataUrl: string, prefix: string): 
         url: thumbnailUrl,
         thumbnailInline: true,
     };
+}
+
+export async function loadImageMetadata(filename: string): Promise<ImageSidecarMetadata | null> {
+    try {
+        const res = await fetch(`${LOAD_IMAGE_METADATA_ENDPOINT}?filename=${encodeURIComponent(filename)}`);
+        if (res.status === 404) {
+            return null;
+        }
+        if (!res.ok) {
+            throw new Error(`Server returned ${res.status}`);
+        }
+
+        return normalizeImageSidecarMetadata(await res.json());
+    } catch (err) {
+        console.error('Failed to load image metadata:', err);
+        return null;
+    }
 }
 /**
  * Fetch a full-resolution image from the local filesystem via the server endpoint.

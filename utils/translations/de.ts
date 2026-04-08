@@ -307,10 +307,8 @@ export const de = {
     queuedBatchRecoverRecentAlreadyTrackedNotice:
         'Die aktuellen Remote-Batch-Jobs werden bereits verfolgt. {0} Eintrage wurden aktualisiert.',
     queuedBatchRecoverRecentNoneNotice: 'Keine weiteren aktuellen Remote-Batch-Jobs gefunden.',
-    queuedBatchRecoverRecentLog:
-        '{0} aktuelle Remote-Batch-Jobs aus der Batch-Liste wiederhergestellt.',
-    queuedBatchRecoverRecentRefreshedLog:
-        '{0} bereits verfolgte Remote-Batch-Jobs aus der Batch-Liste aktualisiert.',
+    queuedBatchRecoverRecentLog: '{0} aktuelle Remote-Batch-Jobs aus der Batch-Liste wiederhergestellt.',
+    queuedBatchRecoverRecentRefreshedLog: '{0} bereits verfolgte Remote-Batch-Jobs aus der Batch-Liste aktualisiert.',
     queuedBatchRecoverRecentFailedLog: 'Wiederherstellung aktueller Batch-Jobs fehlgeschlagen: {0}',
     queuedBatchRecoverRecentMetadataHint:
         'Wiederhergestellte Remote-Jobs konnen erneut importiert werden, aber die Gemini-Batch-Liste liefert weder den ursprunglichen Prompt noch Referenzbilder zuruck, daher enthalten diese Eintrage nur vereinfachte lokale Details.',
@@ -460,6 +458,12 @@ export const de = {
     composerActionPanelDesc:
         'Generieren bleibt die Hauptaktion. Folgeaktionen und Arbeitsbereichsaktionen bleiben nah dran, aber leiser.',
     composerAdvancedEyebrow: 'Tiefere Steuerung',
+    composerAdvancedTemperatureGuideDefault:
+        'Der Standardwert 1.0 halt das Modell zwischen Vorhersagbarkeit und Variation im Gleichgewicht.',
+    composerAdvancedTemperatureGuideHigher:
+        'Oberhalb von 1.0 steigen Variation und Uberraschung, aber Konsistenz und Prompt-Treue konnen sinken.',
+    composerAdvancedTemperatureGuideLower:
+        'Unterhalb von 1.0 werden Ergebnisse stabiler und wortlicher, sind aber meist weniger explorativ.',
     composerAdvancedStructuredOutputGuideOff:
         'Waehle Aus, wenn du nur die normale Antwort in Textform und das Bildresultat brauchst.',
     composerAdvancedStructuredOutputGuideSceneBrief:
@@ -677,6 +681,8 @@ export const de = {
     workspaceViewerSize: 'Grosse',
     workspaceViewerStyle: 'Stil',
     workspaceViewerModel: 'Modell',
+    workspaceViewerMetadataLoading: 'Ladt...',
+    workspaceViewerMetadataUnavailable: 'Nicht verfugbar',
     workspaceViewerResultText: 'Ergebnistext',
     workspaceViewerResultTextEmpty:
         'Wenn das ausgewahlte Modell Bilder und Text zuruckgibt, erscheint das Ergebnis hier.',

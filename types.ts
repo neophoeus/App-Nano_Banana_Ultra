@@ -278,6 +278,41 @@ export interface GenerationSettings {
     imageSearch: boolean;
 }
 
+export interface SavedImageActualOutput {
+    width: number;
+    height: number;
+    mimeType?: string | null;
+}
+
+export interface ImageSidecarMetadata {
+    prompt: string;
+    model: ImageModel | string;
+    style: ImageStyle | string;
+    aspectRatio: AspectRatio | string;
+    requestedImageSize: ImageSize | string;
+    size: ImageSize | string;
+    outputFormat: OutputFormat | string;
+    structuredOutputMode: StructuredOutputMode;
+    temperature: number;
+    thinkingLevel: ThinkingLevel | string;
+    includeThoughts: boolean;
+    googleSearch: boolean;
+    imageSearch: boolean;
+    groundingMode: string;
+    generationMode: string;
+    mode: string;
+    executionMode: ExecutionMode | string;
+    batchSize?: number;
+    batchJobName?: string;
+    batchResultIndex?: number;
+    actualOutput?: SavedImageActualOutput | null;
+    filename?: string;
+    timestamp?: string;
+    [key: string]: unknown;
+}
+
+export type ImageSidecarMetadataState = 'loading' | 'missing';
+
 export interface GenerateResponse {
     imageUrl?: string;
     text?: string;
