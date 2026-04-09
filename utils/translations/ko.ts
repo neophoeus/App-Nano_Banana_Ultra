@@ -579,7 +579,7 @@ export const ko = {
     surfaceSharedControlsStateTitle: '공유 컴포저 상태',
     surfaceSharedControlsStateDesc: '{0}가 열려 있는 동안에도 메인 페이지 설정이 여기서 계속 유지됩니다.',
     surfaceSharedControlsCurrentPrompt: '현재 프롬프트',
-    surfaceSharedControlsPromptDetail: '템플릿, 재작성, 기록',
+    surfaceSharedControlsPromptDetail: '영감, 재작성',
     surfaceSharedControlsQuantityDetail: '이미지 {0}장',
     surfaceSharedControlsReferenceDetail: '오브젝트 {0}/{1} · 캐릭터 {2}/{3}',
     surfaceSharedControlsActiveSheet: '활성 시트',

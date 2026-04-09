@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { IMAGE_MODELS, MODEL_CAPABILITIES } from '../constants';
-import { MAX_DISPLAY_HISTORY, PROMPT_TEMPLATES, PromptHistoryItem } from '../hooks/usePromptHistory';
 import { Language } from '../utils/translations';
 import { AspectRatio, GeneratedImage, ImageModel, ImageSize, ImageStyle, WorkspaceSettingsDraft } from '../types';
 import BatchSelector from './BatchSelector';
@@ -14,8 +13,6 @@ import WorkspaceModalFrame from './WorkspaceModalFrame';
 
 export type PickerSheet =
     | 'prompt'
-    | 'history'
-    | 'templates'
     | 'styles'
     | 'settings'
     | 'model'
@@ -40,14 +37,9 @@ type WorkspacePickerSheetProps = {
     isEnhancingPrompt: boolean;
     closePickerSheet: () => void;
     openPromptSheet: () => void;
-    openTemplatesSheet: () => void;
-    openHistorySheet: () => void;
     openStylesSheet: () => void;
     openReferencesSheet: () => void;
     openAdvancedSettings?: () => void;
-    promptHistory: PromptHistoryItem[];
-    removePrompt: (prompt: string) => void;
-    clearPromptHistory: () => void;
     history: GeneratedImage[];
     handleHistorySelect: (item: GeneratedImage) => void;
     handleContinueFromHistoryTurn: (item: GeneratedImage) => void;
@@ -127,14 +119,9 @@ export default function WorkspacePickerSheet({
     handleSurpriseMe,
     handleSmartRewrite,
     openPromptSheet,
-    openTemplatesSheet,
-    openHistorySheet,
     openStylesSheet,
     openReferencesSheet,
     openAdvancedSettings = () => {},
-    promptHistory,
-    removePrompt,
-    clearPromptHistory,
     history,
     handleHistorySelect,
     handleContinueFromHistoryTurn,
@@ -274,11 +261,7 @@ export default function WorkspacePickerSheet({
         }
     }, [activePickerSheet, closePickerSheet, showStyleEntry]);
 
-    if (!activePickerSheet) {
-        return null;
-    }
-
-    if (activePickerSheet === 'styles' && !showStyleEntry) {
+    if (!activePickerSheet || (activePickerSheet === 'styles' && !showStyleEntry)) {
         return null;
     }
 
@@ -391,82 +374,6 @@ export default function WorkspacePickerSheet({
                             {t('generationSettingsApply')}
                         </Button>
                     </div>
-                </div>
-            );
-        }
-
-        if (activePickerSheet === 'history') {
-            return (
-                <div className="space-y-2">
-                    {promptHistory.length === 0 && (
-                        <div className="nbu-overlay-card-neutral rounded-2xl border border-dashed px-3 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                            {t('workspacePickerNoSavedPrompts')}
-                        </div>
-                    )}
-                    {promptHistory.slice(0, MAX_DISPLAY_HISTORY).map((item, index) => (
-                        <div
-                            key={`${item.usedAt}-${index}`}
-                            className="nbu-overlay-card-neutral flex items-center gap-2 rounded-2xl border px-3 py-3"
-                        >
-                            <button
-                                onClick={() => {
-                                    setPrompt(item.text);
-                                    closePickerSheet();
-                                }}
-                                className="flex-1 text-left text-sm text-gray-700 dark:text-gray-200"
-                            >
-                                {item.text}
-                            </button>
-                            <button
-                                onClick={() => removePrompt(item.text)}
-                                className="rounded-lg px-2 py-1 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
-                            >
-                                {t('workspacePickerRemovePrompt')}
-                            </button>
-                        </div>
-                    ))}
-                    {promptHistory.length > 0 && (
-                        <button
-                            onClick={() => {
-                                clearPromptHistory();
-                                closePickerSheet();
-                            }}
-                            className="w-full rounded-2xl border border-red-200 px-4 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 dark:border-red-900/40 dark:text-red-300 dark:hover:bg-red-950/30"
-                        >
-                            {t('workspacePickerClearPromptHistory')}
-                        </button>
-                    )}
-                </div>
-            );
-        }
-
-        if (activePickerSheet === 'templates') {
-            return (
-                <div className="grid gap-2 md:grid-cols-2">
-                    {PROMPT_TEMPLATES.map((template) => (
-                        <button
-                            key={template.id}
-                            onClick={() => {
-                                setPrompt(
-                                    template.promptKey ? t(template.promptKey) || template.prompt : template.prompt,
-                                );
-                                closePickerSheet();
-                            }}
-                            className="nbu-overlay-card-neutral rounded-2xl border px-4 py-4 text-left transition-colors hover:border-amber-400 hover:bg-amber-50 dark:hover:border-amber-500/40 dark:hover:bg-amber-950/20"
-                        >
-                            <div className="flex items-center gap-3">
-                                <span className="text-xl">{template.icon}</span>
-                                <div>
-                                    <div className="font-semibold text-gray-900 dark:text-gray-100">
-                                        {t(template.labelKey) || template.label}
-                                    </div>
-                                    <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                        {template.prompt.slice(0, 96)}...
-                                    </div>
-                                </div>
-                            </div>
-                        </button>
-                    ))}
                 </div>
             );
         }

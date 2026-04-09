@@ -18,7 +18,21 @@ const { saveImageToLocalMock, generateThumbnailMock, persistHistoryThumbnailMock
 );
 
 vi.mock('../components/GeneratedImage', () => ({
-    default: () => <div data-testid="mock-generated-image" />,
+    default: ({ stageTopRight }: { stageTopRight?: { visibleActions?: Array<{ key: string; onClick?: () => void }>; overflowActions?: Array<{ key: string; onClick?: () => void }> } }) => {
+        const clearAction = [...(stageTopRight?.visibleActions || []), ...(stageTopRight?.overflowActions || [])].find(
+            (action) => action.key === 'clear',
+        );
+
+        return (
+            <div data-testid="mock-generated-image">
+                {clearAction ? (
+                    <button type="button" data-testid="mock-generated-image-clear" onClick={clearAction.onClick}>
+                        Clear stage
+                    </button>
+                ) : null}
+            </div>
+        );
+    },
 }));
 
 vi.mock('../components/WorkspaceHealthPanel', () => ({
@@ -224,13 +238,6 @@ describe('App official conversation flow', () => {
 
             if (url === '/api/runtime-config') {
                 return new Response(JSON.stringify({ hasApiKey: true }), {
-                    status: 200,
-                    headers: { 'Content-Type': 'application/json' },
-                });
-            }
-
-            if (url === '/api/load-prompts') {
-                return new Response(JSON.stringify({ prompts: [] }), {
                     status: 200,
                     headers: { 'Content-Type': 'application/json' },
                 });
@@ -478,5 +485,36 @@ describe('App official conversation flow', () => {
         await waitFor(() => {
             expect(container.querySelector('[data-testid="workspace-progress-detail-modal"]')).toBeTruthy();
         });
+    });
+
+    it('disables repaint after clearing the stage even when a restored history selection still exists', async () => {
+        await act(async () => {
+            root.render(<App />);
+        });
+
+        const repaintButton = await waitFor(() => {
+            const button = container.querySelector('[data-testid="side-tools-repaint-current"]') as HTMLButtonElement | null;
+            expect(button).toBeTruthy();
+            return button!;
+        });
+        expect(repaintButton.disabled).toBe(false);
+
+        const clearButton = await waitFor(() => {
+            const button = container.querySelector('[data-testid="mock-generated-image-clear"]') as HTMLButtonElement | null;
+            expect(button).toBeTruthy();
+            return button!;
+        });
+        await clickElement(clearButton);
+
+        await waitFor(() => {
+            const button = container.querySelector('[data-testid="side-tools-repaint-current"]') as HTMLButtonElement | null;
+            expect(button).toBeTruthy();
+            expect(button!.disabled).toBe(true);
+            return button!;
+        });
+
+        const uploadButton = container.querySelector('[data-testid="side-tools-upload-to-repaint"]') as HTMLButtonElement | null;
+        expect(uploadButton).toBeTruthy();
+        expect(uploadButton!.disabled).toBe(false);
     });
 });

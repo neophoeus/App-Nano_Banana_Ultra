@@ -4,6 +4,18 @@ This changelog is compiled from the repository's local git tags plus the publish
 
 ## Unreleased
 
+## v3.4.1 - 2026-04-09
+
+- Release title: Nano Banana Ultra 3.4.1 - Prompt Helper Removal, History Rail Regroup & Stage Shell Alignment
+- Release prep summary:
+    - removed composer-side prompt helper persistence and template/history routes end-to-end by deleting `usePromptHistory`, removing the `Templates` / `History` launcher buttons and picker routes, stripping the related backend prompt-history endpoints and Playwright output isolation file list, and aligning the surviving shared-controls wording across the maintained locales to the smaller `Inspiration, rewrite` contract
+    - corrected viewer prompt reuse so `Apply Prompt` now prefers the currently viewed history item's prompt or loaded metadata prompt instead of blindly replaying stale composer/view state when the inspected image changes
+    - split `Image Tools` into clearer action ownership with dedicated `Upload Image To Repaint`, `Repaint Current Image`, and `Draw Reference Sketch` entries, wired a direct upload-to-repaint path from the shared side-tool surface, and added an App-level regression that keeps `Repaint Current Image` disabled after clearing the stage while the upload path remains available
+    - regrouped unified history and recent-turn presentation by standardizing the surface title to `History`, moving utility actions back into the top-right header row, removing the old footer, enlarging the compact desktop history contract to centered `128px` six-up square thumbnails with tighter spacing, restyling the split left/right pagers into stronger button-plus-chip controls, and fixing the right pager order to `last`, `next`, then total-pages
+    - expanded the recent-turn filmstrip into larger responsive mobile/desktop tokens, narrowed the composer three-column desktop widths around the embedded `Image Tools` shell, and preserved prompt text suppression plus preview-slot behavior through the updated history/filmstrip layout tests
+    - unlocked the desktop main shell from the earlier viewport-fill chain, let the desktop stage outer shell stretch to the taller `History + Composer` column while keeping the same padded mobile-style shell spacing, restored the desktop inner square to shell-driven expansion, and removed the mobile viewport-height clamp so the mobile stage square also grows with the shell instead of staying artificially small on shorter screens
+    - validation follow-through reran the focused history / stage / render-stability slices through the layout passes, then reran the full Vitest suite at `83 files / 714 tests` and `npm run build`
+
 ## v3.4.0 - 2026-04-09
 
 - Release title: Nano Banana Ultra 3.4.0 - Support Surface Closeout & Sticky Send Intent

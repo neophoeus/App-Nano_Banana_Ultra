@@ -410,7 +410,7 @@ export const en = {
     surfaceSharedControlsStateDescEditor:
         'Model and generation settings stay live here while {0} is open. Prompt and references stay local to the editor.',
     surfaceSharedControlsCurrentPrompt: 'Current Prompt',
-    surfaceSharedControlsPromptDetail: 'Templates, rewrite, history',
+    surfaceSharedControlsPromptDetail: 'Inspiration, rewrite',
     surfaceSharedControlsQuantityDetail: '{0} image(s)',
     surfaceSharedControlsReferenceDetail: 'Objects {0}/{1} · Characters {2}/{3}',
     surfaceSharedControlsActiveSheet: 'Active Sheet',

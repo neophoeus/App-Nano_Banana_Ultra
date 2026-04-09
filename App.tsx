@@ -58,7 +58,6 @@ import { EMPTY_WORKSPACE_CONVERSATION_STATE } from './utils/conversationState';
 import { useImageGeneration } from './hooks/useImageGeneration';
 import { usePerformGeneration } from './hooks/usePerformGeneration';
 import { usePromptTools } from './hooks/usePromptTools';
-import { usePromptHistory, PROMPT_TEMPLATES, MAX_DISPLAY_HISTORY } from './hooks/usePromptHistory';
 import { useComposerState } from './hooks/useComposerState';
 import { useGroundingProvenanceView } from './hooks/useGroundingProvenanceView';
 import { useGroundingProvenancePanelProps } from './hooks/useGroundingProvenancePanelProps';
@@ -293,12 +292,6 @@ const App: React.FC = () => {
     } = useWorkspaceAssets({
         initialStagedAssets: initialWorkspaceSnapshot.stagedAssets,
     });
-    const {
-        promptHistory,
-        addPrompt: addPromptToHistory,
-        removePrompt,
-        clearHistory: clearPromptHistory,
-    } = usePromptHistory();
     const {
         selectedResultText,
         selectedThoughts,
@@ -1091,7 +1084,6 @@ const App: React.FC = () => {
         setHistory,
         setIsEditing,
         setEditingImageSource,
-        addPromptToHistory,
         getGenerationLineageContext,
         getConversationRequestContext,
         onBatchPreviewStart: handleBatchPreviewStart,
@@ -1254,7 +1246,6 @@ const App: React.FC = () => {
         getModelLabel,
         getGenerationLineageContext,
         addLog,
-        addPromptToHistory,
         showNotification,
         setHistory,
         historySelectRef: queuedBatchHistorySelectRef,
@@ -1408,6 +1399,9 @@ const App: React.FC = () => {
         performGeneration,
         queueBatchJobFromEditor: handleQueueBatchJobFromEditor,
     });
+    const handleOpenUploadToRepaint = useCallback(() => {
+        uploadInputRef.current?.click();
+    }, []);
     const handleSurfaceRemoveObjectReference = useCallback(
         (indexToRemove: number) => {
             if (isEditing) {
@@ -1437,7 +1431,6 @@ const App: React.FC = () => {
         clearAssetRoles,
         applyEmptyWorkspaceSnapshot,
         clearSharedWorkspaceSnapshot,
-        clearPromptHistory,
         setActiveWorkspaceDetailModal,
         setIsAdvancedSettingsOpen,
         setIsSketchPadOpen,
@@ -1588,6 +1581,19 @@ const App: React.FC = () => {
         characterImageCount: surfaceCharacterImages.length,
         t,
     });
+    const viewerPromptValue = useMemo(() => {
+        const historyPrompt = currentViewedCompletedHistoryItem?.prompt?.trim();
+        if (historyPrompt) {
+            return historyPrompt;
+        }
+
+        const metadataPrompt = typeof selectedMetadata?.prompt === 'string' ? selectedMetadata.prompt.trim() : '';
+        if (metadataPrompt) {
+            return metadataPrompt;
+        }
+
+        return viewSettings.prompt;
+    }, [currentViewedCompletedHistoryItem?.prompt, selectedMetadata, viewSettings.prompt]);
 
     useEffect(() => {
         if (!isSurfaceWorkspaceOpen) {
@@ -2237,7 +2243,7 @@ const App: React.FC = () => {
         viewerItems: viewerHistoryItems,
         viewerSelectedHistoryId: currentViewedCompletedHistoryId,
         onSelectViewerItem: handleViewerSelectHistoryItem,
-        prompt: viewSettings.prompt,
+        prompt: viewerPromptValue,
         error,
         resultStatusSummary: groundingResolutionStatusSummary,
         resultStatusTone: groundingResolutionStatusTone,
@@ -2291,8 +2297,6 @@ const App: React.FC = () => {
         isEnhancingPrompt: isEditing ? isEnhancingEditorPrompt : isEnhancingComposerPrompt,
         closePickerSheet: handleCloseWorkspacePickerSheet,
         openPromptSheet: () => setActivePickerSheet('prompt'),
-        openTemplatesSheet: () => setActivePickerSheet('templates'),
-        openHistorySheet: () => setActivePickerSheet('history'),
         openStylesSheet: () => {
             if (!isEditing) {
                 setActivePickerSheet('styles');
@@ -2300,9 +2304,6 @@ const App: React.FC = () => {
         },
         openReferencesSheet: () => setActivePickerSheet('references'),
         openAdvancedSettings: openAdvancedSettingsFromGeneration,
-        promptHistory,
-        removePrompt,
-        clearPromptHistory,
         history,
         handleHistorySelect,
         handleContinueFromHistoryTurn,
@@ -2378,7 +2379,7 @@ const App: React.FC = () => {
         ],
     );
     const stagePanelClassName =
-        'min-w-0 nbu-shell-panel nbu-shell-surface-stage-hero min-h-[400px] overflow-hidden p-3 lg:min-h-0 lg:flex-1 xl:h-full xl:min-h-0 xl:p-0';
+        'min-w-0 nbu-shell-panel nbu-shell-surface-stage-hero min-h-[400px] overflow-hidden p-3 lg:min-h-0 xl:flex-1';
     const topLauncherCompactButtonClassName =
         'group nbu-shell-panel flex h-[40px] min-w-0 items-center justify-center px-2.5 py-2 text-center transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:hover:shadow-[0_18px_40px_rgba(2,6,23,0.38)] min-h-[40px]';
     const topLauncherCompactLabelClassName =
@@ -2501,13 +2502,15 @@ const App: React.FC = () => {
         workspaceSession.conversationTurnIds,
         workspaceSession.sourceHistoryId,
     ]);
+    const canRepaintCurrentImage = Boolean(getActiveImageUrl());
     const sideToolPanel = useMemo(
         () => (
             <WorkspaceSideToolPanel
                 currentLanguage={currentLang}
-                canEditCurrentImage={Boolean(activeViewerImage)}
+                canEditCurrentImage={canRepaintCurrentImage}
                 onOpenSketchPad={handleOpenSketchPad}
                 onOpenEditor={handleOpenEditor}
+                onOpenUploadToRepaint={handleOpenUploadToRepaint}
                 objectImages={objectImages}
                 characterImages={characterImages}
                 maxObjects={capability.maxObjects}
@@ -2521,13 +2524,14 @@ const App: React.FC = () => {
             />
         ),
         [
-            activeViewerImage,
+            canRepaintCurrentImage,
             capability.maxCharacters,
             capability.maxObjects,
             characterImages,
             currentLang,
             handleOpenEditor,
             handleOpenSketchPad,
+            handleOpenUploadToRepaint,
             handleRemoveCharacterReference,
             handleRemoveObjectReference,
             isGenerating,
@@ -2871,21 +2875,21 @@ const App: React.FC = () => {
 
             <WorkspaceTopHeader {...workspaceTopHeaderProps} />
 
-            <div className="relative z-10 mx-auto flex min-h-screen max-w-[1560px] flex-col px-4 pb-[50px] pt-[100px] lg:px-4 lg:pb-[54px] xl:px-3 xl:pt-[58px]">
-                <main className="mt-0 flex flex-1 flex-col gap-1.5 xl:min-h-0">
+            <div className="relative z-10 mx-auto flex min-h-screen max-w-[1560px] flex-col px-4 pb-[50px] pt-[100px] lg:px-4 lg:pb-[54px] xl:min-h-0 xl:px-3 xl:pt-[58px]">
+                <main className="mt-0 flex flex-1 flex-col gap-1.5 xl:min-h-0 xl:flex-none">
                     <section
                         data-testid="workspace-main-shell"
-                        className="grid min-w-0 gap-1.5 xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] xl:items-stretch"
+                        className="grid min-w-0 gap-1.5 xl:min-h-0 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] xl:items-stretch"
                     >
-                        <div data-testid="workspace-stage-column" className="min-w-0 xl:min-h-0 xl:h-full">
+                        <div data-testid="workspace-stage-column" className="min-w-0 xl:flex xl:min-h-0 xl:flex-col">
                             {focusSurface}
                         </div>
 
                         <div
                             data-testid="workspace-work-column"
-                            className="grid min-w-0 gap-1.5 xl:min-h-0 xl:h-full xl:grid-rows-[minmax(0,1fr)_auto]"
+                            className="grid min-w-0 gap-1.5 xl:min-h-0"
                         >
-                            <div data-testid="workspace-history-column" className="min-w-0 xl:min-h-0 xl:h-full">
+                            <div data-testid="workspace-history-column" className="min-w-0 xl:min-h-0">
                                 {historySurface}
                             </div>
 

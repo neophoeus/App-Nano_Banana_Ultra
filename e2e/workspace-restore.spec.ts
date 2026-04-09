@@ -2068,7 +2068,7 @@ test.describe('workspace restore flows', () => {
         await expect(page.getByTestId('image-editor')).toHaveCount(0);
         await expect(composer(page)).toHaveValue('Shared prompt from main composer');
 
-        await expect(page.locator('[data-testid="side-tools-open-editor"]:visible')).toContainText(
+        await expect(page.locator('[data-testid="side-tools-upload-to-repaint"]:visible')).toContainText(
             tt('workspaceSideToolUploadToRepaint'),
         );
         await page.locator('#global-upload-input').setInputFiles(editorSharedContextFixturePath);

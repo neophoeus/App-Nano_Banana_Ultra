@@ -5,8 +5,6 @@ import { buildWorkflowTimeline, renderWorkflowMessage, workflowMessageIncludes }
 
 type PickerSheet =
     | 'prompt'
-    | 'history'
-    | 'templates'
     | 'styles'
     | 'settings'
     | 'model'
@@ -134,10 +132,6 @@ export function useWorkspaceShellViewModel({
         switch (activePickerSheet) {
             case 'prompt':
                 return t('workspaceSheetTitlePrompt');
-            case 'history':
-                return t('workspaceSheetTitleHistory');
-            case 'templates':
-                return t('workspaceSheetTitleTemplates');
             case 'styles':
                 return t('workspaceSheetTitleStyles');
             case 'settings':

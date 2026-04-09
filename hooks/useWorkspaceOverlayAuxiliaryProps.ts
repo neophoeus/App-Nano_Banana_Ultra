@@ -32,7 +32,7 @@ type UseWorkspaceOverlayAuxiliaryPropsArgs = {
     isSurfaceWorkspaceOpen: boolean;
     isAdvancedSettingsOpen: boolean;
     isEditing: boolean;
-    activePickerSheet: SurfaceSharedControlsProps['activePickerSheet'] | 'history' | 'templates';
+    activePickerSheet: SurfaceSharedControlsProps['activePickerSheet'];
     settingsVariant: SurfaceSharedControlsVariant;
     totalReferenceCount: number;
     hasSurfacePrompt: boolean;
@@ -130,10 +130,7 @@ export function useWorkspaceOverlayAuxiliaryProps({
             surfaceSharedControlsProps: isSurfaceWorkspaceOpen
                 ? ({
                       currentLanguage,
-                      activePickerSheet:
-                          activePickerSheet === 'history' || activePickerSheet === 'templates'
-                              ? null
-                              : activePickerSheet,
+                      activePickerSheet,
                       isAdvancedSettingsOpen,
                       totalReferenceCount,
                       hasPrompt: hasSurfacePrompt,

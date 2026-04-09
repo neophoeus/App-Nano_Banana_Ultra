@@ -7,7 +7,6 @@ type UseWorkspaceResetActionsArgs = {
     clearAssetRoles: (roles: Array<'object' | 'character' | 'stage-source'>) => void;
     applyEmptyWorkspaceSnapshot: () => void;
     clearSharedWorkspaceSnapshot: () => void | Promise<void>;
-    clearPromptHistory: () => void;
     setActiveWorkspaceDetailModal: Dispatch<
         SetStateAction<'progress' | 'response' | 'sources' | 'versions' | 'queued-jobs' | null>
     >;
@@ -25,7 +24,6 @@ export function useWorkspaceResetActions({
     clearAssetRoles,
     applyEmptyWorkspaceSnapshot,
     clearSharedWorkspaceSnapshot,
-    clearPromptHistory,
     setActiveWorkspaceDetailModal,
     setIsAdvancedSettingsOpen,
     setIsSketchPadOpen,
@@ -42,7 +40,6 @@ export function useWorkspaceResetActions({
     const handleClearGalleryHistory = useCallback(() => {
         applyEmptyWorkspaceSnapshot();
         void clearSharedWorkspaceSnapshot();
-        clearPromptHistory();
         setActiveWorkspaceDetailModal(null);
         setIsAdvancedSettingsOpen(false);
         setIsSketchPadOpen(false);
@@ -54,7 +51,6 @@ export function useWorkspaceResetActions({
     }, [
         applyEmptyWorkspaceSnapshot,
         clearSharedWorkspaceSnapshot,
-        clearPromptHistory,
         lastPromotedHistoryIdRef,
         setActiveWorkspaceDetailModal,
         setIsAdvancedSettingsOpen,

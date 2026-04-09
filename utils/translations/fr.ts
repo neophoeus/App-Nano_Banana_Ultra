@@ -603,7 +603,7 @@ export const fr = {
     surfaceSharedControlsStateDescEditor:
         "Les reglages partages restent actifs ici tant que {0} est ouvert. Le prompt reste local a l'editeur.",
     surfaceSharedControlsCurrentPrompt: 'Prompt actuel',
-    surfaceSharedControlsPromptDetail: 'Modeles, reecriture, historique',
+    surfaceSharedControlsPromptDetail: 'Inspiration, reecriture',
     surfaceSharedControlsQuantityDetail: '{0} image(s)',
     surfaceSharedControlsReferenceDetail: 'Objets {0}/{1} · Personnages {2}/{3}',
     surfaceSharedControlsActiveSheet: 'Panneau actif',

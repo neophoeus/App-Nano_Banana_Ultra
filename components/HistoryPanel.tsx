@@ -56,7 +56,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
 
     if (history.length === 0 && previewTiles.length === 0) return null;
 
-    const resolvedTitle = title || t('workspacePickerPromptHistoryTitle');
+    const resolvedTitle = title || t('workspaceSheetTitleHistory');
 
     const totalPages = continuous ? 1 : Math.ceil(history.length / pageSize);
     const displayedHistory = continuous ? history : history.slice(page * pageSize, (page + 1) * pageSize);
@@ -73,11 +73,11 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
     const titleIconClassName = isEmbedded ? 'h-4 w-4 text-slate-400 dark:text-slate-500' : 'h-4 w-4';
     const gridClassName =
         thumbnailMode === 'compact'
-            ? 'grid w-full min-w-0 grid-cols-4 gap-1.5 xl:grid-cols-[repeat(6,minmax(100px,100px))] xl:justify-between xl:gap-x-0 xl:gap-y-1'
+            ? 'grid w-full min-w-0 grid-cols-4 gap-1.5 xl:grid-cols-[repeat(6,minmax(128px,128px))] xl:justify-center xl:gap-1.5'
             : 'grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4';
     const cardSizeClassName =
         thumbnailMode === 'compact'
-            ? 'aspect-square w-full rounded-[18px] xl:h-[100px] xl:w-[100px] xl:shrink-0'
+            ? 'aspect-square w-full rounded-[18px] xl:h-[128px] xl:w-[128px] xl:shrink-0'
             : 'aspect-square rounded-xl';
     const badgeContainerClassName =
         thumbnailMode === 'compact'

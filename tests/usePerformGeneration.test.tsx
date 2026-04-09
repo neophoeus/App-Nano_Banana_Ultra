@@ -55,7 +55,6 @@ describe('usePerformGeneration', () => {
     let latestIsEditing = true;
     let latestEditingImageSource: string | null = 'data:image/png;base64,EDIT';
     let notifications: Array<{ message: string; type?: 'info' | 'error' }>;
-    let promptHistory: string[];
     let conversationContextFactory:
         | (() => {
               conversationId: string;
@@ -151,9 +150,6 @@ describe('usePerformGeneration', () => {
                 setEditingImageSource: (value) => {
                     latestEditingImageSource = value;
                 },
-                addPromptToHistory: (value) => {
-                    promptHistory.push(value);
-                },
                 getGenerationLineageContext: () => ({
                     parentHistoryId: 'parent-turn',
                     rootHistoryId: 'root-turn',
@@ -190,7 +186,6 @@ describe('usePerformGeneration', () => {
         latestIsEditing = true;
         latestEditingImageSource = 'data:image/png;base64,EDIT';
         notifications = [];
-        promptHistory = [];
         conversationContextFactory = null;
 
         checkApiKeyMock.mockReset();
@@ -314,7 +309,6 @@ describe('usePerformGeneration', () => {
         expect(latestIsGenerating).toBe(false);
         expect(latestIsEditing).toBe(true);
         expect(latestEditingImageSource).toBe('data:image/png;base64,EDIT');
-        expect(promptHistory).toEqual(['A minimal yellow banana icon on a clean white card']);
         expect(notifications).toEqual([]);
     });
 

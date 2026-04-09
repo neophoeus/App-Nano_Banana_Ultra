@@ -40,8 +40,6 @@ export type EditorContextSnapshot = {
 
 type PickerSheet =
     | 'prompt'
-    | 'history'
-    | 'templates'
     | 'styles'
     | 'settings'
     | 'model'

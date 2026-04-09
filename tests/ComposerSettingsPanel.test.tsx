@@ -140,8 +140,8 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).toContain('dark:bg-violet-500/18');
         expect(markup).toContain('Inspiration');
         expect(markup).toContain('AI Enhance');
-        expect(markup).toContain('Templates');
-        expect(markup).toContain('History');
+        expect(markup).not.toContain('Templates');
+        expect(markup).not.toContain('History');
         expect(markup).toContain('Advanced settings');
         expect(markup).toContain('Output format: Images only');
         expect(markup).toContain('Temperature: 1.0');

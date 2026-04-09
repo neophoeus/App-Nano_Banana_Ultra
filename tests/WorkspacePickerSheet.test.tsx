@@ -20,7 +20,7 @@ const buildTurn = (overrides: Partial<GeneratedImage> = {}): GeneratedImage => (
 });
 
 describe('WorkspacePickerSheet', () => {
-    it('removes the gallery picker route now that gallery lives in the main workspace rail', () => {
+    it('falls back to the loading shell when a removed prompt-helper route is forced in', () => {
         const t = (key: string) => getTranslation('en', key);
         const markup = renderToStaticMarkup(
             <WorkspacePickerSheet
@@ -77,7 +77,8 @@ describe('WorkspacePickerSheet', () => {
         );
 
         expect(markup).toContain('Prompt History');
-        expect(markup).toContain(t('workspacePickerNoSavedPrompts'));
+    expect(markup).toContain(t('workspacePickerLoading'));
+    expect(markup).not.toContain(t('workspacePickerNoSavedPrompts'));
         expect(markup).not.toContain(t('workspaceSheetTitleGallery'));
         expect(markup).not.toContain(t('templates'));
         expect(markup).not.toContain(t('workspaceSheetTitleStyles'));

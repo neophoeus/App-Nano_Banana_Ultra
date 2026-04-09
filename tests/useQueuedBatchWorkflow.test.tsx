@@ -103,7 +103,6 @@ describe('useQueuedBatchWorkflow', () => {
     let latestHistory: GeneratedImage[];
     let notifications: Array<{ message: string; type?: 'info' | 'error' }>;
     let logs: string[];
-    let promptHistory: string[];
     let selectedHistoryIds: string[];
 
     const renderHook = (
@@ -146,7 +145,6 @@ describe('useQueuedBatchWorkflow', () => {
                         lineageDepth: 1,
                     })),
                 addLog: overrides.addLog ?? ((message) => logs.push(message)),
-                addPromptToHistory: overrides.addPromptToHistory ?? ((value) => promptHistory.push(value)),
                 showNotification:
                     overrides.showNotification ?? ((message, type) => notifications.push({ message, type })),
                 setHistory: (updater) => {
@@ -218,7 +216,6 @@ describe('useQueuedBatchWorkflow', () => {
         latestHistory = [];
         notifications = [];
         logs = [];
-        promptHistory = [];
         selectedHistoryIds = [];
 
         checkApiKeyMock.mockReset();
@@ -320,7 +317,6 @@ describe('useQueuedBatchWorkflow', () => {
                 aspectRatio: '16:9',
             }),
         );
-        expect(promptHistory).toEqual(['Queue this editor revision']);
         expect(notifications).toContainEqual({
             message: 'Queued batch job submitted to the official Batch API.',
             type: 'info',

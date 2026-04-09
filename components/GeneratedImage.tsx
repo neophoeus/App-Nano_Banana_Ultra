@@ -190,7 +190,7 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
         <div className="mx-auto flex h-full min-h-0 w-full flex-1 items-center justify-center">
             <div
                 data-testid="generated-image-stage-frame"
-                className="relative aspect-square w-full max-w-[min(100%,calc(100vh-19rem))] xl:h-full xl:w-auto xl:max-h-full xl:max-w-full"
+                className="relative aspect-square w-full max-w-full xl:h-full xl:w-auto xl:max-h-full xl:max-w-full"
             >
                 {children}
             </div>

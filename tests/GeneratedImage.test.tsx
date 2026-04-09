@@ -417,7 +417,11 @@ describe('GeneratedImage', () => {
 
         expect(stageFrameTag).toBeDefined();
         expect(stageFrameTag).toContain('aspect-square');
+        expect(stageFrameTag).toContain('max-w-full');
         expect(stageFrameTag).toContain('xl:h-full');
+        expect(stageFrameTag).toContain('xl:w-auto');
+        expect(stageFrameTag).toContain('xl:max-h-full');
+        expect(stageFrameTag).toContain('xl:max-w-full');
     });
 
     it('renders the failed selected-history state without crashing when clear is available', () => {

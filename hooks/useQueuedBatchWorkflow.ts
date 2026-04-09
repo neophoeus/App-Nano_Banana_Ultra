@@ -170,7 +170,6 @@ type UseQueuedBatchWorkflowArgs = {
     getModelLabel: (model: ImageModel) => string;
     getGenerationLineageContext: (params: { mode: string; editingInput?: string }) => GenerationLineageContext;
     addLog: (message: string) => void;
-    addPromptToHistory: (prompt: string) => void;
     showNotification: (message: string, type?: 'info' | 'error') => void;
     setHistory: Dispatch<SetStateAction<GeneratedImage[]>>;
     historySelectRef: MutableRefObject<((item: GeneratedImage) => void) | null>;
@@ -255,7 +254,6 @@ export function useQueuedBatchWorkflow({
     getModelLabel,
     getGenerationLineageContext,
     addLog,
-    addPromptToHistory,
     showNotification,
     setHistory,
     historySelectRef,
@@ -604,9 +602,6 @@ export function useQueuedBatchWorkflow({
                 upsertQueuedJob(mapRemoteQueuedJobToLocal(remoteJob, seed));
                 addLog(formatMessage('queuedBatchSubmittedLog', remoteJob.name));
                 showNotification(t('queuedBatchSubmittedNotice'), 'info');
-                if (draft.finalPrompt) {
-                    addPromptToHistory(draft.finalPrompt);
-                }
             } catch (error: any) {
                 const message = error?.message || 'Queued batch job submission failed.';
                 removeQueuedJob(localId);
@@ -616,7 +611,6 @@ export function useQueuedBatchWorkflow({
         },
         [
             addLog,
-            addPromptToHistory,
             apiKeyReady,
             formatMessage,
             handleApiKeyConnect,

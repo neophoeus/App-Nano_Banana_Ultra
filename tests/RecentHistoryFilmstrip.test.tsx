@@ -81,10 +81,12 @@ describe('RecentHistoryFilmstrip', () => {
         expect(markup).toContain('Recent Turns');
         expect(markup).toContain('filmstrip-grid');
         expect(markup).toContain('overflow-x-auto');
-        expect(markup).toContain('grid-cols-[repeat(4,minmax(96px,96px))]');
-        expect(markup).toContain('xl:grid-cols-[repeat(6,minmax(96px,96px))]');
-        expect(markup).toContain('xl:justify-center');
-        expect(markup).toContain('rounded-[18px]');
+        expect(markup).toContain('grid-cols-[repeat(3,minmax(108px,108px))]');
+        expect(markup).toContain('sm:grid-cols-[repeat(4,minmax(108px,108px))]');
+        expect(markup).toContain('lg:grid-cols-[repeat(6,minmax(112px,112px))]');
+        expect(markup).toContain('lg:justify-center');
+        expect(markup).toContain('rounded-[20px]');
+        expect(markup).toContain('h-[108px]');
         expect(markup).not.toContain('Visible prompt must stay out of the filmstrip.');
         expect(markup).not.toContain('Second prompt must stay out of the filmstrip.');
         expect(visibleText).not.toContain('Visible prompt must stay out of the filmstrip.');

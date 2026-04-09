@@ -434,7 +434,7 @@ export const zh_CN = {
     surfaceSharedControlsStateDescEditor:
         '当 {0} 打开时，模型与生成设置仍会在这里同步；提示词与参考则保持 editor 本地独立。',
     surfaceSharedControlsCurrentPrompt: '当前提示词',
-    surfaceSharedControlsPromptDetail: '模板、改写、历史',
+    surfaceSharedControlsPromptDetail: '灵感、改写',
     surfaceSharedControlsQuantityDetail: '{0} 张图',
     surfaceSharedControlsReferenceDetail: '对象 {0}/{1} · 角色 {2}/{3}',
     surfaceSharedControlsActiveSheet: '当前面板',

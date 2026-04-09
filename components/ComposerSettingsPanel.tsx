@@ -74,8 +74,6 @@ export type ComposerSettingsPanelProps = {
     onFollowUpGenerate: () => void;
     onSurpriseMe: () => void;
     onSmartRewrite: () => void;
-    onOpenPromptHistory: () => void;
-    onOpenTemplates: () => void;
     onOpenStyles: () => void;
     onOpenSettings: () => void;
     onOpenModelPicker?: () => void;
@@ -249,8 +247,6 @@ function ComposerSettingsPanel({
     onFollowUpGenerate,
     onSurpriseMe,
     onSmartRewrite,
-    onOpenPromptHistory,
-    onOpenTemplates,
     onOpenStyles,
     onOpenSettings,
     onToggleAdvancedSettings,
@@ -673,50 +669,6 @@ function ComposerSettingsPanel({
                 </svg>
             ),
         },
-        {
-            id: 'templates',
-            label: t('workspaceSheetTitleTemplates'),
-            onClick: onOpenTemplates,
-            icon: (
-                <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.7}
-                        d="M7.25 5.5H17a1.75 1.75 0 0 1 1.75 1.75V17A1.75 1.75 0 0 1 17 18.75H7.25A1.75 1.75 0 0 1 5.5 17V7.25A1.75 1.75 0 0 1 7.25 5.5Z"
-                    />
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.7}
-                        d="M9.75 3.75h6.5A1.5 1.5 0 0 1 17.75 5.25v6.5"
-                    />
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.7}
-                        d="M8.5 9h6.75M8.5 12h5.75M8.5 15h3.75"
-                    />
-                </svg>
-            ),
-        },
-        {
-            id: 'history',
-            label: t('workspacePickerPromptHistoryTitle'),
-            onClick: onOpenPromptHistory,
-            icon: (
-                <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M12 8v4l2.5 2.25" />
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.7}
-                        d="M20 12a8 8 0 1 1-2.35-5.65"
-                    />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} d="M20 5v4.5h-4.5" />
-                </svg>
-            ),
-        },
     ];
 
     const handleClearPrompt = () => {
@@ -907,7 +859,7 @@ function ComposerSettingsPanel({
                 </div>
             </div>
 
-            <div className="grid gap-1.5 lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)_240px] xl:grid-cols-[minmax(300px,320px)_minmax(0,1fr)_270px]">
+            <div className="grid gap-1.5 lg:grid-cols-[minmax(248px,280px)_minmax(0,1fr)_216px] xl:grid-cols-[minmax(280px,300px)_minmax(0,1fr)_228px]">
                 <div data-testid="composer-image-tools-slot" className="order-1 min-w-0">
                     {imageToolsPanel ?? null}
                 </div>

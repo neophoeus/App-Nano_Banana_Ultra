@@ -64,9 +64,10 @@ describe('HistoryPanel', () => {
         expect(markup).not.toContain('Stage source');
         expect(markup).not.toContain('Continuation source');
         expect(markup).toContain('grid-cols-4');
-        expect(markup).toContain('xl:grid-cols-[repeat(6,minmax(100px,100px))]');
-        expect(markup).toContain('xl:justify-between');
-        expect(markup).toContain('xl:h-[100px] xl:w-[100px]');
+        expect(markup).toContain('xl:grid-cols-[repeat(6,minmax(128px,128px))]');
+        expect(markup).toContain('xl:justify-center');
+        expect(markup).toContain('xl:gap-1.5');
+        expect(markup).toContain('xl:h-[128px] xl:w-[128px] xl:shrink-0');
     });
 
     it('removes per-card actions and queued metadata from history tokens', () => {

@@ -353,8 +353,6 @@ export function useComposerSettingsPanelProps({
             onFollowUpGenerate: () => latestHandlersRef.current.handleFollowUpGenerate(),
             onSurpriseMe: () => latestHandlersRef.current.handleSurpriseMe(),
             onSmartRewrite: () => latestHandlersRef.current.handleSmartRewrite(),
-            onOpenPromptHistory: () => latestHandlersRef.current.setActivePickerSheet('history'),
-            onOpenTemplates: () => latestHandlersRef.current.setActivePickerSheet('templates'),
             onOpenStyles: () => latestHandlersRef.current.setActivePickerSheet('styles'),
             onOpenSettings: () => latestHandlersRef.current.openSettings(),
             onToggleAdvancedSettings: () => latestHandlersRef.current.openAdvancedSettings(),

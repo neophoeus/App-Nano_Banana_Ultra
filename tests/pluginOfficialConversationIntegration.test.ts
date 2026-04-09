@@ -692,7 +692,7 @@ describe('imageSavePlugin official conversation integration', () => {
         expect(batchResponse.body.error).toBe('Batch not found');
     });
 
-    it('treats malformed local endpoint payloads as 400 instead of 500', async () => {
+    it('treats malformed local image payloads as 400 and removes prompt-history endpoints', async () => {
         const { imageSavePlugin } = await import('../plugins/imageSavePlugin');
         const handlers = new Map<string, MiddlewareHandler>();
         const outputDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nano-banana-local-errors-'));
@@ -713,15 +713,11 @@ describe('imageSavePlugin official conversation integration', () => {
         const savePromptsHandler = handlers.get('/api/save-prompts');
 
         expect(saveImageHandler).toBeTruthy();
-        expect(savePromptsHandler).toBeTruthy();
+        expect(savePromptsHandler).toBeUndefined();
 
         const badImagePayload = await invokeRawRoute(saveImageHandler!, '{bad-json');
         expect(badImagePayload.status).toBe(400);
         expect(badImagePayload.body.success).toBe(false);
-
-        const badPromptsPayload = await invokeRawRoute(savePromptsHandler!, '{bad-json');
-        expect(badPromptsPayload.status).toBe(400);
-        expect(badPromptsPayload.body.success).toBe(false);
     });
 
     it('includes editing input when creating queued batch jobs without enabling conversation-native continuation', async () => {

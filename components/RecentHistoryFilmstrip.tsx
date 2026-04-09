@@ -65,7 +65,7 @@ function RecentHistoryFilmstrip({
         .replace('{0}', String(recentHistory.length))
         .replace('{1}', String(branchCount));
     const filmstripGridClassName =
-        'grid grid-cols-[repeat(4,minmax(96px,96px))] justify-center gap-2.5 xl:grid-cols-[repeat(6,minmax(96px,96px))] xl:justify-center';
+        'grid grid-cols-[repeat(3,minmax(108px,108px))] justify-center gap-3 sm:grid-cols-[repeat(4,minmax(108px,108px))] lg:grid-cols-[repeat(6,minmax(112px,112px))] lg:justify-center';
 
     return (
         <div className="nbu-stage-hero-filmstrip-shell min-w-0 max-w-full overflow-hidden rounded-[24px] border p-2.5">
@@ -142,7 +142,7 @@ function RecentHistoryFilmstrip({
                                         }}
                                         role="button"
                                         tabIndex={0}
-                                        className={`relative h-24 w-24 shrink-0 overflow-hidden rounded-[18px] border bg-white/90 transition-[border-color,box-shadow,background-color] duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 dark:bg-slate-950/70 ${isSelected ? 'border-amber-500 shadow-[0_10px_22px_rgba(15,23,42,0.18)]' : isFailed ? 'border-red-300 dark:border-red-800' : 'border-gray-200/80 dark:border-gray-800 hover:border-gray-400 dark:hover:border-gray-600'}`}
+                                        className={`relative h-[108px] w-[108px] shrink-0 overflow-hidden rounded-[20px] border bg-white/90 transition-[border-color,box-shadow,background-color] duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 lg:h-[112px] lg:w-[112px] dark:bg-slate-950/70 ${isSelected ? 'border-amber-500 shadow-[0_10px_22px_rgba(15,23,42,0.18)]' : isFailed ? 'border-red-300 dark:border-red-800' : 'border-gray-200/80 dark:border-gray-800 hover:border-gray-400 dark:hover:border-gray-600'}`}
                                     >
                                         {isFailed ? (
                                             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-red-50 to-rose-100 px-2 text-center text-[10px] font-bold uppercase tracking-[0.14em] text-red-600 dark:from-red-950/30 dark:to-rose-950/20 dark:text-red-300">
@@ -153,7 +153,7 @@ function RecentHistoryFilmstrip({
                                                 data-testid={`filmstrip-card-${item.id}-missing-media`}
                                                 className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800"
                                             >
-                                                <div className="h-8 w-8 rounded-2xl border border-slate-300/70 bg-white/70 shadow-inner dark:border-slate-700 dark:bg-slate-900/60" />
+                                                <div className="h-9 w-9 rounded-2xl border border-slate-300/70 bg-white/70 shadow-inner dark:border-slate-700 dark:bg-slate-900/60" />
                                             </div>
                                         ) : (
                                             <img

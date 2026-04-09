@@ -203,60 +203,6 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
                 }
             });
 
-            // --- Prompt History Endpoints ---
-
-            // F3 (Permanent): Save prompt history
-            server.middlewares.use('/api/save-prompts', (req, res) => {
-                if (req.method !== 'POST') {
-                    sendJson(res, 405, { success: false, error: 'Method not allowed' });
-                    return;
-                }
-
-                let body = '';
-                req.on('data', (chunk: Buffer) => {
-                    body += chunk.toString();
-                });
-                req.on('end', () => {
-                    try {
-                        const historyData = JSON.parse(body);
-                        const promptsPath = path.join(resolvedDir, 'prompt_history.json');
-                        fs.writeFileSync(promptsPath, JSON.stringify(historyData, null, 2), 'utf-8');
-
-                        sendJson(res, 200, { success: true });
-                    } catch (err: any) {
-                        sendClassifiedApiError(res, '/api/save-prompts', err, 'Failed to save prompts', {
-                            basePayload: { success: false },
-                            defaultStatus: 500,
-                        });
-                    }
-                });
-            });
-
-            // F3 (Permanent): Load prompt history
-            server.middlewares.use('/api/load-prompts', (req, res) => {
-                if (req.method !== 'GET') {
-                    sendJson(res, 405, { success: false, error: 'Method not allowed' });
-                    return;
-                }
-
-                try {
-                    const promptsPath = path.join(resolvedDir, 'prompt_history.json');
-                    if (fs.existsSync(promptsPath)) {
-                        const data = fs.readFileSync(promptsPath, 'utf-8');
-                        res.writeHead(200, { 'Content-Type': 'application/json' });
-                        res.end(data);
-                    } else {
-                        // Return empty array if file does not exist yet
-                        sendJson(res, 200, []);
-                    }
-                } catch (err: any) {
-                    sendClassifiedApiError(res, '/api/load-prompts', err, 'Failed to load prompts', {
-                        basePayload: { success: false },
-                        defaultStatus: 500,
-                    });
-                }
-            });
-
             console.log(`\n  🍌 Image auto-save enabled → ${resolvedDir}\n`);
             console.log('  🍌 Health check → /api/health');
         },

@@ -11,6 +11,7 @@ describe('WorkspaceSideToolPanel', () => {
                 canEditCurrentImage={true}
                 onOpenSketchPad={vi.fn()}
                 onOpenEditor={vi.fn()}
+                onOpenUploadToRepaint={vi.fn()}
                 objectImages={['object.png']}
                 characterImages={['character.png']}
                 maxObjects={4}
@@ -25,12 +26,14 @@ describe('WorkspaceSideToolPanel', () => {
         );
 
         expect(markup).toContain('Image Tools');
+    expect(markup).toContain('Upload Image To Repaint');
         expect(markup).toContain('Repaint Current Image');
         expect(markup).toContain('Draw Reference Sketch');
         expect(markup).toContain('References');
         expect(markup).toContain('Objects 1/4');
         expect(markup).toContain('Characters 1/2');
         expect(markup).toContain('workspace-side-tools-actions-card');
+    expect(markup).toContain('workspace-side-tools-sketch-card');
         expect(markup).toContain('workspace-side-tools-references-card');
         expect(markup).toContain('workspace-side-tools-actions');
         expect(markup).toContain('workspace-side-tools-references-toggle');
@@ -38,7 +41,8 @@ describe('WorkspaceSideToolPanel', () => {
         expect(markup).toContain('workspace-side-tools-references-summary-object');
         expect(markup).toContain('workspace-side-tools-references-summary-character');
         expect(markup).toContain('workspace-side-tool-panel');
-        expect(markup).toContain('side-tools-open-editor-icon');
+    expect(markup).toContain('side-tools-upload-to-repaint-icon');
+    expect(markup).toContain('side-tools-repaint-current-icon');
         expect(markup).toContain('side-tools-open-sketchpad-icon');
         expect(markup).toContain('aria-expanded="false"');
         expect(markup).toContain('justify-start');
@@ -65,6 +69,7 @@ describe('WorkspaceSideToolPanel', () => {
                 canEditCurrentImage={false}
                 onOpenSketchPad={vi.fn()}
                 onOpenEditor={vi.fn()}
+                onOpenUploadToRepaint={vi.fn()}
                 objectImages={[]}
                 characterImages={[]}
                 maxObjects={4}
@@ -79,7 +84,11 @@ describe('WorkspaceSideToolPanel', () => {
         );
 
         expect(markup).toContain('Upload Image To Repaint');
-        expect(markup).toContain('side-tools-open-editor-icon');
+        expect(markup).toContain('Repaint Current Image');
+        expect(markup).toContain('side-tools-upload-to-repaint-icon');
+        expect(markup).toContain('side-tools-repaint-current-icon');
+        expect(markup).toContain('data-testid="side-tools-repaint-current"');
+        expect(markup).toContain('disabled=""');
         expect(markup).not.toContain('Continue Editing');
         expect(markup).not.toContain('Upload Image To Edit');
     });

@@ -6,7 +6,6 @@ const MANIFEST_PATH = path.resolve(process.cwd(), 'test-results', '.playwright-o
 const MANAGED_OUTPUT_STATE_FILES = [
     'workspace_snapshot.json',
     'workspace_snapshot.json.tmp',
-    'prompt_history.json',
 ] as const;
 
 type OutputStateManifest = {

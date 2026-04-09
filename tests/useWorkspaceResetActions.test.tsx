@@ -19,7 +19,6 @@ describe('useWorkspaceResetActions', () => {
         const clearAssetRoles = vi.fn();
         const applyEmptyWorkspaceSnapshot = vi.fn();
         const clearSharedWorkspaceSnapshot = vi.fn();
-        const clearPromptHistory = vi.fn();
         const setActiveWorkspaceDetailModal = vi.fn() as any;
         const setIsAdvancedSettingsOpen = vi.fn() as any;
         const setIsSketchPadOpen = vi.fn() as any;
@@ -35,7 +34,6 @@ describe('useWorkspaceResetActions', () => {
                 clearAssetRoles,
                 applyEmptyWorkspaceSnapshot,
                 clearSharedWorkspaceSnapshot,
-                clearPromptHistory,
                 setActiveWorkspaceDetailModal,
                 setIsAdvancedSettingsOpen,
                 setIsSketchPadOpen,
@@ -58,7 +56,6 @@ describe('useWorkspaceResetActions', () => {
             clearAssetRoles,
             applyEmptyWorkspaceSnapshot,
             clearSharedWorkspaceSnapshot,
-            clearPromptHistory,
             setActiveWorkspaceDetailModal,
             setIsAdvancedSettingsOpen,
             setIsSketchPadOpen,
@@ -92,7 +89,6 @@ describe('useWorkspaceResetActions', () => {
         expect(context.clearAssetRoles).toHaveBeenCalledTimes(1);
         expect(context.clearAssetRoles).toHaveBeenCalledWith(['stage-source']);
         expect(context.applyEmptyWorkspaceSnapshot).not.toHaveBeenCalled();
-        expect(context.clearPromptHistory).not.toHaveBeenCalled();
     });
 
     it('performs a workspace hard reset and closes transient surfaces when clearing history', () => {
@@ -104,7 +100,6 @@ describe('useWorkspaceResetActions', () => {
 
         expect(context.applyEmptyWorkspaceSnapshot).toHaveBeenCalledTimes(1);
         expect(context.clearSharedWorkspaceSnapshot).toHaveBeenCalledTimes(1);
-        expect(context.clearPromptHistory).toHaveBeenCalledTimes(1);
         expect(context.setActiveWorkspaceDetailModal).toHaveBeenCalledWith(null);
         expect(context.setIsAdvancedSettingsOpen).toHaveBeenCalledWith(false);
         expect(context.setIsSketchPadOpen).toHaveBeenCalledWith(false);

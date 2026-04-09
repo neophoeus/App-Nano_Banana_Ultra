@@ -51,6 +51,12 @@ function WorkspaceUnifiedHistoryPanel({
     const t = (key: string) => getTranslation(currentLanguage, key);
     const utilityActionButtonClassName =
         'rounded-full border border-gray-200/80 px-1.5 py-1 text-[11px] font-semibold text-gray-600 transition-colors hover:border-amber-300 hover:text-amber-700 dark:border-gray-700 dark:text-gray-300 dark:hover:border-amber-500/40 dark:hover:text-amber-200';
+    const pagerButtonClassName =
+        'inline-flex h-9 w-9 items-center justify-center rounded-[16px] border border-slate-200/80 bg-white/88 text-slate-500 shadow-[0_8px_18px_rgba(15,23,42,0.08)] transition-[transform,border-color,background-color,color,box-shadow] hover:-translate-y-0.5 hover:border-amber-200/80 hover:bg-amber-50/80 hover:text-amber-700 hover:shadow-[0_12px_24px_rgba(217,119,6,0.14)] disabled:translate-y-0 disabled:cursor-not-allowed disabled:border-slate-200/60 disabled:bg-white/55 disabled:text-slate-300 disabled:shadow-none dark:border-slate-700/80 dark:bg-slate-950/72 dark:text-slate-400 dark:hover:border-amber-500/30 dark:hover:bg-amber-950/20 dark:hover:text-amber-200 dark:hover:shadow-[0_12px_24px_rgba(0,0,0,0.24)] dark:disabled:border-slate-800/80 dark:disabled:bg-slate-950/45 dark:disabled:text-slate-600 xl:h-10 xl:w-10';
+    const currentPageLabelClassName =
+        'inline-flex h-9 w-9 select-none items-center justify-center rounded-full border border-amber-200/80 bg-amber-50/90 text-center font-mono text-[11px] font-black text-amber-700 shadow-[0_10px_20px_rgba(217,119,6,0.12)] dark:border-amber-500/30 dark:bg-amber-950/25 dark:text-amber-200 xl:h-10 xl:w-10';
+    const totalPageLabelClassName =
+        'inline-flex h-9 w-9 select-none items-center justify-center rounded-full border border-slate-200/80 bg-white/88 text-center font-mono text-[11px] font-black text-slate-600 shadow-[0_8px_18px_rgba(15,23,42,0.08)] dark:border-slate-700/80 dark:bg-slate-950/72 dark:text-slate-300 xl:h-10 xl:w-10';
     const itemCountLabel = t('workspaceInsightsItemsCount').replace('{0}', String(history.length));
     const branchCountLabel = t('workspaceInsightsBranchesCount').replace('{0}', String(branchSummariesCount));
     const previewTileCount = previewTiles.length;
@@ -113,15 +119,15 @@ function WorkspaceUnifiedHistoryPanel({
     return (
         <section
             data-testid="workspace-unified-history-panel"
-            className="nbu-stage-hero-filmstrip-shell flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-[24px] border p-1.5"
+            className="nbu-stage-hero-filmstrip-shell flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-[24px] border p-3"
         >
-            <div className="mb-1.5 flex flex-wrap items-start justify-between gap-1.5">
+            <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0 flex flex-1 flex-wrap items-center gap-2">
                     <h2
                         data-testid="workspace-unified-history-title"
                         className="text-[15px] font-black text-slate-900 dark:text-slate-100"
                     >
-                        {t('workspacePickerPromptHistoryTitle')}
+                        {t('workspaceSheetTitleHistory')}
                     </h2>
                     <span
                         data-testid="workspace-unified-history-count"
@@ -145,56 +151,70 @@ function WorkspaceUnifiedHistoryPanel({
                     ) : null}
                 </div>
 
-                <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-                    {onOpenVersionsDetails || onImportWorkspace || onExportWorkspace ? (
-                        <div
-                            data-testid="workspace-unified-history-utility-actions"
-                            className="flex min-w-0 flex-wrap items-center gap-1.5"
+                <div
+                    data-testid="workspace-unified-history-utility-actions"
+                    className="flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-1.5"
+                >
+                    {onOpenVersionsDetails ? (
+                        <button
+                            type="button"
+                            data-testid="history-versions-open-details"
+                            onClick={onOpenVersionsDetails}
+                            className={utilityActionButtonClassName}
                         >
-                            {onOpenVersionsDetails ? (
-                                <button
-                                    type="button"
-                                    data-testid="history-versions-open-details"
-                                    onClick={onOpenVersionsDetails}
-                                    className={utilityActionButtonClassName}
-                                >
-                                    {t('workspaceInsightsVersions')}
-                                </button>
-                            ) : null}
-                            {onImportWorkspace ? (
-                                <button
-                                    type="button"
-                                    data-testid="history-import-workspace"
-                                    onClick={onImportWorkspace}
-                                    className={utilityActionButtonClassName}
-                                >
-                                    {t('composerToolbarImportWorkspace')}
-                                </button>
-                            ) : null}
-                            {onExportWorkspace ? (
-                                <button
-                                    type="button"
-                                    data-testid="history-export-workspace"
-                                    onClick={onExportWorkspace}
-                                    className={utilityActionButtonClassName}
-                                >
-                                    {t('composerToolbarExportWorkspace')}
-                                </button>
-                            ) : null}
-                        </div>
+                            {t('workspaceInsightsVersions')}
+                        </button>
                     ) : null}
+                    {onImportWorkspace ? (
+                        <button
+                            type="button"
+                            data-testid="history-import-workspace"
+                            onClick={onImportWorkspace}
+                            className={utilityActionButtonClassName}
+                        >
+                            {t('composerToolbarImportWorkspace')}
+                        </button>
+                    ) : null}
+                    {onExportWorkspace ? (
+                        <button
+                            type="button"
+                            data-testid="history-export-workspace"
+                            onClick={onExportWorkspace}
+                            className={utilityActionButtonClassName}
+                        >
+                            {t('composerToolbarExportWorkspace')}
+                        </button>
+                    ) : null}
+                    <button
+                        type="button"
+                        data-testid="workspace-unified-history-clear"
+                        onClick={() => setShowConfirm(true)}
+                        className="inline-flex items-center justify-center rounded-full border border-red-200/80 bg-red-50/90 px-2.5 py-1.5 text-[11px] font-semibold text-red-600 transition-colors hover:border-red-300 hover:bg-red-100 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200 dark:hover:border-red-800 dark:hover:bg-red-950/50"
+                    >
+                        {t('clearHistory')}
+                    </button>
+                </div>
+            </div>
 
+            {selectedItemDock ? (
+                <div data-testid="workspace-unified-history-selected-item" className="mb-2 min-w-0">
+                    {selectedItemDock}
+                </div>
+            ) : null}
+
+            {history.length > 0 || previewTiles.length > 0 ? (
+                <div className="flex min-h-0 flex-1 items-center gap-2 xl:gap-2.5">
                     {totalPages > 1 ? (
                         <div
-                            data-testid="workspace-unified-history-pagination"
-                            className="nbu-segmented-tray flex items-center rounded-lg p-0.5"
+                            data-testid="workspace-unified-history-pager-left"
+                            className="flex shrink-0 flex-col items-center gap-1"
                         >
                             <button
                                 type="button"
                                 data-testid="workspace-unified-history-page-first"
                                 onClick={() => setPage(0)}
                                 disabled={page === 0}
-                                className="p-1 text-gray-400 transition-colors hover:text-gray-800 disabled:opacity-30 disabled:hover:text-gray-400 dark:hover:text-white"
+                                className={pagerButtonClassName}
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -215,7 +235,7 @@ function WorkspaceUnifiedHistoryPanel({
                                 data-testid="workspace-unified-history-page-prev"
                                 onClick={() => setPage((currentPage) => Math.max(0, currentPage - 1))}
                                 disabled={page === 0}
-                                className="p-1 text-gray-400 transition-colors hover:text-gray-800 disabled:opacity-30 disabled:hover:text-gray-400 dark:hover:text-white"
+                                className={pagerButtonClassName}
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -232,36 +252,40 @@ function WorkspaceUnifiedHistoryPanel({
                             </button>
                             <span
                                 data-testid="workspace-unified-history-page-label"
-                                className="min-w-[30px] select-none px-2 text-center font-mono text-[10px] text-gray-600 dark:text-gray-500"
+                                className={currentPageLabelClassName}
                             >
-                                {page + 1}/{totalPages}
+                                {page + 1}
                             </span>
-                            <button
-                                type="button"
-                                data-testid="workspace-unified-history-page-next"
-                                onClick={() => setPage((currentPage) => Math.min(totalPages - 1, currentPage + 1))}
-                                disabled={page === totalPages - 1}
-                                className="p-1 text-gray-400 transition-colors hover:text-gray-800 disabled:opacity-30 disabled:hover:text-gray-400 dark:hover:text-white"
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-4 w-4"
-                                    viewBox="0 0 20 20"
-                                    fill="currentColor"
-                                >
-                                    <path
-                                        fillRule="evenodd"
-                                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                        clipRule="evenodd"
-                                    />
-                                </svg>
-                            </button>
+                        </div>
+                    ) : null}
+
+                    <div className="min-w-0 flex-1">
+                        <HistoryPanel
+                            history={displayedHistory}
+                            previewTiles={pagePreviewTiles}
+                            onSelect={onSelect}
+                            isPromotedContinuationSource={isPromotedContinuationSource}
+                            selectedId={selectedHistoryId || undefined}
+                            currentStageSourceHistoryId={currentStageSourceHistoryId}
+                            currentLanguage={currentLanguage}
+                            surface="embedded"
+                            continuous={true}
+                            renderHeader={false}
+                            thumbnailMode="compact"
+                        />
+                    </div>
+
+                    {totalPages > 1 ? (
+                        <div
+                            data-testid="workspace-unified-history-pager-right"
+                            className="flex shrink-0 flex-col items-center gap-1"
+                        >
                             <button
                                 type="button"
                                 data-testid="workspace-unified-history-page-last"
                                 onClick={() => setPage(Math.max(totalPages - 1, 0))}
                                 disabled={page === totalPages - 1}
-                                className="p-1 text-gray-400 transition-colors hover:text-gray-800 disabled:opacity-30 disabled:hover:text-gray-400 dark:hover:text-white"
+                                className={pagerButtonClassName}
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -277,41 +301,34 @@ function WorkspaceUnifiedHistoryPanel({
                                     />
                                 </svg>
                             </button>
+                            <button
+                                type="button"
+                                data-testid="workspace-unified-history-page-next"
+                                onClick={() => setPage((currentPage) => Math.min(totalPages - 1, currentPage + 1))}
+                                disabled={page === totalPages - 1}
+                                className={pagerButtonClassName}
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-4 w-4"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                >
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                        clipRule="evenodd"
+                                    />
+                                </svg>
+                            </button>
+                            <span
+                                data-testid="workspace-unified-history-page-total"
+                                className={totalPageLabelClassName}
+                            >
+                                {totalPages}
+                            </span>
                         </div>
                     ) : null}
-
-                    <button
-                        type="button"
-                        data-testid="workspace-unified-history-clear"
-                        onClick={() => setShowConfirm(true)}
-                        className="inline-flex items-center justify-center rounded-full border border-red-200/80 bg-red-50/90 px-2.5 py-1.5 text-[11px] font-semibold text-red-600 transition-colors hover:border-red-300 hover:bg-red-100 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200 dark:hover:border-red-800 dark:hover:bg-red-950/50"
-                    >
-                        {t('clearHistory')}
-                    </button>
-                </div>
-            </div>
-
-            {selectedItemDock ? (
-                <div data-testid="workspace-unified-history-selected-item" className="mb-1.5 min-w-0">
-                    {selectedItemDock}
-                </div>
-            ) : null}
-
-            {history.length > 0 || previewTiles.length > 0 ? (
-                <div className="min-w-0 flex-1 overflow-hidden">
-                    <HistoryPanel
-                        history={displayedHistory}
-                        previewTiles={pagePreviewTiles}
-                        onSelect={onSelect}
-                        isPromotedContinuationSource={isPromotedContinuationSource}
-                        selectedId={selectedHistoryId || undefined}
-                        currentStageSourceHistoryId={currentStageSourceHistoryId}
-                        currentLanguage={currentLanguage}
-                        surface="embedded"
-                        continuous={true}
-                        renderHeader={false}
-                        thumbnailMode="compact"
-                    />
                 </div>
             ) : (
                 <div

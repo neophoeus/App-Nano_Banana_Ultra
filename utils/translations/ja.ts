@@ -582,7 +582,7 @@ export const ja = {
     surfaceSharedControlsStateTitle: '共有コンポーザー状態',
     surfaceSharedControlsStateDesc: '{0} を開いている間も、メインページの設定はここで有効です。',
     surfaceSharedControlsCurrentPrompt: '現在のプロンプト',
-    surfaceSharedControlsPromptDetail: 'テンプレート、書き換え、履歴',
+    surfaceSharedControlsPromptDetail: 'ひらめき、書き換え',
     surfaceSharedControlsQuantityDetail: '{0} 枚',
     surfaceSharedControlsReferenceDetail: 'オブジェクト {0}/{1} ・ キャラクター {2}/{3}',
     surfaceSharedControlsActiveSheet: '現在のシート',

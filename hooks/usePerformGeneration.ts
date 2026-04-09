@@ -84,7 +84,6 @@ interface UsePerformGenerationProps {
     setHistory: (val: React.SetStateAction<GeneratedImageType[]>) => void;
     setIsEditing: (val: boolean) => void;
     setEditingImageSource: (val: string | null) => void;
-    addPromptToHistory: (prompt: string) => void;
     getGenerationLineageContext?: (params: { mode: string; editingInput?: string }) => GenerationLineageContext | null;
     getConversationRequestContext?: (params: {
         mode: string;
@@ -129,7 +128,6 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
         setHistory,
         setIsEditing,
         setEditingImageSource,
-        addPromptToHistory,
         getGenerationLineageContext,
         getConversationRequestContext,
         onBatchPreviewStart,
@@ -440,10 +438,6 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                 addLog(
                     t('logSuccessFail').replace('{0}', successCount.toString()).replace('{1}', failCount.toString()),
                 );
-
-                if (successCount > 0 && finalPrompt) {
-                    addPromptToHistory(finalPrompt);
-                }
             } catch (err: any) {
                 console.error(err);
                 const errorMessage = err.message || 'Unknown error';
@@ -469,7 +463,6 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
         [
             abortControllerRef,
             addLog,
-            addPromptToHistory,
             apiKeyReady,
             aspectRatio,
             batchSize,

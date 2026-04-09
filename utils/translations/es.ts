@@ -607,7 +607,7 @@ export const es = {
     surfaceSharedControlsStateDescEditor:
         'Los ajustes compartidos siguen activos aqui mientras {0} esta abierto. El prompt permanece local al editor.',
     surfaceSharedControlsCurrentPrompt: 'Prompt actual',
-    surfaceSharedControlsPromptDetail: 'Plantillas, reescritura, historial',
+    surfaceSharedControlsPromptDetail: 'Inspiracion, reescritura',
     surfaceSharedControlsQuantityDetail: '{0} imagen(es)',
     surfaceSharedControlsReferenceDetail: 'Objetos {0}/{1} · Personajes {2}/{3}',
     surfaceSharedControlsActiveSheet: 'Panel activo',

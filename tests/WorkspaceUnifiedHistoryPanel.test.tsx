@@ -134,6 +134,8 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
         expect(markup).toContain('workspace-unified-history-panel');
         expect(markup).toContain('workspace-unified-history-selected-item');
         expect(markup).toContain('workspace-unified-history-clear');
+        expect(markup).toContain('workspace-unified-history-utility-actions');
+        expect(markup).toContain('rounded-[24px] border p-3');
         expect(markup).toContain('history-card-turn-a');
         expect(markup).toContain('history-card-turn-b');
         expect(markup).toContain('history-stage-source-turn-a');
@@ -144,8 +146,11 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
         expect(visibleText).not.toContain('Prompt A should stay hidden.');
         expect(visibleText).not.toContain('Prompt B should stay hidden.');
         expect(markup).toContain('grid-cols-4');
-        expect(markup).toContain('xl:grid-cols-[repeat(6,minmax(100px,100px))]');
-        expect(markup).toContain('xl:justify-between');
+        expect(markup).toContain('xl:grid-cols-[repeat(6,minmax(128px,128px))]');
+        expect(markup).toContain('xl:justify-center');
+        expect(markup).toContain('xl:gap-1.5');
+        expect(markup).toContain('xl:h-[128px] xl:w-[128px] xl:shrink-0');
+        expect(markup).not.toContain('workspace-unified-history-footer');
     });
 
     it('renders versions and workspace snapshot utility actions when callbacks are supplied', () => {
@@ -162,10 +167,19 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
         const versionsButton = container.querySelector('[data-testid="history-versions-open-details"]');
         const importButton = container.querySelector('[data-testid="history-import-workspace"]');
         const exportButton = container.querySelector('[data-testid="history-export-workspace"]');
+        const clearButton = container.querySelector('[data-testid="workspace-unified-history-clear"]');
+        const utilityActions = container.querySelector('[data-testid="workspace-unified-history-utility-actions"]');
 
         expect(versionsButton).not.toBeNull();
         expect(importButton).not.toBeNull();
         expect(exportButton).not.toBeNull();
+        expect(clearButton).not.toBeNull();
+        expect(utilityActions).not.toBeNull();
+        expect(utilityActions?.contains(versionsButton as Node)).toBe(true);
+        expect(utilityActions?.contains(importButton as Node)).toBe(true);
+        expect(utilityActions?.contains(exportButton as Node)).toBe(true);
+        expect(utilityActions?.contains(clearButton as Node)).toBe(true);
+        expect(container.querySelector('[data-testid="workspace-unified-history-footer"]')).toBeNull();
 
         flushSync(() => {
             (versionsButton as HTMLButtonElement).dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -193,8 +207,22 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
             branchSummariesCount: 2,
         });
 
-        expect(container.innerHTML).toContain('workspace-unified-history-page-label');
-        expect(container.textContent).toContain('1/2');
+        const leftPager = container.querySelector('[data-testid="workspace-unified-history-pager-left"]');
+        const rightPager = container.querySelector('[data-testid="workspace-unified-history-pager-right"]');
+        const firstPageButton = container.querySelector(
+            '[data-testid="workspace-unified-history-page-first"]',
+        ) as HTMLButtonElement | null;
+        const currentPageLabel = container.querySelector(
+            '[data-testid="workspace-unified-history-page-label"]',
+        ) as HTMLSpanElement | null;
+        const totalPageLabel = container.querySelector(
+            '[data-testid="workspace-unified-history-page-total"]',
+        ) as HTMLSpanElement | null;
+
+        expect(leftPager).not.toBeNull();
+        expect(rightPager).not.toBeNull();
+        expect(currentPageLabel?.textContent).toBe('1');
+        expect(totalPageLabel?.textContent).toBe('2');
         expect(container.innerHTML).toContain('history-card-turn-a');
         expect(container.innerHTML).toContain('history-card-turn-d');
         expect(container.innerHTML).not.toContain('history-card-turn-e');
@@ -206,7 +234,8 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
             nextButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
         });
 
-        expect(container.textContent).toContain('2/2');
+        expect(currentPageLabel?.textContent).toBe('2');
+        expect(totalPageLabel?.textContent).toBe('2');
         expect(container.innerHTML).toContain('history-card-turn-e');
         expect(container.innerHTML).not.toContain('history-card-turn-a');
     });
@@ -217,7 +246,34 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
             branchSummariesCount: 3,
         });
 
-        expect(container.textContent).toContain('1/4');
+        const leftPager = container.querySelector('[data-testid="workspace-unified-history-pager-left"]');
+        const rightPager = container.querySelector('[data-testid="workspace-unified-history-pager-right"]');
+        const firstPageButton = container.querySelector(
+            '[data-testid="workspace-unified-history-page-first"]',
+        ) as HTMLButtonElement | null;
+        const currentPageLabel = container.querySelector(
+            '[data-testid="workspace-unified-history-page-label"]',
+        ) as HTMLSpanElement | null;
+        const totalPageLabel = container.querySelector(
+            '[data-testid="workspace-unified-history-page-total"]',
+        ) as HTMLSpanElement | null;
+
+        expect(leftPager).not.toBeNull();
+        expect(rightPager).not.toBeNull();
+        expect(firstPageButton).not.toBeNull();
+        expect(Array.from(rightPager?.children || []).map((element) => element.getAttribute('data-testid'))).toEqual([
+            'workspace-unified-history-page-last',
+            'workspace-unified-history-page-next',
+            'workspace-unified-history-page-total',
+        ]);
+        expect(currentPageLabel?.textContent).toBe('1');
+        expect(totalPageLabel?.textContent).toBe('4');
+        expect(firstPageButton?.className).toContain('rounded-[16px]');
+        expect(firstPageButton?.className).toContain('h-9');
+        expect(currentPageLabel?.className).toContain('rounded-full');
+        expect(currentPageLabel?.className).toContain('bg-amber-50/90');
+        expect(totalPageLabel?.className).toContain('rounded-full');
+        expect(totalPageLabel?.className).toContain('bg-white/88');
         expect(container.innerHTML).toContain('history-card-turn-01');
         expect(container.innerHTML).toContain('history-card-turn-06');
         expect(container.innerHTML).not.toContain('history-card-turn-07');
@@ -229,7 +285,8 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
             lastButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
         });
 
-        expect(container.textContent).toContain('4/4');
+        expect(currentPageLabel?.textContent).toBe('4');
+        expect(totalPageLabel?.textContent).toBe('4');
         expect(container.innerHTML).toContain('history-card-turn-21');
         expect(container.innerHTML).not.toContain('history-card-turn-01');
 
@@ -240,7 +297,8 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
             firstButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
         });
 
-        expect(container.textContent).toContain('1/4');
+        expect(currentPageLabel?.textContent).toBe('1');
+        expect(totalPageLabel?.textContent).toBe('4');
         expect(container.innerHTML).toContain('history-card-turn-01');
         expect(container.innerHTML).not.toContain('history-card-turn-21');
     });
@@ -256,7 +314,10 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
             nextButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
         });
 
-        expect(container.textContent).toContain('2/2');
+        expect(
+            (container.querySelector('[data-testid="workspace-unified-history-page-label"]') as HTMLSpanElement | null)
+                ?.textContent,
+        ).toBe('2');
         expect(container.innerHTML).toContain('history-card-turn-11');
 
         renderPanel({
@@ -275,7 +336,10 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
         await new Promise((resolve) => setTimeout(resolve, 0));
 
-        expect(container.textContent).toContain('1/2');
+        expect(
+            (container.querySelector('[data-testid="workspace-unified-history-page-label"]') as HTMLSpanElement | null)
+                ?.textContent,
+        ).toBe('1');
         expect(container.innerHTML).toContain('history-card-turn-12');
         expect(container.innerHTML).not.toContain('history-card-turn-11');
     });
@@ -311,7 +375,14 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
             branchSummariesCount: 2,
         });
 
-        expect(container.textContent).toContain('1/3');
+        expect(
+            (container.querySelector('[data-testid="workspace-unified-history-page-label"]') as HTMLSpanElement | null)
+                ?.textContent,
+        ).toBe('1');
+        expect(
+            (container.querySelector('[data-testid="workspace-unified-history-page-total"]') as HTMLSpanElement | null)
+                ?.textContent,
+        ).toBe('3');
         expect(container.innerHTML).toContain('history-preview-tile-3');
         expect(container.innerHTML).toContain('history-preview-tile-0');
         expect(container.innerHTML).toContain('history-card-turn-01');
@@ -331,7 +402,14 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
             nextButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
         });
 
-        expect(container.textContent).toContain('2/3');
+        expect(
+            (container.querySelector('[data-testid="workspace-unified-history-page-label"]') as HTMLSpanElement | null)
+                ?.textContent,
+        ).toBe('2');
+        expect(
+            (container.querySelector('[data-testid="workspace-unified-history-page-total"]') as HTMLSpanElement | null)
+                ?.textContent,
+        ).toBe('3');
         expect(container.innerHTML).toContain('history-card-turn-03');
         expect(container.innerHTML).toContain('history-card-turn-08');
         expect(container.innerHTML).not.toContain('history-preview-tile-3');

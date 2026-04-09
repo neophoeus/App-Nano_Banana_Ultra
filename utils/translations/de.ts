@@ -606,7 +606,7 @@ export const de = {
     surfaceSharedControlsStateDescEditor:
         'Die gemeinsamen Einstellungen bleiben hier aktiv, solange {0} geoffnet ist. Der Prompt bleibt lokal im Editor.',
     surfaceSharedControlsCurrentPrompt: 'Aktueller Prompt',
-    surfaceSharedControlsPromptDetail: 'Vorlagen, Umschreiben, Verlauf',
+    surfaceSharedControlsPromptDetail: 'Inspiration, Umschreiben',
     surfaceSharedControlsQuantityDetail: '{0} Bild(er)',
     surfaceSharedControlsReferenceDetail: 'Objekte {0}/{1} · Charaktere {2}/{3}',
     surfaceSharedControlsActiveSheet: 'Aktives Panel',

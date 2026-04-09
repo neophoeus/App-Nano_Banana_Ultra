@@ -601,7 +601,7 @@ export const ru = {
     surfaceSharedControlsStateDescEditor:
         'Пока открыт {0}, общие настройки остаются активными здесь. Промпт остается локальным для редактора.',
     surfaceSharedControlsCurrentPrompt: 'Текущий промпт',
-    surfaceSharedControlsPromptDetail: 'Шаблоны, переписывание, история',
+    surfaceSharedControlsPromptDetail: 'Вдохновение, переписывание',
     surfaceSharedControlsQuantityDetail: '{0} изображ.',
     surfaceSharedControlsReferenceDetail: 'Объекты {0}/{1} · Персонажи {2}/{3}',
     surfaceSharedControlsActiveSheet: 'Активный лист',

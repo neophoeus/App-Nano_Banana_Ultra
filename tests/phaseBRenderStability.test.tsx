@@ -284,13 +284,6 @@ describe('Phase B render stability', () => {
                 });
             }
 
-            if (url === '/api/load-prompts') {
-                return new Response(JSON.stringify({ prompts: [] }), {
-                    status: 200,
-                    headers: { 'Content-Type': 'application/json' },
-                });
-            }
-
             if (url === '/api/workspace-snapshot') {
                 return new Response(JSON.stringify({ ok: true, snapshot: null }), {
                     status: 200,
@@ -390,6 +383,7 @@ describe('Phase B render stability', () => {
             document.querySelector('[data-testid="workspace-actions-composer-row"]'),
         );
         const mainShell = await waitFor(() => document.querySelector('[data-testid="workspace-main-shell"]'));
+        const stageColumn = await waitFor(() => document.querySelector('[data-testid="workspace-stage-column"]'));
         const workColumn = await waitFor(() => document.querySelector('[data-testid="workspace-work-column"]'));
         const sideToolPanel = await waitFor(() =>
             document.querySelector('[data-testid="mock-workspace-side-tool-panel"]'),
@@ -397,13 +391,24 @@ describe('Phase B render stability', () => {
         const composerSettingsPanel = await waitFor(() =>
             document.querySelector('[data-testid="mock-composer-settings-panel"]'),
         );
+        const stageShellClassName = stageColumn?.firstElementChild?.getAttribute('class') || '';
 
         expect(actionsComposerRow).toBeTruthy();
         expect(actionsComposerRow?.getAttribute('class')).not.toContain('xl:max-w-[1320px]');
         expect(actionsComposerRow?.getAttribute('class')).not.toContain('xl:mr-auto');
         expect(mainShell?.getAttribute('class')).toContain('xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]');
+        expect(mainShell?.getAttribute('class')).not.toContain('xl:flex-1');
         expect(workColumn?.contains(historyPanel)).toBe(true);
         expect(workColumn?.contains(actionsComposerRow)).toBe(true);
+        expect(workColumn?.getAttribute('class')).not.toContain('xl:h-full');
+        expect(workColumn?.getAttribute('class')).not.toContain('xl:grid-rows-[minmax(0,1fr)_auto]');
+        expect(stageColumn?.getAttribute('class')).toContain('xl:flex');
+        expect(stageColumn?.getAttribute('class')).toContain('xl:flex-col');
+        expect(stageColumn?.getAttribute('class')).not.toContain('xl:h-full');
+        expect(stageShellClassName).toContain('p-3');
+        expect(stageShellClassName).toContain('xl:flex-1');
+        expect(stageShellClassName).not.toContain('xl:h-full');
+        expect(stageShellClassName).not.toContain('xl:p-0');
         expect(historyPanel?.querySelector('[data-testid="mock-workspace-side-tool-panel"]')).toBeNull();
         expect(actionsComposerRow?.contains(sideToolPanel)).toBe(true);
         expect(actionsComposerRow?.contains(composerSettingsPanel)).toBe(true);
