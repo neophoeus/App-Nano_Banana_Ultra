@@ -65,10 +65,12 @@ export const es = {
     modelGemini31Flash: 'Nano Banana 2 (gemini-3.1-flash-image-preview)',
     modelGemini25Flash: 'Nano Banana (gemini-2.5-flash-image)',
     promptLabel: 'Prompt',
-    composerPromptLabelIndependent: 'Brief creativo',
-    composerPromptLabelMemory: 'Dialogue',
-    composerPromptPlaceholderIndependent: 'Describe lo que quieres generar o cambiar en esta ronda...',
-    composerPromptPlaceholderMemory: 'Continua el Dialogue anterior y explica como debe cambiar esta ronda...',
+    composerPromptLabelIndependent: 'Instruccion',
+    composerPromptLabelMemory: 'Conversacion',
+    composerPromptPlaceholderIndependent:
+        'Escribe una instruccion o prompt de un solo turno para generar o hacer una edicion posterior sin memoria de conversacion...',
+    composerPromptPlaceholderMemory:
+        'Continua la conversacion y explica como debe cambiar esta ronda con el contexto recordado...',
     composerSendIntentTitle: 'Siguiente envio',
     composerSendIntentIndependent: 'Envio independiente',
     composerSendIntentMemory: 'Envio con memoria',
@@ -77,6 +79,8 @@ export const es = {
     composerSendIntentHelperMemory: 'El siguiente envio reutiliza la memoria oficial de la conversacion.',
     composerSendIntentDisabledReason: 'El envio con memoria solo esta disponible cuando la cantidad es 1.',
     composerSendIntentInfoButton: 'Detalles de la regla de envio',
+    composerPromptToolSurpriseMe: 'Sorprendeme',
+    composerPromptToolAutoRewrite: 'Reescritura auto',
     rewrite: 'Mejorar (IA)',
     random: 'Sorpréndeme',
     clear: 'Borrar',
@@ -459,6 +463,7 @@ export const es = {
     composerAdvancedGroundingGuideTitle: 'Guia de ejecucion',
     composerAdvancedGroundingGuideDesc:
         'Estas notas de tamano con grounding se basan en comprobaciones reales dentro de la ruta actual del producto.',
+    composerAdvancedGroundingGuideImageSearchLimit: 'Image Search queda limitado a 1K.',
     composerAdvancedGroundingGuideFlashGoogle:
         'Nano Banana 2 + Google Search: las solicitudes de 2K y 4K mantuvieron el tamano pedido.',
     composerAdvancedGroundingGuideFlashImage:

@@ -3687,6 +3687,8 @@ test.describe('workspace restore flows', () => {
         await expect(composerPanel.getByTestId('composer-style-strip')).toBeVisible();
         await expect(composerPanel.getByTestId('composer-style-button')).toContainText(tt('styleNone'));
         await expect(composerPanel.getByTestId('composer-style-clear')).toHaveCount(0);
+        await expect(sideTools.getByTestId('workspace-side-tool-panel-disclosure')).toBeVisible();
+        await sideTools.getByTestId('workspace-side-tool-panel-summary').click();
         await expect(sideTools.getByTestId('workspace-side-tools-actions')).toBeVisible();
         const referencesToggle = sideTools.getByTestId('workspace-side-tools-references-toggle');
         await expect(referencesToggle).toHaveAttribute('aria-expanded', 'false');
@@ -3717,6 +3719,8 @@ test.describe('workspace restore flows', () => {
                 .first(),
         ).toBeVisible();
         await expect(page.getByTestId('composer-reference-context-button')).toHaveCount(0);
+        await page.keyboard.press('Escape');
+        await expect(sideTools.getByTestId('workspace-side-tool-references')).toHaveCount(0);
 
         await sideTools.getByTestId('side-tools-open-sketchpad').click();
         await expect(page.getByText(tt('loadingPrepareSketchPad'), { exact: true })).toBeVisible();
@@ -3724,7 +3728,9 @@ test.describe('workspace restore flows', () => {
         await page.getByTestId('sketchpad-close').click();
         await expect(page.getByTestId('sketchpad')).toHaveCount(0);
 
-        await page.getByRole('button', { name: tt('composerToolbarAdvancedSettings') }).click();
+        await expect(composerPanel.getByTestId('composer-advanced-settings-disclosure')).toBeVisible();
+        await composerPanel.getByTestId('composer-advanced-settings-disclosure-summary').click();
+        await composerPanel.getByTestId('composer-advanced-settings-button').click();
         await expect(
             page
                 .getByTestId('composer-advanced-settings-dialog')

@@ -6,9 +6,13 @@
 import { ImageSidecarMetadata } from '../types';
 import { normalizeImageSidecarMetadata } from './imageSidecarMetadata';
 
-const THUMBNAIL_MAX_DIM = 300; // Max width or height for history thumbnails
+const THUMBNAIL_MAX_DIM = 200; // Max width or height for lightweight preview thumbnails
 const LOAD_IMAGE_ENDPOINT = '/api/load-image';
 const LOAD_IMAGE_METADATA_ENDPOINT = '/api/load-image-metadata';
+const REFERENCE_PREVIEW_CACHE_LIMIT = 96;
+
+const referencePreviewCache = new Map<string, string>();
+const referencePreviewInFlight = new Map<string, Promise<string>>();
 
 export type PreparedImageAsset = {
     dataUrl: string;
@@ -16,6 +20,10 @@ export type PreparedImageAsset = {
     width: number;
     height: number;
     mimeType: string;
+};
+
+export type PreparedImagePreviewAsset = PreparedImageAsset & {
+    previewDataUrl: string;
 };
 
 export type PersistedHistoryThumbnail = {
@@ -50,6 +58,24 @@ const extractFilenameStem = (filename: string): string => filename.replace(/\.[^
 
 const deriveThumbnailFilenameStem = (savedFilename: string): string =>
     `${extractFilenameStem(savedFilename)}-thumbnail`;
+
+const touchReferencePreviewCacheEntry = (source: string, previewDataUrl: string): string => {
+    if (referencePreviewCache.has(source)) {
+        referencePreviewCache.delete(source);
+    }
+
+    referencePreviewCache.set(source, previewDataUrl);
+
+    while (referencePreviewCache.size > REFERENCE_PREVIEW_CACHE_LIMIT) {
+        const oldestSource = referencePreviewCache.keys().next().value;
+        if (typeof oldestSource !== 'string') {
+            break;
+        }
+        referencePreviewCache.delete(oldestSource);
+    }
+
+    return previewDataUrl;
+};
 
 export const constrainImageDimensions = (
     width: number,
@@ -145,6 +171,19 @@ export const prepareImageAssetFromFile = async (file: File, maxDimension = 4096)
     return normalizeImageDataUrl(dataUrl, file.type || 'image/png', maxDimension);
 };
 
+export const clearReferencePreviewCache = (): void => {
+    referencePreviewCache.clear();
+    referencePreviewInFlight.clear();
+};
+
+export const getReferencePreviewDataUrl = (source: string): string | undefined => {
+    const cachedPreview = referencePreviewCache.get(source);
+    return cachedPreview ? touchReferencePreviewCacheEntry(source, cachedPreview) : undefined;
+};
+
+export const setReferencePreviewDataUrl = (source: string, previewDataUrl: string): string =>
+    touchReferencePreviewCacheEntry(source, previewDataUrl);
+
 /**
  * Save a full-resolution image to the local filesystem via the server endpoint.
  * Optionally saves a JSON sidecar with generation metadata.
@@ -186,19 +225,18 @@ export const generateThumbnail = (dataUrl: string): Promise<string> => {
         const img = new Image();
         img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_DIM = 200; // Lowered from 300 to 200 to save memory in history state
 
             let w = img.width;
             let h = img.height;
             if (w > h) {
-                if (w > MAX_DIM) {
-                    h = Math.round((h *= MAX_DIM / w));
-                    w = MAX_DIM;
+                if (w > THUMBNAIL_MAX_DIM) {
+                    h = Math.round((h *= THUMBNAIL_MAX_DIM / w));
+                    w = THUMBNAIL_MAX_DIM;
                 }
             } else {
-                if (h > MAX_DIM) {
-                    w = Math.round((w *= MAX_DIM / h));
-                    h = MAX_DIM;
+                if (h > THUMBNAIL_MAX_DIM) {
+                    w = Math.round((w *= THUMBNAIL_MAX_DIM / h));
+                    h = THUMBNAIL_MAX_DIM;
                 }
             }
 
@@ -218,6 +256,41 @@ export const generateThumbnail = (dataUrl: string): Promise<string> => {
         };
         img.src = dataUrl;
     });
+};
+
+export const ensureReferencePreviewDataUrl = async (source: string): Promise<string> => {
+    const cachedPreview = getReferencePreviewDataUrl(source);
+    if (cachedPreview) {
+        return cachedPreview;
+    }
+
+    const pendingPreview = referencePreviewInFlight.get(source);
+    if (pendingPreview) {
+        return pendingPreview;
+    }
+
+    const previewPromise = generateThumbnail(source)
+        .catch(() => source)
+        .then((previewDataUrl) => touchReferencePreviewCacheEntry(source, previewDataUrl))
+        .finally(() => {
+            referencePreviewInFlight.delete(source);
+        });
+
+    referencePreviewInFlight.set(source, previewPromise);
+    return previewPromise;
+};
+
+export const prepareImagePreviewAssetFromFile = async (
+    file: File,
+    maxDimension = 4096,
+): Promise<PreparedImagePreviewAsset> => {
+    const preparedImage = await prepareImageAssetFromFile(file, maxDimension);
+    const previewDataUrl = await ensureReferencePreviewDataUrl(preparedImage.dataUrl);
+
+    return {
+        ...preparedImage,
+        previewDataUrl,
+    };
 };
 
 export async function persistHistoryThumbnail(

@@ -207,14 +207,36 @@ describe('ComposerAdvancedSettingsDialog draft flow', () => {
         expect(container.querySelector('[data-testid="composer-advanced-settings-open-generation"]')).toBeNull();
     });
 
-    it('renders the temperature guidance copy in the advanced settings body', () => {
+    it('renders the temperature guidance behind the original circular info trigger', () => {
         act(() => {
             root.render(<AdvancedSettingsHarness />);
         });
 
         expect(container.textContent).toContain(getTranslation('en', 'composerDefaultTemp').replace('{0}', '= 1.0'));
-        expect(container.textContent).toContain(getTranslation('en', 'composerAdvancedTemperatureGuideHigher'));
-        expect(container.textContent).toContain(getTranslation('en', 'composerAdvancedTemperatureGuideLower'));
-        expect(container.textContent).not.toContain(getTranslation('en', 'composerAdvancedTemperatureGuideDefault'));
+        expect(container.textContent).not.toContain(getTranslation('en', 'composerAdvancedGenerationSectionTitle'));
+        expect(container.textContent).not.toContain(getTranslation('en', 'composerAdvancedGroundingSectionTitle'));
+        expect(container.textContent).not.toContain(getTranslation('en', 'composerAdvancedGroundingGuideTitle'));
+        expect(container.querySelector('[data-testid="composer-advanced-output-format-card"]')).toBeTruthy();
+        expect(container.querySelector('[data-testid="composer-advanced-temperature-card"]')).toBeTruthy();
+        expect(container.querySelector('[data-testid="composer-advanced-structured-output-card"]')).toBeTruthy();
+        expect(container.querySelector('[data-testid="composer-advanced-grounding-card"]')).toBeTruthy();
+
+        const trigger = container.querySelector(
+            '[data-testid="composer-advanced-temperature-guide-hint-trigger"]',
+        ) as HTMLButtonElement;
+        const panel = container.querySelector('[data-testid="composer-advanced-temperature-guide-hint"]') as HTMLDivElement;
+
+        expect(trigger.getAttribute('aria-label')).toBe(getTranslation('en', 'groundingProvenanceInsightTemperature'));
+        expect(trigger.textContent).toBe('');
+        expect(panel.getAttribute('aria-hidden')).toBe('true');
+
+        act(() => {
+            trigger.click();
+        });
+
+        expect(panel.getAttribute('aria-hidden')).toBe('false');
+        expect(panel.textContent).toContain(getTranslation('en', 'composerAdvancedTemperatureGuideHigher'));
+        expect(panel.textContent).toContain(getTranslation('en', 'composerAdvancedTemperatureGuideLower'));
+        expect(panel.textContent).not.toContain(getTranslation('en', 'composerAdvancedTemperatureGuideDefault'));
     });
 });

@@ -65,11 +65,12 @@ export const de = {
     modelGemini31Flash: 'Nano Banana 2 (gemini-3.1-flash-image-preview)',
     modelGemini25Flash: 'Nano Banana (gemini-2.5-flash-image)',
     promptLabel: 'Prompt',
-    composerPromptLabelIndependent: 'Kreativbrief',
-    composerPromptLabelMemory: 'Dialogue',
-    composerPromptPlaceholderIndependent: 'Beschreibe, was du in dieser Runde erzeugen oder andern mochtest...',
+    composerPromptLabelIndependent: 'Anweisung',
+    composerPromptLabelMemory: 'Konversation',
+    composerPromptPlaceholderIndependent:
+        'Schreibe eine einzelne Anweisung oder einen Prompt fur eine neue Generierung oder eine Folgeanpassung ohne Konversationsspeicher...',
     composerPromptPlaceholderMemory:
-        'Setze den bisherigen Dialogue fort und beschreibe, wie diese Runde angepasst werden soll...',
+        'Setze die Konversation fort und beschreibe, wie sich diese Runde mit gespeichertem Kontext andern soll...',
     composerSendIntentTitle: 'Naechster Versand',
     composerSendIntentIndependent: 'Unabhaengig senden',
     composerSendIntentMemory: 'Mit Speicher senden',
@@ -78,6 +79,8 @@ export const de = {
     composerSendIntentHelperMemory: 'Der naechste Versand nutzt den offiziellen Gespraechsspeicher weiter.',
     composerSendIntentDisabledReason: 'Senden mit Speicher ist nur bei Menge 1 verfuegbar.',
     composerSendIntentInfoButton: 'Details zur Senderegel',
+    composerPromptToolSurpriseMe: 'Uberrasch mich',
+    composerPromptToolAutoRewrite: 'Auto-Umschreiben',
     rewrite: 'KI-Optimierung',
     random: 'Überraschung',
     clear: 'Leeren',
@@ -460,6 +463,7 @@ export const de = {
     composerAdvancedGroundingGuideTitle: 'Laufzeitleitfaden',
     composerAdvancedGroundingGuideDesc:
         'Diese Hinweise zu Grounding-Groessen basieren auf realen Pruefungen im aktuellen Produktpfad.',
+    composerAdvancedGroundingGuideImageSearchLimit: 'Image Search ist auf 1K begrenzt.',
     composerAdvancedGroundingGuideFlashGoogle:
         'Nano Banana 2 + Google Search: Angeforderte 2K und 4K blieben bei der angeforderten Groesse.',
     composerAdvancedGroundingGuideFlashImage:

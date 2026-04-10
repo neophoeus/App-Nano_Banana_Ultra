@@ -65,10 +65,12 @@ export const fr = {
     modelGemini31Flash: 'Nano Banana 2 (gemini-3.1-flash-image-preview)',
     modelGemini25Flash: 'Nano Banana (gemini-2.5-flash-image)',
     promptLabel: 'Prompt',
-    composerPromptLabelIndependent: 'Brief creatif',
-    composerPromptLabelMemory: 'Dialogue',
-    composerPromptPlaceholderIndependent: 'Decrivez ce que vous voulez generer ou modifier pour ce tour...',
-    composerPromptPlaceholderMemory: 'Poursuivez le Dialogue precedent et decrivez comment ajuster ce tour...',
+    composerPromptLabelIndependent: 'Instruction',
+    composerPromptLabelMemory: 'Conversation',
+    composerPromptPlaceholderIndependent:
+        'Ecrivez une instruction ou un prompt en un seul tour pour generer ou faire une retouche sans memoire de conversation...',
+    composerPromptPlaceholderMemory:
+        'Poursuivez la conversation et decrivez comment ce tour doit changer avec le contexte memorise...',
     composerSendIntentTitle: 'Envoi suivant',
     composerSendIntentIndependent: 'Envoi independant',
     composerSendIntentMemory: 'Envoi avec memoire',
@@ -77,6 +79,8 @@ export const fr = {
     composerSendIntentHelperMemory: 'Le prochain envoi reutilise la memoire officielle de la conversation.',
     composerSendIntentDisabledReason: 'L envoi avec memoire est disponible seulement quand la quantite est 1.',
     composerSendIntentInfoButton: 'Details de la regle d envoi',
+    composerPromptToolSurpriseMe: 'Surprends-moi',
+    composerPromptToolAutoRewrite: 'Reecriture auto',
     rewrite: 'Améliorer (IA)',
     random: 'Surprends-moi',
     clear: 'Effacer',
@@ -456,6 +460,7 @@ export const fr = {
     composerAdvancedGroundingGuideTitle: 'Guide d execution',
     composerAdvancedGroundingGuideDesc:
         'Ces notes de taille avec grounding reposent sur des verifications reelles dans le parcours produit actuel.',
+    composerAdvancedGroundingGuideImageSearchLimit: 'Image Search est limite a 1K.',
     composerAdvancedGroundingGuideFlashGoogle:
         'Nano Banana 2 + Google Search : les demandes 2K et 4K ont conserve la taille demandee.',
     composerAdvancedGroundingGuideFlashImage:

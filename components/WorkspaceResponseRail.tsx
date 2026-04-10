@@ -38,6 +38,9 @@ function WorkspaceResponseRail({
     const statusDotClassName = hasAnswerContent
         ? 'bg-emerald-500 dark:bg-emerald-300'
         : 'bg-slate-300 dark:bg-slate-600';
+    const detailPanelStatusClassName = hasAnswerContent
+        ? 'inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-emerald-200/80 bg-white/85 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-700 dark:border-emerald-500/25 dark:bg-[#10201a] dark:text-emerald-100'
+        : 'inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-slate-200/80 bg-white/85 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500 dark:border-slate-700/80 dark:bg-[#11161d] dark:text-slate-300';
 
     const renderDisclosureChevron = () => (
         <svg
@@ -87,7 +90,13 @@ function WorkspaceResponseRail({
                             </div>
                         )}
                     </div>
-                    <span className="nbu-status-pill inline-flex items-center gap-2 whitespace-nowrap">
+                    <span
+                        className={
+                            isDetailPanel
+                                ? detailPanelStatusClassName
+                                : 'nbu-status-pill inline-flex items-center gap-2 whitespace-nowrap'
+                        }
+                    >
                         <span aria-hidden="true" className={`h-2 w-2 rounded-full ${statusDotClassName}`} />
                         {hasAnswerContent ? t('workspacePanelStatusEnabled') : t('workspacePanelStatusReserved')}
                     </span>

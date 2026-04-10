@@ -28,6 +28,10 @@ describe('WorkspaceEvidenceDetailPanel', () => {
         expect(markup).toContain('workspace-evidence-detail-summary');
         expect(markup).toContain('workspace-evidence-detail-count-sources');
         expect(markup).toContain('workspace-evidence-detail-count-support-bundles');
+        expect(markup).toContain('border-sky-200/80 bg-white/85');
+        expect(markup).toContain('dark:bg-[#0d1720]');
+        expect(markup).toContain('dark:bg-[#10202c]');
+        expect(markup).toContain('dark:bg-[#111b25]');
         expect(markup).toContain('workspace-evidence-detail-summary-mode');
         expect(markup).toContain('workspace-evidence-detail-summary-source-turn');
         expect(markup).toContain('Sources');

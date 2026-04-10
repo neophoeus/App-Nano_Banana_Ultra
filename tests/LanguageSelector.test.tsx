@@ -49,6 +49,9 @@ describe('LanguageSelector', () => {
             '[data-testid="language-selector-toggle"]',
         ) as HTMLButtonElement | null;
         const menu = container.querySelector('[data-testid="language-selector-menu"]') as HTMLDivElement | null;
+        const scrollRegion = container.querySelector(
+            '[data-testid="language-selector-scroll-region"]',
+        ) as HTMLDivElement | null;
         const activeOption = container.querySelector('[data-testid="language-option-en"]') as HTMLButtonElement | null;
         const inactiveOption = container.querySelector(
             '[data-testid="language-option-zh_TW"]',
@@ -59,11 +62,18 @@ describe('LanguageSelector', () => {
         expect(openToggle?.className).toContain('dark:hover:bg-gray-700');
         expect(menu).toBeTruthy();
         expect(menu?.className).toContain('border-gray-200 bg-white');
+        expect(menu?.className).toContain('w-40');
         expect(menu?.className).toContain('dark:border-gray-700 dark:bg-gray-900');
         expect(menu?.className).not.toContain('nbu-overlay-shell');
+        expect(scrollRegion?.className).toContain('nbu-scrollbar-subtle');
+        expect(scrollRegion?.style.scrollbarGutter).toBe('auto');
         expect(activeOption?.className).toContain('bg-amber-50 text-amber-700 font-bold');
+        expect(activeOption?.className).toContain('pr-2.5');
         expect(activeOption?.className).toContain('dark:bg-amber-500/20 dark:text-amber-200');
         expect(inactiveOption?.className).toContain('text-gray-700 hover:bg-gray-100 hover:text-gray-900');
+        expect(inactiveOption?.className).toContain('flex');
+        expect(inactiveOption?.innerHTML).toContain('truncate');
+        expect(inactiveOption?.className).not.toContain('grid-cols');
         expect(inactiveOption?.className).toContain('dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white');
     });
 });

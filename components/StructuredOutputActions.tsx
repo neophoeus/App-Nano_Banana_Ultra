@@ -14,6 +14,15 @@ type StructuredOutputActionsProps = {
 };
 
 type CopyState = 'json' | 'text' | null;
+type MenuPlacement = {
+    horizontal: 'start' | 'end';
+    vertical: 'top' | 'bottom';
+};
+
+const DEFAULT_MENU_PLACEMENT: MenuPlacement = {
+    horizontal: 'end',
+    vertical: 'bottom',
+};
 
 const buildStructuredOutputExportFilename = (
     mode: StructuredOutputMode | null,
@@ -44,7 +53,10 @@ export default function StructuredOutputActions({
 }: StructuredOutputActionsProps) {
     const t = (key: string) => getTranslation(currentLanguage, key);
     const [copyState, setCopyState] = useState<CopyState>(null);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [menuPlacement, setMenuPlacement] = useState<MenuPlacement>(DEFAULT_MENU_PLACEMENT);
     const menuRef = useRef<HTMLDetailsElement | null>(null);
+    const menuPanelRef = useRef<HTMLDivElement | null>(null);
     const resetTimerRef = useRef<number | null>(null);
     const jsonText = useMemo(() => {
         if (structuredData) {
@@ -75,6 +87,52 @@ export default function StructuredOutputActions({
             }
         };
     }, []);
+
+    useEffect(() => {
+        if (!isMenuOpen || typeof window === 'undefined') {
+            return undefined;
+        }
+
+        const updatePlacement = () => {
+            const summaryElement = menuRef.current?.querySelector('summary');
+            const anchorRect = summaryElement?.getBoundingClientRect();
+            const panelRect = menuPanelRef.current?.getBoundingClientRect();
+
+            if (!anchorRect || !panelRect) {
+                return;
+            }
+
+            const viewportPadding = 16;
+            const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
+            const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+            const availableRight = viewportWidth - anchorRect.left - viewportPadding;
+            const availableLeft = anchorRect.right - viewportPadding;
+            const availableBottom = viewportHeight - anchorRect.bottom - viewportPadding;
+            const availableTop = anchorRect.top - viewportPadding;
+            const nextPlacement: MenuPlacement = {
+                horizontal:
+                    panelRect.width <= availableRight || availableRight >= availableLeft ? 'start' : 'end',
+                vertical:
+                    panelRect.height <= availableBottom || availableBottom >= availableTop ? 'bottom' : 'top',
+            };
+
+            setMenuPlacement((previous) =>
+                previous.horizontal === nextPlacement.horizontal && previous.vertical === nextPlacement.vertical
+                    ? previous
+                    : nextPlacement,
+            );
+        };
+
+        const frameId = window.requestAnimationFrame(updatePlacement);
+        window.addEventListener('resize', updatePlacement);
+        window.addEventListener('scroll', updatePlacement, true);
+
+        return () => {
+            window.cancelAnimationFrame(frameId);
+            window.removeEventListener('resize', updatePlacement);
+            window.removeEventListener('scroll', updatePlacement, true);
+        };
+    }, [isMenuOpen]);
 
     if (!structuredData && !formattedStructuredOutput) {
         return null;
@@ -161,10 +219,14 @@ export default function StructuredOutputActions({
         variant === 'dark'
             ? 'nbu-control-button px-3 py-1.5 text-xs text-slate-200'
             : 'nbu-control-button px-3 py-1.5 text-xs';
+    const menuHorizontalPlacementClassName =
+        menuPlacement.horizontal === 'start' ? 'left-0 translate-x-0' : 'right-0 translate-x-0';
+    const menuVerticalPlacementClassName =
+        menuPlacement.vertical === 'top' ? 'bottom-full mb-2' : 'top-full mt-2';
     const menuPanelClassName =
         variant === 'dark'
-            ? 'nbu-floating-panel absolute left-1/2 top-full z-20 mt-2 w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 rounded-2xl p-2 sm:left-auto sm:right-0 sm:w-44 sm:translate-x-0'
-            : 'nbu-floating-panel absolute left-1/2 top-full z-20 mt-2 w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 rounded-2xl p-2 sm:left-auto sm:right-0 sm:w-44 sm:translate-x-0';
+            ? `nbu-floating-panel absolute ${menuHorizontalPlacementClassName} ${menuVerticalPlacementClassName} z-20 w-[min(18rem,calc(100vw-2rem))] rounded-2xl p-2 sm:w-44`
+            : `nbu-floating-panel absolute ${menuHorizontalPlacementClassName} ${menuVerticalPlacementClassName} z-20 w-[min(18rem,calc(100vw-2rem))] rounded-2xl p-2 sm:w-44`;
     const summaryClassName =
         variant === 'dark'
             ? 'nbu-control-button flex cursor-pointer list-none items-center gap-2 px-3 py-1.5 text-xs text-slate-200'
@@ -181,7 +243,18 @@ export default function StructuredOutputActions({
 
     return (
         <div data-testid="structured-output-actions" className="relative inline-flex">
-            <details data-testid="structured-output-actions-menu" className="group relative" ref={menuRef}>
+            <details
+                data-testid="structured-output-actions-menu"
+                className="group relative"
+                ref={menuRef}
+                onToggle={(event) => {
+                    const nextIsOpen = event.currentTarget.open;
+                    setIsMenuOpen(nextIsOpen);
+                    if (!nextIsOpen) {
+                        setMenuPlacement(DEFAULT_MENU_PLACEMENT);
+                    }
+                }}
+            >
                 <summary data-testid="structured-output-actions-summary" className={summaryClassName}>
                     <span>{t('structuredOutputActionsLabel')}</span>
                     <svg
@@ -194,7 +267,12 @@ export default function StructuredOutputActions({
                     </svg>
                 </summary>
 
-                <div className={menuPanelClassName}>
+                <div
+                    ref={menuPanelRef}
+                    data-placement-horizontal={menuPlacement.horizontal}
+                    data-placement-vertical={menuPlacement.vertical}
+                    className={menuPanelClassName}
+                >
                     <div data-testid="structured-output-actions-copy-group-label" className={sectionLabelClassName}>
                         {t('structuredOutputActionsCopyGroup')}
                     </div>

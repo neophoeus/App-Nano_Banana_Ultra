@@ -1,8 +1,33 @@
 # Changelog
 
-This changelog is compiled from the repository's local git tags plus the published GitHub Releases and Tags pages for `neophoeus/App-Nano_Banana_Ultra`.
+## v3.4.2 - 2026-04-10
 
-## Unreleased
+- Release title: Nano Banana Ultra 3.4.2 - Composer Reflow, Instruction / Conversation UX & Smart Overlay Placement
+- Release prep summary:
+    - composer shell reflow and action ownership regroup:
+        - rebuilt the composer around a clearer `top settings row -> Image Tools + prompt -> Next send + Generate -> queue row` structure instead of the older mixed three-column surface, while keeping the style strip visible and preserving mobile stacking
+        - kept the prompt helper area inside the prompt card, preserved the visible placeholder quick-tool slot, and made `Follow-up Edit` a permanent peer action beside `Generate` instead of hiding it whenever no stage image is active
+        - kept `Image Tools` embedded in the composer ownership path and promoted `References` into a floating card that works on both desktop and mobile instead of staying a purely inline foldout
+
+    - wording, responsive disclosure rules, and composer polish:
+        - settled the prompt surface wording on `Instruction / Conversation`, updated the placeholders to distinguish stateless one-turn generate-or-edit instructions from remembered-context conversation edits, and aligned the maintained locales to the new wording
+        - changed the quick-tool labels to `Surprise Me` / `Auto Rewrite`, matched `New Conversation` to the destructive red action family, moved the `Next send` and `Queue Batch Job` help cards above their triggers, and then normalized the shared Button radius contract so the larger `Generate` and `Follow-up Edit` corners render as intended instead of being visually sharpened by the shared base and secondary button styling
+        - made `Image Tools` and `Advanced settings` collapsible only below `1280px`; desktop now renders both always open with no disclosure affordance, and the advanced summary strip now shows only actually editable controls supported by the active model instead of passive or unsupported chips such as `Return thoughts`
+        - moved the desktop `References` floating card to the left side of its trigger so it no longer spills into the outer shell on wide layouts
+
+    - floating references, advanced-settings cleanup, and header-language refinement:
+        - re-anchored the floating `References` card so it grows upward instead of pushing below the viewport on narrow layouts, capped it with an internal scroll region, kept the denser five-up grid, and then switched the uploader onto session-scoped preview thumbnails so the card renders lightweight reference previews instead of decoding the original full-resolution uploads on open; the floating card still lazy-mounts those preview cells without changing the visible contract
+        - strengthened the collapsed `References` summary so only populated `Objects` / `Characters` counts turn into the active amber emphasis state, making attached-reference totals easier to scan without changing the existing `Label current/max` text contract or summary selectors
+        - removed the misleading `Grounding: Off` advanced-summary chip, restored the advanced settings modal to a two-column layout with separate `Output format`, `Thinking level`, and `Temperature` cards, brought back the original circular temperature info icon beside `Default temp = 1.0`, and simplified the grounding runtime copy down to the one actionable title-free `Image Search` 1K limit note
+        - restored the top language toggle sizing, trimmed only the dropdown option rows to remove the lingering right-side dead gutter, deleted the short-lived `composerAdvancedTipsButton` locale key across the maintained translations, and aligned the locale/test contracts to the final modal and menu behavior
+
+    - overlay placement hardening for support and response surfaces:
+        - extended the shared `InfoTooltip` primitive with opt-in preferred vertical placement plus viewport-aware auto flipping so selected callers can open upward when needed without changing the default behavior of older tooltip surfaces
+        - rebuilt `StructuredOutputActions` menu placement to auto-resolve horizontal and vertical direction on open, preventing the `Response` detail and viewer-side structured-output menus from always overflowing down and right near card boundaries
+
+    - regression coverage and validation follow-through:
+        - updated the focused composer, side-tool, response-rail, viewer-overlay, and translation Vitest expectations to the new layout and wording contract, and added direct jsdom coverage for `InfoTooltip` and `StructuredOutputActions` auto-placement behavior
+        - extended the second-wave regression pass with the corrected language-menu contract, the restored icon-only temperature help, the simplified grounding-note path, and the collapsed References active-count emphasis; later follow-up passes reran the relevant uploader / Button / composer / side-tool / picker Vitest slices, a green `npm run build`, the restore regression slice at `22 / 22`, and the full Playwright suite at `64 / 64`, while the earlier broader validation still included focused diagnostics on touched files, restore Playwright mainline smoke at `6 / 6`, and the targeted Vitest slice at `6 files / 377 tests`
 
 ## v3.4.1 - 2026-04-09
 
@@ -400,10 +425,6 @@ This changelog is compiled from the repository's local git tags plus the publish
     - locked the main generated-image stage to a square frame so portrait outputs no longer stretch the workspace and force extra scrolling
     - applied the same square-stage layout contract to the empty, loading, and error states so the focus surface keeps a stable footprint throughout the workflow
     - added focused Vitest coverage for the square stage-frame contract in `GeneratedImage`
-- 繁中發版摘要:
-    - 3.0.4 是主圖工作區的版面穩定化更新，重點是把主圖區固定成正方形，避免直式輸出把整個畫面拉得過長
-    - 主圖、空狀態、生成中與錯誤狀態現在都共用同一個 square stage 版面契約，使用流程中的視覺佔位會更穩定
-    - 已補上 `GeneratedImage` 的 focused Vitest 測試，避免之後有人把這個正方形 stage 契約改壞
 
 ## v3.0.3 - 2026-03-29
 
@@ -413,13 +434,6 @@ This changelog is compiled from the repository's local git tags plus the publish
     - replaced the long desktop right-rail presentation with a single summary-first entry point that reduces the feeling of floating context cards across unrelated sections
         - hardened the auto-save failure persistence path so unsaved inline generated/history payloads no longer get written into local snapshots, shared backups, or exported workspace documents, while current-session viewing still keeps working and uploaded reference assets remain restorable
     - revalidated the layout refactor with focused Vitest coverage for `WorkspaceInsightsSidebar` and `WorkspaceHistoryCanvas`
-
-- 繁中發版摘要:
-    - 3.0.3 是針對 `Workspace Context` 與 `Image Tools` 版面流向的整理版，重點在於把脈絡資訊放回主要閱讀順序，而不是懸浮在多個區塊旁邊
-    - `Workspace Context` 已從 desktop 的 sticky 右側欄移回主流程，固定排在 `Response` 與 `Recent Turns` 之間
-    - desktop 與 mobile 現在共用同一個可收合 `Workspace Context` 容器，不再維持桌機常駐、手機另外一套 disclosure 的分裂路徑
-    - `Image Tools` 已移到主圖工作區右側的 support rail，讓工具操作貼近主圖焦點區，而不是跟 context 區塊爭奪上方視覺空間
-    - 相關版面調整已用 `WorkspaceInsightsSidebar` 與 `WorkspaceHistoryCanvas` 的 focused Vitest 測試重新驗證
 
 ## v3.0.2 - 2026-03-26
 
@@ -433,16 +447,6 @@ This changelog is compiled from the repository's local git tags plus the publish
     - updated the restore Playwright suite to preload translations, consume the dedicated fixture directory, and align a few selectors and headings with the current shell wording
     - added a dedicated `test:e2e:restore` npm script so focused restore runs can safely pass `--grep` without the `npm exec` argument-swallowing problem
     - revalidated the restore workflow after the fixture migration, including a full `workspace-restore.spec.ts` pass at `66 passed`
-- 繁中發版摘要:
-    - 3.0.2 是針對 i18n 載入與 restore 測試基礎設施的穩定化版本，重點在於減少預設 bundle 負擔，同時把還原回歸測試從 runtime 輸出資料夾中解耦
-    - 透過把 lineage 的英文 fallback label 從翻譯 runtime graph 拿掉，並將各語系拆成獨立 i18n chunk，清除了 Vite 的 chunk size warning
-    - 非英文翻譯改成 runtime 按需載入，英文維持 eager，既保留既有翻譯呼叫方式，也避免預設首包把所有 locale 一次帶進來
-    - 補上 Vitest 與 Playwright 的翻譯 preload 路徑，確保改成 lazy-load 後，測試環境仍能穩定驗證多語系介面
-    - restore 與 import 的測試 fixture 正式搬到 `e2e/fixtures/restore`，不再依賴 `output/` 這種執行期產物目錄
-    - 一併修整 smoke、variant、provenance、official conversation、invalid import 與 shared-context 這批 restore fixture，讓目前的 E2E 路徑都回到專用測試資料
-    - restore Playwright 規格同步更新為讀取新 fixture 目錄、預先載入翻譯，並對齊目前 shell wording 與 selector
-    - 新增 `test:e2e:restore` 指令，之後可用 `npm run test:e2e:restore -- --grep "..."` 做精準 restore 回歸，不再受 `npm exec` 參數吞掉問題影響
-    - 完整 restore 回歸已重新驗證通過，`workspace-restore.spec.ts` 目前為 `66 passed`
 
 ## v3.0.1 - 2026-03-26
 
@@ -458,15 +462,6 @@ This changelog is compiled from the repository's local git tags plus the publish
     - closed translation parity for the new shell groupings and wording across all supported locales, including Japanese, Korean, Spanish, French, German, Russian, Traditional Chinese, and Simplified Chinese
     - extended regression coverage for the composer-owned settings row, composer reference strip, simplified header, image-only side tools, regrouped insights rail, and localized shell wording so the 3.0.1 shell contract is guarded by tests
     - kept focused validation green for the shell-owner path, including targeted Vitest coverage for composer, header, side tool, insights, and translation baselines
-- 繁中發版摘要:
-    - 3.0.1 是 3.0.0 之後的工作區殼層整理版，重點不是新增新功能，而是把已完成的 continuity workspace 做到更清楚、更像一般使用者會理解的產品介面
-    - 完成 A-I 全部後續收尾，把 `Model`、`Ratio`、`Size`、`Qty` 正式收進 composer，讓設定入口和 prompt 與 generate 行為放在同一個主操作區
-    - `Reference Tray` 狀態改成 composer 自己管理，直接放在 helper 區下方，不再分散在 header、side tool、composer 多個表面之間
-    - 頂部 header 壓回精簡全域列，只保留品牌、theme、language、console 等全域元素，不再兼任第二個參數設定列
-    - 側邊工具面板收斂成純影像工具，保留上傳底圖、編輯當前圖、SketchPad 等真正的 image-tool 入口，同時移除舊的 reference owner contract
-    - 右側脈絡欄重新整理成 `目前工作`、`版本`、`來源與引用`、`活動` 四個家族，降低舊版 branch / lineage / workflow dashboard 的工程味
-    - 補完多語系收尾，把新版 shell 的首屏文案與分組名稱在 9 種語言中對齊，避免部分 locale 仍停留在舊的工程導向 wording
-    - 相關 Vitest 回歸覆蓋一併補齊，3.0.1 的 shell owner 與文案契約已由 focused tests 守住
 
 ## v3.0.0 - 2026-03-26
 
@@ -500,17 +495,6 @@ This changelog is compiled from the repository's local git tags plus the publish
     - added or expanded major supporting docs for shell decisions, implementation structure, package ownership, and internal smoke verification to match the shipped 3.x workspace architecture
     - greatly expanded automated coverage with new and updated Vitest suites for structured outputs, official conversation flows, queued-batch workflow, persistence, provenance, lineage, restore/import UI, and shell surfaces
     - expanded Playwright restore coverage into focused entrypoints and broader locale-aware regression coverage for restore, replay, provenance, queued-batch, and owner-route workflows
-- 繁中發版摘要:
-    - 3.0.0 是自 `v2.5.1` 之後的第一次大型正式改版，核心方向是把 Nano Banana Ultra 從單次生圖介面升級成可延續、多輪操作、可還原的影像工作區
-    - 介面重新整併為更清楚的工作區殼層，讓輸出、歷史、右側脈絡、工具與底部 composer 各自有明確責任，不再讓多個次要面板重複提供同一類直接操作
-    - 正式把 official conversation continuity、branch/source 延續、session replay、restore/import/reopen 等多輪工作流做成產品主幹，而不只是零散功能
-    - 正式加入 structured outputs 工作流，包含多種 preset、結果檢視、JSON 或文字匯出、以及把結果直接 append 或 replace 回下一輪 prompt 的重用能力
-    - 正式加入 queued batch job 工作流，支援提交、刷新、取消、匯入、批次結果回收、時間線顯示，並能在工作區快照還原後接續追蹤
-    - 大幅強化 grounding 與 provenance 體驗，讓摘要、比較、來源檢視、bundle/source drill-down 與 prompt 重用都能在同一套語意下工作
-    - 工作區快照與本地還原機制同步強化，支援更安全的檔案型影像回復、較小的 snapshot 負載，以及更穩定的 restore 行為
-    - 九種語言的 shell 文案、queue、viewer、provenance、restore、replay、history、composer 等主要表面做了大範圍收斂，降低英文殘留與語意不一致
-    - 視覺上建立了新的 shell token、overlay token、summary-first disclosure 模式與 modal theme-safe 行為，整體 UI 比 2.5.1 更像完整工作區產品而不是功能堆疊
-    - 測試與驗證範圍也顯著擴大，Vitest 與 Playwright 都補上了針對 continuity、queued batch、structured outputs、restore、provenance 與多語系路徑的回歸覆蓋
 
 ## v2.5.1 - 2026-03-11
 
@@ -598,7 +582,7 @@ This changelog is compiled from the repository's local git tags plus the publish
 
 - Commit: `503ce40`
 - Release title: Release v1.3
-- Tag subject: `feat: 專案大幅改版更新`
+- Tag subject: `feat: major project refresh update`
 - Release notes summary:
     - major project refresh and rebuild wave
 

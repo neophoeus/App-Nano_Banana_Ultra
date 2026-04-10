@@ -21,8 +21,10 @@ const languageToggleOpenClassName =
 const languageMenuPanelClassName =
     'absolute top-full right-0 z-50 mt-3 w-40 overflow-hidden animate-[fadeIn_0.1s_ease-out] rounded-xl border border-gray-200 bg-white shadow-2xl ring-1 ring-black/5 dark:border-gray-700 dark:bg-gray-900 dark:ring-white/10';
 
+const languageMenuScrollRegionClassName = 'nbu-scrollbar-subtle max-h-[60vh] overflow-y-auto py-1';
+
 const languageMenuOptionBaseClassName =
-    'flex w-full items-center gap-2 border-b border-gray-100 px-4 py-2.5 text-left text-xs transition-colors last:border-0 dark:border-gray-800';
+    'flex w-full min-w-0 items-center gap-2 border-b border-gray-100 pl-3 pr-2.5 py-2.5 text-left text-xs transition-colors last:border-0 dark:border-gray-800';
 
 const languageMenuOptionActiveClassName =
     'bg-amber-50 text-amber-700 font-bold dark:bg-amber-500/20 dark:text-amber-200';
@@ -67,7 +69,11 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
 
             {isOpen && (
                 <div data-testid="language-selector-menu" className={`${languageMenuPanelClassName} ${menuClassName}`}>
-                    <div className="nbu-scrollbar-subtle max-h-[60vh] overflow-y-auto py-1">
+                    <div
+                        data-testid="language-selector-scroll-region"
+                        className={languageMenuScrollRegionClassName}
+                        style={{ scrollbarGutter: 'auto' }}
+                    >
                         {SUPPORTED_LANGUAGES.map((lang) => (
                             <button
                                 key={lang.value}
@@ -79,7 +85,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
                                 className={`${languageMenuOptionBaseClassName} ${currentLanguage === lang.value ? languageMenuOptionActiveClassName : languageMenuOptionInactiveClassName}`}
                             >
                                 <span className="w-5 text-center font-bold opacity-70">{lang.shortLabel}</span>
-                                <span className="tracking-wide">{lang.label}</span>
+                                <span className="min-w-0 flex-1 truncate text-left tracking-wide">{lang.label}</span>
                             </button>
                         ))}
                     </div>

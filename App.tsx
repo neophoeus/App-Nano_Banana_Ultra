@@ -64,6 +64,7 @@ import { useGroundingProvenancePanelProps } from './hooks/useGroundingProvenance
 import { useHistoryPresentationHelpers } from './hooks/useHistoryPresentationHelpers';
 import { useHistorySourceOrchestration } from './hooks/useHistorySourceOrchestration';
 import { useImportedWorkspaceReview } from './hooks/useImportedWorkspaceReview';
+import { useDocumentThemeMode } from './hooks/useDocumentThemeMode';
 import { useComposerSettingsPanelProps } from './hooks/useComposerSettingsPanelProps';
 import { useWorkspaceOverlayAuxiliaryProps } from './hooks/useWorkspaceOverlayAuxiliaryProps';
 import { useWorkspacePickerSheetProps } from './hooks/useWorkspacePickerSheetProps';
@@ -158,6 +159,7 @@ const App: React.FC = () => {
     const initialActiveResult = initialWorkspaceSnapshot.workspaceSession.activeResult;
     const initialComposerState = initialWorkspaceSnapshot.composerState || EMPTY_WORKSPACE_COMPOSER_STATE;
     const [apiKeyReady, setApiKeyReady] = useState(false);
+    const isDarkTheme = useDocumentThemeMode();
     const [currentLang, setCurrentLang] = useState<Language>('en');
     const [areInitialPreferencesReady, setAreInitialPreferencesReady] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -1930,29 +1932,54 @@ const App: React.FC = () => {
         ),
         [currentLang, systemStatusRefreshToken, t],
     );
-    const focusComposerPromptTextarea = useCallback(() => {
-        if (typeof window === 'undefined') {
-            return;
-        }
-
-        window.requestAnimationFrame(() => {
-            const textarea = composerPromptTextareaRef.current;
-            if (!textarea) {
+    const focusComposerPromptTextarea = useCallback(
+        ({ delayFrames = 1, ensureVisible = false }: { delayFrames?: number; ensureVisible?: boolean } = {}) => {
+            if (typeof window === 'undefined') {
                 return;
             }
 
-            try {
-                textarea.focus({ preventScroll: false });
-            } catch {
-                textarea.focus();
-            }
+            const normalizedDelayFrames = Math.max(1, delayFrames);
+            const focusTextarea = () => {
+                const textarea = composerPromptTextareaRef.current;
+                if (!textarea) {
+                    return;
+                }
 
-            const cursorIndex = textarea.value.length;
-            textarea.setSelectionRange(cursorIndex, cursorIndex);
-        });
-    }, []);
+                if (ensureVisible) {
+                    try {
+                        textarea.scrollIntoView({ block: 'center', inline: 'nearest' });
+                    } catch {
+                        textarea.scrollIntoView();
+                    }
+                }
+
+                try {
+                    textarea.focus({ preventScroll: false });
+                } catch {
+                    textarea.focus();
+                }
+
+                const cursorIndex = textarea.value.length;
+                textarea.setSelectionRange(cursorIndex, cursorIndex);
+            };
+
+            const queueFocus = (remainingFrames: number) => {
+                window.requestAnimationFrame(() => {
+                    if (remainingFrames > 1) {
+                        queueFocus(remainingFrames - 1);
+                        return;
+                    }
+
+                    focusTextarea();
+                });
+            };
+
+            queueFocus(normalizedDelayFrames);
+        },
+        [],
+    );
     const replaceComposerPromptText = useCallback(
-        (value: string, noticeKey: string) => {
+        (value: string, noticeKey: string, focusOptions?: { delayFrames?: number; ensureVisible?: boolean }) => {
             const normalizedValue = value.trim();
             if (!normalizedValue) {
                 return;
@@ -1960,7 +1987,7 @@ const App: React.FC = () => {
 
             setPrompt(normalizedValue);
             showNotification(t(noticeKey), 'info');
-            focusComposerPromptTextarea();
+            focusComposerPromptTextarea(focusOptions);
         },
         [focusComposerPromptTextarea, setPrompt, showNotification, t],
     );
@@ -1972,7 +1999,10 @@ const App: React.FC = () => {
     );
     const handleApplyPromptFromViewer = useCallback(
         (value: string) => {
-            replaceComposerPromptText(value, 'workspaceViewerPromptAppliedNotice');
+            replaceComposerPromptText(value, 'workspaceViewerPromptAppliedNotice', {
+                delayFrames: 2,
+                ensureVisible: true,
+            });
         },
         [replaceComposerPromptText],
     );
@@ -2208,20 +2238,28 @@ const App: React.FC = () => {
         : generatedImageUrls.length > 0
           ? getStageOriginLabel('generated')
           : null;
-    const darkProvenancePanel = useMemo(
+    const viewerProvenancePanel = useMemo(
         () => (
             <Suspense
                 fallback={
                     <PanelLoadingFallback
                         label={t('loadingPrepareProvenancePanel')}
-                        className="rounded-[24px] border border-dashed border-slate-700/70 bg-slate-900/70 px-4 py-6 text-center text-sm text-slate-300"
+                        className={
+                            isDarkTheme
+                                ? 'rounded-[24px] border border-dashed border-slate-700/70 bg-slate-900/70 px-4 py-6 text-center text-sm text-slate-300'
+                                : 'rounded-[24px] border border-dashed border-slate-200 bg-white/90 px-4 py-6 text-center text-sm text-slate-500'
+                        }
                     />
                 }
             >
-                <GroundingProvenancePanel {...groundingProvenancePanelProps} tone="dark" scope="dark" />
+                <GroundingProvenancePanel
+                    {...groundingProvenancePanelProps}
+                    tone={isDarkTheme ? 'dark' : 'light'}
+                    scope={isDarkTheme ? 'dark' : 'primary'}
+                />
             </Suspense>
         ),
-        [groundingProvenancePanelProps, t],
+        [groundingProvenancePanelProps, isDarkTheme, t],
     );
     const handleViewerSelectHistoryItem = useCallback(
         (historyId: string) => {
@@ -2270,7 +2308,7 @@ const App: React.FC = () => {
         formattedStructuredOutput,
         effectiveThoughts,
         thoughtStateMessage,
-        provenancePanel: darkProvenancePanel,
+        provenancePanel: viewerProvenancePanel,
         sessionHintEntries,
         formatSessionHintKey,
         formatSessionHintValue,
@@ -2885,10 +2923,7 @@ const App: React.FC = () => {
                             {focusSurface}
                         </div>
 
-                        <div
-                            data-testid="workspace-work-column"
-                            className="grid min-w-0 gap-1.5 xl:min-h-0"
-                        >
+                        <div data-testid="workspace-work-column" className="grid min-w-0 gap-1.5 xl:min-h-0">
                             <div data-testid="workspace-history-column" className="min-w-0 xl:min-h-0">
                                 {historySurface}
                             </div>

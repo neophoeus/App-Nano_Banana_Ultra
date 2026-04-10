@@ -66,19 +66,27 @@ function WorkspaceProgressDetailPanel({
         : latestWorkflowEntry?.displayMessage || t('workflowStatusIdle');
     const workflowDetailMessage = latestWorkflowEntry?.displayMessage || t('workspacePanelStatusReserved');
     const shouldShowWorkflowDetailMessage = isGenerating && workflowDetailMessage !== workflowHeadline;
+    const progressSummaryClassName =
+        'rounded-[24px] border border-amber-200/80 bg-amber-50/70 px-4 py-3 dark:border-amber-500/25 dark:bg-[#18130d]';
+    const progressPillClassName =
+        'inline-flex items-center rounded-full border border-amber-200/80 bg-white/85 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-amber-700 dark:border-amber-500/25 dark:bg-amber-950/45 dark:text-amber-100';
+    const progressWorkflowCardClassName =
+        'rounded-[24px] border border-amber-200/80 bg-white/92 px-4 py-3 dark:border-amber-500/20 dark:bg-[#111217]';
+    const progressAmberChipClassName =
+        'nbu-chip border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-100';
     const hasWorkflowSummary = Boolean(
         latestWorkflowEntry ||
-            isGenerating ||
-            batchProgress.total > 0 ||
-            activeQueueCount > 0 ||
-            importReadyQueueCount > 0 ||
-            issueQueueCount > 0 ||
-            resultStatusSummary,
+        isGenerating ||
+        batchProgress.total > 0 ||
+        activeQueueCount > 0 ||
+        importReadyQueueCount > 0 ||
+        issueQueueCount > 0 ||
+        resultStatusSummary,
     );
     const resultStatusClassName =
         resultStatusTone === 'warning'
-            ? 'rounded-2xl border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-xs font-medium text-amber-800 dark:border-amber-500/20 dark:bg-amber-950/20 dark:text-amber-200'
-            : 'rounded-2xl border border-emerald-200/80 bg-emerald-50/90 px-3 py-2 text-xs font-medium text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-950/20 dark:text-emerald-200';
+            ? 'rounded-2xl border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-xs font-medium text-amber-800 dark:border-amber-500/25 dark:bg-[#1a140d] dark:text-amber-100'
+            : 'rounded-2xl border border-emerald-200/80 bg-emerald-50/90 px-3 py-2 text-xs font-medium text-emerald-800 dark:border-emerald-500/25 dark:bg-[#0f1916] dark:text-emerald-100';
     const thoughtsBodyText = thoughtsText?.trim() ? thoughtsText : null;
     const detailThoughtEntries = React.useMemo(
         () =>
@@ -119,12 +127,9 @@ function WorkspaceProgressDetailPanel({
 
     return (
         <div data-testid="workspace-progress-detail-panel" className="space-y-3">
-            <div
-                data-testid="workspace-progress-detail-summary"
-                className="rounded-[24px] border border-amber-200/80 bg-amber-50/70 px-4 py-3 dark:border-amber-500/20 dark:bg-amber-950/12"
-            >
+            <div data-testid="workspace-progress-detail-summary" className={progressSummaryClassName}>
                 <div className="flex flex-wrap items-center gap-2">
-                    <span className="nbu-status-pill">{t('workspaceSupportProgress')}</span>
+                    <span className={progressPillClassName}>{t('workspaceSupportProgress')}</span>
                     <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-700 dark:text-amber-200">
                         {detailThoughtEntries.length > 0
                             ? t('workspacePanelStatusEnabled')
@@ -140,18 +145,12 @@ function WorkspaceProgressDetailPanel({
             </div>
 
             {hasWorkflowSummary ? (
-                <div
-                    data-testid="workspace-progress-workflow-summary"
-                    className="rounded-[24px] border border-amber-200/80 bg-white/92 px-4 py-3 dark:border-amber-500/20 dark:bg-slate-950/35"
-                >
+                <div data-testid="workspace-progress-workflow-summary" className={progressWorkflowCardClassName}>
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
                             {t('workflowStatusLabel')}
                         </div>
-                        <span
-                            data-testid="workspace-progress-workflow-status"
-                            className="nbu-status-pill"
-                        >
+                        <span data-testid="workspace-progress-workflow-status" className={progressPillClassName}>
                             {workflowStatusLabel}
                         </span>
                     </div>
@@ -177,7 +176,7 @@ function WorkspaceProgressDetailPanel({
                             {batchProgress.total > 0 ? (
                                 <span
                                     data-testid="workspace-progress-workflow-progress"
-                                    className="nbu-chip border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-950/20 dark:text-amber-200"
+                                    className={progressAmberChipClassName}
                                 >
                                     {batchProgress.completed}/{batchProgress.total}
                                 </span>
@@ -188,14 +187,8 @@ function WorkspaceProgressDetailPanel({
                                 </span>
                             ) : null}
                             {importReadyQueueCount > 0 ? (
-                                <span
-                                    data-testid="workspace-progress-workflow-import-ready-queue"
-                                    className="nbu-chip"
-                                >
-                                    {t('queuedBatchJobsImportReadyCount').replace(
-                                        '{0}',
-                                        String(importReadyQueueCount),
-                                    )}
+                                <span data-testid="workspace-progress-workflow-import-ready-queue" className="nbu-chip">
+                                    {t('queuedBatchJobsImportReadyCount').replace('{0}', String(importReadyQueueCount))}
                                 </span>
                             ) : null}
                             {issueQueueCount > 0 ? (
@@ -210,7 +203,7 @@ function WorkspaceProgressDetailPanel({
                             data-testid="workspace-progress-workflow-result-status"
                             className={`${resultStatusClassName} mt-2.5`}
                         >
-                            <span className="mr-2 inline-flex rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-current dark:bg-black/20">
+                            <span className="mr-2 inline-flex rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-current dark:bg-black/35">
                                 {t('stageGroundingResultStatus')}
                             </span>
                             <span>{resultStatusSummary}</span>
@@ -221,10 +214,10 @@ function WorkspaceProgressDetailPanel({
 
             <div
                 data-testid="workspace-progress-accumulated-card"
-                className="rounded-[24px] border border-amber-200/80 bg-white/92 px-4 py-3 dark:border-amber-500/20 dark:bg-slate-950/35"
+                className="rounded-[24px] border border-amber-200/80 bg-white/92 px-4 py-3 dark:border-amber-500/20 dark:bg-[#111217]"
             >
                 <div className="flex flex-wrap items-center gap-2">
-                    <span className="nbu-status-pill">{t('workspaceInsightsLatestThoughts')}</span>
+                    <span className={progressPillClassName}>{t('workspaceInsightsLatestThoughts')}</span>
                     {detailThoughtEntries.length > 0 ? (
                         <span
                             data-testid="workspace-progress-accumulated-count"
@@ -250,12 +243,9 @@ function WorkspaceProgressDetailPanel({
                 </div>
             </div>
 
-            <div
-                data-testid="workspace-progress-detail-stream"
-                className="rounded-[24px] border border-amber-200/80 bg-amber-50/70 px-4 py-3 dark:border-amber-500/20 dark:bg-amber-950/12"
-            >
+            <div data-testid="workspace-progress-detail-stream" className={progressSummaryClassName}>
                 <div className="flex flex-wrap items-center gap-2">
-                    <span className="nbu-status-pill">{t('workspaceInsightsAllThoughts')}</span>
+                    <span className={progressPillClassName}>{t('workspaceInsightsAllThoughts')}</span>
                     <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-700 dark:text-amber-200">
                         {detailThoughtEntries.length > 0
                             ? t('workspacePanelStatusEnabled')
@@ -275,12 +265,12 @@ function WorkspaceProgressDetailPanel({
                         <article
                             key={entry.id}
                             data-testid={`workspace-progress-detail-thought-entry-${entry.shortId}`}
-                            className="rounded-[24px] border border-amber-200 dark:border-amber-500/20 bg-white/92 dark:bg-slate-950/35 px-4 py-3"
+                            className="rounded-[24px] border border-amber-200 bg-white/92 px-4 py-3 dark:border-amber-500/20 dark:bg-[#111217]"
                         >
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                                     <span className="text-sm font-bold text-amber-600 dark:text-amber-300">☼</span>
-                                    <span className="nbu-status-pill">{t('workspaceViewerThoughts')}</span>
+                                    <span className={progressPillClassName}>{t('workspaceViewerThoughts')}</span>
                                     {entry.shortId !== '--------' ? (
                                         <span className="nbu-chip px-2 py-0.5 text-[10px] font-mono text-gray-500 dark:text-gray-400">
                                             {entry.shortId}

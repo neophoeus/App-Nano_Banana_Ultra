@@ -368,6 +368,7 @@ const phaseEGroup2ShellParityKeys = [
     'composerAdvancedGroundingResolutionWarningFlashImageSearch',
     'composerAdvancedGroundingGuideTitle',
     'composerAdvancedGroundingGuideDesc',
+    'composerAdvancedGroundingGuideImageSearchLimit',
     'composerAdvancedGroundingGuideFlashGoogle',
     'composerAdvancedGroundingGuideFlashImage',
     'composerAdvancedGroundingGuideProGoogle',
@@ -1545,12 +1546,14 @@ const zhCnGroundingDescriptionBaseline = {
 } as const;
 
 const zhTwGroundingGuideSentenceBaseline = {
+    composerAdvancedGroundingGuideImageSearchLimit: '使用圖片搜尋時最多 1K。',
     composerAdvancedGroundingGuideFlashGoogle: 'Nano Banana 2 + Google 搜尋：2K、4K 會維持請求尺寸。',
     composerAdvancedGroundingGuideFlashImage: 'Nano Banana 2 + 圖片搜尋：2K、4K 可能回落到 1K。',
     composerAdvancedGroundingGuideProGoogle: 'Nano Banana Pro + Google 搜尋：2K、4K 會維持請求尺寸。',
 } as const;
 
 const zhCnGroundingGuideSentenceBaseline = {
+    composerAdvancedGroundingGuideImageSearchLimit: '使用图片搜索时最多 1K。',
     composerAdvancedGroundingGuideFlashGoogle: 'Nano Banana 2 + Google 搜索：2K、4K 会保持请求尺寸。',
     composerAdvancedGroundingGuideFlashImage: 'Nano Banana 2 + 图片搜索：2K、4K 可能回落到 1K。',
     composerAdvancedGroundingGuideProGoogle: 'Nano Banana Pro + Google 搜索：2K、4K 会保持请求尺寸。',

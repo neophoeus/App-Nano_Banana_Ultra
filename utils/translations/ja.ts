@@ -63,10 +63,11 @@ export const ja = {
     modelGemini31Flash: 'Nano Banana 2 (gemini-3.1-flash-image-preview)',
     modelGemini25Flash: 'Nano Banana (gemini-2.5-flash-image)',
     promptLabel: 'プロンプト',
-    composerPromptLabelIndependent: '制作指示',
-    composerPromptLabelMemory: 'Dialogue',
-    composerPromptPlaceholderIndependent: '今回生成または調整したい内容を説明してください...',
-    composerPromptPlaceholderMemory: 'これまでの Dialogue を引き継ぎ、このターンでどう調整したいか伝えてください...',
+    composerPromptLabelIndependent: '指示',
+    composerPromptLabelMemory: '会話',
+    composerPromptPlaceholderIndependent:
+        '単発の指示やプロンプトを書いて、新規生成または会話記憶なしの追加入力を行ってください...',
+    composerPromptPlaceholderMemory: '会話を引き継ぎ、このターンをどう調整したいか対話で指示してください...',
     composerSendIntentTitle: '次の送信',
     composerSendIntentIndependent: '独立送信',
     composerSendIntentMemory: '記憶送信',
@@ -74,6 +75,8 @@ export const ja = {
     composerSendIntentHelperMemory: '次の送信は公式の会話記憶を引き継ぎます。',
     composerSendIntentDisabledReason: '記憶送信は枚数が 1 のときだけ使えます。',
     composerSendIntentInfoButton: '送信ルールの説明',
+    composerPromptToolSurpriseMe: 'おまかせ',
+    composerPromptToolAutoRewrite: '自動リライト',
     rewrite: 'AI 推敲',
     random: 'おまかせ',
     clear: 'クリア',
@@ -450,6 +453,7 @@ export const ja = {
     composerAdvancedGroundingGuideTitle: '実行ガイド',
     composerAdvancedGroundingGuideDesc:
         'これらのグラウンディング解像度メモは、現在の製品経路での実機確認に基づいています。',
+    composerAdvancedGroundingGuideImageSearchLimit: 'Image Search は最大 1K です。',
     composerAdvancedGroundingGuideFlashGoogle:
         'Nano Banana 2 + Google Search: 2K と 4K の要求はそのままのサイズで返りました。',
     composerAdvancedGroundingGuideFlashImage:

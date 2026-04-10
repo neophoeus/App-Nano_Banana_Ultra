@@ -15,8 +15,15 @@ const Button: React.FC<ButtonProps> = ({
     disabled,
     ...props
 }) => {
+    const hasExplicitRadiusClass = /(^|\s)!?rounded(?:-[^\s]+)?(?=\s|$)/.test(className);
     const baseStyles =
-        'inline-flex items-center justify-center px-4 py-2 rounded-lg font-bold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]';
+        'inline-flex items-center justify-center px-4 py-2 font-bold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-black disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]';
+
+    const defaultRadiusClassName = hasExplicitRadiusClass
+        ? ''
+        : variant === 'secondary'
+          ? 'rounded-full'
+          : 'rounded-lg';
 
     // Ultra Theme Variants
     const variants = {
@@ -28,11 +35,11 @@ const Button: React.FC<ButtonProps> = ({
       focus:ring-amber-500 
       shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:shadow-[0_0_30px_rgba(245,158,11,0.6)]
       border border-yellow-200/50
-      relative overflow-hidden
+            relative
     `,
         // Updated Secondary for Light/Dark Mode
         secondary: `
-            nbu-control-button
+                        nbu-control-button-surface
       focus:ring-gray-400 dark:focus:ring-gray-500 
       shadow-sm hover:shadow-md dark:hover:shadow-[0_0_15px_rgba(255,255,255,0.05)]
     `,
@@ -42,7 +49,7 @@ const Button: React.FC<ButtonProps> = ({
 
     return (
         <button
-            className={`${baseStyles} ${variants[variant]} ${className}`}
+            className={`${baseStyles} ${defaultRadiusClassName} ${variants[variant]} ${className}`}
             disabled={isLoading || disabled}
             {...props}
         >

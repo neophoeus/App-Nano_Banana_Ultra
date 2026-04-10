@@ -44,7 +44,8 @@ describe('WorkspaceProgressDetailPanel', () => {
                     },
                 ]}
                 latestWorkflowEntry={{
-                    displayMessage: 'Workspace snapshot imported from ui-import-provenance-live-workspace.json (1 turns).',
+                    displayMessage:
+                        'Workspace snapshot imported from ui-import-provenance-live-workspace.json (1 turns).',
                     label: 'Imported workspace snapshot',
                     stage: 'history',
                     timestamp: '10:14',
@@ -66,6 +67,10 @@ describe('WorkspaceProgressDetailPanel', () => {
         expect(markup).toContain('workspace-progress-detail-summary');
         expect(markup).toContain('workspace-progress-workflow-summary');
         expect(markup).toContain('workspace-progress-workflow-status');
+        expect(markup).toContain('dark:bg-[#18130d]');
+        expect(markup).toContain('dark:bg-[#111217]');
+        expect(markup).toContain('dark:bg-amber-950/45');
+        expect(markup).toContain('dark:bg-[#0f1916]');
         expect(markup).toContain('workspace-progress-workflow-headline');
         expect(markup).toContain('workspace-progress-workflow-progress');
         expect(markup).toContain('workspace-progress-workflow-active-queue');
@@ -84,7 +89,9 @@ describe('WorkspaceProgressDetailPanel', () => {
         expect(markup).toContain('Progress');
         expect(markup).toContain('Workflow');
         expect(markup).toContain('History');
-        expect(markup).toContain('Workspace snapshot imported from ui-import-provenance-live-workspace.json (1 turns).');
+        expect(markup).toContain(
+            'Workspace snapshot imported from ui-import-provenance-live-workspace.json (1 turns).',
+        );
         expect(markup).toContain('1/3');
         expect(markup).toContain('1 active');
         expect(markup).toContain('1 ready to import');

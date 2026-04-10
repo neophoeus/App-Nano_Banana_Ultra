@@ -65,6 +65,8 @@ describe('WorkspaceResponseRail', () => {
 
         expect(markup).toContain('workspace-response-rail');
         expect(markup).toContain('workspace-model-output-card');
+        expect(markup).toContain('border-emerald-200/80 bg-white/85');
+        expect(markup).toContain('dark:bg-[#10201a]');
         expect(markup).not.toContain('workspace-response-rail-summary');
         expect(markup).not.toContain('<summary');
     });

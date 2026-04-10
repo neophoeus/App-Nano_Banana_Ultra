@@ -10,7 +10,8 @@ export const getPreferredDarkMode = (): boolean => {
     }
 
     const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const prefersDark =
+        typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-color-scheme: dark)').matches : false;
     return storedTheme === 'dark' || (!storedTheme && prefersDark);
 };
 

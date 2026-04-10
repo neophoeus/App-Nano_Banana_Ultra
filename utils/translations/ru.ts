@@ -65,10 +65,12 @@ export const ru = {
     modelGemini31Flash: 'Nano Banana 2 (gemini-3.1-flash-image-preview)',
     modelGemini25Flash: 'Nano Banana (gemini-2.5-flash-image)',
     promptLabel: 'Промпт',
-    composerPromptLabelIndependent: 'Творческое описание',
-    composerPromptLabelMemory: 'Dialogue',
-    composerPromptPlaceholderIndependent: 'Опишите, что нужно сгенерировать или изменить в этом ходе...',
-    composerPromptPlaceholderMemory: 'Продолжите предыдущий Dialogue и опишите, как изменить этот ход...',
+    composerPromptLabelIndependent: 'Инструкция',
+    composerPromptLabelMemory: 'Разговор',
+    composerPromptPlaceholderIndependent:
+        'Напишите одноразовую инструкцию или промпт для новой генерации или последующего редактирования без памяти разговора...',
+    composerPromptPlaceholderMemory:
+        'Продолжите разговор и опишите, как должен измениться этот ход с сохраненным контекстом...',
     composerSendIntentTitle: 'Следующая отправка',
     composerSendIntentIndependent: 'Независимая отправка',
     composerSendIntentMemory: 'Отправка с памятью',
@@ -77,6 +79,8 @@ export const ru = {
     composerSendIntentHelperMemory: 'Следующая отправка продолжит официальную память диалога.',
     composerSendIntentDisabledReason: 'Отправка с памятью доступна только когда количество равно 1.',
     composerSendIntentInfoButton: 'Описание правила отправки',
+    composerPromptToolSurpriseMe: 'Удиви меня',
+    composerPromptToolAutoRewrite: 'Автопереписывание',
     rewrite: 'Улучшить (AI)',
     random: 'Удиви меня',
     clear: 'Сброс',
@@ -458,6 +462,7 @@ export const ru = {
     composerAdvancedGroundingGuideTitle: 'Руководство по выполнению',
     composerAdvancedGroundingGuideDesc:
         'Эти заметки о размерах с граундингом основаны на реальных проверках в текущем продуктном пути.',
+    composerAdvancedGroundingGuideImageSearchLimit: 'Image Search ограничен 1K.',
     composerAdvancedGroundingGuideFlashGoogle:
         'Nano Banana 2 + Google Search: запрошенные 2K и 4K сохранили исходный размер.',
     composerAdvancedGroundingGuideFlashImage:

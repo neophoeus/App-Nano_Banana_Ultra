@@ -58,10 +58,20 @@ describe('WorkspaceViewerOverlay', () => {
         expect(markup).toContain('workspace-viewer-sidebar-scroll');
         expect(markup).toContain('nbu-scrollbar-subtle');
         expect(markup).toContain('overflow-y-auto');
-        expect(markup).toContain('relative flex h-full max-h-[92vh] w-full max-w-6xl flex-col');
-        expect(markup).toContain('-right-5 -top-5 z-30');
-        expect(markup).toContain('rounded-[28px] border border-white/10 bg-[#05070b] shadow-2xl');
-        expect(markup).toContain('border-red-200 bg-red-100');
+        expect(markup).toContain('relative flex h-full w-full flex-col sm:max-h-[calc(100vh-1.5rem)]');
+        expect(markup).toContain('right-3 top-3 z-30');
+        expect(markup).toContain('grid-rows-[minmax(48vh,1fr)_minmax(0,auto)]');
+        expect(markup).toContain('lg:grid-cols-[minmax(0,1fr)_320px]');
+        expect(markup).toContain('bg-white/96');
+        expect(markup).toContain('dark:bg-[#05070b]');
+        expect(markup).toContain(
+            'dark:bg-[radial-gradient(circle_at_top,_rgba(18,26,36,0.34),_rgba(4,6,11,0.9)_42%,_rgba(0,0,0,0.98)_100%)]',
+        );
+        expect(markup).toContain('dark:bg-[linear-gradient(180deg,_rgba(17,22,30,0.98)_0%,_rgba(9,12,18,0.98)_100%)]');
+        expect(markup).toContain('max-h-[42vh]');
+        expect(markup).toContain('dark:bg-[#11161d]');
+        expect(markup).toContain('dark:bg-[#0f141b]');
+        expect(markup).toContain('dark:bg-[#131922]');
         expect(markup).not.toContain('New Conversation');
         expect(markup).not.toContain('Generate Again');
         expect(markup).not.toContain('Follow-up Edit');

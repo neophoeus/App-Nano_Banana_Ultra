@@ -24,6 +24,9 @@ describe('WorkspaceOutputDetailPanel', () => {
         expect(markup).toContain('workspace-output-detail-panel');
         expect(markup).toContain('workspace-output-detail-summary');
         expect(markup).toContain('workspace-output-detail-mode');
+        expect(markup).toContain('border-emerald-200/80 bg-white/85');
+        expect(markup).toContain('dark:bg-[#0f1916]');
+        expect(markup).toContain('dark:bg-[#10201a]');
         expect(markup).toContain('Response');
         expect(markup).toContain('Structured Output');
         expect(markup).toContain('Night portrait with glossy rain reflections and dense backlight haze.');

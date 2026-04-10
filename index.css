@@ -172,25 +172,33 @@ html.nbu-theme-switching *::after {
         box-shadow: 0 24px 72px rgba(0, 0, 0, 0.42);
     }
 
-    .nbu-control-button {
-        @apply rounded-full border font-semibold transition-colors shadow-sm backdrop-blur;
+    .nbu-control-button,
+    .nbu-control-button-surface {
+        @apply border font-semibold transition-colors shadow-sm backdrop-blur;
         border-color: rgba(226, 232, 240, 0.85);
         background-color: rgba(255, 255, 255, 0.92);
         color: rgb(51, 65, 85);
     }
 
-    .nbu-control-button:hover {
+    .nbu-control-button {
+        @apply rounded-full;
+    }
+
+    .nbu-control-button:hover,
+    .nbu-control-button-surface:hover {
         border-color: rgba(251, 191, 36, 0.55);
         color: rgb(180, 83, 9);
     }
 
-    .dark .nbu-control-button {
+    .dark .nbu-control-button,
+    .dark .nbu-control-button-surface {
         border-color: rgba(255, 255, 255, 0.1);
         background-color: rgba(20, 25, 34, 0.94);
         color: rgb(226, 232, 240);
     }
 
-    .dark .nbu-control-button:hover {
+    .dark .nbu-control-button:hover,
+    .dark .nbu-control-button-surface:hover {
         border-color: rgba(251, 191, 36, 0.4);
         color: rgb(253, 230, 138);
     }

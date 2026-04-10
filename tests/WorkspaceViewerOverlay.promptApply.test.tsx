@@ -25,7 +25,7 @@ describe('WorkspaceViewerOverlay prompt apply', () => {
         (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = false;
     });
 
-    it('routes the viewer prompt through a dedicated CTA without invoking structured-output prompt actions', () => {
+    it('routes the viewer prompt through a dedicated CTA, closes the viewer, and avoids structured-output prompt actions', () => {
         const handleApplyPrompt = vi.fn();
         const handleReplacePrompt = vi.fn();
         const handleAppendPrompt = vi.fn();
@@ -73,7 +73,7 @@ describe('WorkspaceViewerOverlay prompt apply', () => {
         expect(handleApplyPrompt).toHaveBeenCalledWith('Viewer prompt');
         expect(handleReplacePrompt).not.toHaveBeenCalled();
         expect(handleAppendPrompt).not.toHaveBeenCalled();
-        expect(handleClose).not.toHaveBeenCalled();
+        expect(handleClose).toHaveBeenCalledTimes(1);
         expect(handleMoveViewer).not.toHaveBeenCalled();
     });
 

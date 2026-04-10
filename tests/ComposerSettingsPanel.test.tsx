@@ -118,9 +118,10 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).not.toContain(
             'Uses the selected image and tools without replaying official conversation memory.',
         );
-        expect(markup).toContain('Creative brief');
+        expect(markup).toContain('Instruction');
         expect(markup.indexOf('composer-settings-row')).toBeLessThan(markup.indexOf('composer-image-tools-slot'));
         expect(markup.indexOf('composer-image-tools-slot')).toBeLessThan(markup.indexOf('composer-quick-tools'));
+        expect(markup.indexOf('composer-quick-tools')).toBeLessThan(markup.indexOf('composer-sticky-send-intent'));
         expect(markup).toContain('Generation Settings');
         expect(markup).toContain('Style');
         expect(markup).toContain('None');
@@ -138,24 +139,25 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).toContain('dark:bg-emerald-500/18');
         expect(markup).toContain('dark:bg-amber-400/18');
         expect(markup).toContain('dark:bg-violet-500/18');
-        expect(markup).toContain('Inspiration');
-        expect(markup).toContain('AI Enhance');
+        expect(markup).toContain('composer-quick-tool-placeholder');
+        expect(markup).toContain('Surprise Me');
+        expect(markup).toContain('Auto Rewrite');
         expect(markup).not.toContain('Templates');
         expect(markup).not.toContain('History');
         expect(markup).toContain('Advanced settings');
+        expect(markup).toContain('composer-advanced-settings-disclosure');
+        expect(markup).toContain('composer-advanced-settings-disclosure-summary');
         expect(markup).toContain('Output format: Images only');
         expect(markup).toContain('Temperature: 1.0');
         expect(markup).toContain('Thinking level: High');
-        expect(markup).toContain('Return thoughts: Visible');
-        expect(markup).toContain('Grounding: Off');
+        expect(markup).not.toContain('Grounding: Off');
         expect(markup).toContain('bg-white/92');
         expect(markup).toContain('border-slate-200/85');
         expect(markup).toContain('dark:bg-amber-400/95');
         expect(markup).toContain('dark:border-amber-200/30');
         expect(markup).toContain('dark:text-amber-50');
         expect(markup).toContain('tracking-normal');
-        expect(markup).toContain('md:flex-row');
-        expect(markup).toContain('md:grid-cols-[8.25rem_minmax(0,1fr)]');
+        expect(markup).toContain('grid-cols-3');
         expect(markup).toContain('nbu-scrollbar-subtle');
         expect(markup).toContain('overflow-y-auto');
         expect(markup).toContain('resize-none');
@@ -173,6 +175,10 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).not.toContain('Gallery');
         expect(markup).toContain('composer-queue-batch-mode-hint-trigger');
         expect(markup).toContain('composer-queue-batch-mode-hint');
+        expect(markup).toContain('composer-queue-row');
+        expect(markup).toContain('composer-generate-card');
+        expect(markup).toContain('rounded-[30px]');
+        expect(markup).toContain('rounded-[28px]');
         expect(markup).toContain('composer-queue-status-button');
         expect(markup).toContain('0 tracked');
         expect(markup).toContain('0 active');
@@ -188,7 +194,8 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).not.toContain('Import Workspace');
         expect(markup).not.toContain('composer-style-clear');
         expect(markup).not.toContain('New Conversation');
-        expect(markup).not.toContain('Follow-up Edit');
+        expect(markup).toContain('Follow-up Edit');
+        expect(markup).toContain(getTranslation('en', 'followUpEditRequiresStageImage'));
         expect(markup).toContain('min-h-10');
         expect(markup).toContain('py-2');
         expect(markup).toContain('Memory send is available only when quantity is 1.');
@@ -220,9 +227,10 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).toContain('aria-pressed="true"');
         expect(markup).not.toContain('composer-sticky-send-intent-info-card');
         expect(markup).not.toContain('Keeps the next send inside official conversation memory.');
-        expect(markup).toContain('Dialogue');
-        expect(markup).toContain('Continue the earlier dialogue and describe how this round should change...');
+        expect(markup).toContain('Conversation');
+        expect(markup).toContain('Continue the conversation and describe how this round should change with remembered context...');
         expect(markup).toContain('New Conversation');
+        expect(markup).toContain('border-red-200/80 bg-red-50/90');
     });
 
     it('keeps style visible while folding follow-up source context into the follow-up edit action', () => {
@@ -255,8 +263,8 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).toContain('Follow-up Edit');
         expect(markup).toContain('History · Reopen');
         expect(markup.indexOf('composer-settings-button')).toBeLessThan(markup.indexOf('composer-style-strip'));
-        expect(markup.indexOf('composer-style-strip')).toBeLessThan(markup.indexOf('composer-sticky-send-intent'));
-        expect(markup.indexOf('composer-sticky-send-intent')).toBeLessThan(markup.indexOf('composer-image-tools-slot'));
+        expect(markup.indexOf('composer-style-strip')).toBeLessThan(markup.indexOf('composer-image-tools-slot'));
+        expect(markup.indexOf('composer-image-tools-slot')).toBeLessThan(markup.indexOf('composer-sticky-send-intent'));
     });
 
     it('replaces the inline queued jobs panel with a compact status button when tracked jobs exist', () => {
@@ -435,12 +443,16 @@ describe('ComposerAdvancedSettingsDialog grounding warning', () => {
         );
 
         expect(markup).toContain('image search may fall back to 1K');
-        expect(markup).toContain('Runtime guide');
-        expect(markup).toContain('Nano Banana 2 + Image Search');
+        expect(markup).toContain('Image Search is capped at 1K.');
+        expect(markup).toContain('composer-advanced-grounding-card');
         expect(markup).toContain('composer-advanced-grounding-guide');
         expect(markup).not.toContain('composer-advanced-grounding-guide-details');
         expect(markup).not.toContain('composer-advanced-grounding-guide-summary');
         expect(markup).not.toContain('composer-advanced-grounding-guide-count');
+        expect(markup).not.toContain('Nano Banana 2 + Google Search');
+        expect(markup).not.toContain('Nano Banana Pro + Google Search');
+        expect(markup).not.toContain('Grounding behavior');
+        expect(markup).not.toContain('Runtime guide');
         expect(markup).not.toContain('group-open:rotate-180');
         expect(markup).toContain('composer-advanced-settings-apply');
         expect(markup).not.toContain('composer-advanced-settings-open-generation');
@@ -460,7 +472,8 @@ describe('ComposerAdvancedSettingsDialog grounding warning', () => {
         );
 
         expect(markup).not.toContain('image search may fall back to 1K');
-        expect(markup).toContain('Nano Banana Pro + Google Search');
+        expect(markup).not.toContain('composer-advanced-grounding-guide');
+        expect(markup).not.toContain('Nano Banana Pro + Google Search');
         expect(markup).toContain('composer-advanced-structured-output-guide');
         expect(markup).toContain('Off');
         expect(markup).toContain('Choose Off for the normal text-plus-image response.');
@@ -468,6 +481,7 @@ describe('ComposerAdvancedSettingsDialog grounding warning', () => {
         expect(markup).not.toContain('composer-advanced-generation-hint');
         expect(markup).not.toContain('composer-advanced-grounding-section-hint');
         expect(markup).not.toContain('composer-advanced-grounding-guide-hint');
+        expect(markup).not.toContain('Grounding behavior');
         expect(markup).toContain(getTranslation('en', 'composerDefaultTemp').replace('{0}', '= 1.0'));
     });
 
