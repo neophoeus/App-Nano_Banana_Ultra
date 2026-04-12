@@ -6,17 +6,18 @@
 
 ## English
 
-Nano Banana Ultra is a Gemini-powered visual creation workspace for image generation, guided editing, and continuity-based iteration. It is designed for people who do more than run one prompt at a time: concept artists, prompt designers, visual storytellers, and anyone who needs to evolve an image idea across multiple passes without losing context.
+Nano Banana Ultra is a Gemini-powered visual creation workspace for image generation, guided editing, and source-aware multi-pass iteration. It is designed for people who do more than run one prompt at a time: concept artists, prompt designers, visual storytellers, and anyone who needs to evolve an image idea across multiple passes without losing context.
 
-Instead of treating image generation as a disposable single-shot action, Nano Banana Ultra turns it into a persistent workspace. You can move from prompt drafting to reference-guided creation, from batch exploration to branch continuation, from targeted editing to result reuse, all inside one connected flow.
+Instead of treating image generation as a disposable single-shot action, Nano Banana Ultra turns it into a persistent workspace. You can move from prompt drafting to reference-guided creation, from batch exploration to selection-first continuation, from targeted editing to result reuse, all inside one connected flow.
 
 ## Why It Feels Different
 
 - it is built as a workspace, not just a prompt box
-- it keeps image history, continuation state, and reusable outputs visible
+- it keeps history selection, stage state, and reusable outputs aligned around one source model
+- selecting the latest turn continues that branch, while selecting an older turn starts a new branch automatically
 - it supports both exploratory generation and more deliberate editing workflows
 - it lets different Gemini image models expose different strengths without forcing a one-size-fits-all UI
-- it is designed for iterative image work where compare, refine, continue, and recover are all first-class actions
+- restore and import follow the same source-selection rules as the live workspace
 
 ## Product Highlights
 
@@ -24,8 +25,9 @@ Instead of treating image generation as a disposable single-shot action, Nano Ba
 - built-in SketchPad workflow for rough visual ideation before generation
 - image editing workflow for inpainting, outpainting, and follow-up refinement
 - prompt enhancement tools such as Smart Rewrite and Surprise Me
-- batch exploration, variant promotion, and branch-based continuation
-- persistent history, restore, import, and continuity-aware workspace recovery
+- batch exploration, variant comparison, and selection-first continuation or branching
+- persistent history, restore, import, and source-aware workspace recovery
+- Versions view with direct viewing and current-source state instead of a separate open-versus-continue split
 - structured output reuse, provenance review, and insight surfaces
 - multilingual UI and light/dark theme support
 
@@ -69,22 +71,23 @@ Nano Banana Ultra currently supports three Gemini image-model paths, each presen
 
 ### Edit
 
-- reopen a result as the next working source
+- select any successful result as the next working source
+- keep iterating from the latest turn on a branch, or select an older turn to start a new branch automatically
 - refine images with the built-in editor workflow
 - use inpainting and outpainting style edits for targeted changes
 - carry prior results forward instead of rebuilding from scratch every time
 
 ### Explore
 
-- compare sibling variants from the same creative pass
-- promote exactly one result into the active continuation source when needed
-- branch into different visual directions without flattening everything into one timeline
+- compare sibling variants and older turns inside the same workspace
+- select the latest branch tip to keep moving forward from that line
+- select an older turn to spin out a different visual direction without manual route switching
 
 ### Recover
 
 - restore previous workspace state after reload
-- import saved workspaces, reopen recovered turns, and continue from the right source state
-- keep history, source, and continuity context visible across longer sessions
+- import saved workspaces and continue from the restored source state using the same selection-first rules as the live workspace
+- keep history, stage source, and Versions state aligned across longer sessions
 
 ### Reuse
 
@@ -94,19 +97,19 @@ Nano Banana Ultra currently supports three Gemini image-model paths, each presen
 
 ## Version Overview
 
-### Latest Release: 3.4.5
+### Latest Release: 3.5.0
 
-Latest release: 3.4.5. See [CHANGELOG.md](CHANGELOG.md) for release details.
+Latest release: 3.5.0. See [CHANGELOG.md](CHANGELOG.md) for release details.
 
-### 3.4.x
+### 3.5.x
 
-Version 3.4.x is where Nano Banana Ultra 3.x becomes truly usable as an everyday product. It turns the earlier 3.x groundwork into a clearer, steadier creative workspace: simpler support surfaces, more intentional follow-up behavior, more trustworthy history and restore flows, and a more cohesive generate-review-reuse loop.
+Version 3.5.x is where Nano Banana Ultra's 3.x workspace model becomes clearly selection-first and easier to read. History selection now directly defines the next working source, staged-image continuation uses one stateful primary action, and Versions reflects the same state through direct badges instead of a separate open-versus-continue split.
 
-In short, 3.4.x is the practical 3.x baseline.
+In short, 3.5.x is the current practical baseline for the product.
 
 ### 3.x
 
-Version 3.x includes everything from 2.x and represents the current Nano Banana Ultra product state: a continuity-first Gemini image workspace with a summary-first shell, detail-on-demand surfaces, persistent history and restore/import flows, structured-output and provenance reuse, queued-batch workflows, official-conversation continuity, and safer file-backed recovery behavior.
+Version 3.x includes everything from 2.x and represents the current Nano Banana Ultra product state: a selection-first Gemini image workspace with a summary-first shell, detail-on-demand surfaces, persistent history and restore/import flows, structured-output and provenance reuse, queued-batch workflows, official-conversation continuity, and safer file-backed recovery behavior.
 
 ### 2.x
 
@@ -149,25 +152,27 @@ For release-by-release history, see [CHANGELOG.md](CHANGELOG.md).
 
 ## 繁體中文
 
-Nano Banana Ultra 是一個以 Google Gemini 影像模型為核心的視覺創作工作區產品，聚焦在影像生成、引導式編修、以及可延續的多輪創作流程。它不是只給你一個 prompt 輸入框，而是讓整個創作過程可以在同一個工作區裡持續推進。
+Nano Banana Ultra 是一個以 Google Gemini 影像模型為核心的視覺創作工作區產品，聚焦在影像生成、引導式編修、以及以選取決定來源的多輪創作流程。它不是只給你一個 prompt 輸入框，而是讓整個創作過程可以在同一個工作區裡持續推進。
 
-你可以從提示詞開始，加入參考圖、做批次探索、從某一張結果繼續延伸、進入編輯模式做局部修正、在稍後重新還原工作區，再把有價值的結果重用到下一輪。整體體驗更像影像工作區，而不是一次性的生圖工具。
+你可以從提示詞開始，加入參考圖、做批次探索、直接用歷史選取決定下一輪來源、進入編輯模式做局部修正、在稍後重新還原工作區，再把有價值的結果重用到下一輪。整體體驗更像影像工作區，而不是一次性的生圖工具。
 
 ## 產品定位
 
 - 它是工作區，不只是 prompt 輸入器
-- 它把歷史、延續關係、與可重用結果保留在同一個產品空間
+- 它把歷史、來源狀態、與可重用結果保留在同一個產品空間
+- 選到某條分支的最新 turn 會直接接續，選到較早 turn 則會自動分支
 - 它同時支援探索式生成與較精準的編輯工作流
 - 它會依不同 Gemini 模型能力調整介面，而不是所有模型都硬塞同一套控制項
-- 它適合需要比較、修正、延續、還原、重用的長流程影像創作
+- 它適合需要比較、修正、延伸、還原、重用的長流程影像創作
 
 ## 產品重點
 
 - 支援文字生圖、圖生圖、與風格導向生成
 - 內建 SketchPad 與影像編輯工作流
 - 提供 Smart Rewrite、Surprise Me 等提示詞增強工具
-- 支援批次探索、變體升格、與 branch 式延續
-- 支援歷史保存、工作區還原、匯入與延續導向回復
+- 支援批次探索、變體比較、以及依選取自動接續或分支
+- 支援歷史保存、工作區還原、匯入與來源狀態一致的回復
+- Versions 視圖可直接顯示查看中與目前來源狀態，不再依賴額外的查看 / 接續分流
 - 支援 structured output 重用、provenance 檢視、與 insight 顯示
 - 支援多語系介面與明暗主題切換
 
@@ -211,22 +216,23 @@ Nano Banana Ultra 目前支援三條 Gemini 影像模型路徑，並會依模型
 
 ### 編輯
 
-- 把某張結果重新打開成下一輪工作來源
+- 選取任何成功結果作為下一輪工作來源
+- 選到某分支最新 turn 會直接沿該分支接續，選到較早 turn 則會自動開出新分支
 - 使用內建 editor 工作流做影像細修
 - 透過 inpainting、outpainting 這類方式做局部調整
 - 不需要每次都從零重建整張圖
 
 ### 探索
 
-- 比較同一輪生成下的多個 sibling variants
-- 在需要時只升格其中一張成為 active continuation source
-- 讓不同視覺方向能分支發展，而不是全部擠進同一條線
+- 比較同一輪生成下的多個 sibling variants 與較早歷史 turn
+- 選最新結果可沿原方向繼續，選較早結果可直接分出不同視覺方向
+- 不需要先理解額外的查看 / 接續分流才能往下做下一輪
 
 ### 回復
 
 - 重新整理後可還原先前工作區狀態
-- 可匯入舊工作區、重新開啟還原回合，並從正確的來源狀態延續
-- 長流程工作時，歷史、來源、延續脈絡仍保持可見
+- 可匯入舊工作區，並用和目前工作區相同的選取規則決定下一輪來源
+- 長流程工作時，歷史、stage 來源、與 Versions 狀態仍保持對齊
 
 ### 重用
 
@@ -236,19 +242,19 @@ Nano Banana Ultra 目前支援三條 Gemini 影像模型路徑，並會依模型
 
 ## 版本總覽
 
-### 最新版本：3.4.5
+### 最新版本：3.5.0
 
-最新版本：3.4.5。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
+最新版本：3.5.0。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
-### 3.4.x
+### 3.5.x
 
-3.4.x 才是 Nano Banana Ultra 3.x 真正進入日常可用狀態的版本。它把前面 3.x 累積的方向正式收斂成更清楚、更穩定、也更像產品的創作工作區：support surfaces 更簡潔、follow-up 行為更明確、history 與 restore 更可靠，整體 generate-review-reuse 流程也終於真正接起來。
+3.5.x 是 Nano Banana Ultra 3.x 正式收斂成以選取為核心的工作區模型版本。history 選取現在會直接決定下一輪來源，stage 有圖時會把 `以此圖接續` 提升為主要動作，Versions 也改成直接顯示查看中與目前來源狀態，而不是再分開查看 / 接續。
 
-簡單說，3.4.x 才是 3.x 的實用基準版。
+簡單說，3.5.x 是目前產品真正的實用基準版。
 
 ### 3.x
 
-3.x 版本包含 2.x 的全部能力，並代表 Nano Banana Ultra 目前的產品狀態：它已不是單次生成工具，而是以 continuity 為核心的 Gemini 影像工作區，採用 summary-first shell 與按需展開的 detail surfaces，並整合 persistent history、restore/import、structured output 與 provenance 重用、queued batch、official conversation continuity，以及更安全的 file-backed recovery 行為。
+3.x 版本包含 2.x 的全部能力，並代表 Nano Banana Ultra 目前的產品狀態：它已不是單次生成工具，而是以選取決定來源的流程為核心的 Gemini 影像工作區，採用 summary-first shell 與按需展開的 detail surfaces，並整合 persistent history、restore/import、structured output 與 provenance 重用、queued batch、official conversation continuity，以及更安全的 file-backed recovery 行為。
 
 ### 2.x
 

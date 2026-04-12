@@ -131,14 +131,6 @@ export function buildStageTopRightModel({
         };
     }
 
-    if (hasLinkedHistoryTurn && continuationDiffers) {
-        contextChips.push({
-            key: 'continuation-differs',
-            label: t('stageContextContinuationDiffers'),
-            tone: 'divergence',
-        });
-    }
-
     if (hasLinkedHistoryTurn && hasMeaningfulResultStatus && normalizedResultStatusTone) {
         contextChips.push({
             key: 'result-status',
@@ -149,15 +141,6 @@ export function buildStageTopRightModel({
 
     const primaryVisibleActions: StageTopRightAction[] = [];
     const lowerPriorityActions: StageTopRightAction[] = [];
-
-    if (hasLinkedHistoryTurn && onContinueFromStageSource) {
-        primaryVisibleActions.push({
-            key: 'continue-from-here',
-            label: t('stageActionContinueFromHere'),
-            emphasis: 'primary',
-            onClick: onContinueFromStageSource,
-        });
-    }
 
     if (onEdit) {
         primaryVisibleActions.push({
@@ -201,15 +184,6 @@ export function buildStageTopRightModel({
             label: t('stageActionAddToCharacterReference'),
             emphasis: 'secondary',
             onClick: onAddToCharacterReference,
-        });
-    }
-
-    if (hasLinkedHistoryTurn && onBranchFromStageSource) {
-        lowerPriorityActions.push({
-            key: 'branch-from-here',
-            label: t('stageActionBranchFromHere'),
-            emphasis: 'secondary',
-            onClick: onBranchFromStageSource,
         });
     }
 

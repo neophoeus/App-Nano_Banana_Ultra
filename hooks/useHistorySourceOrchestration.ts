@@ -42,6 +42,7 @@ type PromoteResultArtifactsToSession = (
 ) => void;
 
 type UseHistorySourceOrchestrationArgs = {
+    history: GeneratedImageType[];
     generatedImageUrls: string[];
     selectedImageIndex: number;
     selectedHistoryId: string | null;
@@ -130,6 +131,7 @@ export const resolveViewerStageSourceSyncArgs = ({
 const isInlineHistoryPreviewUrl = (value?: string | null) => Boolean(value && value.startsWith('data:'));
 
 export function useHistorySourceOrchestration({
+    history,
     generatedImageUrls,
     selectedImageIndex,
     selectedHistoryId,
@@ -251,9 +253,36 @@ export function useHistorySourceOrchestration({
         t,
     ]);
 
+    const resolveDefaultHistorySelectionLineageAction = useCallback(
+        (item: GeneratedImageType): ContinuationLineageAction => {
+            const branchOriginId = branchOriginIdByTurnId[item.id] || item.id;
+            let latestBranchTurn: GeneratedImageType | null = null;
+
+            history.forEach((historyItem) => {
+                if (historyItem.status !== 'success') {
+                    return;
+                }
+
+                const historyItemBranchOriginId = branchOriginIdByTurnId[historyItem.id] || historyItem.id;
+                if (historyItemBranchOriginId !== branchOriginId) {
+                    return;
+                }
+
+                if (!latestBranchTurn || historyItem.createdAt >= latestBranchTurn.createdAt) {
+                    latestBranchTurn = historyItem;
+                }
+            });
+
+            return latestBranchTurn?.id === item.id ? 'continue' : 'branch';
+        },
+        [branchOriginIdByTurnId, history],
+    );
+
     const handleHistorySelect = useCallback(
         (item: GeneratedImageType, options?: { lineageAction?: TurnLineageAction }) => {
-            const lineageAction = options?.lineageAction || 'reopen';
+            const lineageAction =
+                options?.lineageAction ||
+                (item.status === 'success' ? resolveDefaultHistorySelectionLineageAction(item) : 'reopen');
             const isRouteMutation = lineageAction === 'continue' || lineageAction === 'branch';
             const shortHistoryId = item.id.slice(0, 8);
 
@@ -300,6 +329,11 @@ export function useHistorySourceOrchestration({
             setSelectedImageIndex(0);
             applySelectedResultArtifacts(historyArtifacts);
             if (isRouteMutation) {
+                setBranchContinuationSourceByBranchOriginId((prev) => ({
+                    ...prev,
+                    [branchOriginId]: item.id,
+                }));
+                setConversationState(nextConversationState);
                 promoteResultArtifactsToSession(historyArtifacts, 'history', {
                     ...provenanceOverride,
                     sessionSourceHistoryId: item.id,
@@ -318,11 +352,6 @@ export function useHistorySourceOrchestration({
             ]);
 
             if (lineageAction === 'continue') {
-                setBranchContinuationSourceByBranchOriginId((prev) => ({
-                    ...prev,
-                    [branchOriginId]: item.id,
-                }));
-                setConversationState(nextConversationState);
                 showNotification(
                     item.variantGroupId ? t('historySourceVariantContinueNotice') : t('historySourceContinueNotice'),
                     'info',
@@ -333,7 +362,6 @@ export function useHistorySourceOrchestration({
                         : encodeWorkflowMessage('historySourceContinueLog', shortHistoryId),
                 );
             } else if (lineageAction === 'branch') {
-                setConversationState(nextConversationState);
                 showNotification(t('historySourceBranchNotice'), 'info');
                 addLog(encodeWorkflowMessage('historySourceBranchLog', shortHistoryId));
             } else {
@@ -379,9 +407,11 @@ export function useHistorySourceOrchestration({
             buildResultArtifacts,
             clearAssetRoles,
             conversationState,
+            history,
             isGenerating,
             onHistorySelectWhileGenerating,
             promoteResultArtifactsToSession,
+            resolveDefaultHistorySelectionLineageAction,
             setBranchContinuationSourceByBranchOriginId,
             setConversationState,
             setError,

@@ -2,8 +2,6 @@ import { useCallback, useMemo } from 'react';
 import { BranchSummary } from '../utils/lineage';
 import {
     GeneratedImage,
-    SelectedItemActionBarAction,
-    SelectedItemActionBarProps,
     SelectedItemModel,
     SelectedItemSummaryStripChip,
     SelectedItemSummaryStripProps,
@@ -399,6 +397,21 @@ export function useHistoryPresentationHelpers({
 
             return (
                 <>
+                    {isActive && (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+                            {t('historyBadgeActive')}
+                        </span>
+                    )}
+                    {isCurrentStageSource && (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+                            {t('workspacePickerStageSource')}
+                        </span>
+                    )}
+                    {branchLabel && (
+                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200">
+                            {branchLabel}
+                        </span>
+                    )}
                     {lineageBadge}
                     {memoryBadge}
                     {threadBadge}
@@ -454,91 +467,12 @@ export function useHistoryPresentationHelpers({
                 <div className="mt-2 line-clamp-2 text-xs leading-5 text-gray-700 dark:text-gray-200">
                     {branchSummary.latestTurn.prompt}
                 </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                    {renderHistoryActionButton({
-                        label: t('historyActionOpenLatest'),
-                        testId: 'active-branch-open-latest',
-                        onClick: () => handleHistorySelect(branchSummary.latestTurn),
-                        variant: 'primary',
-                    })}
-                    {renderHistoryActionButton({
-                        label: resolveContinueLabel(branchSummary.latestTurn),
-                        testId: 'active-branch-continue-latest',
-                        onClick: () => handleContinueFromHistoryTurn(branchSummary.latestTurn),
-                    })}
-                    {renderHistoryActionButton({
-                        label: t('historyActionRename'),
-                        onClick: () => handleRenameBranch(branchSummary.latestTurn),
-                    })}
-                </div>
             </>
         ),
         [
             effectiveBranchContinuationSourceByBranchOriginId,
             getBranchAccentClassName,
             getShortTurnId,
-            handleBranchFromHistoryTurn,
-            handleContinueFromHistoryTurn,
-            handleHistorySelect,
-            handleRenameBranch,
-            renderHistoryActionButton,
-            resolveContinueLabel,
-            t,
-        ],
-    );
-
-    const buildSelectedItemActionBarProps = useCallback(
-        (selectedItem: SelectedItemModel | null): SelectedItemActionBarProps | null => {
-            if (!selectedItem) {
-                return null;
-            }
-
-            const actions: SelectedItemActionBarAction[] = [];
-            const renameTarget = branchSummaryByOriginId[selectedItem.branchOriginId]?.latestTurn || null;
-
-            if (!selectedItem.isStageSource) {
-                actions.push({
-                    key: 'open',
-                    label: t('historyActionOpen'),
-                    emphasis: 'secondary',
-                    onClick: () => handleHistorySelect(selectedItem.item),
-                });
-            }
-
-            actions.push({
-                key: 'continue',
-                label: resolveContinueLabel(selectedItem.item),
-                emphasis: 'primary',
-                onClick: () => handleContinueFromHistoryTurn(selectedItem.item),
-            });
-            actions.push({
-                key: 'branch',
-                label: t('historyActionBranch'),
-                emphasis: 'secondary',
-                onClick: () => handleBranchFromHistoryTurn(selectedItem.item),
-            });
-            if (renameTarget) {
-                actions.push({
-                    key: 'rename-branch',
-                    label: t('historyActionRename'),
-                    emphasis: 'tertiary',
-                    onClick: () => handleRenameBranch(renameTarget),
-                });
-            }
-
-            return {
-                selectedItem,
-                isSelectedItemOnStage: selectedItem.isStageSource,
-                actions,
-            };
-        },
-        [
-            branchSummaryByOriginId,
-            handleBranchFromHistoryTurn,
-            handleContinueFromHistoryTurn,
-            handleHistorySelect,
-            handleRenameBranch,
-            resolveContinueLabel,
             t,
         ],
     );
@@ -656,7 +590,6 @@ export function useHistoryPresentationHelpers({
     );
 
     return {
-        buildSelectedItemActionBarProps,
         buildSelectedItemSummaryStripProps,
         renderHistoryActionButton,
         renderHistoryTurnSnapshotContent,

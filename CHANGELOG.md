@@ -1,5 +1,26 @@
 # Changelog
 
+## v3.5.0 - 2026-04-12
+
+- Release title: Nano Banana Ultra 3.5.0 - Selection-First Lineage, Stateful Continue CTA & Versions Flow Simplification
+- Release prep summary:
+    - selection-first history and continuation workflow:
+        - selecting a successful history turn now immediately defines the next working source, so the workflow no longer depends on a separate passive open-versus-continue split
+        - selecting the latest turn on a branch now behaves as continuation from that branch, while selecting an older turn now starts a new branch automatically
+        - restore and import-review flows now follow the same source-selection rules as the live workspace instead of using a separate route model
+
+    - composer and stage workflow simplification:
+        - replaced the old `Generate` plus visible `Follow-up Edit` pairing with one stateful primary action: no image staged keeps fresh generate as the main action, while a staged image promotes `Continue with this image` as the main action and keeps fresh generate as the smaller secondary fallback
+        - simplified the stage surface by removing the extra continue/branch controls and the older divergence signal, so continuation intent is owned by source selection instead of duplicated in multiple places
+
+    - Versions redesign for the new mental model:
+        - updated the Versions view so lineage cards now show state directly through badges such as `Viewing` and `Continue with this image` instead of relying on separate owner-route action buttons
+        - simplified the active-branch area so branch switching stays selection-first and branch rename remains available without keeping the older open/continue action row
+        - kept the selected turn, current stage source, and branch state visually aligned across Versions, stage, and restore flows
+
+    - user-facing wording updates:
+        - updated English and Traditional Chinese labels to match the simplified workflow, including the stage-source wording, continue-with-image wording, grounding-result wording, and the active/viewing badge wording
+
 ## v3.4.5 - 2026-04-12
 
 - Release title: Nano Banana Ultra 3.4.5 - Immediate UI Locale Switching & Startup Translation Preload

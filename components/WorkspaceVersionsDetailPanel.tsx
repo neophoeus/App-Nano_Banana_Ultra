@@ -19,6 +19,7 @@ export type WorkspaceVersionsDetailPanelProps = {
     branchSummariesCount: number;
     sessionUpdatedLabel: string;
     selectedHistoryId: string | null;
+    currentStageSourceHistoryId: string | null;
     lineageRootGroups: LineageRootGroup[];
     onExportWorkspace: () => void;
     onImportWorkspace: () => void;
@@ -65,6 +66,7 @@ function WorkspaceVersionsDetailPanel({
     branchSummariesCount,
     sessionUpdatedLabel,
     selectedHistoryId,
+    currentStageSourceHistoryId,
     lineageRootGroups,
     onExportWorkspace,
     onImportWorkspace,
@@ -88,15 +90,6 @@ function WorkspaceVersionsDetailPanel({
     const snapshotActionStripClassName = `${nestedSectionCardClassName} space-y-2.5`;
     const snapshotActionButtonClassName =
         'nbu-control-button flex w-full items-center justify-center rounded-[18px] px-3 py-2 text-[12px] font-semibold';
-
-    const renderOwnerRouteActionShell = (actionRow: React.ReactNode, testId?: string) => (
-        <div data-testid={testId} className={`${dashedSurfaceClassName} space-y-2.5`}>
-            <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-amber-700 dark:text-amber-200">
-                {t('historyActionOwnerRoute')}
-            </div>
-            <div className="flex flex-wrap gap-2">{actionRow}</div>
-        </div>
-    );
 
     return (
         <div data-testid="workspace-versions-detail-panel" className="space-y-3">
@@ -247,6 +240,7 @@ function WorkspaceVersionsDetailPanel({
                                     {rootGroup.branches.map((branch) => (
                                         <div
                                             key={`branch-group-${branch.branchOriginId}`}
+                                            data-testid={`lineage-map-branch-${branch.branchOriginId}`}
                                             className={dashedSurfaceClassName}
                                         >
                                             <div className="flex items-center justify-between gap-3">
@@ -302,21 +296,13 @@ function WorkspaceVersionsDetailPanel({
                                                                 badges: renderHistoryTurnBadges({
                                                                     item,
                                                                     variant: 'lineage-map',
+                                                                    branchLabel: branch.branchLabel,
+                                                                    isCurrentStageSource:
+                                                                        currentStageSourceHistoryId === item.id,
+                                                                    isActive: isActiveTurn,
                                                                 }),
                                                                 promptClassName:
                                                                     'mt-2 line-clamp-2 text-xs leading-5 text-gray-600 dark:text-gray-300',
-                                                                actionRow: renderOwnerRouteActionShell(
-                                                                    renderHistoryTurnActionRow({
-                                                                        item,
-                                                                        continueLabel: null,
-                                                                        branchLabel: null,
-                                                                        stopPropagation: true,
-                                                                        testIds: {
-                                                                            open: `lineage-map-open-${item.id}`,
-                                                                        },
-                                                                    }),
-                                                                    `lineage-map-owner-route-${item.id}`,
-                                                                ),
                                                             })}
                                                         </div>
                                                     );

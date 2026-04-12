@@ -1482,6 +1482,7 @@ const App: React.FC = () => {
         handleBranchFromHistoryTurn,
         handleImportReviewDirectAction,
     } = useHistorySourceOrchestration({
+        history,
         generatedImageUrls,
         selectedImageIndex,
         selectedHistoryId,
@@ -2647,6 +2648,7 @@ const App: React.FC = () => {
             branchSummariesCount: branchSummaries.length,
             sessionUpdatedLabel,
             selectedHistoryId,
+            currentStageSourceHistoryId: currentStageAsset?.sourceHistoryId || workspaceSession.sourceHistoryId || null,
             lineageRootGroups,
             onExportWorkspace: handleExportWorkspaceSnapshot,
             onImportWorkspace: handleOpenWorkspaceImportPicker,
@@ -2675,8 +2677,10 @@ const App: React.FC = () => {
             renderHistoryTurnActionRow,
             renderHistoryTurnBadges,
             renderHistoryTurnSnapshotContent,
+            currentStageAsset?.sourceHistoryId,
             selectedHistoryId,
             sessionUpdatedLabel,
+            workspaceSession.sourceHistoryId,
         ],
     );
     const workspaceDetailOverlays =

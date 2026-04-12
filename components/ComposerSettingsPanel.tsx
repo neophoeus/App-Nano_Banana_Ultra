@@ -621,7 +621,8 @@ function ComposerSettingsPanel({
     const followUpSourceSummary = currentStageAsset
         ? `${getStageOriginLabel(currentStageAsset.origin)}${currentStageAsset.lineageAction ? ` · ${getLineageActionLabel(currentStageAsset.lineageAction)}` : ''}`
         : null;
-    const followUpGenerateLabel = t('workspaceViewerFollowUpEdit');
+    const hasStageSourceForContinuation = Boolean(currentStageAsset);
+    const followUpGenerateLabel = t('stageActionContinueFromHere');
     const followUpGenerateAriaLabel = followUpSourceSummary
         ? `${followUpGenerateLabel}. ${t('composerFollowUpSource')}: ${followUpSourceSummary}.`
         : followUpGenerateLabel;
@@ -631,6 +632,10 @@ function ComposerSettingsPanel({
             ? `${t('composerFollowUpSource')}: ${followUpSourceSummary}`
             : undefined
         : t('followUpEditRequiresStageImage');
+    const primaryGenerateLabel = hasStageSourceForContinuation ? followUpGenerateLabel : generateLabel;
+    const primaryGenerateAriaLabel = hasStageSourceForContinuation ? followUpGenerateAriaLabel : generateLabel;
+    const primaryGenerateTitle = hasStageSourceForContinuation ? followUpGenerateTitle : undefined;
+    const handlePrimaryGenerate = hasStageSourceForContinuation ? onFollowUpGenerate : onGenerate;
     const supportsThinkingLevelControl = capability.thinkingLevels.some((level) => level !== 'disabled');
     const hasGroundingControl = availableGroundingModes.length > 1;
     const sendIntentInfoPanelNode = sendIntentInfoOpen ? (
@@ -1192,7 +1197,13 @@ function ComposerSettingsPanel({
                     data-testid="composer-generate-card"
                     className="min-w-0 nbu-floating-panel rounded-[30px] p-2 text-slate-900 dark:text-white"
                 >
-                    <div className="grid gap-1.5 sm:grid-cols-2">
+                    <div
+                        className={`grid gap-1.5 ${
+                            hasStageSourceForContinuation
+                                ? 'sm:grid-cols-[minmax(0,1fr)_minmax(0,180px)]'
+                                : 'sm:grid-cols-1'
+                        }`}
+                    >
                         {isGenerating ? (
                             <Button
                                 onClick={onCancelGeneration}
@@ -1203,29 +1214,23 @@ function ComposerSettingsPanel({
                             </Button>
                         ) : (
                             <Button
-                                onClick={onGenerate}
+                                onClick={handlePrimaryGenerate}
+                                aria-label={primaryGenerateAriaLabel}
+                                title={primaryGenerateTitle}
                                 className="btn-shimmer min-h-[64px] rounded-[28px] text-[15px]"
+                            >
+                                {primaryGenerateLabel}
+                            </Button>
+                        )}
+                        {!isGenerating && hasStageSourceForContinuation ? (
+                            <Button
+                                variant="secondary"
+                                onClick={onGenerate}
+                                className="min-h-[64px] min-w-0 rounded-[28px] px-3.5 text-[14px]"
                             >
                                 {generateLabel}
                             </Button>
-                        )}
-                        <Button
-                            variant="secondary"
-                            onClick={onFollowUpGenerate}
-                            aria-label={followUpGenerateAriaLabel}
-                            title={followUpGenerateTitle}
-                            disabled={followUpGenerateDisabled}
-                            className="min-h-[64px] min-w-0 justify-start rounded-[28px] px-3.5 text-left"
-                        >
-                            <span className="flex min-w-0 flex-col items-start gap-0.5 text-left leading-none">
-                                <span>{followUpGenerateLabel}</span>
-                                {followUpSourceSummary ? (
-                                    <span className="max-w-full truncate text-[11px] font-semibold normal-case tracking-normal text-slate-600 dark:text-slate-300">
-                                        {followUpSourceSummary}
-                                    </span>
-                                ) : null}
-                            </span>
-                        </Button>
+                        ) : null}
                     </div>
                 </div>
             </div>

@@ -454,22 +454,6 @@ export interface SelectedItemModel {
     isContinuationSource: boolean;
 }
 
-export type SelectedItemActionBarActionKey = 'open' | 'continue' | 'branch' | 'rename-branch';
-export type SelectedItemActionBarActionEmphasis = 'primary' | 'secondary' | 'tertiary';
-
-export interface SelectedItemActionBarAction {
-    key: SelectedItemActionBarActionKey;
-    label: string;
-    emphasis: SelectedItemActionBarActionEmphasis;
-    onClick: () => void;
-}
-
-export interface SelectedItemActionBarProps {
-    selectedItem: SelectedItemModel;
-    isSelectedItemOnStage: boolean;
-    actions: SelectedItemActionBarAction[];
-}
-
 export type SelectedItemSummaryStripChipKey =
     | 'failed'
     | 'stage-source'
