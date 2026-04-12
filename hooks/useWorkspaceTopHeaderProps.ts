@@ -1,4 +1,4 @@
-import { Dispatch, ReactNode, SetStateAction, useMemo } from 'react';
+import { ReactNode, useMemo } from 'react';
 import WorkspaceTopHeader from '../components/WorkspaceTopHeader';
 import { Language } from '../utils/translations';
 
@@ -7,7 +7,7 @@ type WorkspaceTopHeaderProps = React.ComponentProps<typeof WorkspaceTopHeader>;
 type UseWorkspaceTopHeaderPropsArgs = {
     headerConsole: ReactNode;
     currentLanguage: Language;
-    onLanguageChange: Dispatch<SetStateAction<Language>>;
+    onLanguageChange: (language: Language) => void;
     supportRail?: ReactNode;
 };
 

@@ -26,7 +26,7 @@ type BuildStageTopRightModelArgs = {
     currentStageBranchLabel: string | null;
     continuationDiffers: boolean;
     hasMeaningfulResultStatus: boolean;
-    resultStatusTone: string | null;
+    resultStatusTone: 'warning' | 'success' | null;
     onContinueFromStageSource?: () => void;
     onEdit?: () => void;
     onOpenViewer?: () => void;
@@ -216,7 +216,7 @@ type UseWorkspaceStageViewerArgs = {
     prompt: string;
     error: string | null;
     resultStatusSummary: string | null;
-    resultStatusTone: string | null;
+    resultStatusTone: 'warning' | 'success' | null;
     settings: {
         aspectRatio: GeneratedImageStageProps['aspectRatio'];
         imageSize: GeneratedImageStageProps['imageSize'];
@@ -251,7 +251,7 @@ type UseWorkspaceStageViewerArgs = {
     provenancePanel: ReactNode;
     sessionHintEntries: SessionHintEntry[];
     formatSessionHintKey: (key: string) => string;
-    formatSessionHintValue: (value: unknown) => string;
+    formatSessionHintValue: (key: string, value: unknown) => string;
     onApplyPrompt?: (value: string) => void;
     onReplacePrompt?: (value: string) => void;
     onAppendPrompt?: (value: string) => void;

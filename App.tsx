@@ -2773,7 +2773,6 @@ const App: React.FC = () => {
                                 resultPlaceholder={responseTextPlaceholder}
                                 onReplacePrompt={handleReplacePromptFromStructuredOutput}
                                 onAppendPrompt={handleAppendPromptFromStructuredOutput}
-                                presentation="detail-panel"
                             />
                         </WorkspaceSupportDetailSurface>
                     );

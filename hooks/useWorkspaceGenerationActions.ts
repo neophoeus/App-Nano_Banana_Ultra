@@ -24,7 +24,7 @@ type UseWorkspaceGenerationActionsArgs = {
     imageModel: ImageModel;
     objectImages: string[];
     characterImages: string[];
-    currentStageAsset: StageAsset | undefined;
+    currentStageAsset: StageAsset | null | undefined;
     clearPendingProvenanceContext: () => void;
     primePendingProvenanceContinuation: (sourceHistoryId: string | null) => void;
     resetSelectedOutputState: () => void;

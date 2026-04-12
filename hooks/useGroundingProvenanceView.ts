@@ -175,7 +175,7 @@ export function useGroundingProvenanceView({
                   actualOutputSizeLabel,
               )
             : null;
-    const groundingResolutionStatusTone = groundingResolutionStatusSummary
+    const groundingResolutionStatusTone: 'warning' | 'success' | null = groundingResolutionStatusSummary
         ? actualOutputSizeLabel !== effectiveRequestedImageSize
             ? 'warning'
             : 'success'

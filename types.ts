@@ -418,6 +418,7 @@ export interface GeneratedImage {
     style: ImageStyle;
     model: ImageModel;
     createdAt: number;
+    openedAt?: number | null;
     mode?: string;
     executionMode?: ExecutionMode;
     variantGroupId?: string | null;

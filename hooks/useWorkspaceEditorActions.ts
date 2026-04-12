@@ -68,7 +68,7 @@ type UseWorkspaceEditorActionsArgs = {
         maxObjects: number;
         maxCharacters: number;
     };
-    currentStageAsset: StageAsset | undefined;
+    currentStageAsset: StageAsset | null | undefined;
     editorContextSnapshot: EditorContextSnapshot | null;
     hasSketch: boolean;
     isEditing: boolean;
@@ -107,17 +107,17 @@ type UseWorkspaceEditorActionsArgs = {
     primePendingProvenanceContinuation: (sourceHistoryId: string | null) => void;
     performGeneration: (
         prompt: string,
-        aspectRatio?: AspectRatio,
-        imageSize?: ImageSize,
-        style?: string,
-        model?: ImageModel,
+        aspectRatio: AspectRatio | undefined,
+        imageSize: ImageSize,
+        style: ImageStyle,
+        model: ImageModel,
         editingInput?: string,
         batchSizeOverride?: number,
-        _unused?: unknown,
+        customSize?: ImageSize,
         mode?: string,
         objectImageInputs?: string[],
         characterImageInputs?: string[],
-    ) => void;
+    ) => Promise<void> | void;
     queueBatchJobFromEditor: (submission: {
         prompt: string;
         editingInput: string;
