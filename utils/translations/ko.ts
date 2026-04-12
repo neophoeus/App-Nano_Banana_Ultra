@@ -72,6 +72,7 @@ export const ko = {
     composerSendIntentMemory: '기억 전송',
     composerSendIntentHelperIndependent: '현재 이미지와 도구는 유지하지만 공식 대화 기억은 다시 재생하지 않습니다.',
     composerSendIntentHelperMemory: '다음 전송이 공식 대화 기억을 이어받습니다.',
+    composerSendIntentMemoryTokenNotice: '기억된 문맥은 토큰 사용량을 늘립니다.',
     composerSendIntentDisabledReason: '기억 전송은 수량이 1일 때만 사용할 수 있습니다.',
     composerSendIntentInfoButton: '전송 규칙 설명',
     composerPromptToolImageToPrompt: '이미지에서 프롬프트',

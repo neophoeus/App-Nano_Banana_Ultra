@@ -4,6 +4,7 @@ import { ASPECT_RATIOS } from '../constants';
 import { AspectRatio, WorkspaceComposerState } from '../types';
 import {
     ensureLanguageLoaded,
+    isLanguageLoaded,
     Language,
     persistLanguagePreference,
     resolvePreferredLanguage,
@@ -53,7 +54,6 @@ export function useWorkspaceAppLifecycle({
 
             if (!cancelled) {
                 persistLanguagePreference(preferredLanguage);
-                setCurrentLang(preferredLanguage);
             }
 
             try {
@@ -61,6 +61,12 @@ export function useWorkspaceAppLifecycle({
                 if (cancelled) {
                     return;
                 }
+
+                setCurrentLang((currentLanguage) =>
+                    currentLanguage === preferredLanguage && isLanguageLoaded(preferredLanguage)
+                        ? currentLanguage
+                        : preferredLanguage,
+                );
             } catch (error) {
                 console.error(`Failed to restore language preference ${preferredLanguage}.`, error);
                 if (cancelled) {
@@ -128,5 +134,4 @@ export function useWorkspaceAppLifecycle({
             addLog(t('autoRatioSet').replace('{0}', bestRatio));
         };
     }, [addLog, characterImages, objectImages, setAspectRatio, t]);
-
 }

@@ -1,4 +1,5 @@
-import React, { useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
+import { ModalFloatingLayerContext } from './ModalFloatingLayerContext';
 import { useOverlayEscapeDismiss } from '../hooks/useOverlayEscapeDismiss';
 import { useOverlayFocusTrap } from '../hooks/useOverlayFocusTrap';
 import { useOverlayScrollLock } from '../hooks/useOverlayScrollLock';
@@ -46,11 +47,20 @@ export default function WorkspaceModalFrame({
     closeOnBackdropClick = true,
     initialFocusRef,
 }: WorkspaceModalFrameProps) {
+    const modalRootRef = useRef<HTMLDivElement>(null);
     const dialogRef = useRef<HTMLDivElement>(null);
     const closeButtonRef = useRef<HTMLButtonElement>(null);
+    const [floatingHostElement, setFloatingHostElement] = useState<HTMLDivElement | null>(null);
+    const floatingLayerValue = useMemo(
+        () => ({
+            floatingZIndex: zIndex + 1,
+            hostElement: floatingHostElement,
+        }),
+        [floatingHostElement, zIndex],
+    );
 
     useOverlayEscapeDismiss(true, onClose);
-    useOverlayFocusTrap(dialogRef, { isEnabled: true, initialFocusRef: initialFocusRef ?? closeButtonRef });
+    useOverlayFocusTrap(modalRootRef, { isEnabled: true, initialFocusRef: initialFocusRef ?? closeButtonRef });
     useOverlayScrollLock(true);
 
     return (
@@ -62,41 +72,57 @@ export default function WorkspaceModalFrame({
             role="presentation"
         >
             <div
-                ref={dialogRef}
-                className={`w-full overflow-hidden rounded-[28px] ${maxWidthClass} ${panelClassName}`}
+                ref={modalRootRef}
+                className={`relative w-full ${maxWidthClass}`}
                 onClick={(event) => event.stopPropagation()}
-                role="dialog"
-                aria-modal="true"
-                tabIndex={-1}
+                role="presentation"
             >
-                <div className={`flex flex-wrap items-start justify-between gap-3 ${headerClassName}`}>
-                    <div>
-                        {eyebrow && (
-                            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-300">
-                                {eyebrow}
+                <ModalFloatingLayerContext.Provider value={floatingLayerValue}>
+                    <div
+                        ref={dialogRef}
+                        className={`w-full overflow-hidden rounded-[28px] ${panelClassName}`}
+                        role="dialog"
+                        aria-modal="true"
+                        tabIndex={-1}
+                    >
+                        <div className={`flex flex-wrap items-start justify-between gap-3 ${headerClassName}`}>
+                            <div>
+                                {eyebrow && (
+                                    <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-300">
+                                        {eyebrow}
+                                    </div>
+                                )}
+                                <h3 className="mt-1 text-[17px] font-black text-gray-900 dark:text-gray-100">
+                                    {title}
+                                </h3>
+                                {description && (
+                                    <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-500 dark:text-gray-400">
+                                        {description}
+                                    </p>
+                                )}
+                                {headerExtra}
                             </div>
-                        )}
-                        <h3 className="mt-1 text-[17px] font-black text-gray-900 dark:text-gray-100">{title}</h3>
-                        {description && (
-                            <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-500 dark:text-gray-400">
-                                {description}
-                            </p>
-                        )}
-                        {headerExtra}
+                            {!hideCloseButton && (
+                                <button
+                                    data-testid={closeButtonTestId}
+                                    ref={closeButtonRef}
+                                    type="button"
+                                    onClick={onClose}
+                                    className={closeButtonClassName}
+                                >
+                                    {closeLabel}
+                                </button>
+                            )}
+                        </div>
+                        {children}
                     </div>
-                    {!hideCloseButton && (
-                        <button
-                            data-testid={closeButtonTestId}
-                            ref={closeButtonRef}
-                            type="button"
-                            onClick={onClose}
-                            className={closeButtonClassName}
-                        >
-                            {closeLabel}
-                        </button>
-                    )}
-                </div>
-                {children}
+                    <div
+                        ref={setFloatingHostElement}
+                        data-modal-floating-layer="true"
+                        className="pointer-events-none fixed inset-0"
+                        style={{ zIndex: zIndex + 1 }}
+                    />
+                </ModalFloatingLayerContext.Provider>
             </div>
         </div>
     );

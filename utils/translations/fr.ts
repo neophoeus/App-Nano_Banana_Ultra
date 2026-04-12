@@ -77,6 +77,7 @@ export const fr = {
     composerSendIntentHelperIndependent:
         'Utilise l image et les outils actuels sans rejouer la memoire officielle de la conversation.',
     composerSendIntentHelperMemory: 'Le prochain envoi reutilise la memoire officielle de la conversation.',
+    composerSendIntentMemoryTokenNotice: 'Le contexte memorise augmente l utilisation de tokens.',
     composerSendIntentDisabledReason: 'L envoi avec memoire est disponible seulement quand la quantite est 1.',
     composerSendIntentInfoButton: 'Details de la regle d envoi',
     composerPromptToolImageToPrompt: 'Image vers prompt',

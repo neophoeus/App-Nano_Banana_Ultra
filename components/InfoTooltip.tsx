@@ -1,4 +1,7 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useAnchoredFloatingPlacement } from '../hooks/useAnchoredFloatingPlacement';
+import { useModalFloatingLayer } from './ModalFloatingLayerContext';
 
 type InfoTooltipProps = {
     content: React.ReactNode;
@@ -24,16 +27,29 @@ export default function InfoTooltip({
     autoAdjust = false,
 }: InfoTooltipProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const [resolvedVerticalPlacement, setResolvedVerticalPlacement] = useState<'top' | 'bottom'>(
-        preferredVerticalPlacement,
-    );
     const tooltipId = useId();
     const rootRef = useRef<HTMLDivElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
+    const modalFloatingLayer = useModalFloatingLayer();
+    const usesFloatingLayer = Boolean(modalFloatingLayer?.hostElement);
+    const { floatingStyle, resolvedHorizontalPlacement, resolvedVerticalPlacement } = useAnchoredFloatingPlacement({
+        anchorRef: rootRef,
+        autoAdjustHorizontal: false,
+        autoAdjustVertical: autoAdjust,
+        isOpen,
+        panelRef,
+        preferredHorizontalPlacement: align === 'right' ? 'end' : 'start',
+        preferredVerticalPlacement,
+    });
 
-    useEffect(() => {
-        setResolvedVerticalPlacement(preferredVerticalPlacement);
-    }, [preferredVerticalPlacement]);
+    const isWithinFloatingBoundary = (target: EventTarget | null) => {
+        const targetNode = target as Node | null;
+        if (!targetNode) {
+            return false;
+        }
+
+        return Boolean(rootRef.current?.contains(targetNode) || panelRef.current?.contains(targetNode));
+    };
 
     useEffect(() => {
         if (!isOpen) {
@@ -41,13 +57,15 @@ export default function InfoTooltip({
         }
 
         const handlePointerDown = (event: PointerEvent) => {
-            if (!rootRef.current?.contains(event.target as Node)) {
+            if (!isWithinFloatingBoundary(event.target)) {
                 setIsOpen(false);
             }
         };
 
         const handleEscape = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
                 setIsOpen(false);
             }
         };
@@ -61,51 +79,6 @@ export default function InfoTooltip({
         };
     }, [isOpen]);
 
-    useEffect(() => {
-        if (!isOpen || !autoAdjust || typeof window === 'undefined') {
-            return undefined;
-        }
-
-        const updatePlacement = () => {
-            const rootRect = rootRef.current?.getBoundingClientRect();
-            const panelRect = panelRef.current?.getBoundingClientRect();
-
-            if (!rootRect || !panelRect) {
-                return;
-            }
-
-            const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-            const viewportPadding = 16;
-            const availableTop = rootRect.top - viewportPadding;
-            const availableBottom = viewportHeight - rootRect.bottom - viewportPadding;
-            const preferredFits =
-                preferredVerticalPlacement === 'top'
-                    ? panelRect.height <= availableTop
-                    : panelRect.height <= availableBottom;
-            const fallbackFits =
-                preferredVerticalPlacement === 'top'
-                    ? panelRect.height <= availableBottom
-                    : panelRect.height <= availableTop;
-            const nextPlacement = preferredFits || !fallbackFits
-                ? preferredVerticalPlacement
-                : preferredVerticalPlacement === 'top'
-                  ? 'bottom'
-                  : 'top';
-
-            setResolvedVerticalPlacement(nextPlacement);
-        };
-
-        const frameId = window.requestAnimationFrame(updatePlacement);
-        window.addEventListener('resize', updatePlacement);
-        window.addEventListener('scroll', updatePlacement, true);
-
-        return () => {
-            window.cancelAnimationFrame(frameId);
-            window.removeEventListener('resize', updatePlacement);
-            window.removeEventListener('scroll', updatePlacement, true);
-        };
-    }, [autoAdjust, isOpen, preferredVerticalPlacement]);
-
     const buttonClassName =
         tone === 'dark'
             ? 'border-white/15 bg-white/5 text-white/55 hover:bg-white/10 hover:text-white/80 focus:ring-white/20'
@@ -118,21 +91,64 @@ export default function InfoTooltip({
     const triggerClassName = usesTextTrigger
         ? `inline-flex min-h-6 items-center justify-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] transition focus:outline-none focus:ring-2 ${buttonClassName}`
         : `inline-flex h-5 w-5 items-center justify-center rounded-full border text-[11px] font-black transition focus:outline-none focus:ring-2 ${buttonClassName}`;
-    const alignmentClassName =
-        align === 'right'
+    const inlineAlignmentClassName =
+        resolvedHorizontalPlacement === 'end'
             ? 'left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0'
             : 'left-1/2 -translate-x-1/2 sm:left-0 sm:translate-x-0';
-    const verticalPlacementClassName =
-        resolvedVerticalPlacement === 'top' ? 'bottom-full mb-2' : 'top-full mt-2';
+    const inlineVerticalPlacementClassName = resolvedVerticalPlacement === 'top' ? 'bottom-full mb-2' : 'top-full mt-2';
+    const sharedPanelClassName = `rounded-2xl border px-3 py-2 text-xs leading-5 transition ${panelClassName} ${
+        isOpen ? 'visible opacity-100' : 'pointer-events-none invisible opacity-0'
+    }`;
+    const panelNode = (
+        <div
+            ref={panelRef}
+            id={tooltipId}
+            role="tooltip"
+            aria-hidden={!isOpen}
+            data-testid={dataTestId}
+            data-placement-horizontal={resolvedHorizontalPlacement}
+            data-placement-vertical={resolvedVerticalPlacement}
+            onMouseEnter={() => setIsOpen(true)}
+            onMouseLeave={(event) => {
+                if (!isWithinFloatingBoundary(event.relatedTarget)) {
+                    setIsOpen(false);
+                }
+            }}
+            onBlur={(event) => {
+                if (!isWithinFloatingBoundary(event.relatedTarget)) {
+                    setIsOpen(false);
+                }
+            }}
+            className={
+                usesFloatingLayer
+                    ? `pointer-events-auto ${sharedPanelClassName}`
+                    : `absolute ${inlineAlignmentClassName} ${inlineVerticalPlacementClassName} z-50 w-[min(16rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] ${sharedPanelClassName}`
+            }
+            style={
+                usesFloatingLayer
+                    ? {
+                          ...floatingStyle,
+                          zIndex: modalFloatingLayer?.floatingZIndex,
+                      }
+                    : undefined
+            }
+        >
+            {content}
+        </div>
+    );
 
     return (
         <div
             ref={rootRef}
             className="relative inline-flex shrink-0"
             onMouseEnter={() => setIsOpen(true)}
-            onMouseLeave={() => setIsOpen(false)}
+            onMouseLeave={(event) => {
+                if (!isWithinFloatingBoundary(event.relatedTarget)) {
+                    setIsOpen(false);
+                }
+            }}
             onBlur={(event) => {
-                if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                if (!isWithinFloatingBoundary(event.relatedTarget)) {
                     setIsOpen(false);
                 }
             }}
@@ -165,19 +181,9 @@ export default function InfoTooltip({
                     <circle cx="10" cy="5.6" r="0.9" fill="currentColor" />
                 </svg>
             </button>
-            <div
-                ref={panelRef}
-                id={tooltipId}
-                role="tooltip"
-                aria-hidden={!isOpen}
-                data-testid={dataTestId}
-                data-placement-vertical={resolvedVerticalPlacement}
-                className={`absolute ${alignmentClassName} ${verticalPlacementClassName} z-50 w-[min(16rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-2xl border px-3 py-2 text-xs leading-5 transition ${panelClassName} ${
-                    isOpen ? 'visible opacity-100' : 'pointer-events-none invisible opacity-0'
-                }`}
-            >
-                {content}
-            </div>
+            {usesFloatingLayer && modalFloatingLayer?.hostElement
+                ? createPortal(panelNode, modalFloatingLayer.hostElement)
+                : panelNode}
         </div>
     );
 }

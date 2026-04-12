@@ -77,6 +77,7 @@ export const es = {
     composerSendIntentHelperIndependent:
         'Usa la imagen y las herramientas actuales sin volver a reproducir la memoria oficial de la conversacion.',
     composerSendIntentHelperMemory: 'El siguiente envio reutiliza la memoria oficial de la conversacion.',
+    composerSendIntentMemoryTokenNotice: 'El contexto recordado aumenta el uso de tokens.',
     composerSendIntentDisabledReason: 'El envio con memoria solo esta disponible cuando la cantidad es 1.',
     composerSendIntentInfoButton: 'Detalles de la regla de envio',
     composerPromptToolImageToPrompt: 'Imagen a prompt',

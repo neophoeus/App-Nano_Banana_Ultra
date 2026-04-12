@@ -37,10 +37,12 @@ import WorkspaceUnifiedHistoryPanel from './components/WorkspaceUnifiedHistoryPa
 import WorkspaceVersionsDetailPanel from './components/WorkspaceVersionsDetailPanel';
 import WorkspaceProgressCard from './components/WorkspaceProgressCard';
 import WorkspaceProgressDetailPanel from './components/WorkspaceProgressDetailPanel';
+import { WorkspaceFloatingLayerContext } from './components/WorkspaceFloatingLayerContext';
 import {
     Language,
     ensureLanguageLoaded,
     getTranslation,
+    isLanguageLoaded,
     persistLanguagePreference,
     resolvePreferredLanguage,
 } from './utils/translations';
@@ -166,7 +168,10 @@ const App: React.FC = () => {
     const initialComposerState = initialWorkspaceSnapshot.composerState || EMPTY_WORKSPACE_COMPOSER_STATE;
     const [apiKeyReady, setApiKeyReady] = useState(false);
     const isDarkTheme = useDocumentThemeMode();
-    const [currentLang, setCurrentLang] = useState<Language>(() => resolvePreferredLanguage());
+    const [currentLang, setCurrentLang] = useState<Language>(() => {
+        const preferredLanguage = resolvePreferredLanguage();
+        return isLanguageLoaded(preferredLanguage) ? preferredLanguage : 'en';
+    });
     const [areInitialPreferencesReady, setAreInitialPreferencesReady] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editorMode, setEditorMode] = useState<EditorMode>('inpaint');
@@ -214,6 +219,7 @@ const App: React.FC = () => {
     const workspaceImportInputRef = useRef<HTMLInputElement>(null);
     const composerPromptTextareaRef = useRef<HTMLTextAreaElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
+    const languageChangeRequestRef = useRef(0);
     const lastPromotedHistoryIdRef = useRef<string | null>(null);
     const queuedBatchHistorySelectRef = useRef<((item: import('./types').GeneratedImage) => void) | null>(null);
     const activeBatchPreviewSessionRef = useRef<BatchPreviewSession | null>(null);
@@ -376,10 +382,27 @@ const App: React.FC = () => {
             }
 
             persistLanguagePreference(nextLanguage);
-            setCurrentLang(nextLanguage);
+            const requestId = languageChangeRequestRef.current + 1;
+            languageChangeRequestRef.current = requestId;
+
+            if (isLanguageLoaded(nextLanguage)) {
+                setCurrentLang(nextLanguage);
+                return;
+            }
 
             void ensureLanguageLoaded(nextLanguage)
+                .then(() => {
+                    if (languageChangeRequestRef.current !== requestId) {
+                        return;
+                    }
+
+                    setCurrentLang(nextLanguage);
+                })
                 .catch((error) => {
+                    if (languageChangeRequestRef.current === requestId) {
+                        persistLanguagePreference(currentLang);
+                    }
+
                     console.error(`Failed to load translations for ${nextLanguage}.`, error);
                 });
         },
@@ -1803,6 +1826,14 @@ const App: React.FC = () => {
     const handleOpenResponseDetails = useCallback(() => {
         setActiveWorkspaceDetailModal('response');
     }, []);
+    const [workspaceFloatingHostElement, setWorkspaceFloatingHostElement] = useState<HTMLDivElement | null>(null);
+    const workspaceFloatingLayerValue = useMemo(
+        () => ({
+            floatingZIndex: floatingControlsZIndex + 1,
+            hostElement: workspaceFloatingHostElement,
+        }),
+        [floatingControlsZIndex, workspaceFloatingHostElement],
+    );
     const handleOpenSourcesDetails = useCallback(() => {
         setActiveWorkspaceDetailModal('sources');
     }, []);
@@ -2925,34 +2956,45 @@ const App: React.FC = () => {
                 viewerOverlayProps={workspaceViewerOverlayProps}
             />
 
-            <WorkspaceTopHeader {...workspaceTopHeaderProps} />
+            <WorkspaceFloatingLayerContext.Provider value={workspaceFloatingLayerValue}>
+                <WorkspaceTopHeader {...workspaceTopHeaderProps} />
 
-            <div className="relative z-10 mx-auto flex min-h-screen max-w-[1560px] flex-col px-4 pb-[50px] pt-[100px] lg:px-4 lg:pb-[54px] xl:min-h-0 xl:px-3 xl:pt-[58px]">
-                <main className="mt-0 flex flex-1 flex-col gap-1.5 xl:min-h-0 xl:flex-none">
-                    <section
-                        data-testid="workspace-main-shell"
-                        className="grid min-w-0 gap-1.5 xl:min-h-0 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] xl:items-stretch"
-                    >
-                        <div data-testid="workspace-stage-column" className="min-w-0 xl:flex xl:min-h-0 xl:flex-col">
-                            {focusSurface}
-                        </div>
-
-                        <div data-testid="workspace-work-column" className="grid min-w-0 gap-1.5 xl:min-h-0">
-                            <div data-testid="workspace-history-column" className="min-w-0 xl:min-h-0">
-                                {historySurface}
+                <div className="relative z-10 mx-auto flex min-h-screen max-w-[1560px] flex-col px-4 pb-[50px] pt-[100px] lg:px-4 lg:pb-[54px] xl:min-h-0 xl:px-3 xl:pt-[58px]">
+                    <main className="mt-0 flex flex-1 flex-col gap-1.5 xl:min-h-0 xl:flex-none">
+                        <section
+                            data-testid="workspace-main-shell"
+                            className="grid min-w-0 gap-1.5 xl:min-h-0 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] xl:items-stretch"
+                        >
+                            <div
+                                data-testid="workspace-stage-column"
+                                className="min-w-0 xl:flex xl:min-h-0 xl:flex-col"
+                            >
+                                {focusSurface}
                             </div>
 
-                            <section data-testid="workspace-actions-composer-row" className="min-w-0 xl:min-h-0">
-                                <ComposerSettingsPanel
-                                    {...composerSettingsPanelProps}
-                                    imageToolsPanel={sideToolPanel}
-                                    onClearStyle={handleClearStyle}
-                                />
-                            </section>
-                        </div>
-                    </section>
-                </main>
-            </div>
+                            <div data-testid="workspace-work-column" className="grid min-w-0 gap-1.5 xl:min-h-0">
+                                <div data-testid="workspace-history-column" className="min-w-0 xl:min-h-0">
+                                    {historySurface}
+                                </div>
+
+                                <section data-testid="workspace-actions-composer-row" className="min-w-0 xl:min-h-0">
+                                    <ComposerSettingsPanel
+                                        {...composerSettingsPanelProps}
+                                        imageToolsPanel={sideToolPanel}
+                                        onClearStyle={handleClearStyle}
+                                    />
+                                </section>
+                            </div>
+                        </section>
+                    </main>
+                </div>
+                <div
+                    ref={setWorkspaceFloatingHostElement}
+                    data-workspace-floating-layer="true"
+                    className="pointer-events-none fixed inset-0"
+                    style={{ zIndex: floatingControlsZIndex + 1 }}
+                />
+            </WorkspaceFloatingLayerContext.Provider>
 
             <WorkspaceBottomFooter />
         </div>

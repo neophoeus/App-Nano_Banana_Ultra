@@ -77,6 +77,7 @@ export const en = {
     composerSendIntentHelperIndependent:
         'Uses the selected image and tools without replaying official conversation memory.',
     composerSendIntentHelperMemory: 'Keeps the next send inside official conversation memory.',
+    composerSendIntentMemoryTokenNotice: 'Remembered context increases token usage.',
     composerSendIntentDisabledReason: 'Memory send is available only when quantity is 1.',
     composerSendIntentInfoButton: 'Send rule details',
     composerPromptToolImageToPrompt: 'Image to Prompt',

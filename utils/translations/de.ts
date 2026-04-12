@@ -77,6 +77,7 @@ export const de = {
     composerSendIntentHelperIndependent:
         'Verwendet das aktuelle Bild und die aktuellen Werkzeuge, spielt aber keinen offiziellen Gespraechsspeicher erneut ab.',
     composerSendIntentHelperMemory: 'Der naechste Versand nutzt den offiziellen Gespraechsspeicher weiter.',
+    composerSendIntentMemoryTokenNotice: 'Gespeicherter Kontext erhoeht den Token-Verbrauch.',
     composerSendIntentDisabledReason: 'Senden mit Speicher ist nur bei Menge 1 verfuegbar.',
     composerSendIntentInfoButton: 'Details zur Senderegel',
     composerPromptToolImageToPrompt: 'Bild zu Prompt',

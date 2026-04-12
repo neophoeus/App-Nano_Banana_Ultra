@@ -63,6 +63,7 @@ export const zh_TW = {
     composerSendIntentMemory: '記憶發送',
     composerSendIntentHelperIndependent: '沿用目前圖片與工具，但不會重播官方對話記憶。',
     composerSendIntentHelperMemory: '下一次發送會延續官方對話記憶。',
+    composerSendIntentMemoryTokenNotice: '上下文會增加token使用量。',
     composerSendIntentDisabledReason: '記憶發送只有在數量為 1 時才能使用。',
     composerSendIntentInfoButton: '發送規則說明',
     composerPromptToolImageToPrompt: '圖轉提示詞',

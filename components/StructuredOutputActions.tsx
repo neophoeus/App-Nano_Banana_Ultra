@@ -1,8 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { StructuredOutputMode } from '../types';
+import { useAnchoredFloatingPlacement } from '../hooks/useAnchoredFloatingPlacement';
 import { writeTextToClipboard } from '../utils/clipboard';
 import { getTranslation, Language } from '../utils/translations';
 import { formatStructuredOutputMarkdown, formatStructuredOutputPlainText } from '../utils/structuredOutputPresentation';
+import { useModalFloatingLayer } from './ModalFloatingLayerContext';
 
 type StructuredOutputActionsProps = {
     currentLanguage: Language;
@@ -14,16 +17,6 @@ type StructuredOutputActionsProps = {
 };
 
 type CopyState = 'json' | 'text' | null;
-type MenuPlacement = {
-    horizontal: 'start' | 'end';
-    vertical: 'top' | 'bottom';
-};
-
-const DEFAULT_MENU_PLACEMENT: MenuPlacement = {
-    horizontal: 'end',
-    vertical: 'bottom',
-};
-
 const buildStructuredOutputExportFilename = (
     mode: StructuredOutputMode | null,
     format: 'json' | 'txt' | 'md',
@@ -54,10 +47,21 @@ export default function StructuredOutputActions({
     const t = (key: string) => getTranslation(currentLanguage, key);
     const [copyState, setCopyState] = useState<CopyState>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [menuPlacement, setMenuPlacement] = useState<MenuPlacement>(DEFAULT_MENU_PLACEMENT);
-    const menuRef = useRef<HTMLDetailsElement | null>(null);
+    const menuRef = useRef<HTMLDivElement | null>(null);
+    const summaryButtonRef = useRef<HTMLButtonElement | null>(null);
     const menuPanelRef = useRef<HTMLDivElement | null>(null);
     const resetTimerRef = useRef<number | null>(null);
+    const modalFloatingLayer = useModalFloatingLayer();
+    const usesFloatingLayer = Boolean(modalFloatingLayer?.hostElement);
+    const { floatingStyle, resolvedHorizontalPlacement, resolvedVerticalPlacement } = useAnchoredFloatingPlacement({
+        anchorRef: summaryButtonRef,
+        autoAdjustHorizontal: true,
+        autoAdjustVertical: true,
+        isOpen: isMenuOpen,
+        panelRef: menuPanelRef,
+        preferredHorizontalPlacement: 'end',
+        preferredVerticalPlacement: 'bottom',
+    });
     const jsonText = useMemo(() => {
         if (structuredData) {
             return JSON.stringify(structuredData, null, 2);
@@ -89,48 +93,41 @@ export default function StructuredOutputActions({
     }, []);
 
     useEffect(() => {
-        if (!isMenuOpen || typeof window === 'undefined') {
+        if (!isMenuOpen) {
             return undefined;
         }
 
-        const updatePlacement = () => {
-            const summaryElement = menuRef.current?.querySelector('summary');
-            const anchorRect = summaryElement?.getBoundingClientRect();
-            const panelRect = menuPanelRef.current?.getBoundingClientRect();
+        const isWithinMenuBoundary = (target: EventTarget | null) => {
+            const targetNode = target as Node | null;
+            if (!targetNode) {
+                return false;
+            }
 
-            if (!anchorRect || !panelRect) {
+            return Boolean(menuRef.current?.contains(targetNode) || menuPanelRef.current?.contains(targetNode));
+        };
+
+        const handlePointerDown = (event: PointerEvent) => {
+            if (!isWithinMenuBoundary(event.target)) {
+                setIsMenuOpen(false);
+            }
+        };
+
+        const handleEscape = (event: KeyboardEvent) => {
+            if (event.key !== 'Escape') {
                 return;
             }
 
-            const viewportPadding = 16;
-            const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
-            const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-            const availableRight = viewportWidth - anchorRect.left - viewportPadding;
-            const availableLeft = anchorRect.right - viewportPadding;
-            const availableBottom = viewportHeight - anchorRect.bottom - viewportPadding;
-            const availableTop = anchorRect.top - viewportPadding;
-            const nextPlacement: MenuPlacement = {
-                horizontal:
-                    panelRect.width <= availableRight || availableRight >= availableLeft ? 'start' : 'end',
-                vertical:
-                    panelRect.height <= availableBottom || availableBottom >= availableTop ? 'bottom' : 'top',
-            };
-
-            setMenuPlacement((previous) =>
-                previous.horizontal === nextPlacement.horizontal && previous.vertical === nextPlacement.vertical
-                    ? previous
-                    : nextPlacement,
-            );
+            event.preventDefault();
+            event.stopPropagation();
+            setIsMenuOpen(false);
         };
 
-        const frameId = window.requestAnimationFrame(updatePlacement);
-        window.addEventListener('resize', updatePlacement);
-        window.addEventListener('scroll', updatePlacement, true);
+        document.addEventListener('pointerdown', handlePointerDown);
+        document.addEventListener('keydown', handleEscape);
 
         return () => {
-            window.cancelAnimationFrame(frameId);
-            window.removeEventListener('resize', updatePlacement);
-            window.removeEventListener('scroll', updatePlacement, true);
+            document.removeEventListener('pointerdown', handlePointerDown);
+            document.removeEventListener('keydown', handleEscape);
         };
     }, [isMenuOpen]);
 
@@ -162,9 +159,7 @@ export default function StructuredOutputActions({
             await writeTextToClipboard(value);
             setCopyState(type);
             scheduleReset();
-            if (menuRef.current) {
-                menuRef.current.open = false;
-            }
+            setIsMenuOpen(false);
         } catch {
             setCopyState(null);
         }
@@ -180,9 +175,7 @@ export default function StructuredOutputActions({
             'application/json',
             buildStructuredOutputExportFilename(structuredOutputMode, 'json'),
         );
-        if (menuRef.current) {
-            menuRef.current.open = false;
-        }
+        setIsMenuOpen(false);
     };
 
     const handleExportText = () => {
@@ -195,9 +188,7 @@ export default function StructuredOutputActions({
             'text/plain;charset=utf-8',
             buildStructuredOutputExportFilename(structuredOutputMode, 'txt'),
         );
-        if (menuRef.current) {
-            menuRef.current.open = false;
-        }
+        setIsMenuOpen(false);
     };
 
     const handleExportMarkdown = () => {
@@ -210,23 +201,12 @@ export default function StructuredOutputActions({
             'text/markdown;charset=utf-8',
             buildStructuredOutputExportFilename(structuredOutputMode, 'md'),
         );
-        if (menuRef.current) {
-            menuRef.current.open = false;
-        }
+        setIsMenuOpen(false);
     };
 
-    const buttonClassName =
-        variant === 'dark'
-            ? 'nbu-control-button px-3 py-1.5 text-xs text-slate-200'
-            : 'nbu-control-button px-3 py-1.5 text-xs';
     const menuHorizontalPlacementClassName =
-        menuPlacement.horizontal === 'start' ? 'left-0 translate-x-0' : 'right-0 translate-x-0';
-    const menuVerticalPlacementClassName =
-        menuPlacement.vertical === 'top' ? 'bottom-full mb-2' : 'top-full mt-2';
-    const menuPanelClassName =
-        variant === 'dark'
-            ? `nbu-floating-panel absolute ${menuHorizontalPlacementClassName} ${menuVerticalPlacementClassName} z-20 w-[min(18rem,calc(100vw-2rem))] rounded-2xl p-2 sm:w-44`
-            : `nbu-floating-panel absolute ${menuHorizontalPlacementClassName} ${menuVerticalPlacementClassName} z-20 w-[min(18rem,calc(100vw-2rem))] rounded-2xl p-2 sm:w-44`;
+        resolvedHorizontalPlacement === 'start' ? 'left-0 translate-x-0' : 'right-0 translate-x-0';
+    const menuVerticalPlacementClassName = resolvedVerticalPlacement === 'top' ? 'bottom-full mb-2' : 'top-full mt-2';
     const summaryClassName =
         variant === 'dark'
             ? 'nbu-control-button flex cursor-pointer list-none items-center gap-2 px-3 py-1.5 text-xs text-slate-200'
@@ -240,71 +220,84 @@ export default function StructuredOutputActions({
             ? 'px-3 pb-1 pt-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/45'
             : 'px-3 pb-1 pt-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400';
     const dividerClassName = variant === 'dark' ? 'my-1 border-t border-white/10' : 'my-1 border-t border-slate-200';
+    const sharedPanelClassName = `nbu-floating-panel w-[min(18rem,calc(100vw-2rem))] rounded-2xl p-2 transition sm:w-44 ${
+        isMenuOpen ? 'visible opacity-100' : 'pointer-events-none invisible opacity-0'
+    }`;
+    const menuPanelNode = (
+        <div
+            ref={menuPanelRef}
+            data-testid="structured-output-actions-panel"
+            data-placement-horizontal={resolvedHorizontalPlacement}
+            data-placement-vertical={resolvedVerticalPlacement}
+            aria-hidden={!isMenuOpen}
+            className={
+                usesFloatingLayer
+                    ? `pointer-events-auto ${sharedPanelClassName}`
+                    : `absolute ${menuHorizontalPlacementClassName} ${menuVerticalPlacementClassName} z-20 ${sharedPanelClassName}`
+            }
+            style={
+                usesFloatingLayer
+                    ? {
+                          ...floatingStyle,
+                          zIndex: modalFloatingLayer?.floatingZIndex,
+                      }
+                    : undefined
+            }
+        >
+            <div data-testid="structured-output-actions-copy-group-label" className={sectionLabelClassName}>
+                {t('structuredOutputActionsCopyGroup')}
+            </div>
+            <button type="button" onClick={() => void handleCopy(jsonText, 'json')} className={menuItemClassName}>
+                {copyState === 'json' ? t('structuredOutputCopied') : t('structuredOutputCopyJson')}
+            </button>
+            <button
+                type="button"
+                onClick={() => void handleCopy(plainText || jsonText, 'text')}
+                className={menuItemClassName}
+            >
+                {copyState === 'text' ? t('structuredOutputCopied') : t('structuredOutputCopyText')}
+            </button>
+            <div className={dividerClassName} />
+            <div data-testid="structured-output-actions-export-group-label" className={sectionLabelClassName}>
+                {t('structuredOutputActionsExportGroup')}
+            </div>
+            <button type="button" onClick={handleExportJson} className={menuItemClassName}>
+                {t('structuredOutputExportJson')}
+            </button>
+            <button type="button" onClick={handleExportText} className={menuItemClassName}>
+                {t('structuredOutputExportText')}
+            </button>
+            <button type="button" onClick={handleExportMarkdown} className={menuItemClassName}>
+                {t('structuredOutputExportMarkdown')}
+            </button>
+        </div>
+    );
 
     return (
-        <div data-testid="structured-output-actions" className="relative inline-flex">
-            <details
-                data-testid="structured-output-actions-menu"
-                className="group relative"
-                ref={menuRef}
-                onToggle={(event) => {
-                    const nextIsOpen = event.currentTarget.open;
-                    setIsMenuOpen(nextIsOpen);
-                    if (!nextIsOpen) {
-                        setMenuPlacement(DEFAULT_MENU_PLACEMENT);
-                    }
-                }}
-            >
-                <summary data-testid="structured-output-actions-summary" className={summaryClassName}>
+        <div data-testid="structured-output-actions" ref={menuRef} className="relative inline-flex">
+            <div data-testid="structured-output-actions-menu" className="group relative inline-flex">
+                <button
+                    ref={summaryButtonRef}
+                    type="button"
+                    data-testid="structured-output-actions-summary"
+                    aria-expanded={isMenuOpen}
+                    onClick={() => setIsMenuOpen((value) => !value)}
+                    className={summaryClassName}
+                >
                     <span>{t('structuredOutputActionsLabel')}</span>
                     <svg
                         aria-hidden="true"
                         viewBox="0 0 20 20"
                         fill="none"
-                        className="h-4 w-4 text-current/70 transition-transform group-open:rotate-180"
+                        className={`h-4 w-4 text-current/70 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`}
                     >
                         <path d="M5 7.5 10 12.5 15 7.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                     </svg>
-                </summary>
-
-                <div
-                    ref={menuPanelRef}
-                    data-placement-horizontal={menuPlacement.horizontal}
-                    data-placement-vertical={menuPlacement.vertical}
-                    className={menuPanelClassName}
-                >
-                    <div data-testid="structured-output-actions-copy-group-label" className={sectionLabelClassName}>
-                        {t('structuredOutputActionsCopyGroup')}
-                    </div>
-                    <button
-                        type="button"
-                        onClick={() => void handleCopy(jsonText, 'json')}
-                        className={menuItemClassName}
-                    >
-                        {copyState === 'json' ? t('structuredOutputCopied') : t('structuredOutputCopyJson')}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => void handleCopy(plainText || jsonText, 'text')}
-                        className={menuItemClassName}
-                    >
-                        {copyState === 'text' ? t('structuredOutputCopied') : t('structuredOutputCopyText')}
-                    </button>
-                    <div className={dividerClassName} />
-                    <div data-testid="structured-output-actions-export-group-label" className={sectionLabelClassName}>
-                        {t('structuredOutputActionsExportGroup')}
-                    </div>
-                    <button type="button" onClick={handleExportJson} className={menuItemClassName}>
-                        {t('structuredOutputExportJson')}
-                    </button>
-                    <button type="button" onClick={handleExportText} className={menuItemClassName}>
-                        {t('structuredOutputExportText')}
-                    </button>
-                    <button type="button" onClick={handleExportMarkdown} className={menuItemClassName}>
-                        {t('structuredOutputExportMarkdown')}
-                    </button>
-                </div>
-            </details>
+                </button>
+                {usesFloatingLayer && modalFloatingLayer?.hostElement
+                    ? createPortal(menuPanelNode, modalFloatingLayer.hostElement)
+                    : menuPanelNode}
+            </div>
         </div>
     );
 }

@@ -63,6 +63,7 @@ export const zh_CN = {
     composerSendIntentMemory: '记忆发送',
     composerSendIntentHelperIndependent: '沿用当前图片与工具，但不会重放官方对话记忆。',
     composerSendIntentHelperMemory: '下一次发送会延续官方对话记忆。',
+    composerSendIntentMemoryTokenNotice: '上下文会增加token使用量。',
     composerSendIntentDisabledReason: '记忆发送只有在数量为 1 时才能使用。',
     composerSendIntentInfoButton: '发送规则说明',
     composerPromptToolImageToPrompt: '图转提示词',

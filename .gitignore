@@ -14,9 +14,17 @@ dist-ssr/
 output/
 test-results/
 playwright-report/
+coverage/
 
-# Local workspace content
+# Local workspace and non-product content
 docs/
+tests/
+e2e/
+playwright.config.ts
+run_install.bat
+run_start_dev.bat
+.prettierignore
+prettier.config.mjs
 .env*.local
 e2e-global-log-focus.txt
 INTERNAL_SMOKE_REPORT_*.md
@@ -24,10 +32,7 @@ INTERNAL_SMOKE_HANDOFF*.md
 INTERNAL_SMOKE_FINAL_SUMMARY_*.md
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-!.vscode/tasks.json
+.vscode/
 .idea/
 .DS_Store
 *.suo

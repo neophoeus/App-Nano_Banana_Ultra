@@ -77,6 +77,7 @@ export const ru = {
     composerSendIntentHelperIndependent:
         'Использует текущее изображение и инструменты без повторного воспроизведения официальной памяти диалога.',
     composerSendIntentHelperMemory: 'Следующая отправка продолжит официальную память диалога.',
+    composerSendIntentMemoryTokenNotice: 'Сохраненный контекст увеличивает расход токенов.',
     composerSendIntentDisabledReason: 'Отправка с памятью доступна только когда количество равно 1.',
     composerSendIntentInfoButton: 'Описание правила отправки',
     composerPromptToolImageToPrompt: 'Изображение в промпт',

@@ -73,6 +73,7 @@ export const ja = {
     composerSendIntentMemory: '記憶送信',
     composerSendIntentHelperIndependent: '現在の画像とツールは使い続けますが、公式の会話記憶は再生しません。',
     composerSendIntentHelperMemory: '次の送信は公式の会話記憶を引き継ぎます。',
+    composerSendIntentMemoryTokenNotice: '保持した文脈によりトークン使用量が増えます。',
     composerSendIntentDisabledReason: '記憶送信は枚数が 1 のときだけ使えます。',
     composerSendIntentInfoButton: '送信ルールの説明',
     composerPromptToolImageToPrompt: '画像からプロンプト',

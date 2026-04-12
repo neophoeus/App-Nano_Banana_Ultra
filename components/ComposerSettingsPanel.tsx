@@ -1,12 +1,15 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import Button from './Button';
 import InfoTooltip from './InfoTooltip';
+import { useAnchoredFloatingPlacement } from '../hooks/useAnchoredFloatingPlacement';
 import { useResponsivePanelState } from '../hooks/useResponsivePanelState';
 import { MODEL_CAPABILITIES, OUTPUT_FORMATS, STRUCTURED_OUTPUT_MODES, THINKING_LEVELS } from '../constants';
 import { getGroundingModeLabel } from '../utils/groundingMode';
 import { STRUCTURED_OUTPUT_FIELD_LABEL_KEYS } from '../utils/structuredOutputPresentation';
 import { getStructuredOutputDefinition } from '../utils/structuredOutputs';
 import { getTranslation, Language } from '../utils/translations';
+import { useWorkspaceFloatingLayer } from './WorkspaceFloatingLayerContext';
 import {
     AspectRatio,
     GeneratedImage,
@@ -288,7 +291,10 @@ function ComposerSettingsPanel({
     const resolvedPromptTextareaRef = promptTextareaRef ?? fallbackPromptTextareaRef;
     const sendIntentInfoCardId = React.useId();
     const sendIntentInfoRootRef = React.useRef<HTMLDivElement | null>(null);
+    const sendIntentInfoPanelRef = React.useRef<HTMLDivElement | null>(null);
     const sendIntentInfoAutoCloseTimerRef = React.useRef<number | null>(null);
+    const workspaceFloatingLayer = useWorkspaceFloatingLayer();
+    const usesWorkspaceFloatingLayer = Boolean(workspaceFloatingLayer?.hostElement);
     const {
         isDesktop: isDesktopAdvancedSettings,
         isOpen: isAdvancedSettingsSectionOpen,
@@ -303,7 +309,10 @@ function ComposerSettingsPanel({
         const value = t(key);
         return value === key ? fallback : value;
     };
-    const sendIntentTitle = resolveIntentText('composerSendIntentTitle', t('workspaceTopHeaderSendIntent'));
+    const sendIntentAriaLabelPrefix = resolveIntentText(
+        'workspaceTopHeaderSendIntent',
+        resolveIntentText('composerSendIntentTitle', 'Send'),
+    );
     const independentSendIntentLabel = resolveIntentText(
         'workspaceSendIntentIndependent',
         t('workspaceViewerNewConversation'),
@@ -327,6 +336,10 @@ function ComposerSettingsPanel({
         independentSendIntentButtonLabel,
     );
     const memorySendIntentHelp = resolveIntentText('composerSendIntentHelperMemory', memorySendIntentButtonLabel);
+    const memorySendIntentTokenNotice = resolveIntentText(
+        'composerSendIntentMemoryTokenNotice',
+        'Remembered context increases token usage.',
+    );
     const sendIntentInfoButtonLabel = resolveIntentText('composerSendIntentInfoButton', t('workspacePanelViewDetails'));
     const imageToPromptLabel = resolveIntentText('composerPromptToolImageToPrompt', 'Image to Prompt');
     const surpriseMeLabel = resolveIntentText('composerPromptToolSurpriseMe', 'Surprise Me');
@@ -484,6 +497,7 @@ function ComposerSettingsPanel({
     const displayedStyleLabel = normalizedStyleLabel.length > 0 ? normalizedStyleLabel : t('styleNone');
     const hasActiveStyle = displayedStyleLabel !== t('styleNone');
     const canUseMemorySendIntent = batchSize === 1;
+    const enterBehaviorToggleLabel = enterToSubmit ? t('composerEnterSends') : t('composerEnterNewline');
     const sendIntentDisabledReason = !canUseMemorySendIntent
         ? resolveIntentText(
               'composerSendIntentDisabledReason',
@@ -495,6 +509,17 @@ function ComposerSettingsPanel({
             window.clearTimeout(sendIntentInfoAutoCloseTimerRef.current);
             sendIntentInfoAutoCloseTimerRef.current = null;
         }
+    }, []);
+    const isWithinSendIntentInfoBoundary = React.useCallback((target: EventTarget | null) => {
+        const targetNode = target as Node | null;
+
+        if (!targetNode) {
+            return false;
+        }
+
+        return Boolean(
+            sendIntentInfoRootRef.current?.contains(targetNode) || sendIntentInfoPanelRef.current?.contains(targetNode),
+        );
     }, []);
     const closeSendIntentInfoCard = React.useCallback(() => {
         clearSendIntentInfoAutoClose();
@@ -521,13 +546,15 @@ function ComposerSettingsPanel({
         }
 
         const handlePointerDown = (event: PointerEvent) => {
-            if (!sendIntentInfoRootRef.current?.contains(event.target as Node)) {
+            if (!isWithinSendIntentInfoBoundary(event.target)) {
                 closeSendIntentInfoCard();
             }
         };
 
         const handleEscape = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
                 closeSendIntentInfoCard();
             }
         };
@@ -539,7 +566,7 @@ function ComposerSettingsPanel({
             document.removeEventListener('pointerdown', handlePointerDown);
             document.removeEventListener('keydown', handleEscape);
         };
-    }, [closeSendIntentInfoCard, sendIntentInfoOpen]);
+    }, [closeSendIntentInfoCard, isWithinSendIntentInfoBoundary, sendIntentInfoOpen]);
     const sendIntentInfoTitle =
         sendIntentInfoVariant === 'memory' || sendIntentInfoVariant === 'memory-unavailable'
             ? memorySendIntentButtonLabel
@@ -548,6 +575,10 @@ function ComposerSettingsPanel({
         sendIntentInfoVariant === 'memory' || sendIntentInfoVariant === 'memory-unavailable'
             ? memorySendIntentHelp
             : independentSendIntentHelp;
+    const sendIntentInfoNote =
+        sendIntentInfoVariant === 'memory' || sendIntentInfoVariant === 'memory-unavailable'
+            ? memorySendIntentTokenNotice
+            : null;
     const sendIntentInfoReason = sendIntentInfoVariant === 'memory-unavailable' ? sendIntentDisabledReason : null;
     const handleSendIntentInfoButtonClick = () => {
         if (sendIntentInfoOpen) {
@@ -573,10 +604,19 @@ function ComposerSettingsPanel({
     };
     const sendIntentToggleAriaLabel =
         stickySendIntent === 'memory'
-            ? `${sendIntentTitle}: ${memorySendIntentButtonLabel}. ${independentSendIntentButtonLabel}.`
+            ? `${sendIntentAriaLabelPrefix}: ${memorySendIntentButtonLabel}. ${independentSendIntentButtonLabel}.`
             : canUseMemorySendIntent
-              ? `${sendIntentTitle}: ${independentSendIntentButtonLabel}. ${memorySendIntentButtonLabel}.`
-              : `${sendIntentTitle}: ${independentSendIntentButtonLabel}. ${sendIntentDisabledReason ?? memorySendIntentButtonLabel}.`;
+              ? `${sendIntentAriaLabelPrefix}: ${independentSendIntentButtonLabel}. ${memorySendIntentButtonLabel}.`
+              : `${sendIntentAriaLabelPrefix}: ${independentSendIntentButtonLabel}. ${sendIntentDisabledReason ?? memorySendIntentButtonLabel}.`;
+    const { floatingStyle: sendIntentInfoFloatingStyle } = useAnchoredFloatingPlacement({
+        anchorRef: sendIntentInfoRootRef,
+        autoAdjustHorizontal: true,
+        autoAdjustVertical: true,
+        isOpen: sendIntentInfoOpen && usesWorkspaceFloatingLayer,
+        panelRef: sendIntentInfoPanelRef,
+        preferredHorizontalPlacement: 'end',
+        preferredVerticalPlacement: 'top',
+    });
     const showStartNewConversationAction = stickySendIntent === 'memory';
     const followUpSourceSummary = currentStageAsset
         ? `${getStageOriginLabel(currentStageAsset.origin)}${currentStageAsset.lineageAction ? ` · ${getLineageActionLabel(currentStageAsset.lineageAction)}` : ''}`
@@ -593,6 +633,60 @@ function ComposerSettingsPanel({
         : t('followUpEditRequiresStageImage');
     const supportsThinkingLevelControl = capability.thinkingLevels.some((level) => level !== 'disabled');
     const hasGroundingControl = availableGroundingModes.length > 1;
+    const sendIntentInfoPanelNode = sendIntentInfoOpen ? (
+        <div
+            ref={sendIntentInfoPanelRef}
+            id={sendIntentInfoCardId}
+            role="dialog"
+            aria-label={sendIntentInfoTitle}
+            aria-hidden={!sendIntentInfoOpen}
+            data-testid="composer-sticky-send-intent-info-card"
+            data-placement-horizontal="end"
+            data-placement-vertical="top"
+            className={
+                usesWorkspaceFloatingLayer
+                    ? 'pointer-events-auto w-[min(18rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200/90 bg-white px-3 py-3 text-left shadow-[0_18px_45px_rgba(15,23,42,0.14)] dark:border-slate-700/90 dark:bg-slate-950 dark:shadow-[0_18px_50px_rgba(0,0,0,0.34)]'
+                    : 'absolute right-0 bottom-full z-40 mb-2 w-[min(18rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200/90 bg-white px-3 py-3 text-left shadow-[0_18px_45px_rgba(15,23,42,0.14)] dark:border-slate-700/90 dark:bg-slate-950 dark:shadow-[0_18px_50px_rgba(0,0,0,0.34)]'
+            }
+            style={
+                usesWorkspaceFloatingLayer
+                    ? {
+                          ...sendIntentInfoFloatingStyle,
+                          zIndex: workspaceFloatingLayer?.floatingZIndex,
+                      }
+                    : undefined
+            }
+        >
+            <div
+                data-testid="composer-sticky-send-intent-info-title"
+                className="inline-flex rounded-full bg-amber-300 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-slate-950"
+            >
+                {sendIntentInfoTitle}
+            </div>
+            <div
+                data-testid="composer-sticky-send-intent-info-body"
+                className="mt-2 text-[11px] leading-5 text-slate-700 dark:text-slate-200"
+            >
+                {sendIntentInfoBody}
+            </div>
+            {sendIntentInfoNote && (
+                <div
+                    data-testid="composer-sticky-send-intent-info-note"
+                    className="mt-2 rounded-2xl border border-slate-200/80 bg-slate-50/90 px-3 py-2 text-[11px] leading-4 text-slate-600 dark:border-slate-700/80 dark:bg-slate-900/80 dark:text-slate-300"
+                >
+                    {sendIntentInfoNote}
+                </div>
+            )}
+            {sendIntentInfoReason && (
+                <div
+                    data-testid="composer-sticky-send-intent-info-reason"
+                    className="mt-2 rounded-2xl border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-[11px] leading-4 text-amber-800 dark:border-amber-500/20 dark:bg-amber-950/20 dark:text-amber-100"
+                >
+                    {sendIntentInfoReason}
+                </div>
+            )}
+        </div>
+    ) : null;
     const settingsSummaryItems = [
         {
             key: 'model',
@@ -906,30 +1000,99 @@ function ComposerSettingsPanel({
                                     </button>
                                 )}
                             </div>
-                            <button onClick={onToggleEnterToSubmit} className="nbu-chip">
-                                {enterToSubmit ? t('composerEnterSends') : t('composerEnterNewline')}
-                            </button>
+                            <div
+                                ref={sendIntentInfoRootRef}
+                                data-testid="composer-sticky-send-intent"
+                                className="relative flex min-w-0 max-w-full flex-1 items-center justify-end gap-1.5 sm:flex-none"
+                            >
+                                <button
+                                    type="button"
+                                    data-testid="composer-sticky-send-intent-toggle"
+                                    data-active-intent={stickySendIntent}
+                                    data-memory-available={canUseMemorySendIntent ? 'true' : 'false'}
+                                    aria-label={sendIntentToggleAriaLabel}
+                                    aria-pressed={stickySendIntent === 'memory'}
+                                    onClick={handleSendIntentToggle}
+                                    className="group relative grid min-w-0 flex-1 grid-cols-2 gap-1 rounded-full border border-slate-300/90 bg-slate-200/95 p-1 shadow-inner shadow-slate-300/70 transition-colors hover:border-slate-400/80 focus:outline-none focus:ring-2 focus:ring-amber-300 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30 sm:flex-none"
+                                >
+                                    <span
+                                        data-testid="composer-sticky-send-intent-thumb"
+                                        data-active-intent={stickySendIntent}
+                                        aria-hidden="true"
+                                        className={`pointer-events-none absolute bottom-1 top-1 rounded-full bg-amber-500 transition-all duration-200 ease-out dark:bg-amber-300 ${
+                                            stickySendIntent === 'memory'
+                                                ? 'left-[calc(50%+0.125rem)] right-1 shadow-[0_10px_24px_rgba(245,158,11,0.18)] dark:shadow-none'
+                                                : 'left-1 right-[calc(50%+0.125rem)] shadow-[0_10px_24px_rgba(245,158,11,0.18)] dark:shadow-none'
+                                        }`}
+                                    />
+                                    <span
+                                        data-testid="composer-sticky-send-intent-independent"
+                                        data-selected={stickySendIntent === 'independent' ? 'true' : 'false'}
+                                        aria-hidden="true"
+                                        className={`relative z-10 flex min-w-0 items-center justify-center rounded-full px-2 py-1.5 text-[10px] font-semibold leading-none transition-colors ${
+                                            stickySendIntent === 'independent'
+                                                ? 'text-white dark:text-slate-950'
+                                                : 'text-slate-600 dark:text-slate-500'
+                                        }`}
+                                    >
+                                        <span className="truncate">{independentSendIntentButtonLabel}</span>
+                                    </span>
+                                    <span
+                                        data-testid="composer-sticky-send-intent-memory"
+                                        data-selected={stickySendIntent === 'memory' ? 'true' : 'false'}
+                                        data-available={canUseMemorySendIntent ? 'true' : 'false'}
+                                        aria-hidden="true"
+                                        className={`relative z-10 flex min-w-0 items-center justify-center rounded-full px-2 py-1.5 text-[10px] font-semibold leading-none transition-colors ${
+                                            stickySendIntent === 'memory'
+                                                ? 'text-white dark:text-slate-950'
+                                                : canUseMemorySendIntent
+                                                  ? 'text-slate-600 dark:text-slate-500'
+                                                  : 'text-slate-500 dark:text-slate-600'
+                                        }`}
+                                    >
+                                        <span className="truncate">{memorySendIntentButtonLabel}</span>
+                                    </span>
+                                </button>
+                                <button
+                                    type="button"
+                                    data-testid="composer-sticky-send-intent-info-trigger"
+                                    aria-label={sendIntentInfoButtonLabel}
+                                    aria-controls={sendIntentInfoOpen ? sendIntentInfoCardId : undefined}
+                                    aria-expanded={sendIntentInfoOpen}
+                                    aria-haspopup="dialog"
+                                    title={sendIntentInfoButtonLabel}
+                                    onClick={handleSendIntentInfoButtonClick}
+                                    className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-slate-300/90 bg-slate-100/95 text-slate-600 transition-colors hover:border-amber-300 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-amber-300 dark:border-slate-700/90 dark:bg-slate-950 dark:text-slate-500 dark:hover:border-amber-400/40 dark:hover:text-slate-200"
+                                >
+                                    {renderInfoIcon()}
+                                </button>
+                                {usesWorkspaceFloatingLayer &&
+                                workspaceFloatingLayer?.hostElement &&
+                                sendIntentInfoPanelNode
+                                    ? createPortal(sendIntentInfoPanelNode, workspaceFloatingLayer.hostElement)
+                                    : sendIntentInfoPanelNode}
+                            </div>
                         </div>
                         <div data-testid="composer-quick-tools" className="grid min-w-0 grid-cols-3 gap-1.5">
                             {quickToolButtons.map((button) => {
                                 const isActiveTool = activePromptTool === button.id;
 
                                 return (
-                                <button
-                                    key={button.id}
-                                    type="button"
-                                    data-testid={`composer-quick-tool-${button.id}`}
-                                    onClick={button.onClick}
-                                    disabled={button.disabled}
-                                    title={button.label}
-                                    aria-label={button.label}
-                                    className={`${promptToolButtonClassName} ${button.disabled ? 'opacity-50' : ''}`}
-                                >
-                                    <span className={promptToolIconClassName}>
-                                        {isActiveTool ? renderQuickToolSpinner(button.id) : button.icon}
-                                    </span>
-                                    <span className={promptToolLabelClassName}>{button.label}</span>
-                                </button>
+                                    <button
+                                        key={button.id}
+                                        type="button"
+                                        data-testid={`composer-quick-tool-${button.id}`}
+                                        onClick={button.onClick}
+                                        disabled={button.disabled}
+                                        title={button.label}
+                                        aria-label={button.label}
+                                        className={`${promptToolButtonClassName} ${button.disabled ? 'opacity-50' : ''}`}
+                                    >
+                                        <span className={promptToolIconClassName}>
+                                            {isActiveTool ? renderQuickToolSpinner(button.id) : button.icon}
+                                        </span>
+                                        <span className={promptToolLabelClassName}>{button.label}</span>
+                                    </button>
                                 );
                             })}
                         </div>
@@ -1008,112 +1171,21 @@ function ComposerSettingsPanel({
                 </div>
             </div>
 
-            <div className="mt-1.5 grid gap-1.5 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)]">
+            <div className="mt-1.5 grid gap-1.5 lg:grid-cols-[minmax(0,248px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,264px)_minmax(0,1fr)]">
                 <div
-                    data-testid="composer-sticky-send-intent"
-                    className="min-w-0 nbu-floating-panel p-2.5 text-slate-900 dark:text-white"
+                    data-testid="composer-enter-behavior-card"
+                    className="min-w-0 nbu-floating-panel p-2 text-slate-900 dark:text-white"
                 >
-                    <div className="flex min-w-0 items-start justify-between gap-1.5">
-                        <div
-                            data-testid="composer-sticky-send-intent-title"
-                            className="min-w-0 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400"
+                    <div className="flex min-h-[64px] items-center justify-center rounded-[26px] border border-slate-200/75 bg-white/80 px-3 py-2 dark:border-slate-800/80 dark:bg-slate-950/55">
+                        <button
+                            type="button"
+                            data-testid="composer-enter-behavior-toggle"
+                            onClick={onToggleEnterToSubmit}
+                            className="nbu-chip inline-flex w-full min-w-0 items-center justify-center text-center"
                         >
-                            {sendIntentTitle}
-                        </div>
-                        <div ref={sendIntentInfoRootRef} className="relative flex shrink-0 items-start">
-                            <button
-                                type="button"
-                                data-testid="composer-sticky-send-intent-info-trigger"
-                                aria-label={sendIntentInfoButtonLabel}
-                                aria-controls={sendIntentInfoOpen ? sendIntentInfoCardId : undefined}
-                                aria-expanded={sendIntentInfoOpen}
-                                aria-haspopup="dialog"
-                                title={sendIntentInfoButtonLabel}
-                                onClick={handleSendIntentInfoButtonClick}
-                                className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-slate-300/90 bg-slate-100/95 text-slate-600 transition-colors hover:border-amber-300 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-amber-300 dark:border-slate-700/90 dark:bg-slate-950 dark:text-slate-500 dark:hover:border-amber-400/40 dark:hover:text-slate-200"
-                            >
-                                {renderInfoIcon()}
-                            </button>
-                            {sendIntentInfoOpen && (
-                                <div
-                                    id={sendIntentInfoCardId}
-                                    role="dialog"
-                                    aria-label={sendIntentInfoTitle}
-                                    data-testid="composer-sticky-send-intent-info-card"
-                                    className="absolute right-0 bottom-full z-40 mb-2 w-[min(18rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200/90 bg-white px-3 py-3 text-left shadow-[0_18px_45px_rgba(15,23,42,0.14)] dark:border-slate-700/90 dark:bg-slate-950 dark:shadow-[0_18px_50px_rgba(0,0,0,0.34)]"
-                                >
-                                    <div
-                                        data-testid="composer-sticky-send-intent-info-title"
-                                        className="inline-flex rounded-full bg-amber-300 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-slate-950"
-                                    >
-                                        {sendIntentInfoTitle}
-                                    </div>
-                                    <div
-                                        data-testid="composer-sticky-send-intent-info-body"
-                                        className="mt-2 text-[11px] leading-5 text-slate-700 dark:text-slate-200"
-                                    >
-                                        {sendIntentInfoBody}
-                                    </div>
-                                    {sendIntentInfoReason && (
-                                        <div
-                                            data-testid="composer-sticky-send-intent-info-reason"
-                                            className="mt-2 rounded-2xl border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-[11px] leading-4 text-amber-800 dark:border-amber-500/20 dark:bg-amber-950/20 dark:text-amber-100"
-                                        >
-                                            {sendIntentInfoReason}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
+                            <span className="truncate">{enterBehaviorToggleLabel}</span>
+                        </button>
                     </div>
-                    <button
-                        type="button"
-                        data-testid="composer-sticky-send-intent-toggle"
-                        data-active-intent={stickySendIntent}
-                        data-memory-available={canUseMemorySendIntent ? 'true' : 'false'}
-                        aria-label={sendIntentToggleAriaLabel}
-                        aria-pressed={stickySendIntent === 'memory'}
-                        onClick={handleSendIntentToggle}
-                        className="group relative mt-1.5 grid w-full min-w-0 grid-cols-2 gap-1 rounded-full border border-slate-300/90 bg-slate-200/95 p-1 shadow-inner shadow-slate-300/70 transition-colors hover:border-slate-400/80 focus:outline-none focus:ring-2 focus:ring-amber-300 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
-                    >
-                        <span
-                            data-testid="composer-sticky-send-intent-thumb"
-                            data-active-intent={stickySendIntent}
-                            aria-hidden="true"
-                            className={`pointer-events-none absolute bottom-1 top-1 rounded-full bg-amber-500 transition-all duration-200 ease-out dark:bg-amber-300 ${
-                                stickySendIntent === 'memory'
-                                    ? 'left-[calc(50%+0.125rem)] right-1 shadow-[0_10px_24px_rgba(245,158,11,0.18)] dark:shadow-none'
-                                    : 'left-1 right-[calc(50%+0.125rem)] shadow-[0_10px_24px_rgba(245,158,11,0.18)] dark:shadow-none'
-                            }`}
-                        />
-                        <span
-                            data-testid="composer-sticky-send-intent-independent"
-                            data-selected={stickySendIntent === 'independent' ? 'true' : 'false'}
-                            aria-hidden="true"
-                            className={`relative z-10 flex min-w-0 items-center justify-center rounded-full px-2.5 py-1.5 text-[10px] font-semibold leading-none transition-colors ${
-                                stickySendIntent === 'independent'
-                                    ? 'text-white dark:text-slate-950'
-                                    : 'text-slate-600 dark:text-slate-500'
-                            }`}
-                        >
-                            <span className="truncate">{independentSendIntentButtonLabel}</span>
-                        </span>
-                        <span
-                            data-testid="composer-sticky-send-intent-memory"
-                            data-selected={stickySendIntent === 'memory' ? 'true' : 'false'}
-                            data-available={canUseMemorySendIntent ? 'true' : 'false'}
-                            aria-hidden="true"
-                            className={`relative z-10 flex min-w-0 items-center justify-center rounded-full px-2.5 py-1.5 text-[10px] font-semibold leading-none transition-colors ${
-                                stickySendIntent === 'memory'
-                                    ? 'text-white dark:text-slate-950'
-                                    : canUseMemorySendIntent
-                                      ? 'text-slate-600 dark:text-slate-500'
-                                      : 'text-slate-500 dark:text-slate-600'
-                            }`}
-                        >
-                            <span className="truncate">{memorySendIntentButtonLabel}</span>
-                        </span>
-                    </button>
                 </div>
 
                 <div

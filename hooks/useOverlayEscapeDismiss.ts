@@ -7,10 +7,12 @@ export function useOverlayEscapeDismiss(isEnabled: boolean, onClose: () => void)
         }
 
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
-                event.preventDefault();
-                onClose();
+            if (event.key !== 'Escape' || event.defaultPrevented) {
+                return;
             }
+
+            event.preventDefault();
+            onClose();
         };
 
         window.addEventListener('keydown', handleKeyDown);
