@@ -148,7 +148,7 @@ export default function WorkspaceViewerOverlay({
                         {activeViewerIsFresh ? (
                             <span
                                 data-testid="workspace-viewer-new-badge"
-                                className="absolute left-3 top-3 z-20 inline-flex items-center rounded-full border border-emerald-300/70 bg-emerald-100 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-emerald-800 shadow-[0_0_18px_rgba(16,185,129,0.16)] dark:bg-emerald-400/16 dark:text-emerald-100 dark:shadow-[0_0_18px_rgba(34,197,94,0.35)] sm:left-4 sm:top-4"
+                                className="absolute left-3 top-3 z-20 inline-flex items-center rounded-full border border-emerald-300/70 bg-emerald-100 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-emerald-800 shadow-[0_0_18px_rgba(16,185,129,0.16)] dark:border-emerald-500 dark:bg-emerald-400 dark:text-slate-950 dark:shadow-[0_0_18px_rgba(34,197,94,0.35)] sm:left-4 sm:top-4"
                             >
                                 {t('workspaceViewerNewBadge')}
                             </span>

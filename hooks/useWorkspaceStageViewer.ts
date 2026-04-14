@@ -20,6 +20,7 @@ type ViewerHistoryItem = {
 type BuildStageTopRightModelArgs = {
     hasActiveStageImage: boolean;
     hasLinkedHistoryTurn: boolean;
+    currentStageIsCurrentSource: boolean;
     isGenerating: boolean;
     layoutBucket: StageTopRightLayoutBucket;
     currentStageOriginLabel: string | null;
@@ -70,6 +71,7 @@ const getActionBuckets = (
 export function buildStageTopRightModel({
     hasActiveStageImage,
     hasLinkedHistoryTurn,
+    currentStageIsCurrentSource,
     isGenerating,
     layoutBucket,
     currentStageOriginLabel,
@@ -95,16 +97,10 @@ export function buildStageTopRightModel({
 
     const contextChips: StageTopRightViewModel['contextChips'] = [];
 
-    if (hasLinkedHistoryTurn) {
+    if (currentStageIsCurrentSource) {
         contextChips.push({
-            key: 'stage-source',
-            label: t('workspacePickerStageSource'),
-            tone: 'source',
-        });
-    } else if (currentStageOriginLabel) {
-        contextChips.push({
-            key: 'origin',
-            label: currentStageOriginLabel,
+            key: 'current-source',
+            label: t('workspaceSourceBadge'),
             tone: 'source',
         });
     }
@@ -239,6 +235,7 @@ type UseWorkspaceStageViewerArgs = {
     currentStageOriginLabel: string | null;
     currentStageBranchLabel: string | null;
     currentStageHasLinkedHistoryTurn: boolean;
+    currentStageIsCurrentSource: boolean;
     currentStageContinuationDiffers: boolean;
     metadataItems: WorkspaceViewerOverlayProps['metadataItems'];
     metadataStateMessage: string | null;
@@ -288,6 +285,7 @@ export function useWorkspaceStageViewer({
     currentStageOriginLabel,
     currentStageBranchLabel,
     currentStageHasLinkedHistoryTurn,
+    currentStageIsCurrentSource,
     currentStageContinuationDiffers,
     metadataItems,
     metadataStateMessage,
@@ -347,6 +345,7 @@ export function useWorkspaceStageViewer({
             buildStageTopRightModel({
                 hasActiveStageImage: Boolean(activeViewerImage),
                 hasLinkedHistoryTurn: currentStageHasLinkedHistoryTurn,
+                currentStageIsCurrentSource,
                 isGenerating: showStageGeneratingState,
                 layoutBucket: stageTopRightLayoutBucket,
                 currentStageOriginLabel,
@@ -371,6 +370,7 @@ export function useWorkspaceStageViewer({
             currentStageBranchLabel,
             currentStageContinuationDiffers,
             currentStageHasLinkedHistoryTurn,
+            currentStageIsCurrentSource,
             currentStageOriginLabel,
             showStageGeneratingState,
             onAddToCharacterReference,

@@ -100,6 +100,7 @@ import { useWorkspaceShellUtilities } from './hooks/useWorkspaceShellUtilities';
 import { useWorkspaceTransientUiState } from './hooks/useWorkspaceTransientUiState';
 import { useLegacyWorkspaceSnapshotMigration } from './hooks/useLegacyWorkspaceSnapshotMigration';
 import { normalizeStructuredOutputMode } from './utils/structuredOutputs';
+import { resolveCurrentStageSelectionFirstSourceOverride } from './utils/generationSourceOverride';
 import { buildSavedImageLoadUrl, loadImageMetadata } from './utils/imageSaveUtils';
 import {
     createImageSidecarMetadataState,
@@ -1082,6 +1083,25 @@ const App: React.FC = () => {
                 .filter((historyItem) => Boolean(historyItem.url)),
         [successfulHistory],
     );
+    const currentSourceHistoryId = useMemo(
+        () =>
+            resolveCurrentStageSelectionFirstSourceOverride({
+                sourceHistoryId: currentStageAsset?.sourceHistoryId || null,
+                currentStageLineageAction: currentStageAsset?.lineageAction || null,
+                history,
+                branchOriginIdByTurnId,
+                workspaceSessionSourceHistoryId: workspaceSession.sourceHistoryId,
+                workspaceSessionSourceLineageAction: workspaceSession.sourceLineageAction || null,
+            }).sourceHistoryId,
+        [
+            branchOriginIdByTurnId,
+            currentStageAsset?.lineageAction,
+            currentStageAsset?.sourceHistoryId,
+            history,
+            workspaceSession.sourceHistoryId,
+            workspaceSession.sourceLineageAction,
+        ],
+    );
 
     const { performGeneration } = usePerformGeneration({
         t,
@@ -1792,6 +1812,8 @@ const App: React.FC = () => {
             hasSurfacePrompt: Boolean((isEditing ? editorPrompt : prompt).trim()),
             imageStyle,
             imageModel,
+            capability,
+            availableGroundingModes,
             aspectRatio,
             imageSize,
             batchSize,
@@ -2288,6 +2310,11 @@ const App: React.FC = () => {
         currentStageContinuationSourceHistoryId &&
         currentStageContinuationSourceHistoryId !== currentStageSourceTurn.id,
     );
+    const currentStageIsCurrentSource = Boolean(
+        generatedImageUrls.length > 0 &&
+            (!currentStageHasLinkedHistoryTurn ||
+                (currentStageSourceHistoryId && currentStageSourceHistoryId === currentSourceHistoryId)),
+    );
     const currentStageOriginLabel = currentStageAsset
         ? getStageOriginLabel(currentStageAsset.origin)
         : generatedImageUrls.length > 0
@@ -2354,6 +2381,7 @@ const App: React.FC = () => {
         currentStageOriginLabel,
         currentStageBranchLabel: currentStageLinkedBranchSummary?.branchLabel || null,
         currentStageHasLinkedHistoryTurn,
+        currentStageIsCurrentSource,
         currentStageContinuationDiffers,
         metadataItems: viewerMetadataItems,
         metadataStateMessage: viewerMetadataStateMessage,
@@ -2442,11 +2470,10 @@ const App: React.FC = () => {
                 history={history}
                 previewTiles={activeBatchPreviewSession?.tiles || []}
                 selectedHistoryId={selectedHistoryId}
-                currentStageSourceHistoryId={currentStageSourceHistoryId}
+                currentSourceHistoryId={currentSourceHistoryId}
                 activeBranchSummary={activeBranchSummary}
                 branchSummariesCount={branchSummaries.length}
                 onSelect={handleHistorySelect}
-                isPromotedContinuationSource={isPromotedContinuationSource}
                 getBranchAccentClassName={getBranchAccentClassName}
                 onOpenVersionsDetails={handleOpenVersionsDetails}
                 onImportWorkspace={handleOpenWorkspaceImportPicker}
@@ -2458,8 +2485,8 @@ const App: React.FC = () => {
             activeBranchSummary,
             activeBatchPreviewSession?.tiles,
             branchSummaries.length,
+            currentSourceHistoryId,
             currentLang,
-            currentStageSourceHistoryId,
             getBranchAccentClassName,
             handleExportWorkspaceSnapshot,
             handleClearGalleryHistory,
@@ -2467,7 +2494,6 @@ const App: React.FC = () => {
             handleOpenVersionsDetails,
             handleOpenWorkspaceImportPicker,
             history,
-            isPromotedContinuationSource,
             selectedHistoryId,
         ],
     );
@@ -2925,45 +2951,50 @@ const App: React.FC = () => {
                 branchRenameDialogProps={branchRenameDialogProps}
                 imageEditorSurface={
                     isEditing ? (
-                        <Suspense fallback={<SurfaceLoadingFallback label={t('loadingPrepareUltraEditor')} />}>
-                            <ImageEditor
-                                initialImageUrl={editingImageSource || ''}
-                                initialPrompt={editorInitialState.prompt}
-                                initialObjectImages={editorInitialState.objectImages}
-                                initialCharacterImages={editorInitialState.characterImages}
-                                initialRatio={editorInitialState.ratio}
-                                initialSize={editorInitialState.size}
-                                initialBatchSize={editorInitialState.batchSize}
-                                prompt={editorPrompt}
-                                onPromptChange={setEditorPrompt}
-                                objectImages={editorObjectImages}
-                                onObjectImagesChange={setEditorObjectImages}
-                                characterImages={editorCharacterImages}
-                                onCharacterImagesChange={setEditorCharacterImages}
-                                mode={editorMode}
-                                onModeChange={setEditorMode}
-                                ratio={aspectRatio}
-                                onRatioChange={setAspectRatio}
-                                lockedAspectRatio={activeEditorLockedAspectRatio}
-                                size={imageSize}
-                                onSizeChange={setImageSize}
-                                batchSize={batchSize}
-                                onBatchSizeChange={setBatchSize}
-                                onGenerate={handleEditorGenerate}
-                                onQueueBatch={handleEditorQueueBatch}
-                                onCancel={closeEditor}
-                                isGenerating={isGenerating}
-                                currentLanguage={currentLang}
-                                currentLog={logs.length > 0 ? logs[logs.length - 1] : ''}
-                                error={error}
-                                onErrorClear={() => setError(null)}
-                                imageModel={imageModel}
-                                onModelChange={setImageModel}
-                                leftDockTopOffset={
-                                    surfaceSharedControlsBottom === null ? null : surfaceSharedControlsBottom + 12
-                                }
-                            />
-                        </Suspense>
+                        editingImageSource ? (
+                            <Suspense fallback={<SurfaceLoadingFallback label={t('loadingPrepareUltraEditor')} />}>
+                                <ImageEditor
+                                    initialImageUrl={editingImageSource}
+                                    initialPreparedSource={editorContextSnapshot?.editorPreparedSource ?? null}
+                                    initialPrompt={editorInitialState.prompt}
+                                    initialObjectImages={editorInitialState.objectImages}
+                                    initialCharacterImages={editorInitialState.characterImages}
+                                    initialRatio={editorInitialState.ratio}
+                                    initialSize={editorInitialState.size}
+                                    initialBatchSize={editorInitialState.batchSize}
+                                    prompt={editorPrompt}
+                                    onPromptChange={setEditorPrompt}
+                                    objectImages={editorObjectImages}
+                                    onObjectImagesChange={setEditorObjectImages}
+                                    characterImages={editorCharacterImages}
+                                    onCharacterImagesChange={setEditorCharacterImages}
+                                    mode={editorMode}
+                                    onModeChange={setEditorMode}
+                                    ratio={aspectRatio}
+                                    onRatioChange={setAspectRatio}
+                                    lockedAspectRatio={activeEditorLockedAspectRatio}
+                                    size={imageSize}
+                                    onSizeChange={setImageSize}
+                                    batchSize={batchSize}
+                                    onBatchSizeChange={setBatchSize}
+                                    onGenerate={handleEditorGenerate}
+                                    onQueueBatch={handleEditorQueueBatch}
+                                    onCancel={closeEditor}
+                                    isGenerating={isGenerating}
+                                    currentLanguage={currentLang}
+                                    currentLog={logs.length > 0 ? logs[logs.length - 1] : ''}
+                                    error={error}
+                                    onErrorClear={() => setError(null)}
+                                    imageModel={imageModel}
+                                    onModelChange={setImageModel}
+                                    leftDockTopOffset={
+                                        surfaceSharedControlsBottom === null ? null : surfaceSharedControlsBottom + 12
+                                    }
+                                />
+                            </Suspense>
+                        ) : (
+                            <SurfaceLoadingFallback label={t('loadingPrepareUltraEditor')} />
+                        )
                     ) : null
                 }
                 pickerSheetProps={workspacePickerSheetProps}

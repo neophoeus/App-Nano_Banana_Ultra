@@ -10,7 +10,6 @@ interface HistoryPanelProps {
     onContinueFromTurn?: (item: GeneratedImage) => void;
     onBranchFromTurn?: (item: GeneratedImage) => void;
     onRenameBranch?: (item: GeneratedImage) => void;
-    isPromotedContinuationSource?: (item: GeneratedImage) => boolean;
     getContinueActionLabel?: (item: GeneratedImage) => string;
     branchNameOverrides?: BranchNameOverrides;
     selectedUrl?: string;
@@ -20,7 +19,7 @@ interface HistoryPanelProps {
     currentLanguage?: Language;
     onClear?: () => void;
     surface?: 'default' | 'embedded';
-    currentStageSourceHistoryId?: string | null;
+    currentSourceHistoryId?: string | null;
     continuous?: boolean;
     renderHeader?: boolean;
     thumbnailMode?: 'responsive' | 'compact';
@@ -30,7 +29,6 @@ interface HistoryPanelProps {
 const HistoryPanel: React.FC<HistoryPanelProps> = ({
     history,
     onSelect,
-    isPromotedContinuationSource,
     selectedUrl,
     selectedId,
     disabled,
@@ -38,7 +36,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
     currentLanguage = 'en' as Language,
     onClear,
     surface = 'default',
-    currentStageSourceHistoryId = null,
+    currentSourceHistoryId = null,
     continuous = false,
     renderHeader = true,
     thumbnailMode = 'responsive',
@@ -265,10 +263,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                 {displayedHistory.map((item) => {
                     const isFailed = item.status === 'failed';
                     const isSelected = selectedId ? selectedId === item.id : selectedUrl === item.url;
-                    const isContinuationSource = isPromotedContinuationSource
-                        ? isPromotedContinuationSource(item)
-                        : false;
-                    const isCurrentStageSource = currentStageSourceHistoryId === item.id;
+                    const isCurrentSource = currentSourceHistoryId === item.id;
                     const hasPreviewImage = Boolean(item.url);
                     const isFresh = item.status === 'success' && item.openedAt == null;
 
@@ -326,24 +321,14 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
 
                             {isFresh ? <div data-testid={`history-fresh-${item.id}`} className={freshnessGlowClassName} /> : null}
 
-                            {!isFailed && (isCurrentStageSource || isContinuationSource) && (
+                            {!isFailed && isCurrentSource && (
                                 <div className={badgeContainerClassName}>
-                                    {isCurrentStageSource && (
-                                        <span
-                                            data-testid={`history-stage-source-${item.id}`}
-                                            className="rounded-full bg-amber-500/95 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.14em] text-white shadow-lg whitespace-nowrap"
-                                        >
-                                            {t('workspacePickerStageSource')}
-                                        </span>
-                                    )}
-                                    {isContinuationSource && (
-                                        <span
-                                            data-testid={`history-continuation-source-${item.id}`}
-                                            className="rounded-full bg-emerald-500/95 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.14em] text-white shadow-lg whitespace-nowrap"
-                                        >
-                                            {t('historyBranchContinuationSource')}
-                                        </span>
-                                    )}
+                                    <span
+                                        data-testid={`history-current-source-${item.id}`}
+                                        className="rounded-full bg-emerald-500/95 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.14em] text-white shadow-lg whitespace-nowrap"
+                                    >
+                                        {t('workspaceSourceBadge')}
+                                    </span>
                                 </div>
                             )}
 

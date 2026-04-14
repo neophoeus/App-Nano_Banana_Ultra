@@ -8,11 +8,10 @@ type WorkspaceGalleryCardProps = {
     history: GeneratedImage[];
     onSelect: (item: GeneratedImage) => void;
     onRenameBranch: (item: GeneratedImage) => void;
-    isPromotedContinuationSource: (item: GeneratedImage) => boolean;
     getContinueActionLabel: (item: GeneratedImage) => string;
     branchNameOverrides: BranchNameOverrides;
     selectedHistoryId: string | null;
-    currentStageSourceHistoryId?: string | null;
+    currentSourceHistoryId?: string | null;
     onClear: () => void;
 };
 
@@ -21,11 +20,10 @@ function WorkspaceGalleryCard({
     history,
     onSelect,
     onRenameBranch,
-    isPromotedContinuationSource,
     getContinueActionLabel,
     branchNameOverrides,
     selectedHistoryId,
-    currentStageSourceHistoryId,
+    currentSourceHistoryId,
     onClear,
 }: WorkspaceGalleryCardProps) {
     const t = (key: string) => getTranslation(currentLanguage, key);
@@ -41,11 +39,10 @@ function WorkspaceGalleryCard({
                     history={history}
                     onSelect={onSelect}
                     onRenameBranch={onRenameBranch}
-                    isPromotedContinuationSource={isPromotedContinuationSource}
                     getContinueActionLabel={getContinueActionLabel}
                     branchNameOverrides={branchNameOverrides}
                     selectedId={selectedHistoryId || undefined}
-                    currentStageSourceHistoryId={currentStageSourceHistoryId}
+                    currentSourceHistoryId={currentSourceHistoryId}
                     currentLanguage={currentLanguage}
                     onClear={onClear}
                     title={t('workspacePickerFullGallery')}

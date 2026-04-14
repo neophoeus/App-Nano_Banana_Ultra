@@ -16,6 +16,7 @@ type RecentHistoryFilmstripProps = {
     activeStageImageUrl: string | null;
     selectedHistoryId: string | null;
     currentStageSourceHistoryId: string | null;
+    currentSourceHistoryId: string | null;
     branchOriginIdByTurnId: Record<string, string>;
     branchLabelByTurnId: Record<string, string>;
     branchSummaryByOriginId: Record<string, BranchSummary | undefined>;
@@ -24,7 +25,6 @@ type RecentHistoryFilmstripProps = {
     onHistorySelect: (item: GeneratedImage) => void;
     onContinueFromHistoryTurn: (item: GeneratedImage) => void;
     onBranchFromHistoryTurn: (item: GeneratedImage) => void;
-    isPromotedContinuationSource: (item: GeneratedImage) => boolean;
     getContinueActionLabel: (item: GeneratedImage) => string;
     getBranchAccentClassName: (branchOriginId: string, branchLabel: string) => string;
     getLineageActionLabel: (action?: GeneratedImage['lineageAction']) => string;
@@ -45,12 +45,12 @@ function RecentHistoryFilmstrip({
     activeStageImageUrl,
     selectedHistoryId,
     currentStageSourceHistoryId,
+    currentSourceHistoryId,
     branchLabelByTurnId,
     branchSummaryByOriginId,
     activeBranchOriginId,
     onClear,
     onHistorySelect,
-    isPromotedContinuationSource,
     getBranchAccentClassName,
     currentLanguage,
 }: RecentHistoryFilmstripProps) {
@@ -125,8 +125,7 @@ function RecentHistoryFilmstrip({
                                     (selectedHistoryOwnerId
                                         ? selectedHistoryOwnerId === item.id
                                         : activeStageImageUrl === item.url);
-                                const isCurrentStageSource = currentStageSourceHistoryId === item.id;
-                                const isContinuationSource = isPromotedContinuationSource(item);
+                                const isCurrentSource = currentSourceHistoryId === item.id;
                                 const hasPreviewImage = Boolean(item.url);
 
                                 return (
@@ -162,24 +161,14 @@ function RecentHistoryFilmstrip({
                                                 className="h-full w-full object-cover"
                                             />
                                         )}
-                                        {!isFailed && (isCurrentStageSource || isContinuationSource) && (
+                                        {!isFailed && isCurrentSource && (
                                             <div className="pointer-events-none absolute left-1.5 top-1.5 z-10 flex max-w-[calc(100%-0.75rem)] flex-col items-start gap-1">
-                                                {isCurrentStageSource && (
-                                                    <span
-                                                        data-testid={`filmstrip-stage-source-${item.id}`}
-                                                        className="rounded-full bg-amber-500/95 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.14em] text-white shadow-lg whitespace-nowrap"
-                                                    >
-                                                        {t('workspacePickerStageSource')}
-                                                    </span>
-                                                )}
-                                                {isContinuationSource && (
-                                                    <span
-                                                        data-testid={`filmstrip-continuation-source-${item.id}`}
-                                                        className="rounded-full bg-emerald-500/95 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.14em] text-white shadow-lg whitespace-nowrap"
-                                                    >
-                                                        {t('historyBranchContinuationSource')}
-                                                    </span>
-                                                )}
+                                                <span
+                                                    data-testid={`filmstrip-current-source-${item.id}`}
+                                                    className="rounded-full bg-emerald-500/95 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.14em] text-white shadow-lg whitespace-nowrap"
+                                                >
+                                                    {t('workspaceSourceBadge')}
+                                                </span>
                                             </div>
                                         )}
                                         {isSelected && !isFailed && (

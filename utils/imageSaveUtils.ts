@@ -11,6 +11,8 @@ const LOAD_IMAGE_ENDPOINT = '/api/load-image';
 const LOAD_IMAGE_METADATA_ENDPOINT = '/api/load-image-metadata';
 const REFERENCE_PREVIEW_CACHE_LIMIT = 96;
 
+export const EDITOR_IMAGE_MAX_DIMENSION = 4096;
+
 const referencePreviewCache = new Map<string, string>();
 const referencePreviewInFlight = new Map<string, Promise<string>>();
 
@@ -77,10 +79,90 @@ const touchReferencePreviewCacheEntry = (source: string, previewDataUrl: string)
     return previewDataUrl;
 };
 
+const resolveImageSourceMimeType = (imageSource: string, fallback = 'image/png'): string => {
+    const match = imageSource.match(/^data:([^;,]+)[;,]/);
+    return match?.[1] || fallback;
+};
+
+const readBlobAsDataUrl = (blob: Blob): Promise<string> =>
+    new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Failed to convert blob to data URL.'));
+        reader.readAsDataURL(blob);
+    });
+
+const canvasToDataUrl = (canvas: HTMLCanvasElement, mimeType: string, quality?: number): Promise<string> =>
+    new Promise((resolve, reject) => {
+        if (typeof canvas.toBlob !== 'function') {
+            resolve(canvas.toDataURL(mimeType, quality));
+            return;
+        }
+
+        canvas.toBlob(
+            (blob) => {
+                if (!blob) {
+                    reject(new Error('Failed to encode canvas output.'));
+                    return;
+                }
+
+                void readBlobAsDataUrl(blob).then(resolve).catch(reject);
+            },
+            mimeType,
+            quality,
+        );
+    });
+
+const loadImageElement = (imageSource: string): Promise<HTMLImageElement> =>
+    new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('Failed to load image.'));
+        image.src = imageSource;
+    });
+
+const normalizeLoadedImageSource = async (
+    image: HTMLImageElement,
+    source: string,
+    mimeType: string,
+    maxDimension: number,
+): Promise<PreparedImageAsset> => {
+    const constrained = constrainImageDimensions(image.width, image.height, maxDimension);
+
+    if (!constrained.wasResized) {
+        return {
+            dataUrl: source,
+            wasResized: false,
+            width: constrained.width,
+            height: constrained.height,
+            mimeType: resolveImageSourceMimeType(source, mimeType),
+        };
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = constrained.width;
+    canvas.height = constrained.height;
+    const context = canvas.getContext('2d');
+    if (!context) {
+        throw new Error('Failed to create a normalization canvas context.');
+    }
+
+    context.drawImage(image, 0, 0, constrained.width, constrained.height);
+    const normalizedDataUrl = await canvasToDataUrl(canvas, mimeType);
+
+    return {
+        dataUrl: normalizedDataUrl,
+        wasResized: true,
+        width: constrained.width,
+        height: constrained.height,
+        mimeType,
+    };
+};
+
 export const constrainImageDimensions = (
     width: number,
     height: number,
-    maxDimension = 4096,
+    maxDimension = EDITOR_IMAGE_MAX_DIMENSION,
 ): { width: number; height: number; wasResized: boolean } => {
     if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
         return { width: 0, height: 0, wasResized: false };
@@ -126,47 +208,25 @@ export const readFileAsDataUrl = (file: File): Promise<string> =>
         reader.readAsDataURL(file);
     });
 
+export const prepareImageAssetFromSource = async (
+    imageSource: string,
+    maxDimension = EDITOR_IMAGE_MAX_DIMENSION,
+    mimeType = 'image/png',
+): Promise<PreparedImageAsset> => {
+    const image = await loadImageElement(imageSource);
+    return normalizeLoadedImageSource(image, imageSource, mimeType, maxDimension);
+};
+
 export const normalizeImageDataUrl = (
     dataUrl: string,
     mimeType = 'image/png',
-    maxDimension = 4096,
-): Promise<PreparedImageAsset> =>
-    new Promise((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => {
-            const constrained = constrainImageDimensions(image.width, image.height, maxDimension);
-            let width = constrained.width;
-            let height = constrained.height;
-            let normalizedDataUrl = dataUrl;
-            const wasResized = constrained.wasResized;
+    maxDimension = EDITOR_IMAGE_MAX_DIMENSION,
+): Promise<PreparedImageAsset> => prepareImageAssetFromSource(dataUrl, maxDimension, mimeType);
 
-            if (wasResized) {
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                const context = canvas.getContext('2d');
-                if (!context) {
-                    reject(new Error('Failed to create a normalization canvas context.'));
-                    return;
-                }
-
-                context.drawImage(image, 0, 0, width, height);
-                normalizedDataUrl = canvas.toDataURL(mimeType);
-            }
-
-            resolve({
-                dataUrl: normalizedDataUrl,
-                wasResized,
-                width,
-                height,
-                mimeType,
-            });
-        };
-        image.onerror = () => reject(new Error('Failed to load image for normalization.'));
-        image.src = dataUrl;
-    });
-
-export const prepareImageAssetFromFile = async (file: File, maxDimension = 4096): Promise<PreparedImageAsset> => {
+export const prepareImageAssetFromFile = async (
+    file: File,
+    maxDimension = EDITOR_IMAGE_MAX_DIMENSION,
+): Promise<PreparedImageAsset> => {
     const dataUrl = await readFileAsDataUrl(file);
     return normalizeImageDataUrl(dataUrl, file.type || 'image/png', maxDimension);
 };
@@ -282,7 +342,7 @@ export const ensureReferencePreviewDataUrl = async (source: string): Promise<str
 
 export const prepareImagePreviewAssetFromFile = async (
     file: File,
-    maxDimension = 4096,
+    maxDimension = EDITOR_IMAGE_MAX_DIMENSION,
 ): Promise<PreparedImagePreviewAsset> => {
     const preparedImage = await prepareImageAssetFromFile(file, maxDimension);
     const previewDataUrl = await ensureReferencePreviewDataUrl(preparedImage.dataUrl);

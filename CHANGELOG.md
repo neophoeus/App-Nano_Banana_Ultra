@@ -1,5 +1,30 @@
 # Changelog
 
+## v3.5.2 - 2026-04-13
+
+- Release title: Nano Banana Ultra 3.5.2 - Editor Entry Performance, Final-Frame Editor Contract, Shared Settings Parity & Viewer Contrast Polish
+- Release summary:
+    - editor entry preparation and large-image responsiveness:
+        - large sources now complete any required 4K editor preparation before the editor canvas mounts, preventing the earlier duplicate mount-time re-encode and the second visible stall when entering the editor with oversized images
+        - oversized upload and stage-based editor sources now follow the same shared preparation path, so the editor opens on the already-prepared image instead of redoing the same resize work after the surface is visible
+
+    - final-frame editor preservation contract:
+        - reframe and retouch submissions now treat the final submitted editor canvas as the approved composition, preserving already-visible content by default instead of inferring different prompt families from whether the frame came from pan, crop-zoom, or other geometry history
+        - blank or transparent editor regions are now described as the only areas to regenerate, while fully covered reframe submissions fall back to detail-recovery wording without asking the model to re-center, zoom out, or recompose the scene
+        - strengthened the editor prompt contract so transparent cutouts and blank canvas regions are explicitly treated as missing image areas to render, reducing cases where the model preserves them as unintended white blocks or matte rectangles
+
+    - shared controls advanced-settings chip parity:
+        - the shared-controls Advanced settings summary now follows the same visibility rules as composer, hiding chips for unsupported features, unavailable controls, and values currently set to `off`
+        - output format, grounding, structured output, thinking, and temperature chips now appear only when they represent a real adjustable or active state for the current model instead of creating noisy summary rows
+
+    - unified main-surface source ownership:
+        - main history thumbnails and the stage top-right chip now share one green `Source` marker driven by the current working source, replacing the earlier split between `Stage Source` and branch-local continuation markers on the main browsing surfaces
+        - branch-local continuation ownership is still preserved in detail surfaces such as Versions, so the main workspace stays singular while lineage debugging and branch archaeology remain available where they are actually needed
+        - restore and history verification was realigned to the unified `Source` contract so imported workspaces, restored sessions, and live selection-first flows present the same next-source mental model
+
+    - fullscreen viewer readability polish:
+        - the fullscreen viewer `New` badge now uses stronger dark-theme contrast so the label stays readable against the darker overlay background
+
 ## v3.5.1 - 2026-04-13
 
 - Release title: Nano Banana Ultra 3.5.1 - Editor Continuation Realignment, Visible Text Guidance & Smarter Outpaint Continuity

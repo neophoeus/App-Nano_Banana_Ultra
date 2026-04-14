@@ -1,9 +1,12 @@
 import { ChangeEvent, Dispatch, MutableRefObject, SetStateAction, useCallback } from 'react';
 import { ASPECT_RATIOS } from '../constants';
 import {
+    EDITOR_IMAGE_MAX_DIMENSION,
     constrainImageDimensions,
     loadImageDimensions,
     prepareImageAssetFromFile,
+    prepareImageAssetFromSource,
+    type PreparedImageAsset,
 } from '../utils/imageSaveUtils';
 import { resolveCurrentStageSelectionFirstSourceOverride } from '../utils/generationSourceOverride';
 import { findClosestAspectRatio, findClosestImageSize } from '../utils/canvasWorkspace';
@@ -38,6 +41,7 @@ export type EditorContextSnapshot = {
     imageSearch: boolean;
     editorInitialRatio?: AspectRatio;
     editorInitialSize?: ImageSize;
+    editorPreparedSource?: Pick<PreparedImageAsset, 'width' | 'height' | 'wasResized'>;
     sourceHistoryId?: string | null;
     sourceLineageAction?: ContinuationLineageAction | null;
 };
@@ -47,16 +51,7 @@ type GenerationSourceOverride = {
     sourceLineageAction?: ContinuationLineageAction | null;
 };
 
-type PickerSheet =
-    | 'prompt'
-    | 'styles'
-    | 'settings'
-    | 'model'
-    | 'ratio'
-    | 'size'
-    | 'batch'
-    | 'references'
-    | null;
+type PickerSheet = 'prompt' | 'styles' | 'settings' | 'model' | 'ratio' | 'size' | 'batch' | 'references' | null;
 
 type UseWorkspaceEditorActionsArgs = {
     history: GeneratedImage[];
@@ -254,34 +249,74 @@ export function useWorkspaceEditorActions({
         async (
             nextImageSource: string,
             options?: {
-                sourceDimensions?: { width: number; height: number };
+                preparedAsset?: PreparedImageAsset;
                 entrySource?: 'stage' | 'upload';
             },
         ) => {
             let editorInitialRatio = aspectRatio;
             let editorInitialSize = imageSize;
             const entrySource = options?.entrySource ?? 'stage';
+            let resolvedImageSource = nextImageSource;
+            let preparedSource: Pick<PreparedImageAsset, 'width' | 'height' | 'wasResized'> | undefined;
+
+            setActivePickerSheet(null);
+            setError(null);
+            setIsEditing(true);
+            setEditingImageSource(null);
 
             try {
-                const measuredDimensions = options?.sourceDimensions || (await loadImageDimensions(nextImageSource));
-                const constrainedDimensions = constrainImageDimensions(
-                    measuredDimensions.width,
-                    measuredDimensions.height,
-                );
+                const providedPreparedAsset = options?.preparedAsset;
+                if (providedPreparedAsset) {
+                    resolvedImageSource = providedPreparedAsset.dataUrl;
+                    preparedSource = {
+                        width: providedPreparedAsset.width,
+                        height: providedPreparedAsset.height,
+                        wasResized: providedPreparedAsset.wasResized,
+                    };
+                } else {
+                    const measuredDimensions = await loadImageDimensions(nextImageSource);
+                    const constrainedDimensions = constrainImageDimensions(
+                        measuredDimensions.width,
+                        measuredDimensions.height,
+                        EDITOR_IMAGE_MAX_DIMENSION,
+                    );
+                    preparedSource = {
+                        width: constrainedDimensions.width,
+                        height: constrainedDimensions.height,
+                        wasResized: constrainedDimensions.wasResized,
+                    };
 
-                if (constrainedDimensions.width > 0 && constrainedDimensions.height > 0) {
+                    if (constrainedDimensions.wasResized) {
+                        const preparedAsset = await prepareImageAssetFromSource(
+                            nextImageSource,
+                            EDITOR_IMAGE_MAX_DIMENSION,
+                        );
+                        resolvedImageSource = preparedAsset.dataUrl;
+                        preparedSource = {
+                            width: preparedAsset.width,
+                            height: preparedAsset.height,
+                            wasResized: preparedAsset.wasResized,
+                        };
+                    }
+                }
+
+                if (preparedSource.width > 0 && preparedSource.height > 0) {
                     editorInitialRatio = findClosestAspectRatio(
-                        constrainedDimensions.width,
-                        constrainedDimensions.height,
+                        preparedSource.width,
+                        preparedSource.height,
                         ASPECT_RATIOS,
                     );
-                    editorInitialSize = findClosestImageSize(
-                        constrainedDimensions.width,
-                        constrainedDimensions.height,
-                    );
+                    editorInitialSize = findClosestImageSize(preparedSource.width, preparedSource.height);
                 }
             } catch (error) {
                 console.error('Failed to resolve editor entry settings.', error);
+            }
+
+            if (preparedSource?.wasResized) {
+                addLog(t('msgImageResized'));
+                showNotification(t('msgImageResized'), 'info');
+            } else if (entrySource === 'upload') {
+                addLog(t('logImageUploaded'));
             }
 
             const sourceOverride = resolveEditorSourceOverride(entrySource);
@@ -304,6 +339,7 @@ export function useWorkspaceEditorActions({
                 imageSearch,
                 editorInitialRatio,
                 editorInitialSize,
+                editorPreparedSource: preparedSource,
                 sourceHistoryId: sourceOverride.sourceHistoryId,
                 sourceLineageAction: sourceOverride.sourceLineageAction,
             });
@@ -312,12 +348,10 @@ export function useWorkspaceEditorActions({
             setAspectRatio(editorInitialRatio);
             setImageSize(editorInitialSize);
             setEditorPrompt('');
-            setEditingImageSource(nextImageSource);
-            setIsEditing(true);
-            setActivePickerSheet(null);
-            setError(null);
+            setEditingImageSource(resolvedImageSource);
         },
         [
+            addLog,
             aspectRatio,
             batchSize,
             characterImages,
@@ -343,6 +377,8 @@ export function useWorkspaceEditorActions({
             structuredOutputMode,
             temperature,
             thinkingLevel,
+            showNotification,
+            t,
         ],
     );
 
@@ -441,19 +477,9 @@ export function useWorkspaceEditorActions({
             prepareImageAssetFromFile(file)
                 .then((prepared) => {
                     void openEditorWithSource(prepared.dataUrl, {
-                        sourceDimensions: {
-                            width: prepared.width,
-                            height: prepared.height,
-                        },
+                        preparedAsset: prepared,
                         entrySource: 'upload',
                     });
-
-                    if (prepared.wasResized) {
-                        addLog(t('msgImageResized'));
-                        showNotification(t('msgImageResized'), 'info');
-                    } else {
-                        addLog(t('logImageUploaded'));
-                    }
                 })
                 .catch(() => {
                     showNotification(t('errInvalidImage'), 'error');
@@ -463,7 +489,7 @@ export function useWorkspaceEditorActions({
                 uploadInputRef.current.value = '';
             }
         },
-        [addLog, openEditorWithSource, showNotification, t, uploadInputRef],
+        [openEditorWithSource, showNotification, t, uploadInputRef],
     );
 
     const handleOpenEditor = useCallback(() => {

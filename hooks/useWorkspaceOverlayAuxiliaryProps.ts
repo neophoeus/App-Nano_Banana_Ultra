@@ -12,6 +12,7 @@ import {
     StructuredOutputMode,
     ThinkingLevel,
 } from '../types';
+import { type ModelCapability } from '../utils/modelCapabilities';
 import { getTranslation, Language } from '../utils/translations';
 
 type BranchRenameDialogProps = React.ComponentProps<typeof BranchRenameDialog>;
@@ -38,6 +39,8 @@ type UseWorkspaceOverlayAuxiliaryPropsArgs = {
     hasSurfacePrompt: boolean;
     imageStyle: ImageStyle;
     imageModel: ImageModel;
+    capability: ModelCapability;
+    availableGroundingModes: GroundingMode[];
     aspectRatio: AspectRatio;
     imageSize: ImageSize;
     batchSize: number;
@@ -89,6 +92,8 @@ export function useWorkspaceOverlayAuxiliaryProps({
     hasSurfacePrompt,
     imageStyle,
     imageModel,
+    capability,
+    availableGroundingModes,
     aspectRatio,
     imageSize,
     batchSize,
@@ -135,6 +140,8 @@ export function useWorkspaceOverlayAuxiliaryProps({
                       totalReferenceCount,
                       hasPrompt: hasSurfacePrompt,
                       styleLabel: getStyleLabel(imageStyle),
+                      capability,
+                      availableGroundingModes,
                       modelLabel: getModelLabel(imageModel),
                       aspectRatio,
                       imageSize,
@@ -199,6 +206,7 @@ export function useWorkspaceOverlayAuxiliaryProps({
             branchRenameDialog,
             branchRenameDraft,
             characterImageCount,
+            capability,
             closeBranchRenameDialog,
             currentLanguage,
             floatingControlsZIndex,
@@ -215,6 +223,7 @@ export function useWorkspaceOverlayAuxiliaryProps({
             imageSize,
             imageStyle,
             includeThoughts,
+            availableGroundingModes,
             onSurfaceSharedControlsBottomChange,
             openAdvancedSettings,
             isAdvancedSettingsOpen,

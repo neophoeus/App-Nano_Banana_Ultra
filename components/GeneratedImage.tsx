@@ -4,7 +4,7 @@ import HexagonHUD from './HexagonHUD';
 import { AspectRatio, ExecutionMode, ImageSize, ImageStyle } from '../types';
 import { Language, getTranslation } from '../utils/translations';
 
-export type StageTopRightChipKey = 'stage-source' | 'origin' | 'branch' | 'continuation-differs' | 'result-status';
+export type StageTopRightChipKey = 'current-source' | 'origin' | 'branch' | 'continuation-differs' | 'result-status';
 export type StageTopRightChipTone = 'source' | 'branch' | 'divergence' | 'warning' | 'success';
 
 export interface StageTopRightChip {
@@ -71,7 +71,7 @@ interface GeneratedImageProps {
 }
 
 const stageTopRightChipClassNameByTone: Record<StageTopRightChipTone, string> = {
-    source: 'border-amber-600 bg-amber-500 text-white shadow-[0_8px_18px_rgba(217,119,6,0.34)] dark:border-amber-500 dark:bg-amber-400 dark:text-slate-950',
+    source: 'border-emerald-700 bg-emerald-600 text-white shadow-[0_8px_18px_rgba(5,150,105,0.32)] dark:border-emerald-500 dark:bg-emerald-400 dark:text-slate-950',
     branch: 'border-slate-800 bg-slate-700 text-white shadow-[0_8px_18px_rgba(15,23,42,0.32)] dark:border-slate-500 dark:bg-slate-200 dark:text-slate-950',
     divergence:
         'border-emerald-700 bg-emerald-600 text-white shadow-[0_8px_18px_rgba(5,150,105,0.32)] dark:border-emerald-500 dark:bg-emerald-400 dark:text-slate-950',
@@ -82,7 +82,7 @@ const stageTopRightChipClassNameByTone: Record<StageTopRightChipTone, string> = 
 };
 
 const stageTopRightOverflowChipClassNameByTone: Record<StageTopRightChipTone, string> = {
-    source: 'border-amber-500 bg-amber-300 text-slate-950 shadow-[0_5px_12px_rgba(217,119,6,0.18)] dark:border-amber-500 dark:bg-amber-300 dark:text-slate-950',
+    source: 'border-emerald-500 bg-emerald-300 text-slate-950 shadow-[0_5px_12px_rgba(5,150,105,0.18)] dark:border-emerald-500 dark:bg-emerald-300 dark:text-slate-950',
     branch: 'border-slate-400 bg-slate-300 text-slate-800 shadow-[0_5px_12px_rgba(71,85,105,0.16)] dark:border-slate-500 dark:bg-slate-300 dark:text-slate-950',
     divergence:
         'border-emerald-500 bg-emerald-300 text-slate-950 shadow-[0_5px_12px_rgba(5,150,105,0.18)] dark:border-emerald-500 dark:bg-emerald-300 dark:text-slate-950',

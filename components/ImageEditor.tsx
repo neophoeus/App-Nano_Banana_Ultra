@@ -26,6 +26,11 @@ import {
 
 interface ImageEditorProps {
     initialImageUrl: string;
+    initialPreparedSource?: {
+        width: number;
+        height: number;
+        wasResized: boolean;
+    } | null;
     initialPrompt: string;
     initialObjectImages: string[];
     initialCharacterImages: string[];
@@ -106,7 +111,6 @@ interface ViewportState {
     zoom: number;
 }
 
-const MAX_DIMENSION = 4096;
 const DOODLE_COLORS = ['#ef4444', '#eab308', '#3b82f6', '#22c55e', '#ffffff']; // Red, Yellow, Blue, Green, White
 
 const normalizeVisibleTextLabels = (labels: TextLabel[]): string[] =>
@@ -114,6 +118,7 @@ const normalizeVisibleTextLabels = (labels: TextLabel[]): string[] =>
 
 const ImageEditor: React.FC<ImageEditorProps> = ({
     initialImageUrl,
+    initialPreparedSource = null,
     initialPrompt,
     initialObjectImages,
     initialCharacterImages,
@@ -270,40 +275,37 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
 
     // --- Initialization ---
     useEffect(() => {
+        if (!initialImageUrl) {
+            return undefined;
+        }
+
+        let cancelled = false;
         const img = new Image();
         img.crossOrigin = 'anonymous';
-        img.src = initialImageUrl;
         img.onload = () => {
-            let w = img.width;
-            let h = img.height;
-            let src = img.src;
-
-            if (w > MAX_DIMENSION || h > MAX_DIMENSION) {
-                const scale = MAX_DIMENSION / Math.max(w, h);
-                w = Math.round(w * scale);
-                h = Math.round(h * scale);
-                const cvs = document.createElement('canvas');
-                cvs.width = w;
-                cvs.height = h;
-                const ctx = cvs.getContext('2d');
-                if (ctx) {
-                    ctx.drawImage(img, 0, 0, w, h);
-                    src = cvs.toDataURL('image/png');
-                    showToast(t('warningResized4K'), 'info');
-                }
+            if (cancelled) {
+                return;
             }
 
+            const w = initialPreparedSource?.width || img.width;
+            const h = initialPreparedSource?.height || img.height;
+
             setOriginalDims({ w, h });
-            const finalImg = new Image();
-            finalImg.onload = () => setImgElement(finalImg);
-            finalImg.src = src;
+            setImgElement(img);
 
             if (eventSurfaceRef.current) {
                 const { clientWidth, clientHeight } = eventSurfaceRef.current;
                 setViewport(fitImageToViewport(w, h, clientWidth, clientHeight));
             }
         };
-    }, [initialImageUrl]);
+        img.src = initialImageUrl;
+
+        return () => {
+            cancelled = true;
+            img.onload = null;
+            img.onerror = null;
+        };
+    }, [initialImageUrl, initialPreparedSource?.height, initialPreparedSource?.width]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -1363,33 +1365,33 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                         </div>
                     </div>
                     <div className="pointer-events-auto mx-auto flex w-full max-w-[720px] items-center gap-3 px-4 pb-4">
-                            <Button
-                                data-testid="editor-generate"
-                                onClick={handleGenerateClick}
-                                disabled={isGenerating}
-                                className={`
+                        <Button
+                            data-testid="editor-generate"
+                            onClick={handleGenerateClick}
+                            disabled={isGenerating}
+                            className={`
                                 flex-1 min-w-0
                                 shadow-[0_0_40px_rgba(245,158,11,0.6)] border border-yellow-200/60 
                                 bg-gradient-to-r from-amber-600 via-yellow-500 to-orange-600 
                                 bg-[length:200%_auto] px-5 py-3.5 rounded-full text-sm font-black tracking-[0.18em] sm:text-base sm:tracking-widest
                                 relative group overflow-hidden transition-all duration-300 animate-gradient-xy hover:scale-105
                             `}
+                        >
+                            <span className="text-center leading-tight drop-shadow-md">{t('btnRender')}</span>
+                        </Button>
+                        {onQueueBatch ? (
+                            <Button
+                                data-testid="editor-queue-batch"
+                                variant="secondary"
+                                onClick={handleQueueBatchClick}
+                                disabled={isGenerating}
+                                className="flex-1 min-w-0 rounded-full border border-gray-300/70 px-5 py-3.5 text-sm font-extrabold tracking-[0.12em] text-gray-800 shadow-[0_12px_30px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-0.5 dark:border-gray-600/70 dark:text-gray-100 sm:text-base"
                             >
-                                <span className="text-center leading-tight drop-shadow-md">{t('btnRender')}</span>
+                                <span className="text-center leading-tight">{t('composerQueueBatchJob')}</span>
                             </Button>
-                            {onQueueBatch ? (
-                                <Button
-                                    data-testid="editor-queue-batch"
-                                    variant="secondary"
-                                    onClick={handleQueueBatchClick}
-                                    disabled={isGenerating}
-                                    className="flex-1 min-w-0 rounded-full border border-gray-300/70 px-5 py-3.5 text-sm font-extrabold tracking-[0.12em] text-gray-800 shadow-[0_12px_30px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-0.5 dark:border-gray-600/70 dark:text-gray-100 sm:text-base"
-                                >
-                                    <span className="text-center leading-tight">{t('composerQueueBatchJob')}</span>
-                                </Button>
-                            ) : null}
-                        </div>
+                        ) : null}
                     </div>
+                </div>
 
                 {/* EVENT SURFACE */}
                 <div
@@ -1506,13 +1508,22 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                 className="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-lg transition-colors border border-white/20"
                             >
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={3}
+                                        d="M5 13l4 4L19 7"
+                                    />
                                 </svg>
                             </button>
                         </div>
                         <div className="mt-2 space-y-1 px-1">
-                            <p className="text-[11px] leading-relaxed text-white/85">{t('editorTextInputHintPrimary')}</p>
-                            <p className="text-[11px] leading-relaxed text-white/65">{t('editorTextInputHintSecondary')}</p>
+                            <p className="text-[11px] leading-relaxed text-white/85">
+                                {t('editorTextInputHintPrimary')}
+                            </p>
+                            <p className="text-[11px] leading-relaxed text-white/65">
+                                {t('editorTextInputHintSecondary')}
+                            </p>
                         </div>
                     </div>
                 </div>

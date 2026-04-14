@@ -14,11 +14,10 @@ type WorkspaceUnifiedHistoryPanelProps = {
     history: GeneratedImage[];
     selectedItemDock?: React.ReactNode;
     selectedHistoryId: string | null;
-    currentStageSourceHistoryId?: string | null;
+    currentSourceHistoryId?: string | null;
     activeBranchSummary: BranchSummary | null;
     branchSummariesCount: number;
     onSelect: (item: GeneratedImage) => void;
-    isPromotedContinuationSource: (item: GeneratedImage) => boolean;
     getBranchAccentClassName: (branchOriginId: string, branchLabel: string) => string;
     onOpenVersionsDetails?: () => void;
     onImportWorkspace?: () => void;
@@ -32,11 +31,10 @@ function WorkspaceUnifiedHistoryPanel({
     history,
     selectedItemDock,
     selectedHistoryId,
-    currentStageSourceHistoryId = null,
+    currentSourceHistoryId = null,
     activeBranchSummary,
     branchSummariesCount,
     onSelect,
-    isPromotedContinuationSource,
     getBranchAccentClassName,
     onOpenVersionsDetails,
     onImportWorkspace,
@@ -264,9 +262,8 @@ function WorkspaceUnifiedHistoryPanel({
                             history={displayedHistory}
                             previewTiles={pagePreviewTiles}
                             onSelect={onSelect}
-                            isPromotedContinuationSource={isPromotedContinuationSource}
                             selectedId={selectedHistoryId || undefined}
-                            currentStageSourceHistoryId={currentStageSourceHistoryId}
+                            currentSourceHistoryId={currentSourceHistoryId}
                             currentLanguage={currentLanguage}
                             surface="embedded"
                             continuous={true}

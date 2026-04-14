@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef } from 'react';
+import { type ModelCapability } from '../constants';
 import { GroundingMode, OutputFormat, StructuredOutputMode, ThinkingLevel } from '../types';
 import { getGroundingModeLabel } from '../utils/groundingMode';
 import { getTranslation, Language } from '../utils/translations';
@@ -22,6 +23,8 @@ type SurfaceSharedControlsProps = {
     totalReferenceCount: number;
     hasPrompt: boolean;
     styleLabel: string;
+    capability: ModelCapability;
+    availableGroundingModes: GroundingMode[];
     modelLabel: string;
     aspectRatio: string;
     imageSize: string;
@@ -68,6 +71,8 @@ const SurfaceSharedControls: React.FC<SurfaceSharedControlsProps> = ({
     isAdvancedSettingsOpen,
     totalReferenceCount,
     hasPrompt,
+    capability,
+    availableGroundingModes,
     modelLabel,
     aspectRatio,
     imageSize,
@@ -123,6 +128,8 @@ const SurfaceSharedControls: React.FC<SurfaceSharedControlsProps> = ({
     const getGroundingLabel = (value: GroundingMode) => getGroundingModeLabel(value);
     const isSketchSurface = settingsVariant === 'sketch';
     const summaryModelLabel = getSummaryModelLabel(modelLabel);
+    const supportsThinkingLevelControl = capability.thinkingLevels.some((value) => value !== 'disabled');
+    const hasGroundingControl = availableGroundingModes.length > 1;
     const summaryItems = isSketchSurface
         ? [
               {
@@ -162,36 +169,51 @@ const SurfaceSharedControls: React.FC<SurfaceSharedControlsProps> = ({
                   label: t('batchSize'),
                   value: String(batchSize),
               },
-              {
-                  id: 'output-format',
-                  label: t('groundingProvenanceInsightOutputFormat'),
-                  value: getOutputFormatLabel(outputFormat),
-              },
-              {
-                  id: 'structured-output',
-                  label: t('composerAdvancedStructuredOutput'),
-                  value: getStructuredOutputModeLabel(structuredOutputMode),
-              },
-              {
-                  id: 'thinking-level',
-                  label: t('groundingProvenanceInsightThinkingLevel'),
-                  value: getThinkingLevelLabel(thinkingLevel),
-              },
-              {
-                  id: 'thoughts',
-                  label: t('groundingProvenanceInsightReturnThoughts'),
-                  value: includeThoughts ? t('composerVisibilityVisible') : t('composerVisibilityHidden'),
-              },
-              {
-                  id: 'grounding',
-                  label: t('groundingProvenanceInsightGrounding'),
-                  value: getGroundingLabel(groundingMode),
-              },
-              {
-                  id: 'temperature',
-                  label: t('groundingProvenanceInsightTemperature'),
-                  value: temperature.toFixed(1),
-              },
+              ...(capability.outputFormats.length > 1
+                  ? [
+                        {
+                            id: 'output-format',
+                            label: t('groundingProvenanceInsightOutputFormat'),
+                            value: getOutputFormatLabel(outputFormat),
+                        },
+                    ]
+                  : []),
+              ...(capability.supportsStructuredOutputs && structuredOutputMode !== 'off'
+                  ? [
+                        {
+                            id: 'structured-output',
+                            label: t('composerAdvancedStructuredOutput'),
+                            value: getStructuredOutputModeLabel(structuredOutputMode),
+                        },
+                    ]
+                  : []),
+              ...(capability.supportsTemperature
+                  ? [
+                        {
+                            id: 'temperature',
+                            label: t('groundingProvenanceInsightTemperature'),
+                            value: temperature.toFixed(1),
+                        },
+                    ]
+                  : []),
+              ...(supportsThinkingLevelControl
+                  ? [
+                        {
+                            id: 'thinking-level',
+                            label: t('groundingProvenanceInsightThinkingLevel'),
+                            value: getThinkingLevelLabel(thinkingLevel),
+                        },
+                    ]
+                  : []),
+              ...(hasGroundingControl && groundingMode !== 'off'
+                  ? [
+                        {
+                            id: 'grounding',
+                            label: t('groundingProvenanceInsightGrounding'),
+                            value: getGroundingLabel(groundingMode),
+                        },
+                    ]
+                  : []),
               {
                   id: 'references',
                   label: t('workspaceSheetTitleReferences'),
