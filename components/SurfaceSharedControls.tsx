@@ -22,7 +22,6 @@ type SurfaceSharedControlsProps = {
     isAdvancedSettingsOpen: boolean;
     totalReferenceCount: number;
     hasPrompt: boolean;
-    styleLabel: string;
     capability: ModelCapability;
     availableGroundingModes: GroundingMode[];
     modelLabel: string;
@@ -34,7 +33,6 @@ type SurfaceSharedControlsProps = {
     maxObjects: number;
     maxCharacters: number;
     settingsVariant: SurfaceSharedControlsVariant;
-    showStyleControl?: boolean;
     outputFormat: OutputFormat;
     structuredOutputMode: StructuredOutputMode;
     temperature: number;
@@ -51,17 +49,25 @@ type SurfaceSharedControlsProps = {
 type SheetButtonConfig = {
     id: string;
     title: string;
+    summaryItems: Array<{
+        id: string;
+        label: string;
+        value: string;
+    }>;
     isActive: boolean;
     onClick: () => void;
     testId?: string;
 };
 
 const buildButtonClassName = (isActive: boolean) =>
-    `${isActive ? 'rounded-xl border px-2.5 py-1.5 text-center transition-colors' : 'nbu-control-button rounded-xl px-2.5 py-1.5 text-center'} ${
+    `${isActive ? 'rounded-xl border px-2.5 py-2 text-left transition-colors' : 'nbu-control-button rounded-xl px-2.5 py-2 text-left'} flex min-w-0 flex-col items-start gap-1.5 ${
         isActive
             ? 'border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200'
             : 'text-gray-800 dark:text-gray-100'
     }`;
+
+const summaryChipClassName =
+    'inline-flex max-w-full flex-wrap items-center gap-x-0.5 gap-y-0 rounded-full border border-slate-200/80 bg-white/88 px-2 py-px font-medium text-slate-700 dark:border-slate-700/80 dark:bg-slate-900/80 dark:text-slate-200';
 
 const getSummaryModelLabel = (value: string) => value.replace(/\s*\([^)]*\)\s*$/, '').trim();
 
@@ -78,7 +84,6 @@ const SurfaceSharedControls: React.FC<SurfaceSharedControlsProps> = ({
     imageSize,
     batchSize,
     settingsVariant,
-    showStyleControl = true,
     outputFormat,
     structuredOutputMode,
     temperature,
@@ -130,102 +135,102 @@ const SurfaceSharedControls: React.FC<SurfaceSharedControlsProps> = ({
     const summaryModelLabel = getSummaryModelLabel(modelLabel);
     const supportsThinkingLevelControl = capability.thinkingLevels.some((value) => value !== 'disabled');
     const hasGroundingControl = availableGroundingModes.length > 1;
-    const summaryItems = isSketchSurface
-        ? [
-              {
-                  id: 'model',
-                  label: t('workspaceSheetTitleModel'),
-                  value: summaryModelLabel,
-              },
-              {
-                  id: 'ratio',
-                  label: t('workspaceSheetTitleRatio'),
-                  value: aspectRatio,
-              },
-          ]
-        : [
-              {
-                  id: 'prompt',
-                  label: t('promptLabel'),
-                  value: hasPrompt ? t('workspaceSurfaceReady') : t('workspaceSurfacePromptEmpty'),
-              },
-              {
-                  id: 'model',
-                  label: t('workspaceSheetTitleModel'),
-                  value: summaryModelLabel,
-              },
-              {
-                  id: 'ratio',
-                  label: t('workspaceSheetTitleRatio'),
-                  value: aspectRatio,
-              },
-              {
-                  id: 'size',
-                  label: t('workspaceSheetTitleSize'),
-                  value: imageSize,
-              },
-              {
-                  id: 'quantity',
-                  label: t('batchSize'),
-                  value: String(batchSize),
-              },
-              ...(capability.outputFormats.length > 1
-                  ? [
-                        {
-                            id: 'output-format',
-                            label: t('groundingProvenanceInsightOutputFormat'),
-                            value: getOutputFormatLabel(outputFormat),
-                        },
-                    ]
-                  : []),
-              ...(capability.supportsStructuredOutputs && structuredOutputMode !== 'off'
-                  ? [
-                        {
-                            id: 'structured-output',
-                            label: t('composerAdvancedStructuredOutput'),
-                            value: getStructuredOutputModeLabel(structuredOutputMode),
-                        },
-                    ]
-                  : []),
-              ...(capability.supportsTemperature
-                  ? [
-                        {
-                            id: 'temperature',
-                            label: t('groundingProvenanceInsightTemperature'),
-                            value: temperature.toFixed(1),
-                        },
-                    ]
-                  : []),
-              ...(supportsThinkingLevelControl
-                  ? [
-                        {
-                            id: 'thinking-level',
-                            label: t('groundingProvenanceInsightThinkingLevel'),
-                            value: getThinkingLevelLabel(thinkingLevel),
-                        },
-                    ]
-                  : []),
-              ...(hasGroundingControl && groundingMode !== 'off'
-                  ? [
-                        {
-                            id: 'grounding',
-                            label: t('groundingProvenanceInsightGrounding'),
-                            value: getGroundingLabel(groundingMode),
-                        },
-                    ]
-                  : []),
-              {
-                  id: 'references',
-                  label: t('workspaceSheetTitleReferences'),
-                  value: String(totalReferenceCount),
-              },
-          ];
+    const promptSummaryItems = [
+        {
+            id: 'prompt',
+            label: t('promptLabel'),
+            value: hasPrompt ? t('workspaceSurfaceReady') : t('workspaceSurfacePromptEmpty'),
+        },
+    ];
+    const generationSummaryItems = [
+        {
+            id: 'model',
+            label: t('workspaceSheetTitleModel'),
+            value: summaryModelLabel,
+        },
+        {
+            id: 'ratio',
+            label: t('workspaceSheetTitleRatio'),
+            value: aspectRatio,
+        },
+        {
+            id: 'size',
+            label: t('workspaceSheetTitleSize'),
+            value: imageSize,
+        },
+        {
+            id: 'quantity',
+            label: t('batchSize'),
+            value: String(batchSize),
+        },
+    ];
+    const advancedSummaryItems = [
+        ...(capability.outputFormats.length > 1
+            ? [
+                  {
+                      id: 'output-format',
+                      label: t('groundingProvenanceInsightOutputFormat'),
+                      value: getOutputFormatLabel(outputFormat),
+                  },
+              ]
+            : []),
+        ...(capability.supportsStructuredOutputs && structuredOutputMode !== 'off'
+            ? [
+                  {
+                      id: 'structured-output',
+                      label: t('composerAdvancedStructuredOutput'),
+                      value: getStructuredOutputModeLabel(structuredOutputMode),
+                  },
+              ]
+            : []),
+        ...(capability.supportsTemperature
+            ? [
+                  {
+                      id: 'temperature',
+                      label: t('groundingProvenanceInsightTemperature'),
+                      value: temperature.toFixed(1),
+                  },
+              ]
+            : []),
+        ...(supportsThinkingLevelControl
+            ? [
+                  {
+                      id: 'thinking-level',
+                      label: t('groundingProvenanceInsightThinkingLevel'),
+                      value: getThinkingLevelLabel(thinkingLevel),
+                  },
+              ]
+            : []),
+        ...(hasGroundingControl && groundingMode !== 'off'
+            ? [
+                  {
+                      id: 'grounding',
+                      label: t('groundingProvenanceInsightGrounding'),
+                      value: getGroundingLabel(groundingMode),
+                  },
+              ]
+            : []),
+    ];
+    const referenceSummaryItems = [
+        {
+            id: 'references',
+            label: t('workspaceSheetTitleReferences'),
+            value: String(totalReferenceCount),
+        },
+    ];
 
     const sheetButtons: SheetButtonConfig[] = isSketchSurface
         ? [
               {
                   id: 'model',
                   title: t('workspaceSheetTitleModel'),
+                  summaryItems: [
+                      {
+                          id: 'model',
+                          label: t('workspaceSheetTitleModel'),
+                          value: summaryModelLabel,
+                      },
+                  ],
                   isActive: activePickerSheet === 'model',
                   onClick: () => onOpenSheet('model'),
                   testId: 'shared-control-model',
@@ -233,6 +238,13 @@ const SurfaceSharedControls: React.FC<SurfaceSharedControlsProps> = ({
               {
                   id: 'ratio',
                   title: t('workspaceSheetTitleRatio'),
+                  summaryItems: [
+                      {
+                          id: 'ratio',
+                          label: t('workspaceSheetTitleRatio'),
+                          value: aspectRatio,
+                      },
+                  ],
                   isActive: activePickerSheet === 'ratio',
                   onClick: () => onOpenSheet('ratio'),
                   testId: 'shared-control-ratio',
@@ -242,24 +254,15 @@ const SurfaceSharedControls: React.FC<SurfaceSharedControlsProps> = ({
               {
                   id: 'prompt',
                   title: t('workspaceSheetTitlePrompt'),
+                  summaryItems: promptSummaryItems,
                   isActive: activePickerSheet === 'prompt',
                   onClick: () => onOpenSheet('prompt'),
                   testId: 'shared-control-prompt',
               },
-              ...(showStyleControl
-                  ? [
-                        {
-                            id: 'styles',
-                            title: t('style'),
-                            isActive: activePickerSheet === 'styles',
-                            onClick: () => onOpenSheet('styles'),
-                            testId: 'shared-control-styles',
-                        },
-                    ]
-                  : []),
               {
                   id: 'settings',
                   title: t('workspaceSheetTitleGenerationSettings'),
+                  summaryItems: generationSummaryItems,
                   isActive: activePickerSheet === 'settings',
                   onClick: () => onOpenSheet('settings'),
                   testId: 'shared-control-settings',
@@ -267,6 +270,7 @@ const SurfaceSharedControls: React.FC<SurfaceSharedControlsProps> = ({
               {
                   id: 'advanced-settings',
                   title: t('composerToolbarAdvancedSettings'),
+                  summaryItems: advancedSummaryItems,
                   isActive: isAdvancedSettingsOpen,
                   onClick: onOpenAdvancedSettings,
                   testId: 'shared-control-advanced-settings',
@@ -274,16 +278,17 @@ const SurfaceSharedControls: React.FC<SurfaceSharedControlsProps> = ({
               {
                   id: 'references',
                   title: t('workspaceTopHeaderReferenceTray'),
+                  summaryItems: referenceSummaryItems,
                   isActive: activePickerSheet === 'references',
                   onClick: () => onOpenSheet('references'),
                   testId: 'shared-control-references',
               },
           ];
-    const layoutSignature = `${currentLanguage}:${settingsVariant}:${showStyleControl ? 'style' : 'no-style'}:${
-        activePickerSheet ?? 'none'
-    }:${isAdvancedSettingsOpen ? 'advanced' : 'base'}:${summaryItems
-        .map((item) => `${item.id}:${item.value}`)
-        .join('|')}:${sheetButtons.map((button) => button.id).join('|')}`;
+    const layoutSignature = `${currentLanguage}:${settingsVariant}:${activePickerSheet ?? 'none'}:${
+        isAdvancedSettingsOpen ? 'advanced' : 'base'
+    }:${sheetButtons
+        .map((button) => `${button.id}:${button.summaryItems.map((item) => `${item.id}:${item.value}`).join(',')}`)
+        .join('|')}`;
 
     const reportBottomOffset = useCallback(() => {
         if (!onBottomOffsetChange || !containerRef.current || typeof window === 'undefined') {
@@ -338,31 +343,16 @@ const SurfaceSharedControls: React.FC<SurfaceSharedControlsProps> = ({
     return (
         <div ref={containerRef} className={containerClassName} style={containerStyle}>
             <div data-testid="shared-controls-panel" className="nbu-floating-panel w-[min(16rem,calc(100vw-2rem))] p-3">
-                <div data-testid="shared-controls-toggle" className="min-w-0">
+                <div data-testid="shared-controls-toggle" className="flex min-w-0 items-center gap-2.5">
                     <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-700 dark:bg-amber-500/15 dark:text-amber-200">
                         {t('surfaceSharedControlsBadge')}
                     </span>
-                    <div className="mt-1.5 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    <div className="min-w-0 text-sm font-semibold text-gray-900 dark:text-gray-100">
                         {t('surfaceSharedControlsSettingsTitle')}
-                    </div>
-                    <div
-                        data-testid="shared-controls-summary"
-                        className="mt-1.5 flex flex-wrap items-start gap-1 text-[10px] leading-3.5"
-                    >
-                        {summaryItems.map((item) => (
-                            <span
-                                key={item.id}
-                                data-testid={`shared-controls-summary-item-${item.id}`}
-                                className="inline-flex max-w-full flex-wrap items-center gap-x-0.5 gap-y-0 rounded-full border border-gray-200/80 bg-white/85 px-2 py-px font-medium text-gray-600 dark:border-gray-700/80 dark:bg-gray-900/80 dark:text-gray-300"
-                            >
-                                <span className="text-gray-500 dark:text-gray-400">{item.label}</span>
-                                <span className="text-gray-800 dark:text-gray-100">{item.value}</span>
-                            </span>
-                        ))}
                     </div>
                 </div>
 
-                <div className="mt-2.5 grid grid-cols-2 gap-1.5">
+                <div data-testid="shared-controls-actions" className="mt-2.5 flex flex-col gap-1.5">
                     {sheetButtons.map((button) => (
                         <button
                             key={button.id}
@@ -371,6 +361,20 @@ const SurfaceSharedControls: React.FC<SurfaceSharedControlsProps> = ({
                             className={buildButtonClassName(button.isActive)}
                         >
                             <span className="block text-xs font-semibold leading-[13px]">{button.title}</span>
+                            {button.summaryItems.length > 0 ? (
+                                <span className="flex min-w-0 flex-wrap items-start gap-1 text-[10px] leading-3.5">
+                                    {button.summaryItems.map((item) => (
+                                        <span
+                                            key={item.id}
+                                            data-testid={`shared-controls-summary-item-${item.id}`}
+                                            className={summaryChipClassName}
+                                        >
+                                            <span className="text-slate-500 dark:text-slate-400">{item.label}</span>
+                                            <span className="text-slate-900 dark:text-slate-100">{item.value}</span>
+                                        </span>
+                                    ))}
+                                </span>
+                            ) : null}
                         </button>
                     ))}
                 </div>

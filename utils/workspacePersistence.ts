@@ -20,6 +20,7 @@ import {
 } from './conversationState';
 import { sanitizeSessionHintsForStorage } from './inlineImageDisplay';
 import { buildLineagePresentation } from './lineage';
+import { normalizeImageStyle } from './styleRegistry';
 
 export const WORKSPACE_SNAPSHOT_STORAGE_KEY = 'nbu_workspaceSnapshot';
 export const SHARED_WORKSPACE_SNAPSHOT_ENDPOINT = '/api/workspace-snapshot';
@@ -379,6 +380,7 @@ const sanitizeHistory = (value: unknown): GeneratedImage[] => {
         return [
             {
                 ...(item as GeneratedImage),
+                style: normalizeImageStyle(item.style),
                 openedAt:
                     typeof item.openedAt === 'number' && Number.isFinite(item.openedAt)
                         ? item.openedAt
@@ -472,6 +474,7 @@ const sanitizeQueuedBatchJobs = (value: unknown): QueuedBatchJob[] => {
         return [
             {
                 ...(item as QueuedBatchJob),
+                style: normalizeImageStyle(item.style),
                 ...(importDiagnostic ? { importDiagnostic } : {}),
                 ...(typeof migratedHasInlinedResponses === 'boolean'
                     ? { hasInlinedResponses: migratedHasInlinedResponses }
@@ -635,6 +638,7 @@ const sanitizeWorkspaceComposerState = (value: unknown): WorkspaceComposerState 
         ...EMPTY_WORKSPACE_COMPOSER_STATE,
         ...value,
         prompt: typeof value.prompt === 'string' ? value.prompt : EMPTY_WORKSPACE_COMPOSER_STATE.prompt,
+        imageStyle: normalizeImageStyle(value.imageStyle),
         batchSize:
             typeof value.batchSize === 'number' && Number.isFinite(value.batchSize)
                 ? value.batchSize

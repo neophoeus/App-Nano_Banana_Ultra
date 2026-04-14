@@ -38,6 +38,7 @@ import WorkspaceVersionsDetailPanel from './components/WorkspaceVersionsDetailPa
 import WorkspaceProgressCard from './components/WorkspaceProgressCard';
 import WorkspaceProgressDetailPanel from './components/WorkspaceProgressDetailPanel';
 import { WorkspaceFloatingLayerContext } from './components/WorkspaceFloatingLayerContext';
+import { resolveStyleLabel } from './utils/styleRegistry';
 import {
     Language,
     ensureLanguageLoaded,
@@ -375,6 +376,7 @@ const App: React.FC = () => {
     const surfaceCharacterImages = isEditing ? editorCharacterImages : characterImages;
     const setSurfaceObjectImages = isEditing ? setEditorObjectImages : setObjectImages;
     const setSurfaceCharacterImages = isEditing ? setEditorCharacterImages : setCharacterImages;
+    const isSharedControlsSurfaceOpen = isEditing || isSketchPadOpen;
 
     const handleLanguageChange = useCallback(
         (nextLanguage: Language) => {
@@ -426,8 +428,7 @@ const App: React.FC = () => {
     );
     const getStyleLabel = useCallback(
         (style: string) => {
-            const key = 'style' + style.replace(/[^a-zA-Z0-9]/g, '');
-            return t(key);
+            return resolveStyleLabel(style, t);
         },
         [t],
     );
@@ -1237,6 +1238,7 @@ const App: React.FC = () => {
 
     const { handleGenerate, handleFollowUpGenerate, handleCancelGeneration } = useWorkspaceGenerationActions({
         abortControllerRef,
+        isSharedControlsSurfaceOpen,
         prompt,
         aspectRatio,
         imageSize,
@@ -1665,8 +1667,13 @@ const App: React.FC = () => {
     useEffect(() => {
         if (!isSurfaceWorkspaceOpen) {
             setSurfaceSharedControlsBottom(null);
+            return;
         }
-    }, [isSurfaceWorkspaceOpen]);
+
+        if (activePickerSheet === 'styles') {
+            setActivePickerSheet(null);
+        }
+    }, [activePickerSheet, isSurfaceWorkspaceOpen, setActivePickerSheet]);
 
     const {
         effectiveResultText,
@@ -1792,6 +1799,10 @@ const App: React.FC = () => {
     });
     const handleOpenSurfacePickerSheet = useCallback(
         (sheet: Parameters<typeof openSurfacePickerSheet>[0]) => {
+            if (sheet === 'styles') {
+                return;
+            }
+
             if (sheet === 'settings') {
                 openGenerationSettingsSession();
                 return;
@@ -1805,12 +1816,10 @@ const App: React.FC = () => {
         useWorkspaceOverlayAuxiliaryProps({
             isSurfaceWorkspaceOpen,
             isAdvancedSettingsOpen,
-            isEditing,
             activePickerSheet,
             settingsVariant: isSketchPadOpen ? 'sketch' : 'full',
             totalReferenceCount,
             hasSurfacePrompt: Boolean((isEditing ? editorPrompt : prompt).trim()),
-            imageStyle,
             imageModel,
             capability,
             availableGroundingModes,
@@ -1832,7 +1841,6 @@ const App: React.FC = () => {
             currentLanguage: currentLang,
             openSurfacePickerSheet: handleOpenSurfacePickerSheet,
             openAdvancedSettings: openAdvancedSettingsSession,
-            getStyleLabel,
             getModelLabel,
             workspaceImportReview,
             importedBranchSummaries,

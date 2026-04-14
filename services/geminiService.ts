@@ -1,4 +1,5 @@
 import { GenerateOptions, GenerateResponse, ImageReceivedResult, ImageStyle, QueuedBatchJobStats } from '../types';
+import { getStylePromptDescriptor } from '../utils/styleRegistry';
 import { Language } from '../utils/translations';
 
 const jsonHeaders = {
@@ -100,136 +101,6 @@ export const generatePromptFromImage = async (imageDataUrl: string, lang: Langua
 
 // --- Image Generation Logic ---
 
-// Helper to map UI styles to specific, distinctive prompt keywords
-const getStyleKeywords = (style: ImageStyle): string => {
-    switch (style) {
-        // --- PHOTO ---
-        case 'Photorealistic':
-            return 'photorealistic, hyper-realistic, 8k resolution, raw photo, highly detailed texture, raytracing, sharp focus, dslr quality';
-        case 'Cinematic':
-            return 'cinematic shot, movie scene, dramatic lighting, shallow depth of field, anamorphic lens flare, color graded, 70mm film stock, wide angle';
-        case 'Film Noir':
-            return 'film noir style, black and white photography, chiaroscuro lighting, dramatic shadows, high contrast, mysterious atmosphere, 1940s cinema look';
-        case 'Vintage Polaroid':
-            return 'vintage polaroid photo, instant film aesthetic, soft focus, faded colors, vignette, dust and scratches, retro 80s vibe, white border';
-        case 'Macro':
-            return 'macro photography, extreme close-up, incredible detail, shallow depth of field, bokeh, unseen textures, sharp focus on subject';
-        case 'Long Exposure':
-            return 'long exposure photography, light trails, silky smooth water, motion blur, time-lapse feel, dreamy movement, ethereal flow';
-        case 'Double Exposure':
-            return 'double exposure, superimposed images, dreamlike blending, surreal overlay, multiple exposure photography, ethereal ghosting effect';
-        case 'Tilt-Shift':
-            return 'tilt-shift photography, miniature world effect, selective focus, blurred background and foreground, high angle shot, toy-like appearance';
-        case 'Knolling':
-            return 'knolling photography, flat lay, objects arranged at 90 degree angles, organized chaos, clean background, high angle view, product photography';
-
-        // --- CLASSIC ---
-        case 'Oil Painting':
-            return 'oil painting, impasto technique, visible brushstrokes, textured canvas, vibrant colors, classical art style, masterwork';
-        case 'Watercolor':
-            return 'watercolor painting, wet-on-wet technique, paper texture, soft blended colors, artistic splashes, dreamy, delicate brushstrokes';
-        case 'Pencil Sketch':
-            return 'pencil sketch, graphite drawing, hand-drawn, rough lines, shading, cross-hatching, sketchbook aesthetic, monochrome';
-        case 'Ukiyo-e':
-            return 'ukiyo-e style, japanese woodblock print, flat perspective, bold outlines, traditional japanese patterns, hokusai style, muted colors';
-        case 'Ink Wash':
-            return 'ink wash painting, sumi-e style, brush and ink, minimal color, expressive brushstrokes, negative space, traditional asian art';
-        case 'Impressionism':
-            return 'impressionist painting, monet style, visible small brushstrokes, emphasis on light and movement, vibrant colors, open composition';
-        case 'Mosaic':
-            return 'mosaic art, tile pattern, tessellation, fragmented image, ceramic tiles, grout lines, textured surface, ancient roman aesthetic';
-        case 'Pastel':
-            return 'soft pastel drawing, chalk texture, powdery finish, gentle colors, blended gradients, dreamy atmosphere, paper grain';
-        case 'Art Nouveau':
-            return 'art nouveau style, mucha style, organic forms, curved lines, floral motifs, decorative borders, elegant, romantic';
-        case 'Baroque':
-            return 'baroque art, caravaggio style, dramatic chiaroscuro, rich golden tones, ornate details, grand composition, religious intensity, theatrical lighting';
-        case 'Art Deco':
-            return 'art deco style, 1920s aesthetic, geometric patterns, symmetrical design, gold and black palette, luxurious, bold lines, gatsby era elegance';
-
-        // --- DIGITAL ---
-        case 'Anime':
-            return 'anime style, cel shaded, vibrant colors, expressive eyes, dynamic pose, high quality 2D animation, clean linework, soft highlights';
-        case '3D Render':
-            return '3d render, octane render, unreal engine 5, raytracing, physically based rendering, volumetric lighting, ultra detailed, cgi';
-        case 'Cyberpunk':
-            return 'cyberpunk aesthetic, neon lights, futuristic city, high tech low life, synthwave color palette, rain-slicked streets, glowing circuitry';
-        case 'Pixel Art':
-            return 'pixel art, 16-bit sprite, retro game aesthetic, sharp edges, limited color palette, dithering, nostalgia, arcade style';
-        case 'Low Poly':
-            return 'low poly art, geometric shapes, faceted surfaces, flat shading, minimalist 3d, polygon mesh aesthetic, retro computer graphics';
-        case 'Vaporwave':
-            return 'vaporwave aesthetic, retro 80s and 90s, neon pink and blue, glitch effects, surreal statues, grid background, lo-fi nostalgia';
-        case 'Isometric':
-            return 'isometric view, orthographic projection, detailed diorama, miniature world, clean lines, 3d icon style, precise geometry';
-        case 'Vector Art':
-            return 'vector art, adobe illustrator style, clean lines, flat colors, solid shapes, scalable graphics aesthetic, crisp edges, minimalist';
-        case 'Glitch Art':
-            return 'glitch art, datamoshing, digital distortion, pixel sorting, signal noise, chromatic aberration, broken screen effect, aesthetic error';
-        case 'Manga':
-            return 'manga style, japanese comic, screentone shading, black and white ink, dramatic speed lines, emotional expressions, panel layout feel, detailed crosshatching';
-        case 'Chibi':
-            return 'chibi style, super deformed, oversized head, tiny body, kawaii cute, big sparkly eyes, simplified features, adorable proportions, pastel colors';
-
-        // --- STYLIZED ---
-        case 'Surrealism':
-            return 'surrealism, dali style, dreamlike scene, illogical juxtaposition, melting forms, subconscious imagery, bizarre fantasy, magical realism';
-        case 'Pop Art':
-            return 'pop art, andy warhol style, bold solid colors, repetitive patterns, comic book influence, mass media aesthetic, irony, high contrast';
-        case 'Psychedelic':
-            return 'psychedelic art, trippy visual, fractals, kaleidoscope patterns, neon colors, swirling forms, hallucinations, optical illusion';
-        case 'Gothic':
-            return 'gothic art, dark atmosphere, ornate details, medieval architecture, somber mood, spooky, dramatic lighting, romantic horror';
-        case 'Steampunk':
-            return 'steampunk aesthetic, brass and copper gears, victorian era technology, steam powered machinery, clockwork details, sepia tones';
-        case 'Comic Book':
-            return 'comic book style, halftone dots, bold ink outlines, dynamic panel composition, vivid saturated colors, action-packed, dramatic shading';
-        case 'Fantasy Art':
-            return 'fantasy art, enchanted world, mythical creatures, magical atmosphere, ethereal lighting, epic landscapes, otherworldly beauty, concept art';
-        case 'Stained Glass':
-            return 'stained glass art, vibrant translucent colors, bold black lead lines, intricate patterns, ecclesiastical art, light shining through';
-        case 'Graffiti':
-            return 'graffiti art, street art style, spray paint texture, vibrant colors, drip effects, urban wall mural, bold tagging, stencil art';
-
-        // --- CRAFT ---
-        case 'Claymation':
-            return 'claymation style, plasticine texture, stop motion aesthetic, handmade fingerprint details, soft diffused lighting, playful 3D, warm tones';
-        case 'Origami':
-            return 'origami art, folded paper, sharp creases, geometric shapes, paper texture, layered paper craft, intricate folds, minimal lighting';
-        case 'Knitted':
-            return 'knitted texture, wool yarn, crochet pattern, soft fabric, detailed stitches, cozy atmosphere, handmade textile art';
-        case 'Paper Cutout':
-            return 'paper cutout art, layered paper, shadow box effect, depth and dimension, craft paper texture, silhouette, diorama style';
-        case 'Wood Carving':
-            return 'wood carving, hand-carved texture, natural wood grain, rustic feel, relief sculpture, tactile surface, warm tones';
-        case 'Porcelain':
-            return 'porcelain texture, glossy ceramic, delicate china, smooth surface, fragile, painted glaze details, cracking effect, elegant';
-        case 'Embroidery':
-            return 'embroidery art, stitched thread texture, fabric background, detailed needlework, tactile feel, woven pattern, handmade';
-        case 'Crystal':
-            return 'crystal refraction, faceted glass, prismatic light, translucent, gem-like texture, sparkling, sharp edges, caustic patterns';
-
-        // --- DESIGN ---
-        case 'Blueprint':
-            return 'blueprint style, technical drawing, cyanotype, white lines on blue background, architectural schematic, detailed measurements, diagram';
-        case 'Sticker':
-            return 'sticker art, die-cut white border, vector illustration, flat shading, glossy finish, isolated on background, decal style';
-        case 'Doodle':
-            return 'doodle art, hand-drawn scribbles, notebook paper texture, playful, whimsical, cartoonish, rough sketches, sharpie marker style';
-        case 'Neon':
-            return 'neon art, glowing glass tubes, vibrant light, dark background, electric atmosphere, cyber aesthetic, light painting';
-        case 'Flat Design':
-            return 'flat design, minimalist, solid colors, no shadows, clean geometric shapes, modern UI aesthetic, bold typography, material design inspired';
-        case 'Miniature':
-            return 'miniature model photography, tilt-shift diorama, tiny detailed world, handcrafted scenery, scale model, shallow depth of field, toy-like realism';
-
-        case 'None':
-            return '';
-        default:
-            return `${(style as string).toLowerCase()} style, artistic, high quality`;
-    }
-};
-
 const generateSingleImage = async (
     options: GenerateOptions,
     imgIndex: number = 1,
@@ -248,7 +119,7 @@ const generateSingleImage = async (
     }
 
     if (options.style && options.style !== 'None') {
-        const styleKeywords = getStyleKeywords(options.style);
+        const styleKeywords = getStylePromptDescriptor(options.style);
         finalPrompt = `${finalPrompt}, ${styleKeywords}`;
     }
 

@@ -24,6 +24,7 @@ import {
 import { buildImageSidecarMetadata } from '../utils/imageSidecarMetadata';
 import { deriveExecutionMode } from '../utils/executionMode';
 import { sanitizeSessionHintsForStorage } from '../utils/inlineImageDisplay';
+import { buildStyleTransferPrompt } from '../utils/styleRegistry';
 
 const MODEL_TRANSLATION_KEYS: Record<ImageModel, string> = {
     'gemini-3.1-flash-image-preview': 'modelGemini31Flash',
@@ -171,7 +172,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
 
             let finalPrompt = targetPrompt;
             if (isStyleTransfer && !finalPrompt.trim()) {
-                finalPrompt = `Transform the visual content of the reference image into ${targetStyle} style. Maintain the original composition but apply the ${targetStyle} aesthetic characteristics strongly.`;
+                finalPrompt = buildStyleTransferPrompt(targetStyle);
                 addLog(t('logAutoFillStyle'));
             }
 

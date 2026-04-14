@@ -9,6 +9,7 @@ import {
 } from '../types';
 import { EMPTY_WORKSPACE_COMPOSER_STATE, sanitizeWorkspaceSnapshot } from './workspacePersistence';
 import { inferExecutionModeFromHistoryItem } from './executionMode';
+import { normalizeImageStyle } from './styleRegistry';
 import { normalizeStructuredOutputMode } from './structuredOutputs';
 
 export type AppliedWorkspaceSnapshotState = {
@@ -76,7 +77,7 @@ export const buildWorkspaceComposerStateFromHistoryItem = (item: GeneratedImage)
         prompt: item.prompt,
         aspectRatio: item.aspectRatio,
         imageSize: item.size,
-        imageStyle: item.style,
+        imageStyle: normalizeImageStyle(item.style),
         imageModel: model,
         batchSize: 1,
         outputFormat: (item.metadata?.outputFormat as OutputFormat) || 'images-only',

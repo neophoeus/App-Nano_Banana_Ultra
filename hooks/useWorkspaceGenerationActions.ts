@@ -33,6 +33,7 @@ type PerformGeneration = (
 
 type UseWorkspaceGenerationActionsArgs = {
     abortControllerRef: MutableRefObject<AbortController | null>;
+    isSurfaceWorkspaceOpen: boolean;
     prompt: string;
     aspectRatio: AspectRatio;
     imageSize: ImageSize;
@@ -59,8 +60,14 @@ type UseWorkspaceGenerationActionsArgs = {
     t: (key: string) => string;
 };
 
+export const resolveEffectiveSurfaceStyle = (
+    imageStyle: ImageStyle,
+    isSurfaceWorkspaceOpen: boolean,
+): ImageStyle => (isSurfaceWorkspaceOpen ? 'None' : imageStyle);
+
 export function useWorkspaceGenerationActions({
     abortControllerRef,
+    isSurfaceWorkspaceOpen,
     prompt,
     aspectRatio,
     imageSize,
@@ -84,13 +91,16 @@ export function useWorkspaceGenerationActions({
     t,
 }: UseWorkspaceGenerationActionsArgs) {
     const handleGenerate = useCallback(() => {
+        const effectiveStyle = resolveEffectiveSurfaceStyle(imageStyle, isSurfaceWorkspaceOpen);
+
         clearPendingProvenanceContext();
         resetSelectedOutputState();
         onPrepareGenerate();
-        performGeneration(prompt, aspectRatio, imageSize, imageStyle, imageModel);
+        performGeneration(prompt, aspectRatio, imageSize, effectiveStyle, imageModel);
     }, [
         aspectRatio,
         clearPendingProvenanceContext,
+        isSurfaceWorkspaceOpen,
         imageModel,
         imageSize,
         imageStyle,
@@ -105,6 +115,8 @@ export function useWorkspaceGenerationActions({
             showNotification(t('followUpEditRequiresStageImage'), 'error');
             return;
         }
+
+        const effectiveStyle = resolveEffectiveSurfaceStyle(imageStyle, isSurfaceWorkspaceOpen);
 
         const sourceOverride = resolveCurrentStageSelectionFirstSourceOverride({
             sourceHistoryId: currentStageAsset.sourceHistoryId ?? null,
@@ -124,7 +136,7 @@ export function useWorkspaceGenerationActions({
             prompt,
             aspectRatio,
             imageSize,
-            imageStyle,
+            effectiveStyle,
             imageModel,
             currentStageAsset.url,
             undefined,
@@ -140,6 +152,7 @@ export function useWorkspaceGenerationActions({
         characterImages,
         currentStageAsset,
         history,
+        isSurfaceWorkspaceOpen,
         imageModel,
         imageSize,
         imageStyle,

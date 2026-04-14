@@ -1,5 +1,36 @@
 # Changelog
 
+## v3.5.3 - 2026-04-14
+
+- Release title: Nano Banana Ultra 3.5.3 - Unified Generate Bar, Primary Enter Routing & Composer Enter Copy Refresh
+- Release summary:
+    - unified composer generate bar and embedded Enter control:
+        - rebuilt the composer bottom action area into one full-width generate surface instead of the earlier split layout, so the primary generate controls now read as one continuous action bar across the composer width
+        - moved the Enter behavior control into the far right of that same generate surface and restyled it as a vertical two-state toggle, aligning it more closely with the existing send-intent toggle language while keeping the interaction dedicated to keyboard behavior
+
+    - Enter now follows the visible primary generate action:
+        - pressing Enter in the composer now always routes through the same primary CTA logic shown on screen instead of bypassing it, so keyboard submit stays aligned with the current action state
+        - when no stage image is active, Enter triggers the main `Generate` action; when a stage image is active, Enter triggers the staged-image primary action instead of falling back to a fresh-generate path
+
+    - composer Enter wording refresh across maintained locales:
+        - updated the Enter behavior labels from the older short chip wording to the clearer `Press Enter to Send` and `Press Enter for New Line` phrasing
+        - propagated the same wording intent across the maintained localized composer dictionaries so the refreshed Enter behavior copy stays consistent outside English
+
+    - style hard migration and selector cleanup:
+        - promoted `Vintage Polaroid` to the broader canonical style `Vintage Instant Photo` and promoted `Comic Book` to `Comic Illustration`, so new state now writes the updated style ids while restored legacy workspace snapshots, history items, queued jobs, and saved sidecar metadata are upgraded into the new canonical names automatically
+        - moved style icon rendering onto shared registry-driven icon ids instead of keeping one large style-name switch inside the selector, which keeps the category browser unchanged while making future style maintenance and additions less repetitive
+        - tightened the rewritten style descriptors so broad styles stay reusable without locking the output into overly specific scene assumptions, especially across `Vintage Instant Photo`, `Comic Illustration`, `Cyberpunk`, `Vaporwave`, `Fantasy Art`, `Graffiti`, `Neon`, `Doodle`, and `Miniature`
+        - added maintained-locale labels for the new canonical style names so the renamed styles stay consistent across the supported UI dictionaries
+
+    - art style category chip wrapping:
+        - the Art Style theme/category chips in the styles sheet now wrap onto additional lines instead of staying in one horizontally scrolling strip, so the category bar remains inside the sheet width on narrower layouts
+        - category chips now allow longer localized labels to break within the button when needed, preventing the category row from overflowing its container or showing a horizontal scrollbar
+
+    - shared-controls surface simplification and no-style contract:
+        - the floating shared-controls card now places the `Shared` badge and `Settings` title on a single header row, removes the old standalone summary strip, and turns the action area into a vertical stack of buttons with their own embedded summary chips
+        - full shared-controls surfaces now expose only Prompt, Generation Settings, Advanced settings, and References, while sketch surfaces stay limited to Model and Ratio, removing Styles from the shared-controls surface model entirely
+        - any generate or follow-up action triggered while a shared-controls surface is open now uses an effective style of `None`, so surface-local editor and sketch workflows no longer inherit the main page style even though the main composer still keeps the user’s saved style selection
+
 ## v3.5.2 - 2026-04-13
 
 - Release title: Nano Banana Ultra 3.5.2 - Editor Entry Performance, Final-Frame Editor Contract, Shared Settings Parity & Viewer Contrast Polish

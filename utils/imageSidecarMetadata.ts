@@ -11,6 +11,7 @@ import {
     ThinkingLevel,
 } from '../types';
 import { deriveGroundingMode } from './groundingMode';
+import { normalizeImageStyle } from './styleRegistry';
 
 export const IMAGE_SIDECAR_METADATA_STATE_KEY = '__nanoBananaSidecarState';
 
@@ -62,7 +63,7 @@ export const buildImageSidecarMetadata = ({
 }: BuildImageSidecarMetadataArgs): ImageSidecarMetadata => ({
     prompt,
     model,
-    style,
+    style: normalizeImageStyle(style),
     aspectRatio,
     requestedImageSize,
     size: requestedImageSize,
@@ -110,7 +111,10 @@ export const normalizeImageSidecarMetadata = (value: unknown): ImageSidecarMetad
         return null;
     }
 
-    return value as ImageSidecarMetadata;
+    return {
+        ...(value as ImageSidecarMetadata),
+        style: normalizeImageStyle(value.style),
+    } as ImageSidecarMetadata;
 };
 
 export const isPersistedImageSidecarMetadata = (

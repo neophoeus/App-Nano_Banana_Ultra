@@ -497,7 +497,11 @@ function ComposerSettingsPanel({
     const displayedStyleLabel = normalizedStyleLabel.length > 0 ? normalizedStyleLabel : t('styleNone');
     const hasActiveStyle = displayedStyleLabel !== t('styleNone');
     const canUseMemorySendIntent = batchSize === 1;
-    const enterBehaviorToggleLabel = enterToSubmit ? t('composerEnterSends') : t('composerEnterNewline');
+    const enterBehaviorSendLabel = t('composerEnterSends');
+    const enterBehaviorNewlineLabel = t('composerEnterNewline');
+    const enterBehaviorToggleAriaLabel = enterToSubmit
+        ? `${enterBehaviorSendLabel}. ${enterBehaviorNewlineLabel}.`
+        : `${enterBehaviorNewlineLabel}. ${enterBehaviorSendLabel}.`;
     const sendIntentDisabledReason = !canUseMemorySendIntent
         ? resolveIntentText(
               'composerSendIntentDisabledReason',
@@ -636,6 +640,7 @@ function ComposerSettingsPanel({
     const primaryGenerateAriaLabel = hasStageSourceForContinuation ? followUpGenerateAriaLabel : generateLabel;
     const primaryGenerateTitle = hasStageSourceForContinuation ? followUpGenerateTitle : undefined;
     const handlePrimaryGenerate = hasStageSourceForContinuation ? onFollowUpGenerate : onGenerate;
+    const showSecondaryGenerateButton = !isGenerating && hasStageSourceForContinuation;
     const supportsThinkingLevelControl = capability.thinkingLevels.some((level) => level !== 'disabled');
     const hasGroundingControl = availableGroundingModes.length > 1;
     const sendIntentInfoPanelNode = sendIntentInfoOpen ? (
@@ -1122,7 +1127,7 @@ function ComposerSettingsPanel({
                                     onKeyDown={(e) => {
                                         if (enterToSubmit && e.key === 'Enter' && !e.shiftKey && !isGenerating) {
                                             e.preventDefault();
-                                            onGenerate();
+                                            handlePrimaryGenerate();
                                         }
                                     }}
                                 />
@@ -1176,33 +1181,14 @@ function ComposerSettingsPanel({
                 </div>
             </div>
 
-            <div className="mt-1.5 grid gap-1.5 lg:grid-cols-[minmax(0,248px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,264px)_minmax(0,1fr)]">
-                <div
-                    data-testid="composer-enter-behavior-card"
-                    className="min-w-0 nbu-floating-panel p-2 text-slate-900 dark:text-white"
-                >
-                    <div className="flex min-h-[64px] items-center justify-center rounded-[26px] border border-slate-200/75 bg-white/80 px-3 py-2 dark:border-slate-800/80 dark:bg-slate-950/55">
-                        <button
-                            type="button"
-                            data-testid="composer-enter-behavior-toggle"
-                            onClick={onToggleEnterToSubmit}
-                            className="nbu-chip inline-flex w-full min-w-0 items-center justify-center text-center"
-                        >
-                            <span className="truncate">{enterBehaviorToggleLabel}</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div
-                    data-testid="composer-generate-card"
-                    className="min-w-0 nbu-floating-panel rounded-[30px] p-2 text-slate-900 dark:text-white"
-                >
+            <div
+                data-testid="composer-generate-card"
+                className="mt-1.5 min-w-0 nbu-floating-panel rounded-[30px] p-2 text-slate-900 dark:text-white"
+            >
+                <div className="grid gap-1.5 md:grid-cols-[minmax(0,1fr)_minmax(0,220px)]">
                     <div
-                        className={`grid gap-1.5 ${
-                            hasStageSourceForContinuation
-                                ? 'sm:grid-cols-[minmax(0,1fr)_minmax(0,180px)]'
-                                : 'sm:grid-cols-1'
-                        }`}
+                        data-testid="composer-generate-actions"
+                        className={`grid gap-1.5 ${showSecondaryGenerateButton ? 'sm:grid-cols-[minmax(0,1fr)_minmax(0,180px)]' : 'sm:grid-cols-1'}`}
                     >
                         {isGenerating ? (
                             <Button
@@ -1222,7 +1208,7 @@ function ComposerSettingsPanel({
                                 {primaryGenerateLabel}
                             </Button>
                         )}
-                        {!isGenerating && hasStageSourceForContinuation ? (
+                        {showSecondaryGenerateButton ? (
                             <Button
                                 variant="secondary"
                                 onClick={onGenerate}
@@ -1231,6 +1217,49 @@ function ComposerSettingsPanel({
                                 {generateLabel}
                             </Button>
                         ) : null}
+                    </div>
+
+                    <div data-testid="composer-enter-behavior-card" className="min-w-0">
+                        <button
+                            type="button"
+                            data-testid="composer-enter-behavior-toggle"
+                            data-active-mode={enterToSubmit ? 'send' : 'newline'}
+                            aria-label={enterBehaviorToggleAriaLabel}
+                            aria-pressed={enterToSubmit}
+                            onClick={onToggleEnterToSubmit}
+                            className="group relative grid min-h-[64px] w-full min-w-0 grid-rows-2 gap-1 rounded-[28px] border border-slate-300/90 bg-slate-200/95 p-1 text-left shadow-inner shadow-slate-300/70 transition-colors hover:border-slate-400/80 focus:outline-none focus:ring-2 focus:ring-amber-300 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
+                        >
+                            <span
+                                data-testid="composer-enter-behavior-thumb"
+                                data-active-mode={enterToSubmit ? 'send' : 'newline'}
+                                aria-hidden="true"
+                                className={`pointer-events-none absolute left-1 right-1 rounded-[24px] bg-amber-500 transition-all duration-200 ease-out dark:bg-amber-300 ${
+                                    enterToSubmit
+                                        ? 'top-1 bottom-[calc(50%+0.125rem)] shadow-[0_10px_24px_rgba(245,158,11,0.18)] dark:shadow-none'
+                                        : 'top-[calc(50%+0.125rem)] bottom-1 shadow-[0_10px_24px_rgba(245,158,11,0.18)] dark:shadow-none'
+                                }`}
+                            />
+                            <span
+                                data-testid="composer-enter-behavior-send-option"
+                                data-selected={enterToSubmit ? 'true' : 'false'}
+                                aria-hidden="true"
+                                className={`relative z-10 flex min-w-0 items-center justify-center rounded-[24px] px-3 py-2 text-center text-[11px] font-semibold leading-tight transition-colors ${
+                                    enterToSubmit ? 'text-white dark:text-slate-950' : 'text-slate-600 dark:text-slate-500'
+                                }`}
+                            >
+                                <span className="truncate">{enterBehaviorSendLabel}</span>
+                            </span>
+                            <span
+                                data-testid="composer-enter-behavior-newline-option"
+                                data-selected={enterToSubmit ? 'false' : 'true'}
+                                aria-hidden="true"
+                                className={`relative z-10 flex min-w-0 items-center justify-center rounded-[24px] px-3 py-2 text-center text-[11px] font-semibold leading-tight transition-colors ${
+                                    enterToSubmit ? 'text-slate-600 dark:text-slate-500' : 'text-white dark:text-slate-950'
+                                }`}
+                            >
+                                <span className="truncate">{enterBehaviorNewlineLabel}</span>
+                            </span>
+                        </button>
                     </div>
                 </div>
             </div>

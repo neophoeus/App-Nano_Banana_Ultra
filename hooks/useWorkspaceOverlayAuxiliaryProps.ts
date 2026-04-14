@@ -7,7 +7,6 @@ import {
     GroundingMode,
     ImageModel,
     ImageSize,
-    ImageStyle,
     OutputFormat,
     StructuredOutputMode,
     ThinkingLevel,
@@ -32,12 +31,10 @@ type UseWorkspaceOverlayAuxiliaryPropsArgs = {
     currentLanguage: Language;
     isSurfaceWorkspaceOpen: boolean;
     isAdvancedSettingsOpen: boolean;
-    isEditing: boolean;
     activePickerSheet: SurfaceSharedControlsProps['activePickerSheet'];
     settingsVariant: SurfaceSharedControlsVariant;
     totalReferenceCount: number;
     hasSurfacePrompt: boolean;
-    imageStyle: ImageStyle;
     imageModel: ImageModel;
     capability: ModelCapability;
     availableGroundingModes: GroundingMode[];
@@ -58,7 +55,6 @@ type UseWorkspaceOverlayAuxiliaryPropsArgs = {
     onSurfaceSharedControlsBottomChange: (bottom: number) => void;
     openSurfacePickerSheet: SurfaceSharedControlsProps['onOpenSheet'];
     openAdvancedSettings: () => void;
-    getStyleLabel: (style: ImageStyle) => string;
     getModelLabel: (model: ImageModel) => string;
     workspaceImportReview: WorkspaceImportReviewProps['review'] | null;
     importedBranchSummaries: WorkspaceImportReviewProps['importedBranchSummaries'];
@@ -85,12 +81,10 @@ export function useWorkspaceOverlayAuxiliaryProps({
     currentLanguage,
     isSurfaceWorkspaceOpen,
     isAdvancedSettingsOpen,
-    isEditing,
     activePickerSheet,
     settingsVariant,
     totalReferenceCount,
     hasSurfacePrompt,
-    imageStyle,
     imageModel,
     capability,
     availableGroundingModes,
@@ -111,7 +105,6 @@ export function useWorkspaceOverlayAuxiliaryProps({
     onSurfaceSharedControlsBottomChange,
     openSurfacePickerSheet,
     openAdvancedSettings,
-    getStyleLabel,
     getModelLabel,
     workspaceImportReview,
     importedBranchSummaries,
@@ -139,7 +132,6 @@ export function useWorkspaceOverlayAuxiliaryProps({
                       isAdvancedSettingsOpen,
                       totalReferenceCount,
                       hasPrompt: hasSurfacePrompt,
-                      styleLabel: getStyleLabel(imageStyle),
                       capability,
                       availableGroundingModes,
                       modelLabel: getModelLabel(imageModel),
@@ -157,7 +149,6 @@ export function useWorkspaceOverlayAuxiliaryProps({
                       maxObjects,
                       maxCharacters,
                       settingsVariant,
-                      showStyleControl: !isEditing,
                       containerClassName: 'fixed left-4 top-20 md:left-5 md:top-24',
                       containerStyle: { zIndex: floatingControlsZIndex },
                       onBottomOffsetChange: onSurfaceSharedControlsBottomChange,
@@ -213,7 +204,6 @@ export function useWorkspaceOverlayAuxiliaryProps({
             getImportedContinueActionLabel,
             getModelLabel,
             getShortTurnId,
-            getStyleLabel,
             handleApplyImportedWorkspaceSnapshot,
             handleCloseWorkspaceImportReview,
             handleMergeImportedWorkspaceSnapshot,
@@ -221,7 +211,6 @@ export function useWorkspaceOverlayAuxiliaryProps({
             groundingMode,
             imageModel,
             imageSize,
-            imageStyle,
             includeThoughts,
             availableGroundingModes,
             onSurfaceSharedControlsBottomChange,
@@ -231,7 +220,6 @@ export function useWorkspaceOverlayAuxiliaryProps({
             importedBranchSummaries,
             importedLatestSuccessfulTurn,
             importedLatestTurn,
-            isEditing,
             isImportedPromotedContinuationSource,
             isSurfaceWorkspaceOpen,
             maxCharacters,

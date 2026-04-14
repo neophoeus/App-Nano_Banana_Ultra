@@ -16,7 +16,16 @@ export type AspectRatio =
 export type EditorMode = 'inpaint' | 'outpaint';
 export type ImageSize = '512' | '1K' | '2K' | '4K';
 
-export type ImageStyleCategory = 'All' | 'Photo' | 'Classic' | 'Digital' | 'Stylized' | 'Craft' | 'Design';
+export type ImageStyleCategory =
+    | 'All'
+    | 'PhotoFilm'
+    | 'PaintDrawing'
+    | 'Illustration'
+    | 'ComicsAnime'
+    | 'GraphicDesign'
+    | 'ThreeDPixel'
+    | 'CraftMaterial'
+    | 'Experimental';
 
 export type ImageStyle =
     // Base
@@ -25,7 +34,7 @@ export type ImageStyle =
     | 'Photorealistic'
     | 'Cinematic'
     | 'Film Noir'
-    | 'Vintage Polaroid'
+    | 'Vintage Instant Photo'
     | 'Macro'
     | 'Long Exposure'
     | 'Double Exposure'
@@ -61,10 +70,17 @@ export type ImageStyle =
     | 'Psychedelic'
     | 'Gothic'
     | 'Steampunk'
-    | 'Comic Book'
+    | 'Comic Illustration'
     | 'Fantasy Art'
     | 'Stained Glass'
     | 'Graffiti'
+    // Illustration additions
+    | 'Digital Illustration'
+    | 'Painterly Illustration'
+    | 'Editorial Illustration'
+    | 'Concept Art'
+    | 'Line Art'
+    | 'Storybook Illustration'
     // Craft
     | 'Claymation'
     | 'Origami'

@@ -29,6 +29,7 @@ import {
     isQueuedBatchJobImportReady,
     isQueuedBatchJobRefreshable,
 } from '../utils/queuedBatchJobs';
+import { buildStyleTransferPrompt } from '../utils/styleRegistry';
 import { useQueuedBatchJobs } from './useQueuedBatchJobs';
 
 const QUEUED_BATCH_JOB_STATES: QueuedBatchJobState[] = [
@@ -307,7 +308,7 @@ export function useQueuedBatchWorkflow({
             ? prompt
             : editingInput
               ? 'High resolution, seamless integration with surrounding context, maintain consistent lighting and texture.'
-              : `Transform the visual content of the reference image into ${imageStyle} style. Maintain the original composition but apply the ${imageStyle} aesthetic characteristics strongly.`;
+                            : buildStyleTransferPrompt(imageStyle);
         const generationMode = currentStageAsset?.url
             ? 'Follow-up Edit'
             : objectImages.length > 0 || characterImages.length > 0

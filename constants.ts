@@ -1,13 +1,12 @@
 import {
     AspectRatio,
     ImageSize,
-    ImageStyle,
-    ImageStyleCategory,
     OutputFormat,
     StructuredOutputMode,
     ThinkingLevel,
 } from './types';
 import { IMAGE_MODELS, MODEL_CAPABILITIES, type ModelCapability } from './utils/modelCapabilities';
+export { STYLE_CATEGORIES, STYLES_BY_CATEGORY } from './utils/styleRegistry';
 
 export { IMAGE_MODELS, MODEL_CAPABILITIES };
 export type { ModelCapability };
@@ -51,80 +50,3 @@ export const THINKING_LEVELS: Array<{ value: ThinkingLevel; label: string }> = [
     { value: 'minimal', label: 'Minimal' },
     { value: 'high', label: 'High' },
 ];
-
-export const STYLE_CATEGORIES: ImageStyleCategory[] = [
-    'All',
-    'Photo',
-    'Classic',
-    'Digital',
-    'Stylized',
-    'Craft',
-    'Design',
-];
-
-// Mapping styles to categories for filtering
-export const STYLES_BY_CATEGORY: Record<ImageStyleCategory, ImageStyle[]> = {
-    Photo: [
-        'Photorealistic',
-        'Cinematic',
-        'Film Noir',
-        'Vintage Polaroid',
-        'Macro',
-        'Long Exposure',
-        'Double Exposure',
-        'Tilt-Shift',
-        'Knolling',
-    ],
-    Classic: [
-        'Oil Painting',
-        'Watercolor',
-        'Pencil Sketch',
-        'Ukiyo-e',
-        'Ink Wash',
-        'Impressionism',
-        'Mosaic',
-        'Pastel',
-        'Art Nouveau',
-        'Baroque',
-        'Art Deco',
-    ],
-    Digital: [
-        'Anime',
-        '3D Render',
-        'Cyberpunk',
-        'Pixel Art',
-        'Low Poly',
-        'Vaporwave',
-        'Isometric',
-        'Vector Art',
-        'Glitch Art',
-        'Manga',
-        'Chibi',
-    ],
-    Stylized: [
-        'Surrealism',
-        'Pop Art',
-        'Psychedelic',
-        'Gothic',
-        'Steampunk',
-        'Comic Book',
-        'Fantasy Art',
-        'Stained Glass',
-        'Graffiti',
-    ],
-    Craft: ['Claymation', 'Origami', 'Knitted', 'Paper Cutout', 'Wood Carving', 'Porcelain', 'Embroidery', 'Crystal'],
-    Design: ['Blueprint', 'Sticker', 'Doodle', 'Neon', 'Flat Design', 'Miniature'],
-    All: [], // Populated dynamically below
-};
-
-// Flatten all styles for the 'All' category (excluding None, which is handled separately or first)
-const allStyles = [
-    ...STYLES_BY_CATEGORY['Photo'],
-    ...STYLES_BY_CATEGORY['Classic'],
-    ...STYLES_BY_CATEGORY['Digital'],
-    ...STYLES_BY_CATEGORY['Stylized'],
-    ...STYLES_BY_CATEGORY['Craft'],
-    ...STYLES_BY_CATEGORY['Design'],
-];
-
-STYLES_BY_CATEGORY['All'] = ['None', ...allStyles];
