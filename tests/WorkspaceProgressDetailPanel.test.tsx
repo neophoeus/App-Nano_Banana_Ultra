@@ -221,4 +221,72 @@ describe('WorkspaceProgressDetailPanel', () => {
         );
         expect(container.querySelector('[data-testid="workspace-progress-detail-selected-live"]')).toBeNull();
     });
+
+    it('shows archived failed entries with a failed cue and replays their thought stream', () => {
+        act(() => {
+            root.render(
+                <WorkspaceProgressDetailPanel
+                    currentLanguage="en"
+                    thoughtEntries={[
+                        {
+                            id: 'turn-success',
+                            shortId: 'turn-suc',
+                            prompt: 'Keep the hero image stable and clean up the storefront reflections.',
+                            thoughts: 'Preserve the storefront silhouette and reduce the brightest glare first.',
+                            createdAtLabel: '10:18',
+                            createdAtMs: 1710253080000,
+                        },
+                        {
+                            id: 'failed-stream-turn',
+                            shortId: 'failed-s',
+                            prompt: 'Retry the failed pass but keep the poster geometry locked.',
+                            thoughts: 'Failed turn thought text survives selection.',
+                            resultParts: [
+                                {
+                                    sequence: 0,
+                                    kind: 'thought-text',
+                                    text: 'Failed turn thought text survives selection.',
+                                },
+                                {
+                                    sequence: 1,
+                                    kind: 'thought-image',
+                                    imageUrl: '/api/load-image?filename=failed-thought.png',
+                                },
+                            ],
+                            createdAtLabel: '10:17',
+                            createdAtMs: 1710253020000,
+                            isFailed: true,
+                        },
+                    ]}
+                />,
+            );
+        });
+
+        const failedHistoryButton = container.querySelector(
+            '[data-testid="workspace-progress-detail-history-entry-failed-s"]',
+        ) as HTMLButtonElement | null;
+        const failedHistoryStatus = container.querySelector(
+            '[data-testid="workspace-progress-detail-history-entry-status-failed-s"]',
+        ) as HTMLSpanElement | null;
+
+        expect(container.querySelector('[data-testid="workspace-progress-detail-history-nav"]')).toBeTruthy();
+        expect(failedHistoryButton).toBeTruthy();
+        expect(failedHistoryStatus?.textContent).toContain('Failed');
+
+        act(() => {
+            failedHistoryButton?.click();
+        });
+
+        expect(container.querySelector('[data-testid="workspace-progress-detail-selected-failed"]')).toBeTruthy();
+        expect(
+            (container.querySelector(
+                '[data-testid="workspace-progress-detail-part-text-failed-s-0"]',
+            ) as HTMLElement | null)?.textContent,
+        ).toContain('Failed turn thought text survives selection.');
+        expect(
+            (container.querySelector(
+                '[data-testid="workspace-progress-detail-part-image-failed-s-1"] img',
+            ) as HTMLImageElement | null)?.getAttribute('src'),
+        ).toBe('/api/load-image?filename=failed-thought.png');
+    });
 });

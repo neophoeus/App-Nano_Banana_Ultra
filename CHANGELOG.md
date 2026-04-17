@@ -1,5 +1,29 @@
 # Changelog
 
+## v3.5.6 - 2026-04-17
+
+- Release title: Nano Banana Ultra 3.5.6 - Failed Thought Rediscovery, Progress Failure Cues, App-Scoped Vitest Contracts & Style-First Prompt Recipes
+- Release summary:
+    - Progress-only failed thought rediscovery:
+        - kept failed-generation thinking review inside the existing Progress path rather than broadening failed entry points into the main viewer, filmstrip, or versions surfaces
+        - broadened archived Progress derivation so thought-bearing failed turns from full workspace history are merged into the archived Progress navigator, allowing failed thought text and thought images to be reopened even when the failed turn is no longer the active history selection
+        - preserved selected Progress entry precedence during dedupe so explicitly reopened failed turns continue to surface their own persisted thought artifacts instead of being replaced by success-first branch summaries
+        - added a small failed status chip in the archived Progress navigator and selected detail header, making failed thought streams recognizable without introducing extra CTA surfaces elsewhere in the workspace
+        - kept the Progress support-rail signal active when archived failed thought artifacts exist, so persisted failed thinking remains discoverable through Progress after generation failure
+
+    - app-scoped Vitest entry contracts:
+        - added a dedicated `vitest.config.ts` at the app root so unit-test discovery, test-directory boundaries, and project alias resolution now live in one explicit project-scoped contract instead of being inferred from whichever working directory launched Vitest
+        - updated the supported unit-test runners to point explicitly at that app-scoped Vitest config, including the repo wrappers and VS Code launch entries, so project-local testing stays anchored to `App-Nano_Banana_Ultra` while the parent workspace can still keep shared task and launch surfaces
+        - kept `vitest` and `jsdom` isolated inside `dev-environment/` while making the supported `npm run test -- ...` and wrapper-driven unit-test paths resolve through the project contract instead of depending on bare `npx vitest` behavior or root-level dev dependencies
+
+    - style-first prompt recipes and cross-path style consistency:
+        - replaced the older suffix-only style prompt assembly with a shared style-first prompt builder so selected styles are now front-loaded as the governing visual treatment instead of being appended as trailing descriptor noise after long user prompts
+        - changed the final image prompt structure to separate selected style, style directive, style anchors, and subject-scene intent, making prompt-heavy requests keep the chosen style dominant while still preserving the user's requested content and composition intent
+        - applied that shared style prompt builder across interactive single-image generation, live-progress streaming requests, and queued batch submission so style behavior no longer diverges between those request paths
+        - added a stronger per-style prompt directive for every active style in the central style registry, giving each style an explicit high-level rendering instruction in addition to its existing anchor descriptors so related styles can separate more clearly
+        - upgraded style-transfer fallback prompts to use the same selected-style, directive, and anchor structure, so reference-image style transfer and style-only fallback requests now speak the same stronger prompt language as normal image generation
+        - preserved existing style ids, labels, and normalization behavior while strengthening only the prompt contract, so stored style selections remain compatible with the current workspace, history, and sidecar metadata flows
+
 ## v3.5.5 - 2026-04-16
 
 - Release title: Nano Banana Ultra 3.5.5 - Response Removal, Live Progress Streaming, Failure Persistence, Fan-Out & Capability Probe
@@ -9,6 +33,11 @@
         - removed the viewer-side standalone result-text presentation because the current image-generation paths do not reliably produce a separate user-facing text result worth keeping as a primary surface
         - preserved ordered provider result artifacts end to end through a shared `resultParts` contract that distinguishes thought text, output text, thought images, and output images instead of flattening everything into one generic text field
         - changed Progress to render chronological thought artifacts from those structured result parts, so persisted and reopened turns can show mixed thought text plus thought images in the same ordered stream
+        - widened the desktop Progress detail modal so the thinking surface can support a broader two-column reading layout without changing the Sources modal width
+        - replaced the older mixed Progress / Workflow / latest-thought / all-thought stack with a clearer structure that keeps only a compact Progress summary plus Workflow summary at the top and moves detailed reading into a dedicated master-detail body
+        - split Progress navigation into separate live-slot and archived-turn sections, so active multi-image thought streams no longer compete visually with archived history in one flattened list
+        - changed the selected-detail side to show one chosen live slot or archived turn at a time, including prompt preview, chronological thought text and thought images, and lightweight status cues for live state
+        - changed default Progress selection to prefer the first live slot while generation is active and otherwise fall back to the newest archived thought entry, while still preserving manual user selection until that entry disappears
 
     - real-time live progress transport and truthful Progress activation:
         - added a dedicated `/api/images/generate-stream` NDJSON route for eligible interactive image requests so thought parts can arrive incrementally before the final image completes instead of only appearing after the full response finishes

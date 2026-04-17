@@ -5,6 +5,7 @@ import {
     buildStyleTransferPrompt,
     getStyleIconId,
     getStylePromptDescriptor,
+    getStylePromptDirective,
     getStyleTranslationKey,
     normalizeImageStyle,
 } from '../utils/styleRegistry';
@@ -36,6 +37,9 @@ describe('styleRegistry', () => {
         expect(STYLES_BY_CATEGORY.All).toContain('Digital Illustration');
         expect(STYLES_BY_CATEGORY.PhotoFilm).toContain('Vintage Instant Photo');
         expect(STYLES_BY_CATEGORY.ComicsAnime).toContain('Comic Illustration');
+        expect(
+            STYLES_BY_CATEGORY.All.filter((style) => style !== 'None').every((style) => getStylePromptDirective(style).length > 0),
+        ).toBe(true);
     });
 
     it('keeps rewritten descriptors broad instead of locking to named artists or tools', () => {
@@ -57,8 +61,10 @@ describe('styleRegistry', () => {
 
         for (const { style, bannedTerms } of descriptorChecks) {
             const descriptor = getStylePromptDescriptor(style).toLowerCase();
+            const directive = getStylePromptDirective(style).toLowerCase();
             for (const term of bannedTerms) {
                 expect(descriptor).not.toContain(term);
+                expect(directive).not.toContain(term);
             }
         }
     });
@@ -68,8 +74,10 @@ describe('styleRegistry', () => {
         expect(normalizeImageStyle('Vintage Polaroid')).toBe('Vintage Instant Photo');
         expect(normalizeImageStyle('Comic Book')).toBe('Comic Illustration');
         expect(normalizeImageStyle('')).toBe('None');
-        expect(buildStyleTransferPrompt('Digital Illustration')).toContain('digital-illustration treatment');
-        expect(buildStyleTransferPrompt('Comic Illustration')).toContain('comic-illustration treatment');
+        expect(buildStyleTransferPrompt('Digital Illustration')).toContain('Selected style: Digital Illustration.');
+        expect(buildStyleTransferPrompt('Digital Illustration')).toContain('Style directive:');
+        expect(buildStyleTransferPrompt('Digital Illustration')).toContain('Style anchors:');
+        expect(buildStyleTransferPrompt('Comic Illustration')).toContain('Selected style: Comic Illustration.');
         expect(getStyleTranslationKey('Vintage Polaroid')).toBe('styleVintageInstantPhoto');
         expect(getStyleIconId('Comic Book')).toBe(getStyleIconId('Comic Illustration'));
     });

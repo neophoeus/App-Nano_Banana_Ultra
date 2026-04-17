@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buildConversationRequestContext } from '../utils/conversationState';
 import { generateImageWithGemini } from '../services/geminiService';
+import { buildStyleAwareImagePrompt } from '../utils/stylePromptBuilder';
 import { sanitizeWorkspaceSnapshot } from '../utils/workspacePersistence';
-import { getStylePromptDescriptor } from '../utils/styleRegistry';
 
 const restoredOfficialConversationSnapshot = {
     history: [
@@ -220,7 +220,7 @@ describe('official conversation request path', () => {
 
         expect(fetchMock).toHaveBeenCalledTimes(1);
         const [input, init] = fetchMock.mock.calls[0];
-    expect(input).toBe('/api/images/generate-stream');
+        expect(input).toBe('/api/images/generate-stream');
         expect(init?.method).toBe('POST');
         const requestBody = JSON.parse(String(init?.body));
         expect(requestBody.executionMode).toBe('chat-continuation');
@@ -273,7 +273,20 @@ describe('official conversation request path', () => {
         const [, init] = fetchMock.mock.calls[0];
         const requestBody = JSON.parse(String(init?.body));
         expect(requestBody.prompt).toBe(
-            `Create a calm bookstore reading nook, ${getStylePromptDescriptor('Digital Illustration')}`,
+            buildStyleAwareImagePrompt({
+                prompt: 'Create a calm bookstore reading nook',
+                aspectRatio: '1:1',
+                imageSize: '1K',
+                style: 'Digital Illustration',
+                model: 'gemini-3.1-flash-image-preview',
+                outputFormat: 'images-only',
+                temperature: 1,
+                thinkingLevel: 'minimal',
+                includeThoughts: false,
+                googleSearch: false,
+                imageSearch: false,
+                executionMode: 'single-turn',
+            }),
         );
     });
 

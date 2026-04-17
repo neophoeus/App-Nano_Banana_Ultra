@@ -7,7 +7,7 @@
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/dev-environment/node_modules/vitest/vitest.mjs",
-            "args": ["run", "${file}", "--root", "${workspaceFolder}"],
+            "args": ["run", "${file}", "--config", "${workspaceFolder}/vitest.config.ts", "--root", "${workspaceFolder}"],
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen",
             "skipFiles": ["<node_internals>/**"]

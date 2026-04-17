@@ -128,6 +128,7 @@ type ProgressThoughtEntry = {
     slotIndex?: number;
     slotLabel?: string;
     isLive?: boolean;
+    isFailed?: boolean;
 };
 
 type ActiveLiveProgressSlot = {
@@ -2609,6 +2610,7 @@ const App: React.FC = () => {
                           minute: '2-digit',
                       })
                     : sessionUpdatedLabel,
+            isFailed: selectedProgressHistoryItem.status === 'failed',
         } satisfies ProgressThoughtEntry;
     }, [
         selectedProgressHistoryItem,
@@ -2660,8 +2662,44 @@ const App: React.FC = () => {
         () => liveProgressThoughtsText || selectedProgressThoughtsText || effectiveProgressThoughtsText,
         [effectiveProgressThoughtsText, liveProgressThoughtsText, selectedProgressThoughtsText],
     );
+    const progressHistoryThoughtTurns = useMemo<GeneratedImageType[]>(() => {
+        const hasThoughtArtifacts = (turn: GeneratedImageType) =>
+            Boolean(turn.thoughts?.trim()) || getThoughtResultParts(turn.resultParts).length > 0;
+
+        const relevantHistoryTurns =
+            workspaceSession.conversationTurnIds.length > 0
+                ? workspaceSession.conversationTurnIds
+                      .map((historyId) => getHistoryTurnById(historyId))
+                      .filter((item): item is NonNullable<typeof item> => Boolean(item))
+                : currentStageBranchSummary?.turns && currentStageBranchSummary.turns.length > 0
+                  ? currentStageBranchSummary.turns
+                  : activeBranchSummary?.turns && activeBranchSummary.turns.length > 0
+                    ? activeBranchSummary.turns
+                    : currentStageSourceTurn
+                      ? [currentStageSourceTurn]
+                      : [];
+        const failedThoughtTurns = history.filter(
+            (turn) => turn.status === 'failed' && hasThoughtArtifacts(turn),
+        );
+
+        return [...relevantHistoryTurns, ...failedThoughtTurns]
+            .filter(hasThoughtArtifacts)
+            .filter((turn, index, turns) => turns.findIndex((candidate) => candidate.id === turn.id) === index)
+            .sort((left, right) => (right.createdAt ?? Number.MIN_SAFE_INTEGER) - (left.createdAt ?? Number.MIN_SAFE_INTEGER));
+    }, [
+        activeBranchSummary,
+        currentStageBranchSummary,
+        currentStageSourceTurn,
+        getHistoryTurnById,
+        history,
+        workspaceSession.conversationTurnIds,
+    ]);
     const hasProgressActivity = Boolean(
-        liveProgressThoughtEntries.length > 0 || selectedProgressEntry || effectiveProgressThoughtsText || effectiveThoughtParts.length > 0,
+        liveProgressThoughtEntries.length > 0 ||
+            selectedProgressEntry ||
+            progressHistoryThoughtTurns.length > 0 ||
+            effectiveProgressThoughtsText ||
+            effectiveThoughtParts.length > 0,
     );
     const hasSourceTrailInfo = Boolean(
         groundingQueries.length > 0 ||
@@ -2713,32 +2751,13 @@ const App: React.FC = () => {
                     hour: '2-digit',
                     minute: '2-digit',
                 }),
+                isFailed: turn.status === 'failed',
             };
         };
         const dedupeEntriesById = (entries: ProgressThoughtEntry[]) =>
             entries.filter(
                 (entry, index, allEntries) => allEntries.findIndex((candidate) => candidate.id === entry.id) === index,
             );
-        const historyTurns =
-            workspaceSession.conversationTurnIds.length > 0
-                ? workspaceSession.conversationTurnIds
-                      .map((historyId) => getHistoryTurnById(historyId))
-                      .filter((item): item is NonNullable<typeof item> => Boolean(item))
-                : currentStageBranchSummary?.turns && currentStageBranchSummary.turns.length > 0
-                  ? currentStageBranchSummary.turns
-                  : activeBranchSummary?.turns && activeBranchSummary.turns.length > 0
-                    ? activeBranchSummary.turns
-                    : currentStageSourceTurn
-                      ? [currentStageSourceTurn]
-                      : [];
-        const uniqueTurns = historyTurns.filter(
-            (turn, index, turns) => turns.findIndex((candidate) => candidate.id === turn.id) === index,
-        );
-        const thoughtTurns = uniqueTurns
-            .filter((turn) => Boolean(turn.thoughts?.trim()) || getThoughtResultParts(turn.resultParts).length > 0)
-            .map(mapTurnToThoughtEntry)
-            .reverse();
-
         const mergeWithLiveEntries = (entries: ProgressThoughtEntry[]) => {
             const archivedEntries = dedupeEntriesById(entries);
 
@@ -2750,7 +2769,15 @@ const App: React.FC = () => {
             return [...liveProgressThoughtEntries, ...archivedEntries.filter((entry) => !liveEntryIds.has(entry.id))];
         };
 
-        const archivedThoughtEntries = selectedProgressEntry ? [selectedProgressEntry, ...thoughtTurns] : thoughtTurns;
+        const archivedThoughtEntries = dedupeEntriesById([
+            ...(selectedProgressEntry ? [selectedProgressEntry] : []),
+            ...progressHistoryThoughtTurns.map(mapTurnToThoughtEntry),
+        ]).sort((left, right) => {
+            const leftMs = left.createdAtMs ?? Number.MIN_SAFE_INTEGER;
+            const rightMs = right.createdAtMs ?? Number.MIN_SAFE_INTEGER;
+
+            return rightMs - leftMs;
+        });
 
         if (archivedThoughtEntries.length > 0) {
             return mergeWithLiveEntries(archivedThoughtEntries);
@@ -2772,18 +2799,15 @@ const App: React.FC = () => {
             },
         ]);
     }, [
-        activeBranchSummary,
-        currentStageBranchSummary,
         currentStageSourceTurn,
         effectiveProgressThoughtsText,
         effectiveThoughtParts,
-        getHistoryTurnById,
         liveProgressThoughtEntries,
         prompt,
+        progressHistoryThoughtTurns,
         selectedProgressEntry,
         sessionUpdatedLabel,
         t,
-        workspaceSession.conversationTurnIds,
         workspaceSession.sourceHistoryId,
         workspaceSession.updatedAt,
     ]);

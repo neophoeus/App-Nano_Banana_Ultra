@@ -625,6 +625,68 @@ describe('App official conversation flow', () => {
         });
     });
 
+    it('keeps failed thought turns discoverable from progress history without reselecting the failed turn', async () => {
+        localStorage.setItem(WORKSPACE_SNAPSHOT_STORAGE_KEY, JSON.stringify(restoredFailedProgressSelectionSnapshot));
+
+        await act(async () => {
+            root.render(<App />);
+        });
+
+        const progressEntry = await waitFor(() => {
+            const button = document.querySelector(
+                '[data-testid="workspace-progress-open-details"]',
+            ) as HTMLButtonElement | null;
+            expect(button).toBeTruthy();
+            return button!;
+        });
+        await clickElement(progressEntry);
+
+        await waitFor(() => {
+            expect(document.querySelector('[data-testid="workspace-progress-detail-modal"]')).toBeTruthy();
+        });
+
+        const failedHistoryEntry = await waitFor(() => {
+            const button = document.querySelector(
+                '[data-testid="workspace-progress-detail-history-entry-failed-s"]',
+            ) as HTMLButtonElement | null;
+            expect(button).toBeTruthy();
+            return button!;
+        });
+
+        const failedHistoryStatus = document.querySelector(
+            '[data-testid="workspace-progress-detail-history-entry-status-failed-s"]',
+        ) as HTMLElement | null;
+        expect(failedHistoryStatus?.textContent).toContain('Failed');
+
+        await clickElement(failedHistoryEntry);
+
+        await waitFor(() => {
+            const failedBadge = document.querySelector(
+                '[data-testid="workspace-progress-detail-selected-failed"]',
+            ) as HTMLElement | null;
+            expect(failedBadge).toBeTruthy();
+            return failedBadge!;
+        });
+
+        await waitFor(() => {
+            const thoughtText = document.querySelector(
+                '[data-testid="workspace-progress-detail-part-text-failed-s-0"]',
+            ) as HTMLElement | null;
+            expect(thoughtText).toBeTruthy();
+            expect(thoughtText!.textContent).toContain('Failed turn thought text survives selection.');
+            return thoughtText!;
+        });
+
+        await waitFor(() => {
+            const thoughtImage = document.querySelector(
+                '[data-testid="workspace-progress-detail-part-image-failed-s-1"] img',
+            ) as HTMLImageElement | null;
+            expect(thoughtImage).toBeTruthy();
+            expect(thoughtImage!.getAttribute('src')).toBe('/api/load-image?filename=failed-thought.png');
+            return thoughtImage!;
+        });
+    });
+
     it('disables repaint after clearing the stage even when a restored history selection still exists', async () => {
         await act(async () => {
             root.render(<App />);

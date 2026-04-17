@@ -1,4 +1,11 @@
-import { GenerateOptions, GenerateResponse, ImageReceivedResult, ImageStyle, QueuedBatchJobStats, ResultPart } from '../types';
+import {
+    GenerateOptions,
+    GenerateResponse,
+    ImageReceivedResult,
+    ImageStyle,
+    QueuedBatchJobStats,
+    ResultPart,
+} from '../types';
 import {
     attachGenerationFailure,
     getGenerationFailure,
@@ -9,7 +16,7 @@ import {
     isLiveProgressEligibleRequest,
     LiveProgressStreamTruthSummary,
 } from '../utils/liveProgressCapabilities';
-import { getStylePromptDescriptor } from '../utils/styleRegistry';
+import { buildStyleAwareImagePrompt } from '../utils/stylePromptBuilder';
 import { Language } from '../utils/translations';
 
 const jsonHeaders = {
@@ -134,26 +141,6 @@ async function fetchNdjson<T>(
     }
 }
 
-function buildFinalPrompt(options: GenerateOptions): string {
-    let finalPrompt = options.prompt;
-    const hasInputImages =
-        (options.objectImageInputs && options.objectImageInputs.length > 0) ||
-        (options.characterImageInputs && options.characterImageInputs.length > 0);
-
-    if (!finalPrompt || finalPrompt.trim() === '') {
-        finalPrompt = hasInputImages
-            ? 'High resolution, seamless integration with surrounding context, maintain consistent lighting and texture.'
-            : 'A creative image.';
-    }
-
-    if (options.style && options.style !== 'None') {
-        const styleKeywords = getStylePromptDescriptor(options.style);
-        finalPrompt = `${finalPrompt}, ${styleKeywords}`;
-    }
-
-    return finalPrompt;
-}
-
 type StreamRouteStartEvent = {
     type: 'start';
     sessionId: string;
@@ -275,7 +262,9 @@ const buildResultPartTextSummary = (
     return summary || undefined;
 };
 
-const mergeAccumulatedStreamPartialResponse = <T extends GenerateResponse | GenerationResultPartialResponse | undefined>(
+const mergeAccumulatedStreamPartialResponse = <
+    T extends GenerateResponse | GenerationResultPartialResponse | undefined,
+>(
     partialResponse: T,
     accumulator: LiveProgressClientAccumulator,
 ): T => {
@@ -531,7 +520,7 @@ const generateSingleImageStream = async (
     onLiveProgressEvent?: (event: GenerationLiveProgressEvent) => void,
     eventContext?: GenerationLiveProgressEventContext,
 ): Promise<StreamGenerationResponse> => {
-    const finalPrompt = buildFinalPrompt(options);
+    const finalPrompt = buildStyleAwareImagePrompt(options);
     let finalResponse: GenerateResponse | null = null;
     let streamFailure: StreamRouteFailureEvent | null = null;
     let didReceiveStreamEvent = false;
@@ -652,7 +641,10 @@ const generateSingleImageStream = async (
 
         const streamError = error as Error & { didReceiveStreamEvent?: boolean; partialResponse?: GenerateResponse };
         streamError.didReceiveStreamEvent = didReceiveStreamEvent;
-        streamError.partialResponse = mergeAccumulatedStreamPartialResponse(streamError.partialResponse, streamAccumulator);
+        streamError.partialResponse = mergeAccumulatedStreamPartialResponse(
+            streamError.partialResponse,
+            streamAccumulator,
+        );
         throw streamError;
     }
 
@@ -715,7 +707,9 @@ const executeInteractiveStreamSlot = async (
             throw new Error('Model returned no image data.');
         }
 
-        const receivedResult = onImageReceived ? await onImageReceived(streamed.response.imageUrl, slotIndex) : undefined;
+        const receivedResult = onImageReceived
+            ? await onImageReceived(streamed.response.imageUrl, slotIndex)
+            : undefined;
         return buildSuccessGenerationResult(slotIndex, streamed.response, receivedResult);
     } catch (error: any) {
         if (error.message === 'ABORTED') {
@@ -739,7 +733,13 @@ const executeInteractiveStreamSlot = async (
 
             if (shouldAttemptImageAbsenceRecovery(blockingFallbackResult)) {
                 onLog?.(`Image #${slotIndex + 1}: Blocking request returned no final image. Retrying once.`);
-                const recoveredResult = await executeBlockingImageAttempt(options, slotIndex, onImageReceived, onLog, abortSignal);
+                const recoveredResult = await executeBlockingImageAttempt(
+                    options,
+                    slotIndex,
+                    onImageReceived,
+                    onLog,
+                    abortSignal,
+                );
                 return recoveredResult.status === 'success'
                     ? recoveredResult
                     : mergeRecoveredFailureResult(blockingFallbackResult, recoveredResult);
@@ -751,8 +751,16 @@ const executeInteractiveStreamSlot = async (
         const streamedFailureResult = buildFailedGenerationResult(slotIndex, error);
 
         if (shouldAttemptImageAbsenceRecovery(streamedFailureResult)) {
-            onLog?.(`Image #${slotIndex + 1}: Live progress returned no final image. Retrying once with blocking request.`);
-            const recoveredResult = await executeBlockingImageAttempt(options, slotIndex, onImageReceived, onLog, abortSignal);
+            onLog?.(
+                `Image #${slotIndex + 1}: Live progress returned no final image. Retrying once with blocking request.`,
+            );
+            const recoveredResult = await executeBlockingImageAttempt(
+                options,
+                slotIndex,
+                onImageReceived,
+                onLog,
+                abortSignal,
+            );
             return recoveredResult.status === 'success'
                 ? recoveredResult
                 : mergeRecoveredFailureResult(streamedFailureResult, recoveredResult);
@@ -820,7 +828,7 @@ const generateSingleImage = async (
     onLog?: (msg: string) => void,
     abortSignal?: AbortSignal,
 ): Promise<GenerateResponse> => {
-    const finalPrompt = buildFinalPrompt(options);
+    const finalPrompt = buildStyleAwareImagePrompt(options);
 
     try {
         onLog?.(`Image #${imgIndex}: Sending request...`);
@@ -922,11 +930,13 @@ type SubmitQueuedBatchOptions = GenerateOptions & {
 };
 
 export const submitQueuedBatchJob = async (options: SubmitQueuedBatchOptions): Promise<RemoteQueuedBatchJob> => {
+    const finalPrompt = buildStyleAwareImagePrompt(options);
+
     const response = await fetchJson<{ job: RemoteQueuedBatchJob }>('/api/batches/create', {
         method: 'POST',
         headers: jsonHeaders,
         body: JSON.stringify({
-            prompt: options.prompt,
+            prompt: finalPrompt,
             model: options.model,
             aspectRatio: options.aspectRatio,
             imageSize: options.model === 'gemini-2.5-flash-image' ? undefined : options.imageSize,
@@ -1125,7 +1135,8 @@ export const generateImageWithGemini = async (
                 results[slotIndex] = finalizeFanOutResult({
                     slotIndex,
                     status: 'failed',
-                    error: error instanceof Error && error.message === 'ABORTED' ? 'Generation cancelled' : String(error),
+                    error:
+                        error instanceof Error && error.message === 'ABORTED' ? 'Generation cancelled' : String(error),
                 });
                 await runNextSlot();
                 return;
@@ -1240,7 +1251,13 @@ export const generateImageWithGemini = async (
 
         const slotIndex = outcome.result.slotIndex;
         onLog?.(`Image #${slotIndex + 1}: Retrying once after image-absence failure.`);
-        const recoveredResult = await executeBlockingImageAttempt(options, slotIndex, onImageReceived, onLog, abortSignal);
+        const recoveredResult = await executeBlockingImageAttempt(
+            options,
+            slotIndex,
+            onImageReceived,
+            onLog,
+            abortSignal,
+        );
         const finalizedResult =
             recoveredResult.status === 'success'
                 ? recoveredResult

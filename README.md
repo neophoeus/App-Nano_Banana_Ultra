@@ -106,9 +106,9 @@ Nano Banana Ultra currently supports three Gemini image-model paths. The UI expo
 
 ## Version Overview
 
-### Latest Release: 3.5.5
+### Latest Release: 3.5.6
 
-Latest release: 3.5.5. See [CHANGELOG.md](CHANGELOG.md) for release details.
+Latest release: 3.5.6. See [CHANGELOG.md](CHANGELOG.md) for release details.
 
 ### 3.5.x
 
@@ -165,7 +165,7 @@ Local-only development assets such as `docs/`, `.prettierignore`, and `prettier.
 
 Generated local artifacts such as `output/`, `test-results/`, `playwright-report/`, and `coverage/` are also intentionally kept out of version control.
 
-For repo-tracked local tooling and test execution, use `run_install_all.bat`, `scripts/setup-dev-environment.bat`, `scripts/run-unit-tests.bat`, and `scripts/run-e2e-tests.bat`. Those extra tools now live in `dev-environment/` with a separate lockfile, so the root `package.json` stays limited to runtime, UI, and build dependencies.
+For repo-tracked local tooling and test execution, use `run_install_all.bat`, `scripts/setup-dev-environment.bat`, `scripts/run-unit-tests.bat`, `scripts/run-e2e-tests.bat`, or `npm run test -- ...`. Unit-test discovery is now pinned through `vitest.config.ts`, so the supported test entry points stay anchored to `App-Nano_Banana_Ultra` instead of following the editor or terminal working directory.
 
 The app root now also exposes formal Vitest entry points through `npm test`, `npm run test:unit`, and `npm run test:watch`. Those scripts delegate to the tracked `dev-environment/` Vitest install instead of moving test dependencies back into the product manifest.
 
@@ -277,9 +277,9 @@ Nano Banana Ultra 目前支援三條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：3.5.5
+### 最新版本：3.5.6
 
-最新版本：3.5.5。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
+最新版本：3.5.6。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 3.5.x
 
@@ -336,6 +336,6 @@ Nano Banana Ultra 目前支援三條 Gemini 影像模型路徑。介面會依模
 
 `output/`、`test-results/`、`playwright-report/`、`coverage/` 這類本機產物也同樣刻意不納入版本控制。
 
-如果要使用正式放在 repo 內的本機開發工具與測試入口，請用 `run_install_all.bat`、`scripts/setup-dev-environment.bat`、`scripts/run-unit-tests.bat`、`scripts/run-e2e-tests.bat`。這些額外工具現在集中在 `dev-environment/`，並使用獨立 lockfile，讓 root `package.json` 仍然只承載 runtime、UI 與 build 依賴。
+如果要使用正式放在 repo 內的本機開發工具與測試入口，請用 `run_install_all.bat`、`scripts/setup-dev-environment.bat`、`scripts/run-unit-tests.bat`、`scripts/run-e2e-tests.bat`，或 `npm run test -- ...`。現在 unit test 的探索規則也固定寫在 `vitest.config.ts`，所以正式支援的測試入口會持續錨定在 `App-Nano_Banana_Ultra`，不會跟著編輯器或 terminal 的目前工作目錄漂移。
 
 Playwright 側欄操作與 browser-opening 流程有可能直接讀取 `playwright.config.ts`，而不是先經過 VS Code 的 launch/task。現在這份 config 與它使用的 e2e helper 都已經改成以 app 目錄自身為錨點，所以不論編輯器目前從哪個工作目錄啟動，`output/`、`test-results/` 與 dev server 啟動位置都會留在 `App-Nano_Banana_Ultra` 內。

@@ -19,6 +19,7 @@ export type WorkspaceProgressThoughtEntry = {
     slotIndex?: number;
     slotLabel?: string;
     isLive?: boolean;
+    isFailed?: boolean;
 };
 
 const isThoughtResultPart = (part: ResultPart) => part.kind === 'thought-text' || part.kind === 'thought-image';
@@ -157,6 +158,8 @@ function WorkspaceProgressDetailPanel({
         'rounded-[24px] border border-amber-200/80 bg-white/92 px-4 py-3 dark:border-amber-500/20 dark:bg-[#111217]';
     const progressAmberChipClassName =
         'nbu-chip border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-100';
+    const progressFailureChipClassName =
+        'nbu-chip border-red-200 bg-red-50 text-red-700 dark:border-red-500/30 dark:bg-red-950/40 dark:text-red-100';
     const hasWorkflowSummary = Boolean(
         latestWorkflowEntry ||
         isGenerating ||
@@ -514,9 +517,19 @@ function WorkspaceProgressDetailPanel({
                                             }`}
                                         >
                                             <div className="flex items-center justify-between gap-2">
-                                                <span className="min-w-0 text-sm font-black text-slate-800 dark:text-slate-100">
-                                                    {navigatorLabel}
-                                                </span>
+                                                <div className="flex min-w-0 items-center gap-2">
+                                                    <span className="min-w-0 truncate text-sm font-black text-slate-800 dark:text-slate-100">
+                                                        {navigatorLabel}
+                                                    </span>
+                                                    {entry.isFailed ? (
+                                                        <span
+                                                            data-testid={`workspace-progress-detail-history-entry-status-${entry.shortId}`}
+                                                            className={progressFailureChipClassName}
+                                                        >
+                                                            {t('lblHistoryFailed')}
+                                                        </span>
+                                                    ) : null}
+                                                </div>
                                                 {entry.createdAtLabel ? (
                                                     <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                                                         {entry.createdAtLabel}
@@ -563,6 +576,14 @@ function WorkspaceProgressDetailPanel({
                                             className={progressAmberChipClassName}
                                         >
                                             {t('workspaceInsightsPhaseLabel')}
+                                        </span>
+                                    ) : null}
+                                    {selectedEntry.isFailed ? (
+                                        <span
+                                            data-testid="workspace-progress-detail-selected-failed"
+                                            className={progressFailureChipClassName}
+                                        >
+                                            {t('lblHistoryFailed')}
                                         </span>
                                     ) : null}
                                 </div>

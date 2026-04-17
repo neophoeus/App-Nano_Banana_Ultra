@@ -111,7 +111,7 @@ describe('extractGeneratedContent', () => {
     });
 
     it('uses accumulated streamed artifacts when the final chunk only contains a hidden thought signature', () => {
-        const state = createLiveProgressAccumulatorState();
+        let state = createLiveProgressAccumulatorState();
         const firstChunk = createResponse([
             {
                 text: 'Live reasoning before the render',
@@ -137,8 +137,8 @@ describe('extractGeneratedContent', () => {
             },
         ]);
 
-        applyLiveProgressChunkToAccumulator(state, firstChunk);
-        applyLiveProgressChunkToAccumulator(state, finalChunk);
+        state = applyLiveProgressChunkToAccumulator(state, firstChunk).state;
+        state = applyLiveProgressChunkToAccumulator(state, finalChunk).state;
 
         const extracted = extractStreamCompletionContent(state, finalChunk);
 
@@ -170,7 +170,7 @@ describe('extractGeneratedContent', () => {
     });
 
     it('preserves accumulated thought artifacts even when no final output image ever arrives', () => {
-        const state = createLiveProgressAccumulatorState();
+        let state = createLiveProgressAccumulatorState();
         const firstChunk = createResponse([
             {
                 text: 'Visible thinking survives the failed render',
@@ -190,8 +190,8 @@ describe('extractGeneratedContent', () => {
             },
         ]);
 
-        applyLiveProgressChunkToAccumulator(state, firstChunk);
-        applyLiveProgressChunkToAccumulator(state, finalChunk);
+        state = applyLiveProgressChunkToAccumulator(state, firstChunk).state;
+        state = applyLiveProgressChunkToAccumulator(state, finalChunk).state;
 
         const extracted = extractStreamCompletionContent(state, finalChunk);
 
