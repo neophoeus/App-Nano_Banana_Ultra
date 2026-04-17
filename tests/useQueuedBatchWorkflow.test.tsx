@@ -78,6 +78,7 @@ const buildQueuedJob = (overrides: Partial<QueuedBatchJob> = {}): QueuedBatchJob
     hasInlinedResponses: overrides.hasInlinedResponses ?? true,
     submissionPending: overrides.submissionPending ?? false,
     importDiagnostic: overrides.importDiagnostic ?? null,
+    importIssues: overrides.importIssues ?? null,
     error: overrides.error ?? null,
     parentHistoryId: overrides.parentHistoryId ?? null,
     rootHistoryId: overrides.rootHistoryId ?? null,
@@ -273,6 +274,8 @@ describe('useQueuedBatchWorkflow', () => {
 
         renderHook([], [], {
             getGenerationLineageContext,
+            outputFormat: 'images-and-text',
+            includeThoughts: true,
         });
 
         let submitPromise: Promise<void>;
@@ -302,6 +305,8 @@ describe('useQueuedBatchWorkflow', () => {
                 state: 'JOB_STATE_PENDING',
                 generationMode: 'Editor Edit',
                 submissionPending: true,
+                outputFormat: 'images-only',
+                includeThoughts: false,
                 sourceHistoryId: 'editor-source-turn',
                 rootHistoryId: 'editor-source-turn',
                 lineageAction: 'branch',
@@ -333,6 +338,8 @@ describe('useQueuedBatchWorkflow', () => {
                 style: 'None',
                 objectImageInputs: ['data:image/png;base64,object-ref'],
                 characterImageInputs: ['data:image/png;base64,character-ref'],
+                outputFormat: 'images-only',
+                includeThoughts: false,
             }),
         );
         expect(latestHook!.queuedJobs[0]).toEqual(
@@ -342,6 +349,8 @@ describe('useQueuedBatchWorkflow', () => {
                 batchSize: 3,
                 imageSize: '2K',
                 aspectRatio: '16:9',
+                outputFormat: 'images-only',
+                includeThoughts: false,
             }),
         );
         expect(notifications).toContainEqual({
@@ -447,6 +456,50 @@ describe('useQueuedBatchWorkflow', () => {
         });
     });
 
+    it('recovers authoritative request counts from inline response counts when batch stats are missing', async () => {
+        listQueuedBatchJobsMock.mockResolvedValue([
+            {
+                name: 'batches/recovered-inline-count',
+                displayName: 'Recovered inline count job',
+                state: 'JOB_STATE_SUCCEEDED',
+                model: 'gemini-3.1-flash-image-preview',
+                createTime: '2026-04-05T10:00:00.000Z',
+                updateTime: '2026-04-05T10:05:00.000Z',
+                endTime: '2026-04-05T10:04:00.000Z',
+                error: null,
+                batchStats: null,
+                hasInlinedResponses: true,
+            },
+        ]);
+        getQueuedBatchJobMock.mockResolvedValue({
+            name: 'batches/recovered-inline-count',
+            displayName: 'Recovered inline count job',
+            state: 'JOB_STATE_SUCCEEDED',
+            model: 'gemini-3.1-flash-image-preview',
+            createTime: '2026-04-05T10:00:00.000Z',
+            updateTime: '2026-04-05T10:05:00.000Z',
+            endTime: '2026-04-05T10:04:00.000Z',
+            error: null,
+            batchStats: null,
+            hasInlinedResponses: true,
+            inlinedResponseCount: 2,
+        });
+
+        renderHook([]);
+
+        await act(async () => {
+            await latestHook!.handleRecoverRecentQueuedJobs();
+        });
+
+        expect(latestHook!.queuedJobs[0]).toEqual(
+            expect.objectContaining({
+                name: 'batches/recovered-inline-count',
+                batchSize: 2,
+                hasInlinedResponses: true,
+            }),
+        );
+    });
+
     it('keeps main queue submissions as Text to Image without stale editor state', async () => {
         const submitDeferred = createDeferred<{
             name: string;
@@ -463,6 +516,8 @@ describe('useQueuedBatchWorkflow', () => {
 
         renderHook([], [], {
             prompt: 'Queue from the main composer',
+            outputFormat: 'images-and-text',
+            includeThoughts: true,
         });
 
         let submitPromise: Promise<void>;
@@ -477,6 +532,8 @@ describe('useQueuedBatchWorkflow', () => {
                 state: 'JOB_STATE_PENDING',
                 generationMode: 'Text to Image',
                 submissionPending: true,
+                outputFormat: 'images-only',
+                includeThoughts: false,
             }),
         );
 
@@ -499,12 +556,16 @@ describe('useQueuedBatchWorkflow', () => {
             expect.objectContaining({
                 prompt: 'Queue from the main composer',
                 editingInput: undefined,
+                outputFormat: 'images-only',
+                includeThoughts: false,
             }),
         );
         expect(latestHook!.queuedJobs[0]).toEqual(
             expect.objectContaining({
                 name: 'batches/job-main-queue',
                 generationMode: 'Text to Image',
+                outputFormat: 'images-only',
+                includeThoughts: false,
             }),
         );
     });
@@ -1394,12 +1455,149 @@ describe('useQueuedBatchWorkflow', () => {
         });
     });
 
+    it('uses imported result count to correct stale batch size when import responses omit remote counts', async () => {
+        const readyJob = buildQueuedJob({
+            localId: 'job-import-count-fallback',
+            name: 'batches/job-import-count-fallback',
+            displayName: 'Import count fallback batch',
+            batchSize: 1,
+        });
+
+        importQueuedBatchJobResultsMock.mockResolvedValue({
+            job: {
+                name: readyJob.name,
+                displayName: readyJob.displayName,
+                state: 'JOB_STATE_SUCCEEDED',
+                model: readyJob.model,
+                createTime: '2025-01-01T00:00:00.000Z',
+                updateTime: '2025-01-01T00:05:00.000Z',
+                startTime: '2025-01-01T00:01:00.000Z',
+                endTime: '2025-01-01T00:05:00.000Z',
+                error: null,
+                batchStats: null,
+                hasInlinedResponses: true,
+            },
+            results: [
+                {
+                    index: 0,
+                    status: 'success',
+                    imageUrl: 'data:image/png;base64,first',
+                },
+                {
+                    index: 1,
+                    status: 'success',
+                    imageUrl: 'data:image/png;base64,second',
+                },
+            ],
+        });
+
+        renderHook([readyJob]);
+
+        await act(async () => {
+            await latestHook!.handleImportQueuedJob(readyJob.localId);
+        });
+
+        expect(latestHook!.queuedJobs[0]).toEqual(
+            expect.objectContaining({
+                localId: readyJob.localId,
+                batchSize: 2,
+                importedAt: expect.any(Number),
+            }),
+        );
+        expect(latestHistory[0]).toEqual(
+            expect.objectContaining({
+                metadata: expect.objectContaining({
+                    batchSize: 2,
+                }),
+            }),
+        );
+    });
+
+    it('preserves per-request import issues when a multi-request queued batch fails to import', async () => {
+        const readyJob = buildQueuedJob({
+            localId: 'job-multi-issue-extraction-failure',
+            name: 'batches/job-multi-issue-extraction-failure',
+            displayName: 'Multi issue extraction failure batch',
+            batchSize: 2,
+        });
+
+        importQueuedBatchJobResultsMock.mockResolvedValue({
+            job: {
+                name: readyJob.name,
+                displayName: readyJob.displayName,
+                state: 'JOB_STATE_SUCCEEDED',
+                model: readyJob.model,
+                createTime: '2025-01-01T00:00:00.000Z',
+                updateTime: '2025-01-01T00:05:00.000Z',
+                startTime: '2025-01-01T00:01:00.000Z',
+                endTime: '2025-01-01T00:05:00.000Z',
+                error: null,
+                hasInlinedResponses: true,
+            },
+            results: [
+                {
+                    index: 0,
+                    status: 'failed',
+                    error: 'Model returned no image data (finish reason: STOP).',
+                    sessionHints: {
+                        finishReason: 'STOP',
+                        extractionIssue: 'no-image-data',
+                    },
+                },
+                {
+                    index: 1,
+                    status: 'failed',
+                    error: 'Model returned no image data (finish reason: NO_IMAGE).',
+                    sessionHints: {
+                        finishReason: 'NO_IMAGE',
+                        extractionIssue: 'missing-parts',
+                    },
+                },
+            ],
+        });
+
+        renderHook([readyJob]);
+
+        await act(async () => {
+            await latestHook!.handleImportQueuedJob(readyJob.localId);
+        });
+
+        expect(latestHook!.queuedJobs[0]).toEqual(
+            expect.objectContaining({
+                localId: readyJob.localId,
+                importDiagnostic: 'extraction-failure',
+                error: 'Model returned no image data (finish reason: STOP). (+1 more)',
+                importIssues: [
+                    expect.objectContaining({
+                        index: 0,
+                        error: 'Model returned no image data (finish reason: STOP).',
+                        finishReason: 'STOP',
+                        extractionIssue: 'no-image-data',
+                    }),
+                    expect.objectContaining({
+                        index: 1,
+                        error: 'Model returned no image data (finish reason: NO_IMAGE).',
+                        finishReason: 'NO_IMAGE',
+                        extractionIssue: 'missing-parts',
+                    }),
+                ],
+            }),
+        );
+    });
+
     it('preserves extraction failure details across later status refreshes', async () => {
         const failedImportJob = buildQueuedJob({
             localId: 'job-preserve-import-error',
             name: 'batches/job-preserve-import-error',
             displayName: 'Preserved import error batch',
             importDiagnostic: 'extraction-failure',
+            importIssues: [
+                {
+                    index: 0,
+                    error: 'Prompt was rejected by policy (block reason: PROHIBITED_CONTENT).',
+                    extractionIssue: 'missing-candidates',
+                },
+            ],
             error: 'Prompt was rejected by policy (block reason: PROHIBITED_CONTENT).',
         });
 
@@ -1426,6 +1624,7 @@ describe('useQueuedBatchWorkflow', () => {
             expect.objectContaining({
                 localId: failedImportJob.localId,
                 importDiagnostic: 'extraction-failure',
+                importIssues: failedImportJob.importIssues,
                 error: 'Prompt was rejected by policy (block reason: PROHIBITED_CONTENT).',
             }),
         );

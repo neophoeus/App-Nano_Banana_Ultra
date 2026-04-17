@@ -347,13 +347,13 @@ export const de = {
     styleLineArt: 'Line Art',
     styleStorybookIllustration: 'Bilderbuch Illustration',
     queueBatchModeEditor:
-        'Der Batchauftrag in der Warteschlange sendet einen offiziellen bildkonditionierten Batch auf Editor-Basis mit der aktuellen Editor-Basis und den vorbereiteten Referenzen.',
+        'Der Batchauftrag in der Warteschlange sendet einen offiziellen bildkonditionierten Batch auf Editor-Basis mit der aktuellen Editor-Basis und den vorbereiteten Referenzen. Batchauftrage in der Warteschlange verwenden immer reine Bildausgabe und fordern keine zuruckgegebenen Gedanken an.',
     queueBatchModeStage:
-        'Der Batchauftrag in der Warteschlange sendet einen offiziellen bildkonditionierten Folge-Batch mit dem aktuellen Stufenbild und den vorbereiteten Referenzen.',
+        'Der Batchauftrag in der Warteschlange sendet einen offiziellen bildkonditionierten Folge-Batch mit dem aktuellen Stufenbild und den vorbereiteten Referenzen. Batchauftrage in der Warteschlange verwenden immer reine Bildausgabe und fordern keine zuruckgegebenen Gedanken an.',
     queueBatchModeReferences:
-        'Der Batchauftrag in der Warteschlange sendet einen offiziellen referenzgesteuerten Batch mit dem aktuellen Prompt und der Referenzablage.',
+        'Der Batchauftrag in der Warteschlange sendet einen offiziellen referenzgesteuerten Batch mit dem aktuellen Prompt und der Referenzablage. Batchauftrage in der Warteschlange verwenden immer reine Bildausgabe und fordern keine zuruckgegebenen Gedanken an.',
     queueBatchModePromptOnly:
-        'Der Batchauftrag in der Warteschlange sendet einen offiziellen Batchauftrag nur mit Prompt.',
+        'Der Batchauftrag in der Warteschlange sendet einen offiziellen Batchauftrag nur mit Prompt. Batchauftrage in der Warteschlange verwenden immer reine Bildausgabe und fordern keine zuruckgegebenen Gedanken an.',
     queueBatchConversationNotice:
         'Batchauftrage in der Warteschlange behalten die Quellherkunft bei, senden aber keinen offiziellen Multi-Turn-Konversationsverlauf. Fur Chat-Fortsetzung verwenden Sie den normalen Generierungsablauf.',
     queuedBatchJobsTitle: 'Wartende Batch-Jobs',

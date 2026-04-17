@@ -363,10 +363,13 @@ export const zh_CN = {
     styleConceptArt: '概念艺术',
     styleLineArt: '线稿艺术',
     styleStorybookIllustration: '绘本插画',
-    queueBatchModeEditor: '这会以当前编辑输入图像和已暂存参考图提交一个官方编辑批处理任务。',
-    queueBatchModeStage: '这会以当前阶段图像和已暂存参考图提交一个官方后续延展批处理任务。',
-    queueBatchModeReferences: '这会以当前提示词和参考图托盘提交一个官方参考驱动批处理任务。',
-    queueBatchModePromptOnly: '这会提交一个仅基于提示词的官方批处理任务。',
+    queueBatchModeEditor:
+        '这会以当前编辑输入图像和已暂存参考图提交一个官方编辑批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
+    queueBatchModeStage:
+        '这会以当前阶段图像和已暂存参考图提交一个官方后续延展批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
+    queueBatchModeReferences:
+        '这会以当前提示词和参考图托盘提交一个官方参考驱动批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
+    queueBatchModePromptOnly: '这会提交一个仅基于提示词的官方批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
     queueBatchConversationNotice:
         '队列批处理任务会保留来源延续脉络，但不会发送官方多轮对话历史。若要继续对话，请使用开始生成。',
     queuedBatchJobsTitle: '队列批处理任务',

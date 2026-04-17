@@ -910,6 +910,7 @@ export type RemoteQueuedBatchJob = {
     endTime?: string;
     error?: string | null;
     hasInlinedResponses: boolean;
+    inlinedResponseCount?: number;
     batchStats?: QueuedBatchJobStats | null;
 };
 

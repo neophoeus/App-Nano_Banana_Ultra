@@ -446,6 +446,13 @@ export default function QueuedBatchJobsPanel({
                     const importedResultCount = canOpenImported ? getImportedQueuedResultCount(job) : 0;
                     const importedHistoryItems = canOpenImported ? getImportedQueuedHistoryItems(job) : [];
                     const importDiagnostic = getQueuedBatchJobImportDiagnostic(job);
+                    const importIssues = Array.isArray(job.importIssues)
+                        ? job.importIssues.filter((issue) => issue.error.trim().length > 0)
+                        : [];
+                    const visibleImportIssues =
+                        importIssues.length > 1 || (importIssues.length === 1 && importIssues[0].error !== job.error)
+                            ? importIssues
+                            : [];
                     const importDiagnosticKey =
                         importDiagnostic === 'no-payload'
                             ? 'queuedBatchNoPayloadResultsNotice'
@@ -663,10 +670,33 @@ export default function QueuedBatchJobsPanel({
                                             </span>
                                         )}
                                     </div>
+                                            {(() => {
+                                                const requestCount =
+                                                    typeof job.batchStats?.requestCount === 'number' &&
+                                                    job.batchStats.requestCount > 0
+                                                        ? job.batchStats.requestCount
+                                                        : job.batchSize;
+
+                                                return (
+                                                    <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                                        {job.model} ·{' '}
+                                                        <span data-testid={`queued-batch-job-${job.localId}-request-count`}>
+                                                            {t('queuedBatchJobsRequestCount').replace(
+                                                                '{0}',
+                                                                requestCount.toString(),
+                                                            )}
+                                                        </span>{' '}
+                                                        · {getTranslatedGenerationModeLabel(job.generationMode)}
+                                                    </div>
+                                                );
+                                            })()}
                                     <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                        {job.model} ·{' '}
-                                        {t('queuedBatchJobsRequestCount').replace('{0}', job.batchSize.toString())} ·{' '}
-                                        {getTranslatedGenerationModeLabel(job.generationMode)}
+                                                <span
+                                                    data-testid={`queued-batch-job-${job.localId}-resource-name`}
+                                                    className="break-all font-mono text-[11px]"
+                                                >
+                                                    {job.name}
+                                                </span>
                                     </div>
                                     {job.sourceHistoryId && (
                                         <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -709,6 +739,24 @@ export default function QueuedBatchJobsPanel({
                                         >
                                             {t(importDiagnosticKey)}
                                         </p>
+                                    )}
+                                    {visibleImportIssues.length > 0 && (
+                                        <div
+                                            data-testid={`queued-batch-job-${job.localId}-import-issues`}
+                                            className="mt-2 space-y-1 text-xs text-amber-700 dark:text-amber-300"
+                                        >
+                                            {visibleImportIssues.map((issue) => (
+                                                <p
+                                                    key={`${job.localId}-${issue.index}-${issue.error}`}
+                                                    data-testid={`queued-batch-job-${job.localId}-import-issue-${issue.index}`}
+                                                    className="leading-5"
+                                                >
+                                                    <span className="font-semibold">#{issue.index + 1}</span>
+                                                    {' · '}
+                                                    {issue.error}
+                                                </p>
+                                            ))}
+                                        </div>
                                     )}
                                     {importedHistoryItems.length > 0 && (
                                         <details

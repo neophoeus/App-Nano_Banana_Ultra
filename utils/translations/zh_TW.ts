@@ -315,10 +315,13 @@ export const zh_TW = {
     styleConceptArt: '概念藝術',
     styleLineArt: '線稿藝術',
     styleStorybookIllustration: '繪本插畫',
-    queueBatchModeEditor: '這會以目前編輯輸入影像與已暫存參考圖送出一個官方編輯批次工作。',
-    queueBatchModeStage: '這會以目前的階段圖像與已暫存參考圖送出一個官方後續延伸批次工作。',
-    queueBatchModeReferences: '這會以目前提示詞與參考圖托盤送出一個官方參考驅動批次工作。',
-    queueBatchModePromptOnly: '這會送出一個僅依提示詞的官方批次工作。',
+    queueBatchModeEditor:
+        '這會以目前編輯輸入影像與已暫存參考圖送出一個官方編輯批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
+    queueBatchModeStage:
+        '這會以目前的階段圖像與已暫存參考圖送出一個官方後續延伸批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
+    queueBatchModeReferences:
+        '這會以目前提示詞與參考圖托盤送出一個官方參考驅動批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
+    queueBatchModePromptOnly: '這會送出一個僅依提示詞的官方批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
     queueBatchConversationNotice:
         '佇列批次工作會保留來源延續脈絡，但不會送出官方多輪對話歷史。若要延續對話，請使用開始生成。',
     queuedBatchJobsTitle: '佇列批次工作',

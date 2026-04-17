@@ -30,7 +30,7 @@ describe('QueuedBatchJobsPanel', () => {
                         includeThoughts: true,
                         googleSearch: false,
                         imageSearch: false,
-                        batchSize: 2,
+                        batchSize: 1,
                         batchStats: {
                             requestCount: 2,
                             successfulRequestCount: 0,
@@ -221,6 +221,10 @@ describe('QueuedBatchJobsPanel', () => {
         expect(markup).toContain('Cleanup');
         expect(markup).toContain('Pending panorama batch');
         expect(markup).toContain('Pending');
+        expect(markup).toContain('queued-batch-job-job-pending-request-count');
+        expect(markup).toContain('2 request(s)');
+        expect(markup).toContain('queued-batch-job-job-pending-resource-name');
+        expect(markup).toContain('batches/job-pending');
         expect(markup).toContain('queued-batch-job-job-pending-batch-stats');
         expect(markup).toContain('0 Succeeded · 2 Pending · 0 Failed');
         expect(markup).toContain('Ready character batch');
@@ -280,6 +284,71 @@ describe('QueuedBatchJobsPanel', () => {
         expect(markup).not.toContain('queued-batch-job-job-failed-poll');
         expect(markup).toContain('queued-batch-job-job-failed-restored-history');
         expect(markup).toContain('queued-batch-job-job-failed-restored-history-note');
+    });
+
+    it('renders authoritative request count and resource name when local batch size is stale', () => {
+        const markup = renderToStaticMarkup(
+            <QueuedBatchJobsPanel
+                currentLanguage="en"
+                queueBatchConversationNotice={null}
+                queuedJobs={[
+                    {
+                        localId: 'job-stale-count',
+                        name: 'batches/job-stale-count',
+                        displayName: 'Stale count batch',
+                        state: 'JOB_STATE_SUCCEEDED',
+                        model: 'gemini-3.1-flash-image-preview',
+                        prompt: 'Prompt',
+                        generationMode: 'Text to Image',
+                        aspectRatio: '1:1',
+                        imageSize: '1K',
+                        style: 'None',
+                        outputFormat: 'images-only',
+                        temperature: 1,
+                        thinkingLevel: 'minimal',
+                        includeThoughts: false,
+                        googleSearch: false,
+                        imageSearch: false,
+                        batchSize: 1,
+                        batchStats: {
+                            requestCount: 2,
+                            successfulRequestCount: 1,
+                            failedRequestCount: 1,
+                            pendingRequestCount: 0,
+                        },
+                        objectImageCount: 0,
+                        characterImageCount: 0,
+                        createdAt: 1710400000000,
+                        updatedAt: 1710400030000,
+                        startedAt: 1710400015000,
+                        completedAt: 1710400020000,
+                        lastPolledAt: 1710400030000,
+                        importedAt: null,
+                        hasInlinedResponses: true,
+                        error: null,
+                    },
+                ]}
+                getLineageActionLabel={(action) => action || 'root'}
+                getImportedQueuedResultCount={() => 0}
+                getImportedQueuedHistoryItems={() => []}
+                activeImportedQueuedHistoryId={null}
+                onRecoverRecentQueuedJobs={vi.fn()}
+                onImportAllQueuedJobs={vi.fn()}
+                onPollAllQueuedJobs={vi.fn()}
+                onPollQueuedJob={vi.fn()}
+                onCancelQueuedJob={vi.fn()}
+                onImportQueuedJob={vi.fn()}
+                onOpenImportedQueuedJob={vi.fn()}
+                onOpenLatestImportedQueuedJob={vi.fn()}
+                onOpenImportedQueuedHistoryItem={vi.fn()}
+                onRemoveQueuedJob={vi.fn()}
+            />,
+        );
+
+        expect(markup).toContain('queued-batch-job-job-stale-count-request-count');
+        expect(markup).toContain('2 request(s)');
+        expect(markup).toContain('queued-batch-job-job-stale-count-resource-name');
+        expect(markup).toContain('batches/job-stale-count');
     });
 
     it('shows queue age warnings after the 24h target and near the 48h expiry window', () => {
@@ -499,6 +568,79 @@ describe('QueuedBatchJobsPanel', () => {
         expect(markup).toContain('0 ready to import');
         expect(markup).not.toContain('No image results were available to import from this batch job.');
         expect(markup).not.toContain('queued-batch-job-job-specific-error-import-diagnostic');
+    });
+
+    it('renders per-request import issue details when a queued batch import summary hides multiple failures', () => {
+        const markup = renderToStaticMarkup(
+            <QueuedBatchJobsPanel
+                currentLanguage="en"
+                queueBatchConversationNotice={null}
+                queuedJobs={[
+                    {
+                        localId: 'job-multi-issue',
+                        name: 'batches/job-multi-issue',
+                        displayName: 'Multi issue batch',
+                        state: 'JOB_STATE_SUCCEEDED',
+                        model: 'gemini-3.1-flash-image-preview',
+                        prompt: 'Prompt',
+                        generationMode: 'Follow-up Edit',
+                        aspectRatio: '1:1',
+                        imageSize: '1K',
+                        style: 'None',
+                        outputFormat: 'images-only',
+                        temperature: 1,
+                        thinkingLevel: 'minimal',
+                        includeThoughts: true,
+                        googleSearch: false,
+                        imageSearch: false,
+                        batchSize: 2,
+                        objectImageCount: 0,
+                        characterImageCount: 0,
+                        createdAt: 1710400010000,
+                        updatedAt: 1710400030000,
+                        startedAt: 1710400015000,
+                        completedAt: 1710400020000,
+                        lastPolledAt: 1710400030000,
+                        importedAt: null,
+                        hasInlinedResponses: true,
+                        importDiagnostic: 'extraction-failure',
+                        importIssues: [
+                            {
+                                index: 0,
+                                error: 'Model returned no image data (finish reason: STOP).',
+                            },
+                            {
+                                index: 1,
+                                error: 'Model returned no image data (finish reason: NO_IMAGE).',
+                            },
+                        ],
+                        error: 'Model returned no image data (finish reason: STOP). (+1 more)',
+                    },
+                ]}
+                getLineageActionLabel={(action) => action || 'root'}
+                getImportedQueuedResultCount={() => 0}
+                getImportedQueuedHistoryItems={() => []}
+                activeImportedQueuedHistoryId={null}
+                onRecoverRecentQueuedJobs={vi.fn()}
+                onImportAllQueuedJobs={vi.fn()}
+                onPollAllQueuedJobs={vi.fn()}
+                onPollQueuedJob={vi.fn()}
+                onCancelQueuedJob={vi.fn()}
+                onImportQueuedJob={vi.fn()}
+                onOpenImportedQueuedJob={vi.fn()}
+                onOpenLatestImportedQueuedJob={vi.fn()}
+                onOpenImportedQueuedHistoryItem={vi.fn()}
+                onRemoveQueuedJob={vi.fn()}
+            />,
+        );
+
+        expect(markup).toContain('queued-batch-job-job-multi-issue-import-issues');
+        expect(markup).toContain('queued-batch-job-job-multi-issue-import-issue-0');
+        expect(markup).toContain('queued-batch-job-job-multi-issue-import-issue-1');
+        expect(markup).toContain('#1');
+        expect(markup).toContain('#2');
+        expect(markup).toContain('Model returned no image data (finish reason: STOP).');
+        expect(markup).toContain('Model returned no image data (finish reason: NO_IMAGE).');
     });
 
     it('suppresses duplicate title guidance in embedded mode and keeps bottom breathing room', () => {

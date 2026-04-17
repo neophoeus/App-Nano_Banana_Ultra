@@ -345,12 +345,13 @@ export const fr = {
     styleLineArt: 'Line Art',
     styleStorybookIllustration: 'Illustration de Conte',
     queueBatchModeEditor:
-        "Le lot en file d'attente enverra un lot officiel conditionne par image base sur l'editeur en utilisant la base actuelle de l'editeur et les references preparees.",
+        "Le lot en file d'attente enverra un lot officiel conditionne par image base sur l'editeur en utilisant la base actuelle de l'editeur et les references preparees. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
     queueBatchModeStage:
-        "Le lot en file d'attente enverra un lot officiel conditionne par image de suivi en utilisant l'image actuelle de la scene et les references preparees.",
+        "Le lot en file d'attente enverra un lot officiel conditionne par image de suivi en utilisant l'image actuelle de la scene et les references preparees. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
     queueBatchModeReferences:
-        "Le lot en file d'attente enverra un lot officiel pilote par references avec le prompt actuel et le bac de references.",
-    queueBatchModePromptOnly: "Le lot en file d'attente enverra un lot officiel base uniquement sur le prompt.",
+        "Le lot en file d'attente enverra un lot officiel pilote par references avec le prompt actuel et le bac de references. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
+    queueBatchModePromptOnly:
+        "Le lot en file d'attente enverra un lot officiel base uniquement sur le prompt. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
     queueBatchConversationNotice:
         "Les lots en file d'attente conservent la lignee source, mais n'envoient pas l'historique officiel des conversations multi-tours. Pour poursuivre une conversation, utilisez le flux de generation normal.",
     queuedBatchJobsTitle: "Lots en file d'attente",

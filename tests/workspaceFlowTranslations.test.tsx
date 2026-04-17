@@ -1533,10 +1533,13 @@ const zhCnGroundingGuideSentenceBaseline = {
 } as const;
 
 const zhTwQueuedBatchWordingBaseline = {
-    queueBatchModeEditor: '這會以目前編輯輸入影像與已暫存參考圖送出一個官方編輯批次工作。',
-    queueBatchModeStage: '這會以目前的階段圖像與已暫存參考圖送出一個官方後續延伸批次工作。',
-    queueBatchModeReferences: '這會以目前提示詞與參考圖托盤送出一個官方參考驅動批次工作。',
-    queueBatchModePromptOnly: '這會送出一個僅依提示詞的官方批次工作。',
+    queueBatchModeEditor:
+        '這會以目前編輯輸入影像與已暫存參考圖送出一個官方編輯批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
+    queueBatchModeStage:
+        '這會以目前的階段圖像與已暫存參考圖送出一個官方後續延伸批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
+    queueBatchModeReferences:
+        '這會以目前提示詞與參考圖托盤送出一個官方參考驅動批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
+    queueBatchModePromptOnly: '這會送出一個僅依提示詞的官方批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
     queueBatchConversationNotice:
         '佇列批次工作會保留來源延續脈絡，但不會送出官方多輪對話歷史。若要延續對話，請使用開始生成。',
     queuedBatchJobsWorkflowHint: '先在這裡追蹤佇列狀態，結果就緒後匯入歷史，流程完成後再清除這筆工作。',
@@ -1547,10 +1550,13 @@ const zhTwQueuedBatchWordingBaseline = {
 } as const;
 
 const zhCnQueuedBatchWordingBaseline = {
-    queueBatchModeEditor: '这会以当前编辑输入图像和已暂存参考图提交一个官方编辑批处理任务。',
-    queueBatchModeStage: '这会以当前阶段图像和已暂存参考图提交一个官方后续延展批处理任务。',
-    queueBatchModeReferences: '这会以当前提示词和参考图托盘提交一个官方参考驱动批处理任务。',
-    queueBatchModePromptOnly: '这会提交一个仅基于提示词的官方批处理任务。',
+    queueBatchModeEditor:
+        '这会以当前编辑输入图像和已暂存参考图提交一个官方编辑批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
+    queueBatchModeStage:
+        '这会以当前阶段图像和已暂存参考图提交一个官方后续延展批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
+    queueBatchModeReferences:
+        '这会以当前提示词和参考图托盘提交一个官方参考驱动批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
+    queueBatchModePromptOnly: '这会提交一个仅基于提示词的官方批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
     queueBatchConversationNotice:
         '队列批处理任务会保留来源延续脉络，但不会发送官方多轮对话历史。若要继续对话，请使用开始生成。',
     queuedBatchJobsWorkflowHint: '先在这里跟踪队列状态，结果就绪后导入历史，流程完成后再清除这条任务。',
@@ -1572,12 +1578,13 @@ const zhCnQueuedBatchDescBaseline = {
 
 const jaQueuedBatchWordingBaseline = {
     queueBatchModeEditor:
-        'キュー投入バッチジョブは、現在のエディターベースとステージ済み参照を使って、編集ベースの公式画像条件付きバッチを送信します。',
+        'キュー投入バッチジョブは、現在のエディターベースとステージ済み参照を使って、編集ベースの公式画像条件付きバッチを送信します。キュー投入バッチは常に画像のみを出力し、思考の返却は要求しません。',
     queueBatchModeStage:
-        'キュー投入バッチジョブは、現在のステージ画像とステージ済み参照を使って、後続生成向けの公式画像条件付きバッチを送信します。',
+        'キュー投入バッチジョブは、現在のステージ画像とステージ済み参照を使って、後続生成向けの公式画像条件付きバッチを送信します。キュー投入バッチは常に画像のみを出力し、思考の返却は要求しません。',
     queueBatchModeReferences:
-        'キュー投入バッチジョブは、現在のプロンプトと参照トレイを使って、参照駆動の公式バッチを送信します。',
-    queueBatchModePromptOnly: 'キュー投入バッチジョブは、プロンプトのみの公式バッチジョブを送信します。',
+        'キュー投入バッチジョブは、現在のプロンプトと参照トレイを使って、参照駆動の公式バッチを送信します。キュー投入バッチは常に画像のみを出力し、思考の返却は要求しません。',
+    queueBatchModePromptOnly:
+        'キュー投入バッチジョブは、プロンプトのみの公式バッチジョブを送信します。キュー投入バッチは常に画像のみを出力し、思考の返却は要求しません。',
     queueBatchConversationNotice:
         'キュー投入バッチジョブはソースの系統を保持しますが、公式の複数ターン会話履歴は送信しません。会話を継続する場合は通常の生成を使ってください。',
     queuedBatchJobsWorkflowHint:
@@ -1592,12 +1599,13 @@ const jaQueuedBatchWordingBaseline = {
 
 const koQueuedBatchWordingBaseline = {
     queueBatchModeEditor:
-        '대기열 배치 작업은 현재 에디터 베이스와 스테이징된 참조를 사용해 편집 기반의 공식 이미지 조건부 배치 작업을 제출합니다.',
+        '대기열 배치 작업은 현재 에디터 베이스와 스테이징된 참조를 사용해 편집 기반의 공식 이미지 조건부 배치 작업을 제출합니다. 대기열 배치 작업은 항상 이미지 전용 출력만 사용하며 사고 내용 반환은 요청하지 않습니다.',
     queueBatchModeStage:
-        '대기열 배치 작업은 현재 스테이지 이미지와 스테이징된 참조를 사용해 후속 생성용 공식 이미지 조건부 배치 작업을 제출합니다.',
+        '대기열 배치 작업은 현재 스테이지 이미지와 스테이징된 참조를 사용해 후속 생성용 공식 이미지 조건부 배치 작업을 제출합니다. 대기열 배치 작업은 항상 이미지 전용 출력만 사용하며 사고 내용 반환은 요청하지 않습니다.',
     queueBatchModeReferences:
-        '대기열 배치 작업은 현재 프롬프트와 참조 트레이를 사용해 공식 참조 기반 배치 작업을 제출합니다.',
-    queueBatchModePromptOnly: '대기열 배치 작업은 프롬프트만 사용하는 공식 배치 작업을 제출합니다.',
+        '대기열 배치 작업은 현재 프롬프트와 참조 트레이를 사용해 공식 참조 기반 배치 작업을 제출합니다. 대기열 배치 작업은 항상 이미지 전용 출력만 사용하며 사고 내용 반환은 요청하지 않습니다.',
+    queueBatchModePromptOnly:
+        '대기열 배치 작업은 프롬프트만 사용하는 공식 배치 작업을 제출합니다. 대기열 배치 작업은 항상 이미지 전용 출력만 사용하며 사고 내용 반환은 요청하지 않습니다.',
     queueBatchConversationNotice:
         '대기열 배치 작업은 원본 계보를 유지하지만 공식 다중 턴 대화 기록은 전송하지 않습니다. 대화를 이어가려면 일반 생성 흐름을 사용하세요.',
     queuedBatchJobsWorkflowHint:
@@ -1612,12 +1620,13 @@ const koQueuedBatchWordingBaseline = {
 
 const esQueuedBatchWordingBaseline = {
     queueBatchModeEditor:
-        'El trabajo por lotes en cola enviara un lote oficial condicionado por imagen basado en el editor usando la base actual del editor y las referencias preparadas.',
+        'El trabajo por lotes en cola enviara un lote oficial condicionado por imagen basado en el editor usando la base actual del editor y las referencias preparadas. Los lotes en cola siempre usan salida solo de imagen y no solicitan pensamientos devueltos.',
     queueBatchModeStage:
-        'El trabajo por lotes en cola enviara un lote oficial condicionado por imagen de seguimiento usando la imagen actual del escenario y las referencias preparadas.',
+        'El trabajo por lotes en cola enviara un lote oficial condicionado por imagen de seguimiento usando la imagen actual del escenario y las referencias preparadas. Los lotes en cola siempre usan salida solo de imagen y no solicitan pensamientos devueltos.',
     queueBatchModeReferences:
-        'El trabajo por lotes en cola enviara un lote oficial guiado por referencias usando el prompt actual y la bandeja de referencias.',
-    queueBatchModePromptOnly: 'El trabajo por lotes en cola enviara un lote oficial basado solo en el prompt.',
+        'El trabajo por lotes en cola enviara un lote oficial guiado por referencias usando el prompt actual y la bandeja de referencias. Los lotes en cola siempre usan salida solo de imagen y no solicitan pensamientos devueltos.',
+    queueBatchModePromptOnly:
+        'El trabajo por lotes en cola enviara un lote oficial basado solo en el prompt. Los lotes en cola siempre usan salida solo de imagen y no solicitan pensamientos devueltos.',
     queueBatchConversationNotice:
         'Los trabajos por lotes en cola conservan el linaje de origen, pero no envian el historial oficial de conversacion de varios turnos. Para continuar un chat, usa la generacion normal.',
     queuedBatchJobsWorkflowHint:
@@ -1632,12 +1641,13 @@ const esQueuedBatchWordingBaseline = {
 
 const frQueuedBatchWordingBaseline = {
     queueBatchModeEditor:
-        "Le lot en file d'attente enverra un lot officiel conditionne par image base sur l'editeur en utilisant la base actuelle de l'editeur et les references preparees.",
+        "Le lot en file d'attente enverra un lot officiel conditionne par image base sur l'editeur en utilisant la base actuelle de l'editeur et les references preparees. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
     queueBatchModeStage:
-        "Le lot en file d'attente enverra un lot officiel conditionne par image de suivi en utilisant l'image actuelle de la scene et les references preparees.",
+        "Le lot en file d'attente enverra un lot officiel conditionne par image de suivi en utilisant l'image actuelle de la scene et les references preparees. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
     queueBatchModeReferences:
-        "Le lot en file d'attente enverra un lot officiel pilote par references avec le prompt actuel et le bac de references.",
-    queueBatchModePromptOnly: "Le lot en file d'attente enverra un lot officiel base uniquement sur le prompt.",
+        "Le lot en file d'attente enverra un lot officiel pilote par references avec le prompt actuel et le bac de references. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
+    queueBatchModePromptOnly:
+        "Le lot en file d'attente enverra un lot officiel base uniquement sur le prompt. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
     queueBatchConversationNotice:
         "Les lots en file d'attente conservent la lignee source, mais n'envoient pas l'historique officiel des conversations multi-tours. Pour poursuivre une conversation, utilisez le flux de generation normal.",
     queuedBatchJobsWorkflowHint:
@@ -1652,13 +1662,13 @@ const frQueuedBatchWordingBaseline = {
 
 const deQueuedBatchWordingBaseline = {
     queueBatchModeEditor:
-        'Der Batchauftrag in der Warteschlange sendet einen offiziellen bildkonditionierten Batch auf Editor-Basis mit der aktuellen Editor-Basis und den vorbereiteten Referenzen.',
+        'Der Batchauftrag in der Warteschlange sendet einen offiziellen bildkonditionierten Batch auf Editor-Basis mit der aktuellen Editor-Basis und den vorbereiteten Referenzen. Batchauftrage in der Warteschlange verwenden immer reine Bildausgabe und fordern keine zuruckgegebenen Gedanken an.',
     queueBatchModeStage:
-        'Der Batchauftrag in der Warteschlange sendet einen offiziellen bildkonditionierten Folge-Batch mit dem aktuellen Stufenbild und den vorbereiteten Referenzen.',
+        'Der Batchauftrag in der Warteschlange sendet einen offiziellen bildkonditionierten Folge-Batch mit dem aktuellen Stufenbild und den vorbereiteten Referenzen. Batchauftrage in der Warteschlange verwenden immer reine Bildausgabe und fordern keine zuruckgegebenen Gedanken an.',
     queueBatchModeReferences:
-        'Der Batchauftrag in der Warteschlange sendet einen offiziellen referenzgesteuerten Batch mit dem aktuellen Prompt und der Referenzablage.',
+        'Der Batchauftrag in der Warteschlange sendet einen offiziellen referenzgesteuerten Batch mit dem aktuellen Prompt und der Referenzablage. Batchauftrage in der Warteschlange verwenden immer reine Bildausgabe und fordern keine zuruckgegebenen Gedanken an.',
     queueBatchModePromptOnly:
-        'Der Batchauftrag in der Warteschlange sendet einen offiziellen Batchauftrag nur mit Prompt.',
+        'Der Batchauftrag in der Warteschlange sendet einen offiziellen Batchauftrag nur mit Prompt. Batchauftrage in der Warteschlange verwenden immer reine Bildausgabe und fordern keine zuruckgegebenen Gedanken an.',
     queueBatchConversationNotice:
         'Batchauftrage in der Warteschlange behalten die Quellherkunft bei, senden aber keinen offiziellen Multi-Turn-Konversationsverlauf. Fur Chat-Fortsetzung verwenden Sie den normalen Generierungsablauf.',
     queuedBatchJobsWorkflowHint:
@@ -1673,12 +1683,13 @@ const deQueuedBatchWordingBaseline = {
 
 const ruQueuedBatchWordingBaseline = {
     queueBatchModeEditor:
-        'Пакетная задача в очереди отправит официальный пакет с условием по изображению на основе редактора, используя текущую базу редактора и подготовленные референсы.',
+        'Пакетная задача в очереди отправит официальный пакет с условием по изображению на основе редактора, используя текущую базу редактора и подготовленные референсы. Пакетные задачи в очереди всегда используют вывод только изображений и не запрашивают возврат мыслей.',
     queueBatchModeStage:
-        'Пакетная задача в очереди отправит официальный пакет с условием по изображению для продолжения, используя текущее изображение сцены и подготовленные референсы.',
+        'Пакетная задача в очереди отправит официальный пакет с условием по изображению для продолжения, используя текущее изображение сцены и подготовленные референсы. Пакетные задачи в очереди всегда используют вывод только изображений и не запрашивают возврат мыслей.',
     queueBatchModeReferences:
-        'Пакетная задача в очереди отправит официальный пакет с опорой на референсы, используя текущий промпт и лоток референсов.',
-    queueBatchModePromptOnly: 'Пакетная задача в очереди отправит официальный пакет только по промпту.',
+        'Пакетная задача в очереди отправит официальный пакет с опорой на референсы, используя текущий промпт и лоток референсов. Пакетные задачи в очереди всегда используют вывод только изображений и не запрашивают возврат мыслей.',
+    queueBatchModePromptOnly:
+        'Пакетная задача в очереди отправит официальный пакет только по промпту. Пакетные задачи в очереди всегда используют вывод только изображений и не запрашивают возврат мыслей.',
     queueBatchConversationNotice:
         'Пакетные задачи в очереди сохраняют линию происхождения источника, но не отправляют официальный многходовый контекст диалога. Чтобы продолжить диалог, используйте обычную генерацию.',
     queuedBatchJobsWorkflowHint:

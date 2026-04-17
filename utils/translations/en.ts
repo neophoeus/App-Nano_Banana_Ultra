@@ -333,12 +333,13 @@ export const en = {
     styleLineArt: 'Line Art',
     styleStorybookIllustration: 'Storybook Illustration',
     queueBatchModeEditor:
-        'Queue Batch Job will submit an editor-origin image-conditioned batch using the current editor input plus any staged references.',
+        'Queue Batch Job will submit an editor-origin image-conditioned batch using the current editor input plus any staged references. Queued batches always use images-only output and do not request returned thoughts.',
     queueBatchModeStage:
-        'Queue Batch Job will submit a staged follow-up image-conditioned batch using the current stage image plus any staged references.',
+        'Queue Batch Job will submit a staged follow-up image-conditioned batch using the current stage image plus any staged references. Queued batches always use images-only output and do not request returned thoughts.',
     queueBatchModeReferences:
-        'Queue Batch Job will submit a reference-driven batch using the current prompt and reference tray.',
-    queueBatchModePromptOnly: 'Queue Batch Job will submit a prompt-only official batch job.',
+        'Queue Batch Job will submit a reference-driven batch using the current prompt and reference tray. Queued batches always use images-only output and do not request returned thoughts.',
+    queueBatchModePromptOnly:
+        'Queue Batch Job will submit a prompt-only official batch job. Queued batches always use images-only output and do not request returned thoughts.',
     queueBatchConversationNotice:
         'Queued batch jobs keep source lineage, but they do not send official multi-turn conversation history. Use Generate for chat continuation.',
     queuedBatchJobsTitle: 'Queued Batch Jobs',

@@ -13,6 +13,7 @@ import {
     ImageModel,
     QueuedBatchJob,
     QueuedBatchJobImportDiagnostic,
+    QueuedBatchJobImportIssue,
     QueuedBatchJobStats,
     QueuedBatchJobState,
     StageAsset,
@@ -41,6 +42,8 @@ const QUEUED_BATCH_JOB_STATES: QueuedBatchJobState[] = [
 ];
 const QUEUED_BATCH_AUTO_REFRESH_INTERVAL_MS = 45_000;
 const RECOVER_RECENT_BATCH_PAGE_SIZE = 50;
+const QUEUED_BATCH_OUTPUT_FORMAT: QueuedBatchJob['outputFormat'] = 'images-only';
+const QUEUED_BATCH_INCLUDE_THOUGHTS = false;
 
 const isQueuedBatchJobNameUnrecoverable = (message: string) => {
     const normalized = message.toLowerCase();
@@ -85,6 +88,62 @@ const summarizeQueuedBatchImportErrors = (
     return `${uniqueMessages[0]} (+${uniqueMessages.length - 1} more)`;
 };
 
+type QueuedBatchImportResultLike = {
+    index: number;
+    status: 'success' | 'failed';
+    imageUrl?: string;
+    error?: string;
+    sessionHints?: Record<string, unknown>;
+};
+
+const normalizeQueuedBatchImportIssueExtraction = (value: unknown): QueuedBatchJobImportIssue['extractionIssue'] => {
+    if (value === 'missing-candidates' || value === 'missing-parts' || value === 'no-image-data') {
+        return value;
+    }
+
+    return null;
+};
+
+const buildQueuedBatchImportIssues = (results: QueuedBatchImportResultLike[]): QueuedBatchJobImportIssue[] =>
+    results.flatMap((result): QueuedBatchJobImportIssue[] => {
+        if (result.status === 'success' && result.imageUrl) {
+            return [];
+        }
+
+        const normalizedError = typeof result.error === 'string' ? result.error.trim() : '';
+        if (!normalizedError) {
+            return [];
+        }
+
+        const sessionHints =
+            result.sessionHints && typeof result.sessionHints === 'object'
+                ? (result.sessionHints as Record<string, unknown>)
+                : null;
+        const blockedSafetyCategories = Array.isArray(sessionHints?.blockedSafetyCategories)
+            ? sessionHints.blockedSafetyCategories.filter(
+                  (entry): entry is string => typeof entry === 'string' && entry.trim().length > 0,
+              )
+            : [];
+        const finishReason =
+            typeof sessionHints?.finishReason === 'string' && sessionHints.finishReason.trim().length > 0
+                ? sessionHints.finishReason.trim()
+                : null;
+
+        return [
+            {
+                index: Number.isFinite(result.index) ? Math.max(0, Math.floor(result.index)) : 0,
+                error: normalizedError,
+                ...(finishReason ? { finishReason } : {}),
+                ...(normalizeQueuedBatchImportIssueExtraction(sessionHints?.extractionIssue)
+                    ? { extractionIssue: normalizeQueuedBatchImportIssueExtraction(sessionHints?.extractionIssue) }
+                    : {}),
+                ...(blockedSafetyCategories.length > 0 ? { blockedSafetyCategories } : {}),
+                ...(sessionHints?.textReturned === true ? { returnedTextContent: true } : {}),
+                ...(sessionHints?.thoughtsReturned === true ? { returnedThoughtContent: true } : {}),
+            },
+        ];
+    });
+
 const normalizeQueuedBatchStateLabel = (state: QueuedBatchJobState) => state.replace('JOB_STATE_', '').toLowerCase();
 
 const sortQueuedBatchImportedHistory = (left: GeneratedImage, right: GeneratedImage) => {
@@ -128,6 +187,7 @@ type RemoteQueuedJobSeed = Pick<
     | 'hasInlinedResponses'
     | 'submissionPending'
     | 'importDiagnostic'
+    | 'importIssues'
     | 'error'
     | 'parentHistoryId'
     | 'rootHistoryId'
@@ -147,6 +207,7 @@ type RemoteQueuedJob = {
     endTime?: string;
     error?: string | null;
     hasInlinedResponses: boolean;
+    inlinedResponseCount?: number;
     batchStats?: QueuedBatchJobStats | null;
 };
 
@@ -219,6 +280,30 @@ type EditorQueuedBatchJobSubmission = {
     generationMode?: string;
     sourceOverride?: GenerationSourceOverride | null;
 };
+
+const normalizeQueuedBatchCount = (value: number | null | undefined): number | null => {
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+        return null;
+    }
+
+    const normalized = Math.max(0, Math.floor(value));
+    return normalized > 0 ? normalized : null;
+};
+
+const resolveQueuedBatchRequestCount = (
+    remoteJob: Pick<RemoteQueuedJob, 'batchStats' | 'inlinedResponseCount'>,
+    fallbackCount: number,
+) =>
+    normalizeQueuedBatchCount(remoteJob.batchStats?.requestCount) ??
+    normalizeQueuedBatchCount(remoteJob.inlinedResponseCount) ??
+    normalizeQueuedBatchCount(fallbackCount) ??
+    1;
+
+const normalizeQueuedBatchDraft = (draft: QueuedBatchJobGenerationDraft): QueuedBatchJobGenerationDraft => ({
+    ...draft,
+    outputFormat: QUEUED_BATCH_OUTPUT_FORMAT,
+    includeThoughts: QUEUED_BATCH_INCLUDE_THOUGHTS,
+});
 
 type UseQueuedBatchWorkflowReturn = {
     queuedJobs: QueuedBatchJob[];
@@ -375,12 +460,17 @@ export function useQueuedBatchWorkflow({
             const completedAt = parseBatchJobTimestamp(remoteJob.endTime);
             const state = normalizeQueuedBatchJobState(remoteJob.state);
             const hasInlinedResponses = Boolean(remoteJob.hasInlinedResponses);
+            const resolvedBatchSize = resolveQueuedBatchRequestCount(remoteJob, seed.batchSize);
             const importDiagnostic: QueuedBatchJobImportDiagnostic | null =
                 state === 'JOB_STATE_SUCCEEDED' && !hasInlinedResponses
                     ? 'no-payload'
                     : hasInlinedResponses && seed.importDiagnostic === 'extraction-failure'
                       ? 'extraction-failure'
                       : null;
+            const resolvedImportIssues =
+                importDiagnostic === 'extraction-failure' && Array.isArray(seed.importIssues) && seed.importIssues.length > 0
+                    ? seed.importIssues
+                    : null;
             const resolvedError =
                 remoteJob.error || (importDiagnostic === 'extraction-failure' ? seed.error || null : null);
 
@@ -402,7 +492,7 @@ export function useQueuedBatchWorkflow({
                 includeThoughts: seed.includeThoughts,
                 googleSearch: seed.googleSearch,
                 imageSearch: seed.imageSearch,
-                batchSize: seed.batchSize,
+                batchSize: resolvedBatchSize,
                 batchStats: remoteJob.batchStats || null,
                 objectImageCount: seed.objectImageCount,
                 characterImageCount: seed.characterImageCount,
@@ -415,6 +505,7 @@ export function useQueuedBatchWorkflow({
                 hasInlinedResponses,
                 submissionPending: false,
                 importDiagnostic,
+                importIssues: resolvedImportIssues,
                 error: resolvedError,
                 parentHistoryId: seed.parentHistoryId,
                 rootHistoryId: seed.rootHistoryId,
@@ -451,6 +542,7 @@ export function useQueuedBatchWorkflow({
                     hasInlinedResponses: existingJob.hasInlinedResponses,
                     submissionPending: existingJob.submissionPending,
                     importDiagnostic: existingJob.importDiagnostic,
+                    importIssues: existingJob.importIssues,
                     error: existingJob.error,
                     parentHistoryId: existingJob.parentHistoryId,
                     rootHistoryId: existingJob.rootHistoryId,
@@ -495,13 +587,14 @@ export function useQueuedBatchWorkflow({
                         : Boolean(firstRecoveredHistoryItem?.thoughts),
                 googleSearch: false,
                 imageSearch: false,
-                batchSize: remoteJob.batchStats?.requestCount || recoveredHistoryItems.length || 1,
+                batchSize: resolveQueuedBatchRequestCount(remoteJob, recoveredHistoryItems.length || 1),
                 objectImageCount: 0,
                 characterImageCount: 0,
                 importedAt: lastRecoveredHistoryItem?.createdAt || null,
                 hasInlinedResponses: remoteJob.hasInlinedResponses,
                 submissionPending: false,
                 importDiagnostic: null,
+                importIssues: null,
                 error: null,
                 parentHistoryId: firstRecoveredHistoryItem?.parentHistoryId || null,
                 rootHistoryId: firstRecoveredHistoryItem?.rootHistoryId || null,
@@ -527,58 +620,61 @@ export function useQueuedBatchWorkflow({
                 setApiKeyReady(true);
             }
 
+            const queuedDraft = normalizeQueuedBatchDraft(draft);
+
             const localId = crypto.randomUUID();
             const createdAt = Date.now();
             const seed = {
                 localId,
-                prompt: draft.finalPrompt,
+                prompt: queuedDraft.finalPrompt,
                 restoredFromSnapshot: false,
-                generationMode: draft.generationMode,
-                aspectRatio: draft.aspectRatio,
-                imageSize: draft.imageSize,
-                style: draft.style,
-                outputFormat: draft.outputFormat,
-                temperature: draft.temperature,
-                thinkingLevel: draft.thinkingLevel,
-                includeThoughts: draft.includeThoughts,
-                googleSearch: draft.googleSearch,
-                imageSearch: draft.imageSearch,
-                batchSize: draft.batchSize,
-                objectImageCount: draft.finalObjectInputs.length,
-                characterImageCount: draft.finalCharacterInputs.length,
+                generationMode: queuedDraft.generationMode,
+                aspectRatio: queuedDraft.aspectRatio,
+                imageSize: queuedDraft.imageSize,
+                style: queuedDraft.style,
+                outputFormat: queuedDraft.outputFormat,
+                temperature: queuedDraft.temperature,
+                thinkingLevel: queuedDraft.thinkingLevel,
+                includeThoughts: queuedDraft.includeThoughts,
+                googleSearch: queuedDraft.googleSearch,
+                imageSearch: queuedDraft.imageSearch,
+                batchSize: queuedDraft.batchSize,
+                objectImageCount: queuedDraft.finalObjectInputs.length,
+                characterImageCount: queuedDraft.finalCharacterInputs.length,
                 importedAt: null,
                 hasInlinedResponses: false,
                 submissionPending: true,
                 importDiagnostic: null,
-                parentHistoryId: draft.lineageContext?.parentHistoryId || null,
-                rootHistoryId: draft.lineageContext?.rootHistoryId || null,
-                sourceHistoryId: draft.lineageContext?.sourceHistoryId || null,
-                lineageAction: draft.lineageContext?.lineageAction || 'root',
-                lineageDepth: draft.lineageContext?.lineageDepth || 0,
+                importIssues: null,
+                parentHistoryId: queuedDraft.lineageContext?.parentHistoryId || null,
+                rootHistoryId: queuedDraft.lineageContext?.rootHistoryId || null,
+                sourceHistoryId: queuedDraft.lineageContext?.sourceHistoryId || null,
+                lineageAction: queuedDraft.lineageContext?.lineageAction || 'root',
+                lineageDepth: queuedDraft.lineageContext?.lineageDepth || 0,
             } as const;
 
             upsertQueuedJob({
                 localId,
                 name: `local-pending/${localId}`,
-                displayName: draft.displayName,
+                displayName: queuedDraft.displayName,
                 restoredFromSnapshot: false,
                 state: 'JOB_STATE_PENDING',
-                model: draft.model,
-                prompt: draft.finalPrompt,
-                generationMode: draft.generationMode,
-                aspectRatio: draft.aspectRatio,
-                imageSize: draft.imageSize,
-                style: draft.style,
-                outputFormat: draft.outputFormat,
-                temperature: draft.temperature,
-                thinkingLevel: draft.thinkingLevel,
-                includeThoughts: draft.includeThoughts,
-                googleSearch: draft.googleSearch,
-                imageSearch: draft.imageSearch,
-                batchSize: draft.batchSize,
+                model: queuedDraft.model,
+                prompt: queuedDraft.finalPrompt,
+                generationMode: queuedDraft.generationMode,
+                aspectRatio: queuedDraft.aspectRatio,
+                imageSize: queuedDraft.imageSize,
+                style: queuedDraft.style,
+                outputFormat: queuedDraft.outputFormat,
+                temperature: queuedDraft.temperature,
+                thinkingLevel: queuedDraft.thinkingLevel,
+                includeThoughts: queuedDraft.includeThoughts,
+                googleSearch: queuedDraft.googleSearch,
+                imageSearch: queuedDraft.imageSearch,
+                batchSize: queuedDraft.batchSize,
                 batchStats: null,
-                objectImageCount: draft.finalObjectInputs.length,
-                characterImageCount: draft.finalCharacterInputs.length,
+                objectImageCount: queuedDraft.finalObjectInputs.length,
+                characterImageCount: queuedDraft.finalCharacterInputs.length,
                 createdAt,
                 updatedAt: createdAt,
                 startedAt: null,
@@ -588,6 +684,7 @@ export function useQueuedBatchWorkflow({
                 hasInlinedResponses: false,
                 submissionPending: true,
                 importDiagnostic: null,
+                importIssues: null,
                 error: null,
                 parentHistoryId: seed.parentHistoryId,
                 rootHistoryId: seed.rootHistoryId,
@@ -598,22 +695,22 @@ export function useQueuedBatchWorkflow({
 
             try {
                 const remoteJob = await submitQueuedBatchJob({
-                    prompt: draft.finalPrompt,
-                    aspectRatio: draft.aspectRatio,
-                    imageSize: draft.imageSize,
-                    style: draft.style,
-                    model: draft.model,
-                    editingInput: draft.editingInput,
-                    objectImageInputs: draft.finalObjectInputs,
-                    characterImageInputs: draft.finalCharacterInputs,
-                    outputFormat: draft.outputFormat,
-                    temperature: draft.temperature,
-                    thinkingLevel: draft.thinkingLevel,
-                    includeThoughts: draft.includeThoughts,
-                    googleSearch: draft.googleSearch,
-                    imageSearch: draft.imageSearch,
-                    requestCount: draft.batchSize,
-                    displayName: draft.displayName,
+                    prompt: queuedDraft.finalPrompt,
+                    aspectRatio: queuedDraft.aspectRatio,
+                    imageSize: queuedDraft.imageSize,
+                    style: queuedDraft.style,
+                    model: queuedDraft.model,
+                    editingInput: queuedDraft.editingInput,
+                    objectImageInputs: queuedDraft.finalObjectInputs,
+                    characterImageInputs: queuedDraft.finalCharacterInputs,
+                    outputFormat: queuedDraft.outputFormat,
+                    temperature: queuedDraft.temperature,
+                    thinkingLevel: queuedDraft.thinkingLevel,
+                    includeThoughts: queuedDraft.includeThoughts,
+                    googleSearch: queuedDraft.googleSearch,
+                    imageSearch: queuedDraft.imageSearch,
+                    requestCount: queuedDraft.batchSize,
+                    displayName: queuedDraft.displayName,
                 });
 
                 upsertQueuedJob(mapRemoteQueuedJobToLocal(remoteJob, seed));
@@ -956,7 +1053,13 @@ export function useQueuedBatchWorkflow({
                 const { job: remoteJob, results } = await importQueuedBatchJobResults(job.name);
                 const successfulResults = results.filter((result) => result.status === 'success' && result.imageUrl);
                 const failedResults = results.filter((result) => result.status !== 'success' || !result.imageUrl);
+                const resolvedBatchSize = resolveQueuedBatchRequestCount(remoteJob, results.length || job.batchSize);
+                const resolvedJobSeed = {
+                    ...job,
+                    batchSize: resolvedBatchSize,
+                };
                 const importFailureSummary = summarizeQueuedBatchImportErrors(results);
+                const importIssues = buildQueuedBatchImportIssues(results);
                 const importedHistoryItems: GeneratedImage[] = await Promise.all(
                     successfulResults.map(async (result) => {
                         let thumbnailUrl = result.imageUrl as string;
@@ -977,7 +1080,7 @@ export function useQueuedBatchWorkflow({
                             imageSearch: job.imageSearch,
                             generationMode: job.generationMode || 'Queued Batch Job',
                             executionMode: 'queued-batch-job',
-                            batchSize: job.batchSize,
+                            batchSize: resolvedBatchSize,
                             batchJobName: job.name,
                             batchResultIndex: result.index,
                         });
@@ -1043,10 +1146,11 @@ export function useQueuedBatchWorkflow({
                     const importFailureMessage = importFailureSummary || remoteJob.error || null;
 
                     upsertQueuedJob({
-                        ...mapRemoteQueuedJobToLocal(remoteJob, job),
+                        ...mapRemoteQueuedJobToLocal(remoteJob, resolvedJobSeed),
                         importedAt: job.importedAt,
                         lastPolledAt: Date.now(),
                         importDiagnostic,
+                        importIssues: importIssues.length > 0 ? importIssues : null,
                         error:
                             importDiagnostic === 'extraction-failure' ? importFailureMessage : remoteJob.error || null,
                     });
@@ -1069,10 +1173,11 @@ export function useQueuedBatchWorkflow({
                 setHistory((previous) => [...importedHistoryItems, ...previous]);
                 markQueuedJobImported(localId);
                 upsertQueuedJob({
-                    ...mapRemoteQueuedJobToLocal(remoteJob, job),
+                    ...mapRemoteQueuedJobToLocal(remoteJob, resolvedJobSeed),
                     importedAt: Date.now(),
                     lastPolledAt: Date.now(),
                     importDiagnostic: null,
+                    importIssues: null,
                     error: null,
                 });
                 historySelectRef.current?.(importedHistoryItems[0]);

@@ -1,5 +1,25 @@
 # Changelog
 
+## v3.5.7 - 2026-04-17
+
+- Release title: Nano Banana Ultra 3.5.7 - Queued Batch Import Detail, Safer Queue Profile & Clearer Queue Cards
+- Release summary:
+    - queued-batch import detail and restore persistence:
+        - queued batch jobs now keep structured per-result import issues instead of only collapsing all-failed imports into one summary string, so different failures inside the same batch can stay visible after import attempts
+        - the queued jobs panel now renders those indexed import issue lines directly on the job card, making mixed outcomes such as no-image, text-only, and timeout-style failures readable without opening local storage or dev tools
+        - queued batch import issue detail is now preserved through workspace snapshot persistence and restore, so reopened workspaces keep the same failed-import context on tracked queue cards
+
+    - queue-only safer request profile:
+        - queued batch submission now normalizes to an image-only batch profile instead of inheriting interactive text-plus-image output settings, reducing cases where queued jobs complete without importable image bytes
+        - queued batch submission now explicitly disables returned thoughts for the queue path while leaving normal interactive generation behavior unchanged
+        - the queue-mode tooltip wording now states that queued jobs use image-only output and do not request returned thoughts, so the queue action no longer silently differs from the currently visible interactive advanced settings
+
+    - authoritative queued-job counts and visible batch resource names:
+        - recovered and refreshed queued jobs now correct stale local request counts using authoritative remote batch data, including inline response counts when Gemini omits `batchStats.requestCount`
+        - queued batch import also corrects stale request counts from the returned import result length when the provider still does not send batch request counts, keeping imported history sidecar metadata aligned with the real batch size
+        - queued job cards now display the authoritative request count instead of relying only on the older local seed count, fixing recovered jobs that previously stayed stuck at `1 request(s)`
+        - queued job cards now show the raw `batches/...` resource name directly on the card, so remote batch lookup and re-import troubleshooting no longer depend on local storage inspection
+
 ## v3.5.6 - 2026-04-17
 
 - Release title: Nano Banana Ultra 3.5.6 - Failed Thought Rediscovery, Progress Failure Cues, App-Scoped Vitest Contracts & Style-First Prompt Recipes

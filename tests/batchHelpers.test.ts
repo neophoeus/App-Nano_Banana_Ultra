@@ -54,6 +54,23 @@ describe('serializeBatchJob', () => {
         });
 
         expect(serialized.hasInlinedResponses).toBe(true);
+        expect(serialized.inlinedResponseCount).toBe(1);
+    });
+
+    it('preserves inline response count even when official batchStats are absent', () => {
+        const serialized = serializeBatchJob({
+            name: 'batches/test-job-inline-count-only',
+            displayName: 'Queued inline batch count only',
+            state: 'JOB_STATE_SUCCEEDED',
+            model: 'gemini-3.1-flash-image-preview',
+            dest: {
+                inlinedResponses: [{ response: {} }, { response: {} }],
+            },
+        });
+
+        expect(serialized.batchStats).toBeNull();
+        expect(serialized.hasInlinedResponses).toBe(true);
+        expect(serialized.inlinedResponseCount).toBe(2);
     });
 });
 

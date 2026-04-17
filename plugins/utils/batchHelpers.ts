@@ -12,6 +12,7 @@ export type BatchJobResponsePayload = {
     endTime?: string;
     error?: string | null;
     hasInlinedResponses: boolean;
+    inlinedResponseCount?: number;
     batchStats?: BatchJobStatsPayload | null;
 };
 
@@ -124,6 +125,8 @@ function serializeBatchJobStats(batchStats: any): BatchJobStatsPayload | null {
 }
 
 export function serializeBatchJob(batchJob: any): BatchJobResponsePayload {
+    const inlinedResponses = Array.isArray(batchJob?.dest?.inlinedResponses) ? batchJob.dest.inlinedResponses : [];
+
     return {
         name: String(batchJob?.name || ''),
         displayName: String(batchJob?.displayName || batchJob?.name || 'Queued Batch Job'),
@@ -134,9 +137,9 @@ export function serializeBatchJob(batchJob: any): BatchJobResponsePayload {
         startTime: typeof batchJob?.startTime === 'string' ? batchJob.startTime : undefined,
         endTime: typeof batchJob?.endTime === 'string' ? batchJob.endTime : undefined,
         error: batchJob?.error?.message || batchJob?.error?.details || null,
+        inlinedResponseCount: inlinedResponses.length,
         batchStats: serializeBatchJobStats(batchJob?.batchStats),
-        hasInlinedResponses:
-            Array.isArray(batchJob?.dest?.inlinedResponses) && batchJob.dest.inlinedResponses.length > 0,
+        hasInlinedResponses: inlinedResponses.length > 0,
     };
 }
 

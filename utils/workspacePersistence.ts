@@ -4,6 +4,7 @@ import {
     BranchConversationRecord,
     GeneratedImage,
     QueuedBatchJob,
+    QueuedBatchJobImportIssue,
     ResultPart,
     StageAsset,
     WorkspaceBranchState,
@@ -523,6 +524,49 @@ const sanitizeWorkflowLogs = (value: unknown): string[] => {
     return value.filter((item): item is string => typeof item === 'string');
 };
 
+const sanitizeQueuedBatchJobImportIssues = (value: unknown): QueuedBatchJobImportIssue[] => {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+
+    return value.flatMap((item): QueuedBatchJobImportIssue[] => {
+        if (!(isRecord(item) && typeof item.index === 'number' && Number.isFinite(item.index) && typeof item.error === 'string')) {
+            return [];
+        }
+
+        const normalizedError = item.error.trim();
+        if (!normalizedError) {
+            return [];
+        }
+
+        const finishReason =
+            typeof item.finishReason === 'string' && item.finishReason.trim().length > 0 ? item.finishReason.trim() : null;
+        const extractionIssue =
+            item.extractionIssue === 'missing-candidates' ||
+            item.extractionIssue === 'missing-parts' ||
+            item.extractionIssue === 'no-image-data'
+                ? item.extractionIssue
+                : null;
+        const blockedSafetyCategories = Array.isArray(item.blockedSafetyCategories)
+            ? item.blockedSafetyCategories.filter(
+                  (entry): entry is string => typeof entry === 'string' && entry.trim().length > 0,
+              )
+            : [];
+
+        return [
+            {
+                index: Math.max(0, Math.floor(item.index)),
+                error: normalizedError,
+                ...(finishReason ? { finishReason } : {}),
+                ...(extractionIssue ? { extractionIssue } : {}),
+                ...(blockedSafetyCategories.length > 0 ? { blockedSafetyCategories } : {}),
+                ...(item.returnedTextContent === true ? { returnedTextContent: true } : {}),
+                ...(item.returnedThoughtContent === true ? { returnedThoughtContent: true } : {}),
+            },
+        ];
+    });
+};
+
 const sanitizeQueuedBatchJobs = (value: unknown): QueuedBatchJob[] => {
     if (!Array.isArray(value)) {
         return [];
@@ -561,6 +605,8 @@ const sanitizeQueuedBatchJobs = (value: unknown): QueuedBatchJob[] => {
             item.importDiagnostic === 'no-payload' || item.importDiagnostic === 'extraction-failure'
                 ? item.importDiagnostic
                 : null;
+        const hasExplicitImportIssues = Array.isArray(item.importIssues) || item.importIssues === null;
+        const importIssues = sanitizeQueuedBatchJobImportIssues(item.importIssues);
         const migratedHasInlinedResponses =
             typeof item.hasInlinedResponses === 'boolean'
                 ? item.hasInlinedResponses
@@ -579,6 +625,7 @@ const sanitizeQueuedBatchJobs = (value: unknown): QueuedBatchJob[] => {
                 ...(item as QueuedBatchJob),
                 style: normalizeImageStyle(item.style),
                 ...(importDiagnostic ? { importDiagnostic } : {}),
+                ...(hasExplicitImportIssues ? { importIssues: importIssues.length > 0 ? importIssues : null } : {}),
                 ...(typeof migratedHasInlinedResponses === 'boolean'
                     ? { hasInlinedResponses: migratedHasInlinedResponses }
                     : {}),

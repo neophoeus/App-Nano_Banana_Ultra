@@ -219,6 +219,16 @@ export interface QueuedBatchJobStats {
 
 export type QueuedBatchJobImportDiagnostic = 'no-payload' | 'extraction-failure';
 
+export interface QueuedBatchJobImportIssue {
+    index: number;
+    error: string;
+    finishReason?: string | null;
+    extractionIssue?: GenerationFailureExtractionIssue | null;
+    blockedSafetyCategories?: string[];
+    returnedTextContent?: boolean;
+    returnedThoughtContent?: boolean;
+}
+
 export interface QueuedBatchJob {
     localId: string;
     name: string;
@@ -250,6 +260,7 @@ export interface QueuedBatchJob {
     hasInlinedResponses?: boolean;
     submissionPending?: boolean;
     importDiagnostic?: QueuedBatchJobImportDiagnostic | null;
+    importIssues?: QueuedBatchJobImportIssue[] | null;
     error: string | null;
     parentHistoryId?: string | null;
     rootHistoryId?: string | null;

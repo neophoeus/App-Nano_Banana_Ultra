@@ -345,12 +345,13 @@ export const es = {
     styleLineArt: 'Arte Lineal',
     styleStorybookIllustration: 'Ilustración de Cuento',
     queueBatchModeEditor:
-        'El trabajo por lotes en cola enviara un lote oficial condicionado por imagen basado en el editor usando la base actual del editor y las referencias preparadas.',
+        'El trabajo por lotes en cola enviara un lote oficial condicionado por imagen basado en el editor usando la base actual del editor y las referencias preparadas. Los lotes en cola siempre usan salida solo de imagen y no solicitan pensamientos devueltos.',
     queueBatchModeStage:
-        'El trabajo por lotes en cola enviara un lote oficial condicionado por imagen de seguimiento usando la imagen actual del escenario y las referencias preparadas.',
+        'El trabajo por lotes en cola enviara un lote oficial condicionado por imagen de seguimiento usando la imagen actual del escenario y las referencias preparadas. Los lotes en cola siempre usan salida solo de imagen y no solicitan pensamientos devueltos.',
     queueBatchModeReferences:
-        'El trabajo por lotes en cola enviara un lote oficial guiado por referencias usando el prompt actual y la bandeja de referencias.',
-    queueBatchModePromptOnly: 'El trabajo por lotes en cola enviara un lote oficial basado solo en el prompt.',
+        'El trabajo por lotes en cola enviara un lote oficial guiado por referencias usando el prompt actual y la bandeja de referencias. Los lotes en cola siempre usan salida solo de imagen y no solicitan pensamientos devueltos.',
+    queueBatchModePromptOnly:
+        'El trabajo por lotes en cola enviara un lote oficial basado solo en el prompt. Los lotes en cola siempre usan salida solo de imagen y no solicitan pensamientos devueltos.',
     queueBatchConversationNotice:
         'Los trabajos por lotes en cola conservan el linaje de origen, pero no envian el historial oficial de conversacion de varios turnos. Para continuar un chat, usa la generacion normal.',
     queuedBatchJobsTitle: 'Trabajos por lotes en cola',

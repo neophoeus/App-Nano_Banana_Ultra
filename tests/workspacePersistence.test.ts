@@ -320,6 +320,77 @@ describe('workspacePersistence', () => {
         expect(restored.queuedJobs[0]?.importDiagnostic ?? null).toBeNull();
     });
 
+    it('sanitizes structured queued batch import issues in workspace snapshots', () => {
+        const restored = sanitizeWorkspaceSnapshot({
+            ...EMPTY_WORKSPACE_SNAPSHOT,
+            queuedJobs: [
+                {
+                    localId: 'issue-job',
+                    name: 'batches/issue-job',
+                    displayName: 'Issue job',
+                    state: 'JOB_STATE_SUCCEEDED',
+                    model: 'gemini-3.1-flash-image-preview',
+                    prompt: 'Issue prompt',
+                    generationMode: 'Follow-up Edit',
+                    aspectRatio: '1:1',
+                    imageSize: '1K',
+                    style: 'None',
+                    outputFormat: 'images-only',
+                    temperature: 1,
+                    thinkingLevel: 'minimal',
+                    includeThoughts: true,
+                    googleSearch: false,
+                    imageSearch: false,
+                    batchSize: 2,
+                    objectImageCount: 0,
+                    characterImageCount: 0,
+                    createdAt: 1710400000000,
+                    updatedAt: 1710400005000,
+                    startedAt: 1710400001000,
+                    completedAt: 1710400005000,
+                    lastPolledAt: 1710400005000,
+                    importedAt: null,
+                    hasInlinedResponses: true,
+                    importDiagnostic: 'extraction-failure',
+                    importIssues: [
+                        {
+                            index: 0,
+                            error: ' Model returned no image data (finish reason: STOP). ',
+                            finishReason: 'STOP',
+                            extractionIssue: 'no-image-data',
+                            returnedThoughtContent: true,
+                        },
+                        {
+                            index: 1,
+                            error: 'Model output was blocked by safety filters (sexually explicit).',
+                            blockedSafetyCategories: ['sexually explicit', '', 42 as never],
+                        },
+                        {
+                            index: 2,
+                            error: '   ',
+                        },
+                    ],
+                    error: 'Model returned no image data (finish reason: STOP). (+1 more)',
+                },
+            ],
+        });
+
+        expect(restored.queuedJobs[0]?.importIssues).toEqual([
+            {
+                index: 0,
+                error: 'Model returned no image data (finish reason: STOP).',
+                finishReason: 'STOP',
+                extractionIssue: 'no-image-data',
+                returnedThoughtContent: true,
+            },
+            {
+                index: 1,
+                error: 'Model output was blocked by safety filters (sexually explicit).',
+                blockedSafetyCategories: ['sexually explicit'],
+            },
+        ]);
+    });
+
     it('drops empty generated image urls from restored view state', () => {
         const restored = sanitizeWorkspaceSnapshot({
             ...EMPTY_WORKSPACE_SNAPSHOT,
