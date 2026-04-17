@@ -7,7 +7,6 @@
         "lib": ["ES2022", "DOM", "DOM.Iterable"],
         "skipLibCheck": true,
         "types": ["node"],
-        "baseUrl": ".",
         "moduleResolution": "bundler",
         "isolatedModules": true,
         "moduleDetection": "force",

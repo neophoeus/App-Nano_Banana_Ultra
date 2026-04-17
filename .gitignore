@@ -28,7 +28,6 @@ playwright.local.config.ts
 
 # Local secrets and generated internal reports
 .env*.local
-.tmp-vitest-forwarding-report.json
 e2e-global-log-focus.txt
 INTERNAL_SMOKE_REPORT_*.md
 INTERNAL_SMOKE_HANDOFF*.md
