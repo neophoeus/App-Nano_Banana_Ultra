@@ -637,7 +637,7 @@ export const fr = {
         'Les mises a jour de pensee du tour actif apparaissent ici dans l ordre chronologique.',
     workspaceSupportProgress: 'Progression',
     workspaceSupportResponse: 'Reponse',
-    workspaceSupportSources: 'Origines',
+    workspaceSupportSources: 'Assistance',
     workspaceViewerProvenance: 'Provenance',
     workspaceViewerSessionHints: 'Indices de session',
     workspaceViewerSessionHintsEmpty:

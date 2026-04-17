@@ -1,0 +1,139 @@
+{
+  "format": "nbu-workspace-snapshot",
+  "version": 1,
+  "exportedAt": "2026-03-13T09:10:00.000Z",
+  "snapshot": {
+    "history": [
+      {
+        "id": "chat-follow-up-turn",
+        "url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
+        "prompt": "Official chat follow-up turn",
+        "aspectRatio": "1:1",
+        "size": "1K",
+        "style": "None",
+        "model": "gemini-3.1-flash-image-preview",
+        "createdAt": 1710200001000,
+        "mode": "Follow-up Edit",
+        "executionMode": "chat-continuation",
+        "status": "success",
+        "text": "Official chat follow-up text",
+        "conversationId": "chatconv1-restore-path",
+        "conversationBranchOriginId": "chat-root-turn",
+        "conversationSourceHistoryId": "chat-root-turn",
+        "conversationTurnIndex": 0,
+        "parentHistoryId": "chat-root-turn",
+        "rootHistoryId": "chat-root-turn",
+        "sourceHistoryId": "chat-root-turn",
+        "lineageAction": "continue",
+        "lineageDepth": 1
+      },
+      {
+        "id": "chat-root-turn",
+        "url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
+        "prompt": "Official chat root turn",
+        "aspectRatio": "1:1",
+        "size": "1K",
+        "style": "None",
+        "model": "gemini-3.1-flash-image-preview",
+        "createdAt": 1710200000000,
+        "mode": "Text to Image",
+        "executionMode": "single-turn",
+        "status": "success",
+        "text": "Official chat root text",
+        "rootHistoryId": "chat-root-turn",
+        "lineageAction": "root",
+        "lineageDepth": 0
+      }
+    ],
+    "stagedAssets": [
+      {
+        "id": "stage-official-chat",
+        "url": "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
+        "role": "stage-source",
+        "origin": "history",
+        "createdAt": 1710200002000,
+        "sourceHistoryId": "chat-follow-up-turn",
+        "lineageAction": "continue"
+      }
+    ],
+    "workflowLogs": [
+      "[10:30:00] Official conversation snapshot imported.",
+      "[10:30:01] Session fields are intentionally stale to validate restore normalization."
+    ],
+    "workspaceSession": {
+      "activeResult": {
+        "text": "Official chat follow-up text",
+        "thoughts": null,
+        "grounding": null,
+        "metadata": null,
+        "sessionHints": {
+          "thoughtSignatureReturned": true,
+          "restoredFromSnapshot": true
+        },
+        "historyId": "chat-follow-up-turn"
+      },
+      "continuityGrounding": null,
+      "continuitySessionHints": {
+        "thoughtSignatureReturned": true,
+        "restoredFromSnapshot": true
+      },
+      "provenanceMode": null,
+      "provenanceSourceHistoryId": null,
+      "conversationId": "stale-conversation-id",
+      "conversationBranchOriginId": "stale-branch-origin",
+      "conversationActiveSourceHistoryId": "stale-active-source",
+      "conversationTurnIds": [
+        "stale-active-source"
+      ],
+      "source": "history",
+      "sourceHistoryId": "chat-follow-up-turn",
+      "updatedAt": 1710200003000
+    },
+    "branchState": {
+      "nameOverrides": {
+        "chat-root-turn": "Chat Branch"
+      },
+      "continuationSourceByBranchOriginId": {
+        "chat-root-turn": "chat-follow-up-turn"
+      }
+    },
+    "conversationState": {
+      "byBranchOriginId": {
+        "chat-root-turn": {
+          "conversationId": "chatconv1-restore-path",
+          "branchOriginId": "chat-root-turn",
+          "activeSourceHistoryId": "chat-follow-up-turn",
+          "turnIds": [
+            "chat-follow-up-turn"
+          ],
+          "startedAt": 1710200000500,
+          "updatedAt": 1710200001500
+        }
+      }
+    },
+    "viewState": {
+      "generatedImageUrls": [
+        "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+      ],
+      "selectedImageIndex": 0,
+      "selectedHistoryId": "chat-follow-up-turn"
+    },
+    "composerState": {
+      "prompt": "Imported official conversation workspace",
+      "aspectRatio": "1:1",
+      "imageSize": "1K",
+      "imageStyle": "None",
+      "imageModel": "gemini-3.1-flash-image-preview",
+      "batchSize": 1,
+      "outputFormat": "images-only",
+      "temperature": 1,
+      "thinkingLevel": "minimal",
+      "includeThoughts": true,
+      "googleSearch": false,
+      "imageSearch": false,
+      "generationMode": "Follow-up Edit",
+      "executionMode": "chat-continuation",
+      "stickySendIntent": "memory"
+    }
+  }
+}

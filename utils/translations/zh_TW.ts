@@ -502,7 +502,7 @@ export const zh_TW = {
     workspaceProgressChronologicalHint: '這裡會依時間順序顯示目前回合的思考更新。',
     workspaceSupportProgress: '進展',
     workspaceSupportResponse: '回應',
-    workspaceSupportSources: '來源',
+    workspaceSupportSources: '支援',
     workspaceViewerProvenance: '來源脈絡',
     workspaceViewerSessionHints: '工作階段提示',
     workspaceViewerSessionHintsEmpty: '後端可在不改變檢視器契約的前提下，將多輪或脈絡工作階段提示附加於此。',

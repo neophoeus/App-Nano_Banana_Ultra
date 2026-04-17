@@ -16,13 +16,15 @@ test-results/
 playwright-report/
 coverage/
 
-# Local-only development assets excluded from the product repo
+# Local-only development assets excluded from the tracked repo surface
 docs/
-tests/
-e2e/
-playwright.config.ts
 .prettierignore
 prettier.config.mjs
+
+# Local-only scratch test assets
+tests-local/
+e2e-local/
+playwright.local.config.ts
 
 # Local secrets and generated internal reports
 .env*.local
@@ -31,8 +33,14 @@ INTERNAL_SMOKE_REPORT_*.md
 INTERNAL_SMOKE_HANDOFF*.md
 INTERNAL_SMOKE_FINAL_SUMMARY_*.md
 
+# Track repo-owned VS Code project metadata, ignore everything else in .vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/extensions.json
+!.vscode/launch.json
+
 # Editor directories and files
-.vscode/
 .idea/
 .DS_Store
 *.suo

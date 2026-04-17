@@ -12,6 +12,7 @@ type WorkspaceSupportDetailSurfaceProps = {
     description?: string;
     compact?: boolean;
     headerExtra?: React.ReactNode;
+    desktopWidthClass?: string;
 };
 
 export default function WorkspaceSupportDetailSurface({
@@ -23,6 +24,7 @@ export default function WorkspaceSupportDetailSurface({
     description,
     compact = false,
     headerExtra,
+    desktopWidthClass = 'max-w-[840px]',
 }: WorkspaceSupportDetailSurfaceProps) {
     const { isDesktop } = useResponsivePanelState();
 
@@ -30,7 +32,7 @@ export default function WorkspaceSupportDetailSurface({
         <WorkspaceModalFrame
             dataTestId={dataTestId}
             zIndex={WORKSPACE_OVERLAY_Z_INDEX.supportConsole}
-            maxWidthClass={isDesktop ? 'max-w-[560px]' : 'max-w-none'}
+            maxWidthClass={isDesktop ? desktopWidthClass : 'max-w-none'}
             onClose={onClose}
             closeLabel={closeLabel}
             title={title}

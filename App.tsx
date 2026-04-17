@@ -11,6 +11,7 @@ import {
     ImageStyle,
     ImageModel,
     OutputFormat,
+    ResultPart,
     ThinkingLevel,
     GroundingMetadata,
     ProvenanceContinuityMode,
@@ -26,12 +27,10 @@ import QueuedBatchJobsPanel from './components/QueuedBatchJobsPanel';
 import SurfaceLoadingFallback from './components/SurfaceLoadingFallback';
 import WorkspaceDetailModal from './components/WorkspaceDetailModal';
 import WorkspaceOverlayStack from './components/WorkspaceOverlayStack';
-import WorkspaceResponseRail from './components/WorkspaceResponseRail';
 import WorkspaceSideToolPanel from './components/WorkspaceSideToolPanel';
 import WorkspaceSupportDetailSurface from './components/WorkspaceSupportDetailSurface';
 import WorkspaceBottomFooter from './components/WorkspaceBottomFooter';
 import WorkspaceEvidenceDetailPanel from './components/WorkspaceEvidenceDetailPanel';
-import WorkspaceOutputDetailPanel from './components/WorkspaceOutputDetailPanel';
 import WorkspaceTopHeader from './components/WorkspaceTopHeader';
 import WorkspaceUnifiedHistoryPanel from './components/WorkspaceUnifiedHistoryPanel';
 import WorkspaceVersionsDetailPanel from './components/WorkspaceVersionsDetailPanel';
@@ -67,6 +66,8 @@ import { inferExecutionModeFromHistoryItem } from './utils/executionMode';
 import { EMPTY_WORKSPACE_CONVERSATION_STATE } from './utils/conversationState';
 import { useImageGeneration } from './hooks/useImageGeneration';
 import { usePerformGeneration } from './hooks/usePerformGeneration';
+import { GenerationLiveProgressEvent } from './services/geminiService';
+import { LiveProgressStreamTruthSummary } from './utils/liveProgressCapabilities';
 import { usePromptTools } from './hooks/usePromptTools';
 import { useComposerState } from './hooks/useComposerState';
 import { useGroundingProvenanceView } from './hooks/useGroundingProvenanceView';
@@ -121,8 +122,49 @@ type ProgressThoughtEntry = {
     shortId: string;
     prompt: string | null;
     thoughts: string;
+    resultParts: ResultPart[];
     createdAtLabel: string;
     createdAtMs: number | null;
+    slotIndex?: number;
+    slotLabel?: string;
+    isLive?: boolean;
+};
+
+type ActiveLiveProgressSlot = {
+    slotIndex: number;
+    sessionId: string;
+    startedAtMs: number;
+    resultParts: ResultPart[];
+    summary: LiveProgressStreamTruthSummary | null;
+};
+
+type ActiveLiveProgressSession = {
+    batchSessionId: string;
+    startedAtMs: number;
+    slots: Record<number, ActiveLiveProgressSlot>;
+};
+
+const isThoughtResultPart = (part: ResultPart) => part.kind === 'thought-text' || part.kind === 'thought-image';
+
+const buildResultPartIdentityKey = (part: ResultPart) =>
+    part.kind === 'thought-text' || part.kind === 'output-text'
+        ? `${part.kind}:${part.sequence}:${part.text}`
+        : `${part.kind}:${part.sequence}:${part.mimeType}:${part.imageUrl}`;
+
+const getThoughtResultParts = (parts?: ResultPart[] | null): ResultPart[] =>
+    (parts || []).filter(isThoughtResultPart).sort((left, right) => left.sequence - right.sequence);
+
+const buildThoughtSummaryFromParts = (parts: ResultPart[], fallbackLabel: string) => {
+    const text = parts
+        .map((part) => (part.kind === 'thought-text' ? part.text.trim() : ''))
+        .filter(Boolean)
+        .join('\n\n');
+
+    if (text) {
+        return text;
+    }
+
+    return parts.some((part) => part.kind === 'thought-image') ? fallbackLabel : '';
 };
 
 const areWorkspaceSettingsDraftsEqual = (left: WorkspaceSettingsDraft, right: WorkspaceSettingsDraft) =>
@@ -181,11 +223,12 @@ const App: React.FC = () => {
     const [settingsSessionDraft, setSettingsSessionDraft] = useState<WorkspaceSettingsDraft | null>(null);
     const [settingsSessionReturnToGeneration, setSettingsSessionReturnToGeneration] = useState(false);
     const [activeWorkspaceDetailModal, setActiveWorkspaceDetailModal] = useState<
-        'progress' | 'response' | 'sources' | 'versions' | 'queued-jobs' | null
+        'progress' | 'sources' | 'versions' | 'queued-jobs' | null
     >(null);
     const [editingImageSource, setEditingImageSource] = useState<string | null>(null);
     const [batchProgress, setBatchProgress] = useState({ completed: 0, total: 0 });
     const [activeBatchPreviewSession, setActiveBatchPreviewSession] = useState<BatchPreviewSession | null>(null);
+    const [activeLiveProgressSession, setActiveLiveProgressSession] = useState<ActiveLiveProgressSession | null>(null);
     const [branchNameOverrides, setBranchNameOverrides] = useState<BranchNameOverrides>(
         () => initialWorkspaceSnapshot.branchState.nameOverrides,
     );
@@ -308,6 +351,7 @@ const App: React.FC = () => {
     const {
         selectedResultText,
         selectedThoughts,
+        selectedResultParts,
         selectedGrounding,
         selectedMetadata,
         setSelectedMetadata,
@@ -489,12 +533,13 @@ const App: React.FC = () => {
             setGeneratedImageUrls([]);
             setSelectedImageIndex(0);
             setSelectedHistoryId(item.id);
-            applySelectedResultArtifacts(null);
+            applySelectedResultArtifacts(buildResultArtifacts(item));
             setError(buildStageErrorState(t, item.failure, item.error || t('statusFailed'), item.failureContext));
             clearAssetRoles(['stage-source']);
         },
         [
             applySelectedResultArtifacts,
+            buildResultArtifacts,
             clearAssetRoles,
             setError,
             setGeneratedImageUrls,
@@ -645,6 +690,86 @@ const App: React.FC = () => {
 
     const handleBatchPreviewClear = useCallback(({ sessionId }: { sessionId: string }) => {
         setActiveBatchPreviewSession((previousSession) => (previousSession?.id === sessionId ? null : previousSession));
+    }, []);
+
+    const handleLiveProgressReset = useCallback(() => {
+        setActiveLiveProgressSession(null);
+    }, []);
+
+    const handleLiveProgressEvent = useCallback((event: GenerationLiveProgressEvent) => {
+        const batchSessionId = event.batchSessionId || event.sessionId;
+        const slotIndex = event.slotIndex ?? 0;
+
+        setActiveLiveProgressSession((previousSession) => {
+            const nextSession =
+                previousSession && previousSession.batchSessionId === batchSessionId
+                    ? previousSession
+                    : {
+                          batchSessionId,
+                          startedAtMs: Date.now(),
+                          slots: {},
+                      };
+
+            if (event.type === 'start') {
+                return {
+                    ...nextSession,
+                    slots: {
+                        ...nextSession.slots,
+                        [slotIndex]: {
+                            slotIndex,
+                            sessionId: event.sessionId,
+                            startedAtMs: Date.now(),
+                            resultParts: [],
+                            summary: null,
+                        },
+                    },
+                };
+            }
+
+            const previousSlot = nextSession.slots[slotIndex];
+            const nextSlot =
+                previousSlot && previousSlot.sessionId === event.sessionId
+                    ? previousSlot
+                    : {
+                          slotIndex,
+                          sessionId: event.sessionId,
+                          startedAtMs: previousSlot?.startedAtMs ?? Date.now(),
+                          resultParts: previousSlot?.resultParts || [],
+                          summary: previousSlot?.summary || null,
+                      };
+
+            if (event.type === 'summary') {
+                return {
+                    ...nextSession,
+                    slots: {
+                        ...nextSession.slots,
+                        [slotIndex]: {
+                            ...nextSlot,
+                            summary: event.summary,
+                        },
+                    },
+                };
+            }
+            const partKey = buildResultPartIdentityKey(event.part);
+            const alreadyIncluded = nextSlot.resultParts.some((candidate) => buildResultPartIdentityKey(candidate) === partKey);
+
+            if (alreadyIncluded) {
+                return nextSession;
+            }
+
+            return {
+                ...nextSession,
+                slots: {
+                    ...nextSession.slots,
+                    [slotIndex]: {
+                        ...nextSlot,
+                        resultParts: [...nextSlot.resultParts, event.part].sort(
+                            (left, right) => left.sequence - right.sequence,
+                        ),
+                    },
+                },
+            };
+        });
     }, []);
 
     const handleHistorySelectionDuringGeneration = useCallback(() => {
@@ -1100,6 +1225,8 @@ const App: React.FC = () => {
         onBatchPreviewTileUpdate: handleBatchPreviewTileUpdate,
         onBatchPreviewComplete: handleBatchPreviewComplete,
         onBatchPreviewClear: handleBatchPreviewClear,
+        onLiveProgressEvent: handleLiveProgressEvent,
+        onLiveProgressReset: handleLiveProgressReset,
     });
 
     const {
@@ -1195,7 +1322,7 @@ const App: React.FC = () => {
 
     const { handleGenerate, handleFollowUpGenerate, handleCancelGeneration } = useWorkspaceGenerationActions({
         abortControllerRef,
-        isSharedControlsSurfaceOpen,
+        isSurfaceWorkspaceOpen: isSharedControlsSurfaceOpen,
         prompt,
         aspectRatio,
         imageSize,
@@ -1630,8 +1757,8 @@ const App: React.FC = () => {
     }, [activePickerSheet, isSurfaceWorkspaceOpen, setActivePickerSheet]);
 
     const {
-        effectiveResultText,
         effectiveThoughts,
+        effectiveResultParts,
         effectiveMetadata,
         effectiveSessionHints,
         actualOutputDimensions,
@@ -1685,6 +1812,7 @@ const App: React.FC = () => {
     } = useGroundingProvenanceView({
         selectedResultText,
         selectedThoughts,
+        selectedResultParts,
         selectedGrounding,
         selectedMetadata,
         selectedSessionHints,
@@ -1813,9 +1941,6 @@ const App: React.FC = () => {
     }, []);
     const handleOpenProgressDetails = useCallback(() => {
         setActiveWorkspaceDetailModal('progress');
-    }, []);
-    const handleOpenResponseDetails = useCallback(() => {
-        setActiveWorkspaceDetailModal('response');
     }, []);
     const [workspaceFloatingHostElement, setWorkspaceFloatingHostElement] = useState<HTMLDivElement | null>(null);
     const workspaceFloatingLayerValue = useMemo(
@@ -2318,7 +2443,6 @@ const App: React.FC = () => {
         currentStageContinuationDiffers,
         metadataItems: viewerMetadataItems,
         metadataStateMessage: viewerMetadataStateMessage,
-        effectiveResultText,
         effectiveThoughts,
         thoughtStateMessage,
         provenancePanel: viewerProvenancePanel,
@@ -2428,16 +2552,117 @@ const App: React.FC = () => {
     const stagePanelClassName =
         'min-w-0 nbu-shell-panel nbu-shell-surface-stage-hero min-h-[400px] overflow-hidden p-3 lg:min-h-0 xl:flex-1';
     const topLauncherCompactButtonClassName =
-        'group nbu-shell-panel flex h-[40px] min-w-0 items-center justify-center px-2.5 py-2 text-center transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:hover:shadow-[0_18px_40px_rgba(2,6,23,0.38)] min-h-[40px]';
+        'group nbu-shell-panel flex h-[40px] min-h-[40px] min-w-0 w-full items-center justify-center px-2.5 py-2 text-center transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.12)] dark:hover:shadow-[0_18px_40px_rgba(2,6,23,0.38)]';
     const topLauncherCompactLabelClassName =
         'whitespace-nowrap text-[9px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400 sm:text-[10px]';
     const supportDetailTabButtonClassName =
         'rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-colors';
-    const responseTextPlaceholder =
-        viewSettings.outputFormat === 'images-and-text'
-            ? t('workspacePanelResultTextReady')
-            : t('workspacePanelResultTextReserved');
-    const hasResponseInfo = Boolean(effectiveResultText?.trim());
+    const effectiveThoughtParts = useMemo(() => getThoughtResultParts(effectiveResultParts), [effectiveResultParts]);
+    const selectedProgressHistoryItem = useMemo(
+        () => (selectedHistoryId ? getHistoryTurnById(selectedHistoryId) : null),
+        [getHistoryTurnById, selectedHistoryId],
+    );
+    const selectedProgressThoughtParts = useMemo(() => {
+        const selectedThoughtParts = getThoughtResultParts(selectedResultParts);
+
+        if (selectedThoughtParts.length > 0) {
+            return selectedThoughtParts;
+        }
+
+        return getThoughtResultParts(selectedProgressHistoryItem?.resultParts);
+    }, [selectedProgressHistoryItem, selectedResultParts]);
+    const selectedProgressThoughtsText = useMemo(() => {
+        const trimmedSelectedThoughts = selectedThoughts?.trim();
+        if (trimmedSelectedThoughts) {
+            return trimmedSelectedThoughts;
+        }
+
+        const trimmedHistoryThoughts = selectedProgressHistoryItem?.thoughts?.trim();
+        if (trimmedHistoryThoughts) {
+            return trimmedHistoryThoughts;
+        }
+
+        return buildThoughtSummaryFromParts(selectedProgressThoughtParts, t('workspaceViewerThoughts'));
+    }, [selectedProgressHistoryItem, selectedProgressThoughtParts, selectedThoughts, t]);
+    const selectedProgressEntry = useMemo<ProgressThoughtEntry | null>(() => {
+        if (!selectedProgressHistoryItem) {
+            return null;
+        }
+
+        if (!selectedProgressThoughtsText && selectedProgressThoughtParts.length === 0) {
+            return null;
+        }
+
+        const createdAtMs = selectedProgressHistoryItem.createdAt ?? workspaceSession.updatedAt ?? null;
+
+        return {
+            id: selectedProgressHistoryItem.id,
+            shortId: getShortTurnId(selectedProgressHistoryItem.id),
+            prompt: selectedProgressHistoryItem.prompt || null,
+            thoughts: selectedProgressThoughtsText,
+            resultParts: selectedProgressThoughtParts,
+            createdAtMs,
+            createdAtLabel:
+                createdAtMs != null
+                    ? new Date(createdAtMs).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                      })
+                    : sessionUpdatedLabel,
+        } satisfies ProgressThoughtEntry;
+    }, [
+        selectedProgressHistoryItem,
+        selectedProgressThoughtParts,
+        selectedProgressThoughtsText,
+        sessionUpdatedLabel,
+        workspaceSession.updatedAt,
+    ]);
+    const liveProgressThoughtEntries = useMemo<ProgressThoughtEntry[]>(() => {
+        if (!isGenerating || !activeLiveProgressSession) {
+            return [];
+        }
+
+        return Object.values(activeLiveProgressSession.slots)
+            .map((slot) => {
+                const slotThoughtParts = getThoughtResultParts(slot.resultParts);
+                if (slotThoughtParts.length === 0) {
+                    return null;
+                }
+
+                return {
+                    id: `live-${activeLiveProgressSession.batchSessionId}-${slot.slotIndex}`,
+                    shortId: `slot-${String(slot.slotIndex + 1).padStart(2, '0')}`,
+                    prompt: prompt || null,
+                    thoughts: buildThoughtSummaryFromParts(slotThoughtParts, t('workspaceViewerThoughts')) || t('workspaceViewerThoughts'),
+                    resultParts: slotThoughtParts,
+                    createdAtMs: slot.startedAtMs,
+                    createdAtLabel: new Date(slot.startedAtMs).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                    }),
+                    slotIndex: slot.slotIndex,
+                    slotLabel: `#${slot.slotIndex + 1}`,
+                    isLive: true,
+                } satisfies ProgressThoughtEntry;
+            })
+            .filter((entry): entry is ProgressThoughtEntry => Boolean(entry));
+    }, [activeLiveProgressSession, isGenerating, prompt, t]);
+    const liveProgressThoughtsText = useMemo(() => liveProgressThoughtEntries[0]?.thoughts || '', [liveProgressThoughtEntries]);
+    const effectiveProgressThoughtsText = useMemo(() => {
+        const trimmedEffectiveThoughts = effectiveThoughts?.trim();
+        if (trimmedEffectiveThoughts) {
+            return trimmedEffectiveThoughts;
+        }
+
+        return buildThoughtSummaryFromParts(effectiveThoughtParts, t('workspaceViewerThoughts'));
+    }, [effectiveThoughtParts, effectiveThoughts, t]);
+    const progressThoughtsSummaryText = useMemo(
+        () => liveProgressThoughtsText || selectedProgressThoughtsText || effectiveProgressThoughtsText,
+        [effectiveProgressThoughtsText, liveProgressThoughtsText, selectedProgressThoughtsText],
+    );
+    const hasProgressActivity = Boolean(
+        liveProgressThoughtEntries.length > 0 || selectedProgressEntry || effectiveProgressThoughtsText || effectiveThoughtParts.length > 0,
+    );
     const hasSourceTrailInfo = Boolean(
         groundingQueries.length > 0 ||
         selectedSources.length > 0 ||
@@ -2450,20 +2675,10 @@ const App: React.FC = () => {
         <>
             <WorkspaceProgressCard
                 currentLanguage={currentLang}
-                thoughtsText={effectiveThoughts}
+                thoughtsText={progressThoughtsSummaryText}
+                hasThoughtArtifacts={hasProgressActivity}
                 onOpenDetails={handleOpenProgressDetails}
             />
-            <button
-                type="button"
-                data-testid="workspace-response-open-details"
-                onClick={handleOpenResponseDetails}
-                className={`${topLauncherCompactButtonClassName} nbu-shell-surface-output-strip hover:border-emerald-300 dark:hover:border-emerald-500/30`}
-            >
-                <span className="flex min-w-0 items-center gap-2">
-                    <TopLauncherSignal active={hasResponseInfo} dataTestId="workspace-response-signal" />
-                    <span className={topLauncherCompactLabelClassName}>{t('workspaceSupportResponse')}</span>
-                </span>
-            </button>
             <button
                 type="button"
                 data-testid="workspace-sources-open-details"
@@ -2484,6 +2699,26 @@ const App: React.FC = () => {
         supportRail,
     });
     const progressThoughtEntries = useMemo<ProgressThoughtEntry[]>(() => {
+        const mapTurnToThoughtEntry = (turn: GeneratedImageType): ProgressThoughtEntry => {
+            const turnThoughtParts = getThoughtResultParts(turn.resultParts);
+
+            return {
+                id: turn.id,
+                shortId: getShortTurnId(turn.id),
+                prompt: turn.prompt || null,
+                thoughts: turn.thoughts?.trim() || buildThoughtSummaryFromParts(turnThoughtParts, t('workspaceViewerThoughts')),
+                resultParts: turnThoughtParts,
+                createdAtMs: turn.createdAt,
+                createdAtLabel: new Date(turn.createdAt).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                }),
+            };
+        };
+        const dedupeEntriesById = (entries: ProgressThoughtEntry[]) =>
+            entries.filter(
+                (entry, index, allEntries) => allEntries.findIndex((candidate) => candidate.id === entry.id) === index,
+            );
         const historyTurns =
             workspaceSession.conversationTurnIds.length > 0
                 ? workspaceSession.conversationTurnIds
@@ -2500,50 +2735,57 @@ const App: React.FC = () => {
             (turn, index, turns) => turns.findIndex((candidate) => candidate.id === turn.id) === index,
         );
         const thoughtTurns = uniqueTurns
-            .filter((turn) => Boolean(turn.thoughts?.trim()))
-            .map((turn) => ({
-                id: turn.id,
-                shortId: getShortTurnId(turn.id),
-                prompt: turn.prompt || null,
-                thoughts: turn.thoughts!.trim(),
-                createdAtMs: turn.createdAt,
-                createdAtLabel: new Date(turn.createdAt).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                }),
-            }))
+            .filter((turn) => Boolean(turn.thoughts?.trim()) || getThoughtResultParts(turn.resultParts).length > 0)
+            .map(mapTurnToThoughtEntry)
             .reverse();
 
-        if (thoughtTurns.length > 0) {
-            return thoughtTurns;
+        const mergeWithLiveEntries = (entries: ProgressThoughtEntry[]) => {
+            const archivedEntries = dedupeEntriesById(entries);
+
+            if (liveProgressThoughtEntries.length === 0) {
+                return archivedEntries;
+            }
+
+            const liveEntryIds = new Set(liveProgressThoughtEntries.map((entry) => entry.id));
+            return [...liveProgressThoughtEntries, ...archivedEntries.filter((entry) => !liveEntryIds.has(entry.id))];
+        };
+
+        const archivedThoughtEntries = selectedProgressEntry ? [selectedProgressEntry, ...thoughtTurns] : thoughtTurns;
+
+        if (archivedThoughtEntries.length > 0) {
+            return mergeWithLiveEntries(archivedThoughtEntries);
         }
 
-        const fallbackThoughts = effectiveThoughts?.trim();
-
-        if (!fallbackThoughts) {
-            return [];
+        if (!effectiveProgressThoughtsText && effectiveThoughtParts.length === 0) {
+            return mergeWithLiveEntries([]);
         }
 
-        return [
+        return mergeWithLiveEntries([
             {
                 id: currentStageSourceTurn?.id || workspaceSession.sourceHistoryId || 'active-session',
                 shortId: getShortTurnId(currentStageSourceTurn?.id || workspaceSession.sourceHistoryId),
                 prompt: prompt || null,
-                thoughts: fallbackThoughts,
+                thoughts: effectiveProgressThoughtsText,
+                resultParts: effectiveThoughtParts,
                 createdAtMs: workspaceSession.updatedAt || null,
                 createdAtLabel: sessionUpdatedLabel,
             },
-        ];
+        ]);
     }, [
         activeBranchSummary,
         currentStageBranchSummary,
         currentStageSourceTurn,
-        effectiveThoughts,
+        effectiveProgressThoughtsText,
+        effectiveThoughtParts,
         getHistoryTurnById,
+        liveProgressThoughtEntries,
         prompt,
+        selectedProgressEntry,
         sessionUpdatedLabel,
+        t,
         workspaceSession.conversationTurnIds,
         workspaceSession.sourceHistoryId,
+        workspaceSession.updatedAt,
     ]);
     const canRepaintCurrentImage = Boolean(getActiveImageUrl());
     const sideToolPanel = useMemo(
@@ -2645,9 +2887,7 @@ const App: React.FC = () => {
         ],
     );
     const workspaceDetailOverlays =
-        activeWorkspaceDetailModal === 'progress' ||
-        activeWorkspaceDetailModal === 'response' ||
-        activeWorkspaceDetailModal === 'sources' ? (
+        activeWorkspaceDetailModal === 'progress' || activeWorkspaceDetailModal === 'sources' ? (
             (() => {
                 const supportDetailHeaderExtra = (
                     <div data-testid="workspace-support-detail-tabs" className="mt-3 flex flex-wrap items-center gap-2">
@@ -2662,18 +2902,6 @@ const App: React.FC = () => {
                             }`}
                         >
                             {t('workspaceSupportProgress')}
-                        </button>
-                        <button
-                            type="button"
-                            data-testid="workspace-support-detail-tab-response"
-                            onClick={handleOpenResponseDetails}
-                            className={`${supportDetailTabButtonClassName} ${
-                                activeWorkspaceDetailModal === 'response'
-                                    ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200'
-                                    : 'border-gray-200/80 text-gray-600 hover:border-emerald-300 hover:text-emerald-700 dark:border-gray-700 dark:text-gray-300 dark:hover:border-emerald-500/30 dark:hover:text-emerald-200'
-                            }`}
-                        >
-                            {t('workspaceSupportResponse')}
                         </button>
                         <button
                             type="button"
@@ -2699,6 +2927,7 @@ const App: React.FC = () => {
                             onClose={handleCloseWorkspaceDetailModal}
                             compact={true}
                             headerExtra={supportDetailHeaderExtra}
+                            desktopWidthClass="max-w-[1120px]"
                         >
                             <WorkspaceProgressDetailPanel
                                 currentLanguage={currentLang}
@@ -2709,26 +2938,8 @@ const App: React.FC = () => {
                                 queuedJobs={queuedJobs}
                                 resultStatusSummary={groundingResolutionStatusSummary}
                                 resultStatusTone={groundingResolutionStatusTone}
-                                thoughtsText={effectiveThoughts}
+                                thoughtsText={progressThoughtsSummaryText}
                                 thoughtsPlaceholder={thoughtStateMessage}
-                            />
-                        </WorkspaceSupportDetailSurface>
-                    );
-                }
-
-                if (activeWorkspaceDetailModal === 'response') {
-                    return (
-                        <WorkspaceSupportDetailSurface
-                            dataTestId="workspace-response-detail-modal"
-                            title={t('workspaceSupportResponse')}
-                            closeLabel={t('workspaceViewerClose')}
-                            onClose={handleCloseWorkspaceDetailModal}
-                            headerExtra={supportDetailHeaderExtra}
-                        >
-                            <WorkspaceOutputDetailPanel
-                                currentLanguage={currentLang}
-                                resultText={effectiveResultText}
-                                resultPlaceholder={responseTextPlaceholder}
                             />
                         </WorkspaceSupportDetailSurface>
                     );
@@ -2902,7 +3113,7 @@ const App: React.FC = () => {
                                     isGenerating={isGenerating}
                                     currentLanguage={currentLang}
                                     currentLog={logs.length > 0 ? logs[logs.length - 1] : ''}
-                                    error={error}
+                                    error={error?.message || null}
                                     onErrorClear={() => setError(null)}
                                     imageModel={imageModel}
                                     onModelChange={setImageModel}

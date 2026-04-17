@@ -106,9 +106,9 @@ Nano Banana Ultra currently supports three Gemini image-model paths. The UI expo
 
 ## Version Overview
 
-### Latest Release: 3.5.4
+### Latest Release: 3.5.5
 
-Latest release: 3.5.4. See [CHANGELOG.md](CHANGELOG.md) for release details.
+Latest release: 3.5.5. See [CHANGELOG.md](CHANGELOG.md) for release details.
 
 ### 3.5.x
 
@@ -157,11 +157,19 @@ For release-by-release history, see [CHANGELOG.md](CHANGELOG.md).
 
 ## Repository Scope
 
-This repository currently tracks the product runtime, UI, and build surface only.
+This repository currently tracks the product runtime, UI, build surface, and stable automated test contracts.
 
-Local-only development assets such as `docs/`, `tests/`, `e2e/`, `playwright.config.ts`, `.prettierignore`, and `prettier.config.mjs` are intentionally excluded from the formal tracked repo surface and may exist only in individual local workflows.
+Tracked test source now includes `tests/`, `e2e/`, and `playwright.config.ts`, so clean clones receive the same unit and Playwright verification contracts that the tracked wrapper scripts and dev-environment manifest already advertise.
+
+Local-only development assets such as `docs/`, `.prettierignore`, and `prettier.config.mjs` remain intentionally excluded from the formal tracked repo surface. If you need personal scratch tests or temporary debug-only Playwright flows, keep them in `tests-local/`, `e2e-local/`, or `playwright.local.config.ts` so they stay outside the shared product contract.
 
 Generated local artifacts such as `output/`, `test-results/`, `playwright-report/`, and `coverage/` are also intentionally kept out of version control.
+
+For repo-tracked local tooling and test execution, use `run_install_all.bat`, `scripts/setup-dev-environment.bat`, `scripts/run-unit-tests.bat`, and `scripts/run-e2e-tests.bat`. Those extra tools now live in `dev-environment/` with a separate lockfile, so the root `package.json` stays limited to runtime, UI, and build dependencies.
+
+The app root now also exposes formal Vitest entry points through `npm test`, `npm run test:unit`, and `npm run test:watch`. Those scripts delegate to the tracked `dev-environment/` Vitest install instead of moving test dependencies back into the product manifest.
+
+Playwright sidebar actions and browser-opening flows can invoke `playwright.config.ts` directly instead of the VS Code launch/task layer. That config and its e2e helpers are now anchored to the app directory itself so `output/`, `test-results/`, and dev-server startup stay inside `App-Nano_Banana_Ultra` regardless of the editor's current working directory.
 
 ---
 
@@ -269,9 +277,9 @@ Nano Banana Ultra 目前支援三條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：3.5.4
+### 最新版本：3.5.5
 
-最新版本：3.5.4。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
+最新版本：3.5.5。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 3.5.x
 
@@ -320,8 +328,14 @@ Nano Banana Ultra 目前支援三條 Gemini 影像模型路徑。介面會依模
 
 ## Repo 範圍說明
 
-目前這個 repo 正式追蹤的是產品執行面、UI 與 build 相關內容。
+目前這個 repo 正式追蹤的是產品執行面、UI、build 相關內容，以及穩定的自動化測試契約。
 
-像 `docs/`、`tests/`、`e2e/`、`playwright.config.ts`、`.prettierignore`、`prettier.config.mjs` 這類本機開發資產，刻意不納入正式追蹤範圍，可能只存在於個人本機工作流中。
+現在 `tests/`、`e2e/`、`playwright.config.ts` 已經納入正式追蹤，讓 clean clone 下來的人可以直接拿到和 repo 內 wrapper scripts、dev-environment manifest 一致的測試驗證契約。
+
+像 `docs/`、`.prettierignore`、`prettier.config.mjs` 這類本機開發資產，仍然刻意不納入正式追蹤範圍。如果你需要個人 scratch 測試或一次性 debug 用的 Playwright 流程，請放在 `tests-local/`、`e2e-local/` 或 `playwright.local.config.ts`，不要混進共享的正式測試面。
 
 `output/`、`test-results/`、`playwright-report/`、`coverage/` 這類本機產物也同樣刻意不納入版本控制。
+
+如果要使用正式放在 repo 內的本機開發工具與測試入口，請用 `run_install_all.bat`、`scripts/setup-dev-environment.bat`、`scripts/run-unit-tests.bat`、`scripts/run-e2e-tests.bat`。這些額外工具現在集中在 `dev-environment/`，並使用獨立 lockfile，讓 root `package.json` 仍然只承載 runtime、UI 與 build 依賴。
+
+Playwright 側欄操作與 browser-opening 流程有可能直接讀取 `playwright.config.ts`，而不是先經過 VS Code 的 launch/task。現在這份 config 與它使用的 e2e helper 都已經改成以 app 目錄自身為錨點，所以不論編輯器目前從哪個工作目錄啟動，`output/`、`test-results/` 與 dev server 啟動位置都會留在 `App-Nano_Banana_Ultra` 內。

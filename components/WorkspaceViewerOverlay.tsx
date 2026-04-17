@@ -24,7 +24,6 @@ type WorkspaceViewerOverlayProps = {
     prompt: string;
     metadataItems?: ViewerMetadataItem[];
     metadataStateMessage?: string | null;
-    effectiveResultText: string | null;
     effectiveThoughts: string | null;
     thoughtStateMessage: string;
     provenancePanel: React.ReactNode;
@@ -45,7 +44,6 @@ export default function WorkspaceViewerOverlay({
     prompt,
     metadataItems = [],
     metadataStateMessage = null,
-    effectiveResultText,
     effectiveThoughts,
     thoughtStateMessage,
     provenancePanel,
@@ -218,21 +216,6 @@ export default function WorkspaceViewerOverlay({
                                         {metadataStateMessage}
                                     </div>
                                 ) : null}
-
-                                <div>
-                                    <div className="flex flex-wrap items-start justify-between gap-3">
-                                        <div>
-                                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-white/45">
-                                                <span>{t('workspaceViewerResultText')}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className={`mt-2 ${viewerSidebarDashedCardClassName}`}>
-                                        {sanitizeSensitiveDisplayText(
-                                            effectiveResultText || t('workspaceViewerResultTextEmpty'),
-                                        )}
-                                    </div>
-                                </div>
 
                                 <div data-testid="workspace-viewer-thoughts-details">
                                     <div

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1200" role="img" aria-labelledby="title desc">
+  <title>Editor Portrait Context Fixture</title>
+  <desc>Portrait scenic fixture for asymmetric crop-zoom reframe regression coverage.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fef3c7" />
+      <stop offset="48%" stop-color="#f97316" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+    <linearGradient id="tower" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e2e8f0" />
+      <stop offset="100%" stop-color="#475569" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="1200" fill="url(#sky)" />
+  <circle cx="618" cy="160" r="92" fill="#fff7ed" opacity="0.8" />
+  <path d="M0 820 C120 760 230 770 330 820 S560 930 800 840 L800 1200 L0 1200 Z" fill="#14532d" opacity="0.92" />
+  <path d="M0 930 C110 890 240 905 355 955 S610 1070 800 985 L800 1200 L0 1200 Z" fill="#064e3b" opacity="0.75" />
+  <g transform="translate(205 210)">
+    <rect x="108" y="0" width="176" height="652" rx="42" fill="url(#tower)" opacity="0.92" />
+    <rect x="145" y="-54" width="102" height="112" rx="28" fill="#f8fafc" opacity="0.88" />
+    <rect x="187" y="-138" width="18" height="156" rx="9" fill="#f8fafc" opacity="0.88" />
+    <rect x="0" y="406" width="500" height="186" rx="36" fill="#0f172a" opacity="0.18" stroke="#ffffff" stroke-opacity="0.28" />
+    <text x="42" y="486" fill="#ffffff" font-family="Segoe UI, sans-serif" font-size="52" font-weight="700">Portrait Reframe Fixture</text>
+    <text x="42" y="548" fill="#e0f2fe" font-family="Segoe UI, sans-serif" font-size="26">Vertical skyline scene for corner-anchored outpaint tests.</text>
+  </g>
+  <g transform="translate(88 1010)">
+    <rect width="330" height="78" rx="39" fill="#fff7ed" opacity="0.9" />
+    <text x="36" y="50" fill="#9a3412" font-family="Segoe UI, sans-serif" font-size="30" font-weight="700">Upload portrait fixture</text>
+  </g>
+</svg>

@@ -7,13 +7,16 @@
         "lib": ["ES2022", "DOM", "DOM.Iterable"],
         "skipLibCheck": true,
         "types": ["node"],
+        "baseUrl": ".",
         "moduleResolution": "bundler",
         "isolatedModules": true,
         "moduleDetection": "force",
         "allowJs": true,
         "jsx": "react-jsx",
         "paths": {
-            "@/*": ["./*"]
+            "@/*": ["./*"],
+            "@playwright/test": ["./dev-environment/node_modules/@playwright/test"],
+            "@playwright/test/*": ["./dev-environment/node_modules/@playwright/test/*"]
         },
         "allowImportingTsExtensions": true,
         "noEmit": true,

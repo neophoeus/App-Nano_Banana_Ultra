@@ -617,7 +617,7 @@ export const ko = {
     workspaceProgressChronologicalHint: '현재 턴의 생각 업데이트가 시간순으로 여기에 표시됩니다.',
     workspaceSupportProgress: '진행',
     workspaceSupportResponse: '응답',
-    workspaceSupportSources: '출처',
+    workspaceSupportSources: '지원',
     workspaceViewerProvenance: '출처 정보',
     workspaceViewerSessionHints: '세션 힌트',
     workspaceViewerSessionHintsEmpty:

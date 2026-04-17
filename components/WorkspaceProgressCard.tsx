@@ -4,12 +4,13 @@ import { getTranslation, Language } from '../utils/translations';
 type WorkspaceProgressCardProps = {
     currentLanguage: Language;
     thoughtsText?: string | null;
+    hasThoughtArtifacts?: boolean;
     onOpenDetails: () => void;
 };
 
-function WorkspaceProgressCard({ currentLanguage, thoughtsText, onOpenDetails }: WorkspaceProgressCardProps) {
+function WorkspaceProgressCard({ currentLanguage, thoughtsText, hasThoughtArtifacts, onOpenDetails }: WorkspaceProgressCardProps) {
     const t = (key: string) => getTranslation(currentLanguage, key);
-    const hasThoughts = Boolean(thoughtsText?.trim());
+    const hasThoughts = hasThoughtArtifacts ?? Boolean(thoughtsText?.trim());
     const inactiveOuterClassName =
         'bg-slate-200/65 ring-1 ring-slate-500/15 shadow-inner shadow-slate-400/20 opacity-95 dark:bg-slate-700/40 dark:ring-slate-400/20 dark:shadow-black/20';
     const inactiveInnerClassName = 'bg-slate-500/70 dark:bg-slate-400/70';

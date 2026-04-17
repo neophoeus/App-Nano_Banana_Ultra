@@ -60,7 +60,7 @@ type UseHistorySourceOrchestrationArgs = {
     resetWorkspaceSession: () => void;
     clearAssetRoles: (roles: Array<'object' | 'character' | 'stage-source'>) => void;
     buildResultArtifacts: (
-        item: Pick<GeneratedImageType, 'text' | 'thoughts' | 'grounding' | 'metadata' | 'sessionHints' | 'id'>,
+        item: Pick<GeneratedImageType, 'text' | 'thoughts' | 'resultParts' | 'grounding' | 'metadata' | 'sessionHints' | 'id'>,
     ) => ResultArtifacts;
     applySelectedResultArtifacts: (artifacts: ResultArtifacts | null) => void;
     promoteResultArtifactsToSession: PromoteResultArtifactsToSession;
@@ -298,10 +298,11 @@ export function useHistorySourceOrchestration({
                     item.error || t('statusFailed'),
                     item.failureContext,
                 );
+                const failedHistoryArtifacts = buildResultArtifacts(item);
                 selectedHistoryLineageActionRef.current = undefined;
                 setGeneratedImageUrls([]);
                 setSelectedImageIndex(0);
-                applySelectedResultArtifacts(null);
+                applySelectedResultArtifacts(failedHistoryArtifacts);
                 setSelectedHistoryId(item.id);
                 setError(stageError);
                 setLogs([

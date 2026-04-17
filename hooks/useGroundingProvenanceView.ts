@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { GenerationSettings, GroundingMetadata, ResultArtifacts, WorkspaceSessionState } from '../types';
+import { GenerationSettings, GroundingMetadata, ResultPart, WorkspaceSessionState } from '../types';
 import { deriveGroundingMode, getGroundingModeLabel } from '../utils/groundingMode';
 import { buildGroundingAttributionDetails, buildGroundingAttributionOverview } from '../utils/groundingProvenance';
 import { getImageSidecarMetadataState, isPersistedImageSidecarMetadata } from '../utils/imageSidecarMetadata';
@@ -13,6 +13,7 @@ import { GroundingSelection } from './useSelectedResultState';
 type UseGroundingProvenanceViewArgs = {
     selectedResultText: string | null;
     selectedThoughts: string | null;
+    selectedResultParts: ResultPart[] | null;
     selectedGrounding: GroundingMetadata | null;
     selectedMetadata: Record<string, unknown> | null;
     selectedSessionHints: Record<string, unknown> | null;
@@ -61,6 +62,7 @@ const EMPTY_SESSION_HINT_ENTRIES: Array<[string, unknown]> = [];
 export function useGroundingProvenanceView({
     selectedResultText,
     selectedThoughts,
+    selectedResultParts,
     selectedGrounding,
     selectedMetadata,
     selectedSessionHints,
@@ -102,6 +104,7 @@ export function useGroundingProvenanceView({
     const metadataUnavailableLabel = t('workspaceViewerMetadataUnavailable');
     const effectiveResultText = selectedResultText ?? workspaceSession.activeResult?.text ?? null;
     const effectiveThoughts = selectedThoughts ?? workspaceSession.activeResult?.thoughts ?? null;
+    const effectiveResultParts = selectedResultParts ?? workspaceSession.activeResult?.resultParts ?? null;
     const effectiveGrounding =
         selectedGrounding ?? workspaceSession.activeResult?.grounding ?? workspaceSession.continuityGrounding ?? null;
     const effectiveMetadata = selectedMetadataState
@@ -660,6 +663,7 @@ export function useGroundingProvenanceView({
     return {
         effectiveResultText,
         effectiveThoughts,
+        effectiveResultParts,
         effectiveGrounding,
         effectiveMetadata,
         effectiveSessionHints,

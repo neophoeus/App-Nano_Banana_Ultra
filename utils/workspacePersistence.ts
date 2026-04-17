@@ -4,6 +4,7 @@ import {
     BranchConversationRecord,
     GeneratedImage,
     QueuedBatchJob,
+    ResultPart,
     StageAsset,
     WorkspaceBranchState,
     WorkspaceComposerState,
@@ -95,6 +96,93 @@ const isNonEmptyAssetUrl = (value: unknown): value is string => typeof value ===
 const buildLoadImageUrl = (savedFilename: string): string =>
     `${LOAD_IMAGE_ENDPOINT}?filename=${encodeURIComponent(savedFilename)}`;
 
+const isImageResultPart = (part: ResultPart): part is Extract<ResultPart, { imageUrl: string }> =>
+    part.kind === 'thought-image' || part.kind === 'output-image';
+
+const sanitizeResultParts = (value: unknown): ResultPart[] | undefined => {
+    if (!Array.isArray(value)) {
+        return undefined;
+    }
+
+    return value.flatMap((part) => {
+        if (!isRecord(part) || typeof part.sequence !== 'number' || typeof part.kind !== 'string') {
+            return [];
+        }
+
+        if ((part.kind === 'thought-text' || part.kind === 'output-text') && typeof part.text === 'string') {
+            return [
+                {
+                    sequence: part.sequence,
+                    kind: part.kind,
+                    text: part.text,
+                } satisfies ResultPart,
+            ];
+        }
+
+        if (
+            (part.kind === 'thought-image' || part.kind === 'output-image') &&
+            typeof part.imageUrl === 'string' &&
+            typeof part.mimeType === 'string'
+        ) {
+            return [
+                {
+                    sequence: part.sequence,
+                    kind: part.kind,
+                    imageUrl: part.imageUrl,
+                    mimeType: part.mimeType,
+                    savedFilename: typeof part.savedFilename === 'string' ? part.savedFilename : undefined,
+                } satisfies ResultPart,
+            ];
+        }
+
+        return [];
+    });
+};
+
+const buildPersistableResultPart = (part: ResultPart): ResultPart => {
+    if (!isImageResultPart(part)) {
+        return part;
+    }
+
+    if (part.savedFilename) {
+        return {
+            ...part,
+            imageUrl: buildLoadImageUrl(part.savedFilename),
+        };
+    }
+
+    if (isInlineAssetUrl(part.imageUrl)) {
+        return {
+            ...part,
+            imageUrl: '',
+        };
+    }
+
+    return part;
+};
+
+const buildRuntimeResultPart = (part: ResultPart): ResultPart => {
+    if (!isImageResultPart(part)) {
+        return part;
+    }
+
+    if (part.savedFilename) {
+        return {
+            ...part,
+            imageUrl: buildLoadImageUrl(part.savedFilename),
+        };
+    }
+
+    if (isInlineAssetUrl(part.imageUrl)) {
+        return {
+            ...part,
+            imageUrl: '',
+        };
+    }
+
+    return part;
+};
+
 const getHistoryThumbnailLoadUrl = (item: GeneratedImage): string | null =>
     typeof item.thumbnailSavedFilename === 'string' && item.thumbnailSavedFilename.trim().length > 0
         ? buildLoadImageUrl(item.thumbnailSavedFilename)
@@ -120,21 +208,29 @@ const buildPersistableHistoryItem = (item: GeneratedImage): GeneratedImage => {
         return {
             ...item,
             url: thumbnailLoadUrl,
+            resultParts: item.resultParts?.map(buildPersistableResultPart),
         };
     }
 
     if (hasPersistableInlineThumbnail(item)) {
-        return item;
+        return {
+            ...item,
+            resultParts: item.resultParts?.map(buildPersistableResultPart),
+        };
     }
 
     if (isLegacyFullResolutionHistoryUrl(item) || isInlineAssetUrl(item.url)) {
         return {
             ...item,
             url: '',
+            resultParts: item.resultParts?.map(buildPersistableResultPart),
         };
     }
 
-    return item;
+    return {
+        ...item,
+        resultParts: item.resultParts?.map(buildPersistableResultPart),
+    };
 };
 
 const buildPersistableStageAsset = (asset: StageAsset): StageAsset => {
@@ -208,11 +304,15 @@ const buildRuntimeHistoryItem = (item: GeneratedImage, preservedInlineHistoryIds
         return {
             ...item,
             url: thumbnailLoadUrl,
+            resultParts: item.resultParts?.map(buildRuntimeResultPart),
         };
     }
 
     if (hasPersistableInlineThumbnail(item)) {
-        return item;
+        return {
+            ...item,
+            resultParts: item.resultParts?.map(buildRuntimeResultPart),
+        };
     }
 
     if (
@@ -223,10 +323,14 @@ const buildRuntimeHistoryItem = (item: GeneratedImage, preservedInlineHistoryIds
         return {
             ...item,
             url: '',
+            resultParts: item.resultParts?.map(buildRuntimeResultPart),
         };
     }
 
-    return item;
+    return {
+        ...item,
+        resultParts: item.resultParts?.map(buildRuntimeResultPart),
+    };
 };
 
 const shouldPreserveRuntimeStageAsset = (asset: StageAsset, preservedInlineHistoryIds: Set<string>): boolean =>
@@ -379,6 +483,7 @@ const sanitizeHistory = (value: unknown): GeneratedImage[] => {
             {
                 ...(item as GeneratedImage),
                 style: normalizeImageStyle(item.style),
+                resultParts: sanitizeResultParts(item.resultParts),
                 openedAt:
                     typeof item.openedAt === 'number' && Number.isFinite(item.openedAt)
                         ? item.openedAt
@@ -532,6 +637,7 @@ const sanitizeWorkspaceSession = (value: unknown): WorkspaceSessionState => {
     const activeResult = isRecord(value.activeResult)
         ? {
               ...value.activeResult,
+              resultParts: sanitizeResultParts(value.activeResult.resultParts) || null,
               sessionHints: sanitizeSessionHintsForStorage(
                   isRecord(value.activeResult.sessionHints)
                       ? (value.activeResult.sessionHints as Record<string, unknown>)

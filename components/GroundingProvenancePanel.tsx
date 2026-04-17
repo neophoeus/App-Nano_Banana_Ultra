@@ -550,7 +550,7 @@ function GroundingProvenancePanel({
                 }
             >
                 <div className={sectionLabelClassName}>{t('groundingPanelContinuitySummary')}</div>
-                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                     {provenanceSummaryRows.map((row) => (
                         <div
                             data-testid={getProvenanceTestId(`provenance-summary-${row.id}`)}
@@ -703,7 +703,7 @@ function GroundingProvenancePanel({
                     }
                 >
                     <div className={sectionLabelClassName}>{t('groundingPanelAttributionOverview')}</div>
-                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                         {attributionOverviewRows.map((row) => (
                             <div
                                 data-testid={getProvenanceTestId(`provenance-attribution-${row.id}`)}
@@ -747,7 +747,7 @@ function GroundingProvenancePanel({
                     }
                 >
                     <div className={sectionLabelClassName}>{t('groundingPanelAttributionStatus')}</div>
-                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                         <div
                             data-testid={getProvenanceTestId('provenance-status-source-status')}
                             className={
@@ -831,7 +831,7 @@ function GroundingProvenancePanel({
             {detailVisibility === 'full' && uncitedSources.length > 0 && (
                 <div>
                     <div className={sectionLabelClassName}>{t('groundingPanelUncitedSourcesSection')}</div>
-                    <div className="mt-2 space-y-2">
+                    <div className="mt-2 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
                         {uncitedSources.map(({ source, index }) => (
                             <div
                                 key={`uncited-source-${index}`}
@@ -1473,7 +1473,7 @@ function GroundingProvenancePanel({
             {shouldShowSourcesSection && (
                 <div>
                     <div className={sectionLabelClassName}>{t('groundingPanelSourcesSection')}</div>
-                    <div className="mt-2 space-y-2">
+                    <div className="mt-2 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
                         {displayedSources.length > 0 ? (
                             displayedSources.map(({ source, index }) =>
                                 renderGroundingSourceCard(
@@ -1496,7 +1496,7 @@ function GroundingProvenancePanel({
             {shouldShowCoverageSection && (
                 <div>
                     <div className={sectionLabelClassName}>{t('groundingPanelCoverageSection')}</div>
-                    <div className="mt-2 space-y-2">
+                    <div className="mt-2 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
                         {displayedSupportBundles.length > 0 ? (
                             displayedSupportBundles.map(({ bundle, index }) =>
                                 renderGroundingCoverageBundle(

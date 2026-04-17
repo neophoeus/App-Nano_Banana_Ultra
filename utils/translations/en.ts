@@ -532,7 +532,7 @@ export const en = {
     workspaceProgressChronologicalHint: 'Thinking updates from the active turn appear here in chronological order.',
     workspaceSupportProgress: 'Progress',
     workspaceSupportResponse: 'Response',
-    workspaceSupportSources: 'Sources',
+    workspaceSupportSources: 'Support',
     workspaceViewerProvenance: 'Provenance',
     workspaceViewerSessionHints: 'Session Hints',
     workspaceViewerSessionHintsEmpty:

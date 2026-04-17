@@ -7,9 +7,7 @@ type UseWorkspaceResetActionsArgs = {
     clearAssetRoles: (roles: Array<'object' | 'character' | 'stage-source'>) => void;
     applyEmptyWorkspaceSnapshot: () => void;
     clearSharedWorkspaceSnapshot: () => void | Promise<void>;
-    setActiveWorkspaceDetailModal: Dispatch<
-        SetStateAction<'progress' | 'response' | 'sources' | 'versions' | 'queued-jobs' | null>
-    >;
+    setActiveWorkspaceDetailModal: Dispatch<SetStateAction<'progress' | 'sources' | 'versions' | 'queued-jobs' | null>>;
     setIsAdvancedSettingsOpen: Dispatch<SetStateAction<boolean>>;
     setIsSketchPadOpen: Dispatch<SetStateAction<boolean>>;
     setShowSketchReplaceConfirm: Dispatch<SetStateAction<boolean>>;

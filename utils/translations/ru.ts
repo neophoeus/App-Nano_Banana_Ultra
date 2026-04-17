@@ -635,7 +635,7 @@ export const ru = {
     workspaceProgressChronologicalHint: 'Здесь в хронологическом порядке показаны обновления мыслей текущего хода.',
     workspaceSupportProgress: 'Ход',
     workspaceSupportResponse: 'Ответ',
-    workspaceSupportSources: 'Источники',
+    workspaceSupportSources: 'Поддержка',
     workspaceViewerProvenance: 'Происхождение',
     workspaceViewerSessionHints: 'Подсказки сессии',
     workspaceViewerSessionHintsEmpty:

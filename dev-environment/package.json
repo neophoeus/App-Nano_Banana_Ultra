@@ -1,0 +1,13 @@
+{
+    "name": "nano-banana-ultra-dev-environment",
+    "private": true,
+    "version": "1.0.0",
+    "type": "module",
+    "devDependencies": {
+        "@playwright/test": "^1.53.2",
+        "jsdom": "^29.0.0",
+        "prettier": "^3.5.3",
+        "vite": "^6.4.2",
+        "vitest": "^3.2.4"
+    }
+}

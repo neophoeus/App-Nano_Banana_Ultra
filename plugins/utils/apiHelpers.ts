@@ -20,6 +20,20 @@ export function sendJson(res: any, status: number, payload: unknown): void {
     res.end(JSON.stringify(payload));
 }
 
+export function startNdjsonStream(res: any, status: number = 200): void {
+    res.writeHead(status, {
+        'Content-Type': 'application/x-ndjson; charset=utf-8',
+        'Cache-Control': 'no-cache, no-transform',
+        Connection: 'keep-alive',
+        'X-Accel-Buffering': 'no',
+    });
+    res.flushHeaders?.();
+}
+
+export function writeNdjsonEvent(res: any, payload: unknown): void {
+    res.write(`${JSON.stringify(payload)}\n`);
+}
+
 export function logApiError(route: string, error: unknown, details?: Record<string, unknown>): void {
     const message = error instanceof Error ? error.message : String(error);
     const payload = details ? { route, message, ...details } : { route, message };

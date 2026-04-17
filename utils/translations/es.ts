@@ -637,7 +637,7 @@ export const es = {
         'Aqui aparecen en orden cronologico las actualizaciones de pensamiento del turno activo.',
     workspaceSupportProgress: 'Progreso',
     workspaceSupportResponse: 'Respuesta',
-    workspaceSupportSources: 'Fuentes',
+    workspaceSupportSources: 'Soporte',
     workspaceViewerProvenance: 'Procedencia',
     workspaceViewerSessionHints: 'Pistas de sesion',
     workspaceViewerSessionHintsEmpty:

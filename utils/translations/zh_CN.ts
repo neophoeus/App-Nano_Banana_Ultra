@@ -120,7 +120,7 @@ export const zh_CN = {
     workspaceProgressChronologicalHint: '这里会按时间顺序显示当前回合的思考更新。',
     workspaceSupportProgress: '进展',
     workspaceSupportResponse: '回应',
-    workspaceSupportSources: '来源',
+    workspaceSupportSources: '支持',
     workspaceViewerProvenance: '来源脉络',
     workspaceViewerSessionHints: '会话提示',
     workspaceViewerSessionHintsEmpty: '后端可以在不改变查看器契约的前提下，把多轮或脉络会话提示附加到这里。',

@@ -1,0 +1,83 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build nano banana ultra (app folder only)",
+            "type": "shell",
+            "command": "npm",
+            "args": ["run", "build"],
+            "isBackground": false,
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build"
+        },
+        {
+            "label": "dev server (app folder only)",
+            "type": "shell",
+            "command": "npm",
+            "args": ["run", "dev"],
+            "isBackground": true,
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build"
+        },
+        {
+            "label": "nano banana: install product dependencies (app folder only)",
+            "type": "shell",
+            "command": "${workspaceFolder}/run_install.bat",
+            "isBackground": false,
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "nano banana: install full dev environment (app folder only)",
+            "type": "shell",
+            "command": "${workspaceFolder}/run_install_all.bat",
+            "isBackground": false,
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "nano banana: vitest (app folder only)",
+            "type": "shell",
+            "command": "${workspaceFolder}/scripts/run-unit-tests.bat",
+            "isBackground": false,
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "test"
+        },
+        {
+            "label": "nano banana: playwright (app folder only)",
+            "type": "shell",
+            "command": "${workspaceFolder}/scripts/run-e2e-tests.bat",
+            "isBackground": false,
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "test"
+        },
+        {
+            "label": "nano banana: format (app folder only)",
+            "type": "shell",
+            "command": "${workspaceFolder}/scripts/run-format.bat",
+            "isBackground": false,
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "nano banana: search @google/genai (app folder only)",
+            "type": "shell",
+            "command": "${workspaceFolder}/scripts/search-genai-sdk.bat",
+            "isBackground": false,
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        }
+    ]
+}

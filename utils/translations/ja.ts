@@ -622,7 +622,7 @@ export const ja = {
     workspaceProgressChronologicalHint: 'ここには現在のターンの思考更新が時系列で表示されます。',
     workspaceSupportProgress: '進行',
     workspaceSupportResponse: '応答',
-    workspaceSupportSources: 'ソース',
+    workspaceSupportSources: 'サポート',
     workspaceViewerProvenance: '由来情報',
     workspaceViewerSessionHints: 'セッションヒント',
     workspaceViewerSessionHintsEmpty:

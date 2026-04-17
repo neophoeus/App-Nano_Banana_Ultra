@@ -639,7 +639,7 @@ export const de = {
         'Hier erscheinen die Denk-Updates des aktiven Durchgangs in zeitlicher Reihenfolge.',
     workspaceSupportProgress: 'Fortschritt',
     workspaceSupportResponse: 'Antwort',
-    workspaceSupportSources: 'Quellen',
+    workspaceSupportSources: 'Assistenz',
     workspaceViewerProvenance: 'Herkunft',
     workspaceViewerSessionHints: 'Sitzungshinweise',
     workspaceViewerSessionHintsEmpty:

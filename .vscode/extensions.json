@@ -1,0 +1,4 @@
+{
+    "recommendations": ["bradlc.vscode-tailwindcss", "esbenp.prettier-vscode", "ms-playwright.playwright"],
+    "unwantedRecommendations": ["dbaeumer.vscode-eslint"]
+}

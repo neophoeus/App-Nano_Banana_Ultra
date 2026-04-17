@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Nano Banana: Vitest Current File (App Folder Only)",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/dev-environment/node_modules/vitest/vitest.mjs",
+            "args": ["run", "${file}", "--root", "${workspaceFolder}"],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "skipFiles": ["<node_internals>/**"]
+        },
+        {
+            "name": "Nano Banana: Playwright (App Folder Only)",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/dev-environment/node_modules/playwright/cli.js",
+            "args": ["test", "--config", "${workspaceFolder}/playwright.config.ts"],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "skipFiles": ["<node_internals>/**"]
+        }
+    ]
+}

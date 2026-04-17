@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
-import { GeneratedImage, GroundingMetadata, ResultArtifacts } from '../types';
+import { GeneratedImage, GroundingMetadata, ResultArtifacts, ResultPart } from '../types';
 
 export type GroundingSelection = { kind: 'bundle'; index: number } | { kind: 'source'; index: number } | null;
 
@@ -13,6 +13,8 @@ type UseSelectedResultStateReturn = {
     setSelectedResultText: Dispatch<SetStateAction<string | null>>;
     selectedThoughts: string | null;
     setSelectedThoughts: Dispatch<SetStateAction<string | null>>;
+    selectedResultParts: ResultPart[] | null;
+    setSelectedResultParts: Dispatch<SetStateAction<ResultPart[] | null>>;
     selectedGrounding: GroundingMetadata | null;
     setSelectedGrounding: Dispatch<SetStateAction<GroundingMetadata | null>>;
     selectedMetadata: Record<string, unknown> | null;
@@ -26,7 +28,7 @@ type UseSelectedResultStateReturn = {
     focusLinkedGroundingItems: boolean;
     setFocusLinkedGroundingItems: Dispatch<SetStateAction<boolean>>;
     buildResultArtifacts: (
-        item: Pick<GeneratedImage, 'text' | 'thoughts' | 'grounding' | 'metadata' | 'sessionHints' | 'id'>,
+        item: Pick<GeneratedImage, 'text' | 'thoughts' | 'resultParts' | 'grounding' | 'metadata' | 'sessionHints' | 'id'>,
     ) => ResultArtifacts;
     applySelectedResultArtifacts: (artifacts: ResultArtifacts | null) => void;
     resetSelectedOutputState: () => void;
@@ -41,6 +43,9 @@ export function useSelectedResultState({
     );
     const [selectedThoughts, setSelectedThoughts] = useState<string | null>(
         () => initialActiveResult?.thoughts || null,
+    );
+    const [selectedResultParts, setSelectedResultParts] = useState<ResultPart[] | null>(
+        () => initialActiveResult?.resultParts || null,
     );
     const [selectedGrounding, setSelectedGrounding] = useState<GroundingMetadata | null>(
         () => initialActiveResult?.grounding || null,
@@ -59,10 +64,11 @@ export function useSelectedResultState({
 
     const buildResultArtifacts = useCallback(
         (
-            item: Pick<GeneratedImage, 'text' | 'thoughts' | 'grounding' | 'metadata' | 'sessionHints' | 'id'>,
+            item: Pick<GeneratedImage, 'text' | 'thoughts' | 'resultParts' | 'grounding' | 'metadata' | 'sessionHints' | 'id'>,
         ): ResultArtifacts => ({
             text: item.text || null,
             thoughts: item.thoughts || null,
+            resultParts: item.resultParts || null,
             grounding: item.grounding || null,
             metadata: item.metadata || null,
             sessionHints: item.sessionHints || null,
@@ -74,6 +80,7 @@ export function useSelectedResultState({
     const applySelectedResultArtifacts = useCallback((artifacts: ResultArtifacts | null) => {
         setSelectedResultText(artifacts?.text || null);
         setSelectedThoughts(artifacts?.thoughts || null);
+        setSelectedResultParts(artifacts?.resultParts || null);
         setSelectedGrounding(artifacts?.grounding || null);
         setSelectedMetadata(artifacts?.metadata || null);
         setSelectedSessionHints(artifacts?.sessionHints || null);
@@ -84,6 +91,7 @@ export function useSelectedResultState({
     const resetSelectedOutputState = useCallback(() => {
         setSelectedResultText(null);
         setSelectedThoughts(null);
+        setSelectedResultParts(null);
         setSelectedGrounding(null);
         setSelectedMetadata(null);
         setSelectedSessionHints(null);
@@ -96,6 +104,8 @@ export function useSelectedResultState({
         setSelectedResultText,
         selectedThoughts,
         setSelectedThoughts,
+        selectedResultParts,
+        setSelectedResultParts,
         selectedGrounding,
         setSelectedGrounding,
         selectedMetadata,

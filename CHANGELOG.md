@@ -1,5 +1,44 @@
 # Changelog
 
+## v3.5.5 - 2026-04-16
+
+- Release title: Nano Banana Ultra 3.5.5 - Response Removal, Live Progress Streaming, Failure Persistence, Fan-Out & Capability Probe
+- Release summary:
+    - response-surface removal and Progress-first support flow:
+        - removed the remaining user-facing `Response` surface from the top support rail, support-detail modal flow, and viewer overlay so the workspace support model now stays focused on `Progress` and `Sources`
+        - removed the viewer-side standalone result-text presentation because the current image-generation paths do not reliably produce a separate user-facing text result worth keeping as a primary surface
+        - preserved ordered provider result artifacts end to end through a shared `resultParts` contract that distinguishes thought text, output text, thought images, and output images instead of flattening everything into one generic text field
+        - changed Progress to render chronological thought artifacts from those structured result parts, so persisted and reopened turns can show mixed thought text plus thought images in the same ordered stream
+
+    - real-time live progress transport and truthful Progress activation:
+        - added a dedicated `/api/images/generate-stream` NDJSON route for eligible interactive image requests so thought parts can arrive incrementally before the final image completes instead of only appearing after the full response finishes
+        - changed the client generation service to prefer the live stream path for eligible single-image interactive requests and fall back to the existing blocking route only when the stream path is unavailable before any live event arrives
+        - added App-level transient live-progress session state so in-flight streamed thought parts are merged directly into the Progress surface while generation is active rather than waiting for final history persistence
+        - tightened the Progress signal so it lights up only when real thought artifacts exist, instead of activating merely because generation is currently running
+        - added live-progress truthfulness tracking around transport-opened state, ordering stability, visible pre-completion thought artifacts, hidden thought-signature presence, and final-render arrival so the app can distinguish true live thought progress from weaker or misleading provider behaviors
+
+    - failure persistence, multi-slot fan-out, and selected failed-item visibility:
+        - changed streamed failure handling so stable pre-failure thought artifacts are merged back into failed partial responses when the provider emits visible thought parts but never produces a final image, preventing those failure-side process artifacts from disappearing at completion time
+        - extended live-progress events with slot and batch-session metadata so interactive multi-image requests can be tracked as independent slot streams without introducing a separate transport contract
+        - moved eligible `interactive-batch-variants` image generation onto a bounded per-slot fan-out path, letting multi-image interactive runs expose live slot progress instead of staying locked behind one shared blocking batch request
+        - changed App live-progress state to track slot-scoped batch sessions and render active slot progress in parallel panels inside `Progress`, replacing the earlier merged multi-slot feed with independently readable per-slot streams
+        - preserved failed history-turn artifacts through reopen and selection flows, so stored `thoughts` and `resultParts` survive failed-stage transitions instead of being cleared when the failed item becomes the active selection
+        - changed archived Progress derivation to prioritize the explicitly selected history item, including failed turns, ahead of successful branch summaries so selecting a failed item now surfaces its own persisted thought text and thought images after completion or restore
+
+    - explicit capability gate and live acceptance matrix:
+        - introduced a dedicated live-progress capability matrix keyed by model, execution mode, output format, thinking level, and `includeThoughts`, replacing the looser earlier assumption that any streaming-capable path should surface live Progress
+        - restricted live-progress eligibility to truthful interactive paths such as batch-size-1 `single-turn` and `chat-continuation` requests with visible-thought support enabled, while keeping unsupported paths out of the live Progress contract
+        - added a `/api/images/live-progress-probe` route so finer-grained capability cells can be exercised against real provider behavior instead of relying only on static capability tables
+        - aligned the shipped runtime truth so excluded model paths, including current `gemini-2.5-flash-image` live-thought cases, stay outside the live Progress acceptance contract even if other image generation flows remain available
+
+    - repo-tracked dev environment and app-scoped workspace execution:
+        - moved Vitest, Playwright, jsdom, and Prettier into a dedicated `dev-environment/` manifest with its own lockfile so the root product manifest stays limited to runtime, UI, and build dependencies
+        - added repo-local install, test, e2e, format, and SDK-search wrappers so local tooling no longer depends on hard-coded VS Code internal tool paths
+        - hardened app-scoped execution by pinning `cwd` to `App-Nano_Banana_Ultra`, preventing tests and generated output from drifting outside the app directory
+        - promoted `tests/`, `e2e/`, and `playwright.config.ts` from local-only assets to tracked repository contracts so clean clones receive the same verification surface already implied by the tracked dev-environment manifest and wrapper scripts
+        - kept generated artifacts such as `output/`, `coverage/`, `test-results/`, and `playwright-report/` ignored, so the repository continues to track source and contracts rather than local runtime byproducts
+        - reserved `tests-local/`, `e2e-local/`, and `playwright.local.config.ts` as ignored scratch space for personal experiments and one-off debug flows instead of mixing them into the shared test surface
+
 ## v3.5.4 - 2026-04-15
 
 - Release title: Nano Banana Ultra 3.5.4 - Interactive Failure Truthfulness, Structured-Output Removal & Explicit Finish-Reason Handling

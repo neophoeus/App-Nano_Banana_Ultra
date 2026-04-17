@@ -239,7 +239,6 @@ type UseWorkspaceStageViewerArgs = {
     currentStageContinuationDiffers: boolean;
     metadataItems: WorkspaceViewerOverlayProps['metadataItems'];
     metadataStateMessage: string | null;
-    effectiveResultText: string | null;
     effectiveThoughts: string | null;
     thoughtStateMessage: string;
     provenancePanel: ReactNode;
@@ -284,7 +283,6 @@ export function useWorkspaceStageViewer({
     currentStageContinuationDiffers,
     metadataItems,
     metadataStateMessage,
-    effectiveResultText,
     effectiveThoughts,
     thoughtStateMessage,
     provenancePanel,
@@ -411,7 +409,6 @@ export function useWorkspaceStageViewer({
                 prompt,
                 metadataItems,
                 metadataStateMessage,
-                effectiveResultText,
                 effectiveThoughts,
                 thoughtStateMessage,
                 provenancePanel,
@@ -427,7 +424,6 @@ export function useWorkspaceStageViewer({
             activeViewerHistoryItem?.isFresh,
             closeViewer,
             currentLanguage,
-            effectiveResultText,
             effectiveThoughts,
             formatSessionHintKey,
             formatSessionHintValue,

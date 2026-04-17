@@ -13,9 +13,16 @@ import {
     ImageModel,
     GeneratedImage as GeneratedImageType,
     OutputFormat,
+    ResultPart,
     ThinkingLevel,
 } from '../types';
-import { GenerationResult, generateImageWithGemini, checkApiKey, promptForApiKey } from '../services/geminiService';
+import {
+    GenerationLiveProgressEvent,
+    GenerationResult,
+    generateImageWithGemini,
+    checkApiKey,
+    promptForApiKey,
+} from '../services/geminiService';
 import { buildStageErrorState, getGenerationFailure } from '../utils/generationFailure';
 import {
     buildSavedImageLoadUrl,
@@ -73,6 +80,73 @@ function buildFailureDisplayContext(
     return undefined;
 }
 
+function buildResultPartFilenameStem(
+    prefix: string,
+    slotIndex: number,
+    sequence: number,
+    sourceSavedFilename?: string,
+): string {
+    const baseStem = sourceSavedFilename
+        ? sourceSavedFilename.replace(/\.[^.]+$/, '')
+        : `${prefix}-${String(slotIndex + 1).padStart(2, '0')}`;
+
+    return `${baseStem}-part-${String(sequence).padStart(2, '0')}`;
+}
+
+async function persistResultParts(
+    resultParts: ResultPart[] | undefined,
+    options: {
+        prefix: string;
+        slotIndex: number;
+        sourceSavedFilename?: string;
+        primaryOutputImageUrl?: string;
+        primaryOutputDisplayUrl?: string;
+        primaryOutputSavedFilename?: string;
+    },
+): Promise<ResultPart[] | undefined> {
+    if (!resultParts?.length) {
+        return undefined;
+    }
+
+    return Promise.all(
+        resultParts.map(async (part) => {
+            if (part.kind === 'thought-text' || part.kind === 'output-text') {
+                return part;
+            }
+
+            if (options.primaryOutputImageUrl && part.imageUrl === options.primaryOutputImageUrl) {
+                return {
+                    ...part,
+                    imageUrl: options.primaryOutputDisplayUrl || part.imageUrl,
+                    savedFilename: options.primaryOutputSavedFilename || part.savedFilename,
+                };
+            }
+
+            const savedPath = await saveImageToLocal(
+                part.imageUrl,
+                `${options.prefix}-thought`,
+                {
+                    kind: part.kind,
+                    slotIndex: options.slotIndex,
+                    sequence: part.sequence,
+                },
+                buildResultPartFilenameStem(options.prefix, options.slotIndex, part.sequence, options.sourceSavedFilename),
+            );
+            const savedFilename = extractSavedFilename(savedPath);
+
+            if (!savedFilename) {
+                return part;
+            }
+
+            return {
+                ...part,
+                imageUrl: buildSavedImageLoadUrl(savedFilename),
+                savedFilename,
+            };
+        }),
+    );
+}
+
 type GenerationSourceOverride = {
     sourceHistoryId: string | null;
     sourceLineageAction?: 'continue' | 'branch' | null;
@@ -123,6 +197,8 @@ interface UsePerformGenerationProps {
     onBatchPreviewTileUpdate?: (args: { sessionId: string; tile: BatchPreviewTile }) => void;
     onBatchPreviewComplete?: (args: { sessionId: string; historyItems: GeneratedImageType[] }) => void;
     onBatchPreviewClear?: (args: { sessionId: string }) => void;
+    onLiveProgressEvent?: (event: GenerationLiveProgressEvent) => void;
+    onLiveProgressReset?: () => void;
 }
 
 export function usePerformGeneration(options: UsePerformGenerationProps) {
@@ -162,6 +238,8 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
         onBatchPreviewTileUpdate,
         onBatchPreviewComplete,
         onBatchPreviewClear,
+        onLiveProgressEvent,
+        onLiveProgressReset,
     } = options;
 
     const performGeneration = useCallback(
@@ -206,6 +284,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
             setGeneratedImageUrls([]);
             setSelectedImageIndex(0);
             setLogs([]);
+            onLiveProgressReset?.();
             const batchSessionId = crypto.randomUUID();
             let didNotifyBatchPreviewComplete = false;
 
@@ -359,6 +438,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                         imageSearch,
                         executionMode: currentExecutionMode,
                         conversationContext,
+                        liveProgressBatchSessionId: batchSessionId,
                     },
                     currentBatchSize,
                     handleImageReceived,
@@ -366,6 +446,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                     controller.signal,
                     (completed, total) => setBatchProgress({ completed, total }),
                     handleResultCallback,
+                    onLiveProgressEvent,
                 );
 
                 const batchHasSiblingSafetyBlockedFailure = results.some(
@@ -399,8 +480,16 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                         batchSize: currentBatchSize,
                         batchResultIndex,
                     });
+                    const prefix = editingInput ? `${targetModel}-edit` : `${targetModel}-gen`;
+                    const persistedResultParts = await persistResultParts(res.resultParts, {
+                        prefix,
+                        slotIndex: batchResultIndex,
+                        sourceSavedFilename: res.savedFilename,
+                        primaryOutputImageUrl: res.url,
+                        primaryOutputDisplayUrl: res.displayUrl,
+                        primaryOutputSavedFilename: res.savedFilename,
+                    });
                     if (res.status === 'success' && res.url) {
-                        const prefix = editingInput ? `${targetModel}-edit` : `${targetModel}-gen`;
                         const persistedThumbnail = await persistHistoryThumbnail(res.url, prefix, res.savedFilename);
                         thumbnailUrl = persistedThumbnail.url;
                         thumbnailSavedFilename = persistedThumbnail.thumbnailSavedFilename;
@@ -429,6 +518,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                         savedFilename: res.savedFilename,
                         text: res.text,
                         thoughts: res.thoughts,
+                        resultParts: persistedResultParts,
                         metadata: {
                             ...sidecarMetadata,
                             ...(res.metadata || {}),
@@ -498,6 +588,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                 if (!didNotifyBatchPreviewComplete) {
                     onBatchPreviewClear?.({ sessionId: batchSessionId });
                 }
+                onLiveProgressReset?.();
                 setIsGenerating(false);
                 abortControllerRef.current = null;
                 setBatchProgress({ completed: 0, total: 0 });
@@ -521,6 +612,8 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
             onBatchPreviewComplete,
             onBatchPreviewStart,
             onBatchPreviewTileUpdate,
+            onLiveProgressEvent,
+            onLiveProgressReset,
             outputFormat,
             setApiKeyReady,
             setBatchProgress,

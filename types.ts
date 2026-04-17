@@ -296,6 +296,25 @@ export interface GroundingMetadata {
     }>;
 }
 
+export type ResultPartTextKind = 'thought-text' | 'output-text';
+export type ResultPartImageKind = 'thought-image' | 'output-image';
+
+export interface ResultTextPart {
+    sequence: number;
+    kind: ResultPartTextKind;
+    text: string;
+}
+
+export interface ResultImagePart {
+    sequence: number;
+    kind: ResultPartImageKind;
+    imageUrl: string;
+    mimeType: string;
+    savedFilename?: string;
+}
+
+export type ResultPart = ResultTextPart | ResultImagePart;
+
 export interface GenerationSettings {
     prompt: string;
     aspectRatio: AspectRatio;
@@ -349,6 +368,7 @@ export interface GenerateResponse {
     imageUrl?: string;
     text?: string;
     thoughts?: string;
+    resultParts?: ResultPart[];
     metadata?: Record<string, unknown>;
     grounding?: GroundingMetadata;
     sessionHints?: Record<string, unknown>;
@@ -366,6 +386,7 @@ export interface GenerateResponse {
 export interface ResultArtifacts {
     text: string | null;
     thoughts: string | null;
+    resultParts?: ResultPart[] | null;
     grounding: GroundingMetadata | null;
     metadata: Record<string, unknown> | null;
     sessionHints: Record<string, unknown> | null;
@@ -457,6 +478,7 @@ export interface GeneratedImage {
     failureContext?: GenerationFailureDisplayContext;
     text?: string;
     thoughts?: string;
+    resultParts?: ResultPart[];
     metadata?: Record<string, unknown>;
     grounding?: GroundingMetadata;
     sessionHints?: Record<string, unknown>;
@@ -541,4 +563,5 @@ export interface GenerateOptions {
     imageSearch?: boolean;
     executionMode?: ExecutionMode;
     conversationContext?: ConversationRequestContext | null;
+    liveProgressBatchSessionId?: string;
 }
