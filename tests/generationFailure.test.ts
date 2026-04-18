@@ -17,6 +17,27 @@ const translations: Record<string, string> = {
     generationFailureDetailMissingParts: 'Missing parts detail.',
     generationFailureDetailPossibleBatchSafetySuppression: 'Possible batch safety suppression detail.',
     generationFailureDetailFinishReason: 'Finish reason: {0}.',
+    generationFailureValuePromptBlockReasonBlocklist: 'blocked by restricted-term rules',
+    generationFailureValuePromptBlockReasonProhibitedContent: 'blocked for prohibited content',
+    generationFailureValuePromptBlockReasonSafety: 'blocked by policy safety rules',
+    generationFailureValuePromptBlockReasonUnspecified: 'blocked by policy rules',
+    generationFailureValuePromptBlockReasonOther: 'blocked by policy rules',
+    generationFailureValueFinishReasonStop: 'completed without image output',
+    generationFailureValueFinishReasonNoImage: 'completed without returning an image',
+    generationFailureValueFinishReasonUnspecified: 'completed without a specific image result reason',
+    generationFailureValueFinishReasonImageSafety: 'blocked by image safety filters',
+    generationFailureValueFinishReasonImageProhibitedContent: 'blocked for prohibited image content',
+    generationFailureValueFinishReasonBlocklist: 'blocked by blocklist rules',
+    generationFailureValueFinishReasonProhibitedContent: 'blocked for prohibited content',
+    generationFailureValueFinishReasonImageOther: 'completed without image output',
+    generationFailureValueFinishReasonSafety: 'blocked by safety filters',
+    generationFailureValueFinishReasonBlocked: 'blocked by model policy',
+    generationFailureValueFinishReasonOther: 'another non-image completion state',
+    generationFailureValueSafetyCategoryHarassment: 'harassment',
+    generationFailureValueSafetyCategoryHateSpeech: 'hate speech',
+    generationFailureValueSafetyCategorySexuallyExplicit: 'sexually explicit',
+    generationFailureValueSafetyCategoryDangerousContent: 'dangerous content',
+    generationFailureValueSafetyCategoryOther: 'other safety policy',
 };
 
 const t = (key: string) => translations[key] || key;
@@ -75,7 +96,7 @@ describe('generationFailure helpers', () => {
         expect(thoughtsOnlyStageError.detail).toContain(
             'Only thought summaries were returned; no image bytes were emitted.',
         );
-        expect(thoughtsOnlyStageError.detail).toContain('Finish reason: STOP.');
+        expect(thoughtsOnlyStageError.detail).toContain('Finish reason: completed without image output.');
         expect(thoughtsOnlyStageError.detail).toContain('Retry detail');
         expect(thoughtsOnlyStageError.summary).not.toBe(visibleTextStageError.summary);
     });
@@ -190,7 +211,19 @@ describe('generationFailure helpers', () => {
         );
 
         expect(stageError.summary).toBe('Safety failure summary');
-        expect(stageError.detail).toContain('Finish reason: IMAGE_SAFETY.');
+        expect(stageError.detail).toContain('Finish reason: blocked by image safety filters.');
         expect(stageError.detail).toContain('Retry detail');
+    });
+
+    it('relocalizes legacy translated fallback safety copy into the current language', () => {
+        const stageError = buildStageErrorState(
+            t,
+            null,
+            '模型有完成回應，但圖片輸出被安全過濾器攔下。 模型結束原因：IMAGE_SAFETY。 請調整提示詞後重試，或稍後再試一次。',
+        );
+
+        expect(stageError.summary).toBe('Safety failure summary');
+        expect(stageError.detail).toContain('Finish reason: blocked by image safety filters.');
+        expect(stageError.detail).not.toContain('模型');
     });
 });

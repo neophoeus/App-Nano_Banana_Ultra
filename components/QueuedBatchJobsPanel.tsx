@@ -1,5 +1,6 @@
 import React from 'react';
 import { GeneratedImage, QueuedBatchJob } from '../types';
+import { formatGenerationFailureDisplayMessage } from '../utils/generationFailure';
 import { Language, getTranslation } from '../utils/translations';
 import {
     getQueuedBatchJobImportDiagnostic,
@@ -150,6 +151,49 @@ const buildJobTimeline = (job: QueuedBatchJob, t: (key: string) => string): JobT
     }
 
     return events.sort((left, right) => left.timestamp - right.timestamp);
+};
+
+const getQueuedImportIssueDisplayText = (
+    t: (key: string) => string,
+    issue: NonNullable<QueuedBatchJob['importIssues']>[number],
+) =>
+    formatGenerationFailureDisplayMessage(
+        t,
+        {
+            error: issue.error,
+            finishReason: issue.finishReason,
+            blockedSafetyCategories: issue.blockedSafetyCategories,
+            extractionIssue: issue.extractionIssue,
+            returnedTextContent: issue.returnedTextContent,
+            returnedThoughtContent: issue.returnedThoughtContent,
+        },
+        { includeRetryDetail: false },
+    ) || issue.error;
+
+const getQueuedJobErrorDisplayText = (
+    t: (key: string) => string,
+    job: QueuedBatchJob,
+    importIssues: NonNullable<QueuedBatchJob['importIssues']>,
+) => {
+    if (!job.error) {
+        return null;
+    }
+
+    const representativeImportIssue = importIssues[0];
+    return (
+        formatGenerationFailureDisplayMessage(
+            t,
+            {
+                error: job.error,
+                finishReason: representativeImportIssue?.finishReason,
+                blockedSafetyCategories: representativeImportIssue?.blockedSafetyCategories,
+                extractionIssue: representativeImportIssue?.extractionIssue,
+                returnedTextContent: representativeImportIssue?.returnedTextContent,
+                returnedThoughtContent: representativeImportIssue?.returnedThoughtContent,
+            },
+            { includeRetryDetail: false },
+        ) || job.error
+    );
 };
 
 export default function QueuedBatchJobsPanel({
@@ -449,10 +493,15 @@ export default function QueuedBatchJobsPanel({
                     const importIssues = Array.isArray(job.importIssues)
                         ? job.importIssues.filter((issue) => issue.error.trim().length > 0)
                         : [];
+                    const localizedJobError = getQueuedJobErrorDisplayText(t, job, importIssues);
                     const visibleImportIssues =
                         importIssues.length > 1 || (importIssues.length === 1 && importIssues[0].error !== job.error)
                             ? importIssues
                             : [];
+                    const localizedVisibleImportIssues = visibleImportIssues.map((issue) => ({
+                        issue,
+                        displayText: getQueuedImportIssueDisplayText(t, issue),
+                    }));
                     const importDiagnosticKey =
                         importDiagnostic === 'no-payload'
                             ? 'queuedBatchNoPayloadResultsNotice'
@@ -538,7 +587,7 @@ export default function QueuedBatchJobsPanel({
                                 key="retry-import"
                                 data-testid={`queued-batch-job-${job.localId}-retry-import`}
                                 onClick={() => onImportQueuedJob(job.localId)}
-                                title={job.error || t('queuedBatchJobsRetryImportHint')}
+                                title={localizedJobError || t('queuedBatchJobsRetryImportHint')}
                                 className={retryImportActionButtonClassName}
                             >
                                 {t('queuedBatchJobsRetryImport')}
@@ -729,8 +778,10 @@ export default function QueuedBatchJobsPanel({
                                     <p className="mt-2 line-clamp-2 text-sm text-gray-700 dark:text-gray-200">
                                         {job.prompt}
                                     </p>
-                                    {job.error && (
-                                        <p className="mt-2 text-xs text-rose-600 dark:text-rose-300">{job.error}</p>
+                                    {localizedJobError && (
+                                        <p className="mt-2 text-xs text-rose-600 dark:text-rose-300">
+                                            {localizedJobError}
+                                        </p>
                                     )}
                                     {shouldShowImportDiagnostic && importDiagnosticKey && (
                                         <p
@@ -740,12 +791,12 @@ export default function QueuedBatchJobsPanel({
                                             {t(importDiagnosticKey)}
                                         </p>
                                     )}
-                                    {visibleImportIssues.length > 0 && (
+                                    {localizedVisibleImportIssues.length > 0 && (
                                         <div
                                             data-testid={`queued-batch-job-${job.localId}-import-issues`}
                                             className="mt-2 space-y-1 text-xs text-amber-700 dark:text-amber-300"
                                         >
-                                            {visibleImportIssues.map((issue) => (
+                                            {localizedVisibleImportIssues.map(({ issue, displayText }) => (
                                                 <p
                                                     key={`${job.localId}-${issue.index}-${issue.error}`}
                                                     data-testid={`queued-batch-job-${job.localId}-import-issue-${issue.index}`}
@@ -753,7 +804,7 @@ export default function QueuedBatchJobsPanel({
                                                 >
                                                     <span className="font-semibold">#{issue.index + 1}</span>
                                                     {' · '}
-                                                    {issue.error}
+                                                    {displayText}
                                                 </p>
                                             ))}
                                         </div>

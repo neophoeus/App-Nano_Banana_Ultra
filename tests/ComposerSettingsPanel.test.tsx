@@ -164,8 +164,8 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).not.toContain('Templates');
         expect(markup).not.toContain('History');
         expect(markup).toContain('Advanced settings');
-        expect(markup).toContain('composer-advanced-settings-disclosure');
-        expect(markup).toContain('composer-advanced-settings-disclosure-summary');
+        expect(markup).not.toContain('composer-advanced-settings-disclosure');
+        expect(markup).not.toContain('composer-advanced-settings-disclosure-summary');
         expect(markup).toContain('Output format: Images only');
         expect(markup).toContain('Temperature: 1.0');
         expect(markup).toContain('Thinking level: High');

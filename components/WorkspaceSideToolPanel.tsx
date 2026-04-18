@@ -1,5 +1,4 @@
 import React from 'react';
-import { useResponsivePanelState } from '../hooks/useResponsivePanelState';
 import { getTranslation, Language } from '../utils/translations';
 import Button from './Button';
 import ImageUploader from './ImageUploader';
@@ -42,7 +41,6 @@ function WorkspaceSideToolPanel({
     handleClearAllReferences,
 }: WorkspaceSideToolPanelProps) {
     const t = (key: string) => getTranslation(currentLanguage, key);
-    const { isDesktop, isOpen: isPanelOpen, setIsOpen: setIsPanelOpen } = useResponsivePanelState();
     const referencesCardId = React.useId();
     const referencesRootRef = React.useRef<HTMLDivElement | null>(null);
     const [isReferencesOpen, setIsReferencesOpen] = React.useState(false);
@@ -116,21 +114,6 @@ function WorkspaceSideToolPanel({
     ];
     const totalReferenceCount = objectImages.length + characterImages.length;
     const clearAllReferencesDisabled = !handleClearAllReferences || totalReferenceCount === 0 || isGenerating;
-    const renderDisclosureChevron = () => (
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 text-gray-400 transition-transform group-open:rotate-180 dark:text-gray-500"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            aria-hidden="true"
-        >
-            <path
-                fillRule="evenodd"
-                d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 011.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                clipRule="evenodd"
-            />
-        </svg>
-    );
 
     React.useEffect(() => {
         if (!isReferencesOpen) {
@@ -159,7 +142,7 @@ function WorkspaceSideToolPanel({
     }, [isReferencesOpen]);
 
     const panelBody = (
-        <div className="mt-1.5 space-y-1.5">
+        <div className="mt-1.5 grid grid-cols-2 items-start gap-1.5 lg:grid-cols-1">
             <div data-testid="workspace-side-tools-actions-card" className="nbu-inline-panel p-2.5">
                 <div data-testid="workspace-side-tools-actions" className="space-y-1.5">
                     <Button
@@ -321,36 +304,12 @@ function WorkspaceSideToolPanel({
             data-testid="workspace-side-tool-panel"
             className="nbu-subpanel nbu-shell-surface-actions-bar min-w-0 overflow-visible p-2.5"
         >
-            {isDesktop ? (
-                <>
-                    <div className="min-w-0">
-                        <div className="min-w-0 flex-1">
-                            <h2 className="text-[14px] font-black text-gray-900 dark:text-gray-100">
-                                {t('workspaceSideToolTitle')}
-                            </h2>
-                        </div>
-                    </div>
-                    {panelBody}
-                </>
-            ) : (
-                <details
-                    data-testid="workspace-side-tool-panel-disclosure"
-                    open={isPanelOpen}
-                    onToggle={(event) => setIsPanelOpen(event.currentTarget.open)}
-                    className="group"
-                >
-                    <summary
-                        data-testid="workspace-side-tool-panel-summary"
-                        className="flex cursor-pointer list-none items-center justify-between gap-3 px-1 py-1 text-left [&::-webkit-details-marker]:hidden"
-                    >
-                        <span className="text-[14px] font-black text-gray-900 dark:text-gray-100">
-                            {t('workspaceSideToolTitle')}
-                        </span>
-                        {renderDisclosureChevron()}
-                    </summary>
-                    {panelBody}
-                </details>
-            )}
+            <div data-testid="workspace-side-tool-panel-header" className="px-1 py-1">
+                <h2 className="text-[14px] font-black text-gray-900 dark:text-gray-100">
+                    {t('workspaceSideToolTitle')}
+                </h2>
+            </div>
+            {panelBody}
         </aside>
     );
 }

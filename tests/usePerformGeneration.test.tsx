@@ -143,6 +143,29 @@ describe('usePerformGeneration', () => {
                         generationFailureDetailPossibleBatchSafetySuppression:
                             'Possible batch safety suppression detail.',
                         generationFailureDetailFinishReason: 'Finish reason: {0}.',
+                        generationFailureValuePromptBlockReasonBlocklist: 'blocked by restricted-term rules',
+                        generationFailureValuePromptBlockReasonProhibitedContent: 'blocked for prohibited content',
+                        generationFailureValuePromptBlockReasonSafety: 'blocked by policy safety rules',
+                        generationFailureValuePromptBlockReasonUnspecified: 'blocked by policy rules',
+                        generationFailureValuePromptBlockReasonOther: 'blocked by policy rules',
+                        generationFailureValueFinishReasonStop: 'completed without image output',
+                        generationFailureValueFinishReasonNoImage: 'completed without returning an image',
+                        generationFailureValueFinishReasonUnspecified:
+                            'completed without a specific image result reason',
+                        generationFailureValueFinishReasonImageSafety: 'blocked by image safety filters',
+                        generationFailureValueFinishReasonImageProhibitedContent:
+                            'blocked for prohibited image content',
+                        generationFailureValueFinishReasonBlocklist: 'blocked by blocklist rules',
+                        generationFailureValueFinishReasonProhibitedContent: 'blocked for prohibited content',
+                        generationFailureValueFinishReasonImageOther: 'completed without image output',
+                        generationFailureValueFinishReasonSafety: 'blocked by safety filters',
+                        generationFailureValueFinishReasonBlocked: 'blocked by model policy',
+                        generationFailureValueFinishReasonOther: 'another non-image completion state',
+                        generationFailureValueSafetyCategoryHarassment: 'harassment',
+                        generationFailureValueSafetyCategoryHateSpeech: 'hate speech',
+                        generationFailureValueSafetyCategorySexuallyExplicit: 'sexually explicit',
+                        generationFailureValueSafetyCategoryDangerousContent: 'dangerous content',
+                        generationFailureValueSafetyCategoryOther: 'other safety policy',
                         modelGemini31Flash: 'Gemini 3.1 Flash',
                     };
                     return translations[key] || key;
@@ -1013,7 +1036,7 @@ describe('usePerformGeneration', () => {
                 summary: 'No-image failure summary',
             }),
         );
-        expect(latestError?.detail).toContain('Finish reason: IMAGE_OTHER.');
+        expect(latestError?.detail).toContain('Finish reason: completed without image output.');
         expect(latestError?.detail).toContain('Retry detail');
         expect(latestError?.detail).not.toContain('Missing parts detail.');
     });

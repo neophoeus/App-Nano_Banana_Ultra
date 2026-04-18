@@ -562,7 +562,9 @@ describe('QueuedBatchJobsPanel', () => {
             />,
         );
 
-        expect(markup).toContain('Prompt was rejected by policy (block reason: PROHIBITED_CONTENT).');
+        expect(markup).toContain(
+            'The prompt was blocked before image generation started. Policy block reason: blocked for prohibited content.',
+        );
         expect(markup).toContain('data-testid="queued-batch-job-job-specific-error-retry-import"');
         expect(markup).toContain('Retry import');
         expect(markup).toContain('0 ready to import');
@@ -639,8 +641,12 @@ describe('QueuedBatchJobsPanel', () => {
         expect(markup).toContain('queued-batch-job-job-multi-issue-import-issue-1');
         expect(markup).toContain('#1');
         expect(markup).toContain('#2');
-        expect(markup).toContain('Model returned no image data (finish reason: STOP).');
-        expect(markup).toContain('Model returned no image data (finish reason: NO_IMAGE).');
+        expect(markup).toContain(
+            'The request completed, but the model did not return image data. Model finish reason: completed without image output.',
+        );
+        expect(markup).toContain(
+            'The request completed, but the model did not return image data. Model finish reason: completed without returning an image.',
+        );
     });
 
     it('suppresses duplicate title guidance in embedded mode and keeps bottom breathing room', () => {

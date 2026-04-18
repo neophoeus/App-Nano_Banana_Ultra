@@ -198,6 +198,56 @@ describe('useQueuedBatchWorkflow', () => {
                             queuedBatchClearIssuesLog:
                                 'Cleared {0} non-importable queued batch jobs from the local queue.',
                             queuedBatchClearImportedLog: 'Cleared {0} imported queued batch jobs from the local queue.',
+                            generationFailureSummaryUnknown:
+                                'The request failed before a trustworthy reason could be identified.',
+                            generationFailureSummaryPolicy:
+                                'The prompt was blocked before image generation started.',
+                            generationFailureSummarySafety: 'The image output was blocked by safety filters.',
+                            generationFailureSummaryTextOnly: 'The model responded with text only and no image.',
+                            generationFailureSummaryEmpty:
+                                'The model response did not include enough information to identify a trustworthy cause.',
+                            generationFailureSummaryNoImage:
+                                'The request completed, but the model did not return image data.',
+                            generationFailureDetailRetry: 'Try revising the prompt or retrying later.',
+                            generationFailureDetailPromptBlockReason: 'Policy block reason: {0}.',
+                            generationFailureDetailSafetyCategories: 'Safety categories: {0}.',
+                            generationFailureDetailTextOnly:
+                                'Text content was returned, but no image bytes were emitted.',
+                            generationFailureDetailThoughtsOnly:
+                                'Only model thought summaries were returned, but no image bytes were emitted.',
+                            generationFailureDetailMissingCandidates:
+                                'No model output candidates were returned in the response.',
+                            generationFailureDetailMissingParts:
+                                'A model output candidate was returned, but it contained no content blocks.',
+                            generationFailureDetailPossibleBatchSafetySuppression:
+                                'Another result in this batch was explicitly blocked by image safety filters. This attempt may have been suppressed for the same reason, but the response did not provide enough signal to confirm it.',
+                            generationFailureDetailFinishReason: 'Model finish reason: {0}.',
+                            generationFailureValuePromptBlockReasonBlocklist:
+                                'blocked by restricted-term rules',
+                            generationFailureValuePromptBlockReasonProhibitedContent:
+                                'blocked for prohibited content',
+                            generationFailureValuePromptBlockReasonSafety: 'blocked by policy safety rules',
+                            generationFailureValuePromptBlockReasonUnspecified: 'blocked by policy rules',
+                            generationFailureValuePromptBlockReasonOther: 'blocked by policy rules',
+                            generationFailureValueFinishReasonStop: 'completed without image output',
+                            generationFailureValueFinishReasonNoImage: 'completed without returning an image',
+                            generationFailureValueFinishReasonUnspecified:
+                                'completed without a specific image result reason',
+                            generationFailureValueFinishReasonImageSafety: 'blocked by image safety filters',
+                            generationFailureValueFinishReasonImageProhibitedContent:
+                                'blocked for prohibited image content',
+                            generationFailureValueFinishReasonBlocklist: 'blocked by blocklist rules',
+                            generationFailureValueFinishReasonProhibitedContent:
+                                'blocked for prohibited content',
+                            generationFailureValueFinishReasonImageOther: 'completed without image output',
+                            generationFailureValueFinishReasonSafety: 'blocked by safety filters',
+                            generationFailureValueFinishReasonBlocked: 'blocked by model policy',
+                            generationFailureValueFinishReasonOther: 'another non-image completion state',
+                            generationFailureValueSafetyCategoryHarassment: 'harassment',
+                            generationFailureValueSafetyCategoryHateSpeech: 'hate speech',
+                            generationFailureValueSafetyCategorySexuallyExplicit: 'sexually explicit',
+                            generationFailureValueSafetyCategoryDangerousContent: 'dangerous content',
+                            generationFailureValueSafetyCategoryOther: 'other safety policy',
                         };
                         return translations[key] || key;
                     }),
@@ -1450,7 +1500,7 @@ describe('useQueuedBatchWorkflow', () => {
             `Queued batch import found no usable image results for ${readyJob.name}: Model returned no image data.`,
         );
         expect(notifications).toContainEqual({
-            message: 'Model returned no image data.',
+            message: 'The request completed, but the model did not return image data.',
             type: 'error',
         });
     });
@@ -1629,7 +1679,7 @@ describe('useQueuedBatchWorkflow', () => {
             }),
         );
         expect(notifications).toContainEqual({
-            message: 'Prompt was rejected by policy (block reason: PROHIBITED_CONTENT).',
+            message: 'The prompt was blocked before image generation started. Policy block reason: blocked for prohibited content.',
             type: 'error',
         });
     });

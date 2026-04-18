@@ -145,6 +145,8 @@ export interface StageErrorState {
     summary: string;
     detail?: string | null;
     failure?: GenerationFailureInfo | null;
+    rawError?: string | null;
+    displayContext?: GenerationFailureDisplayContext | null;
 }
 export type BranchNameOverrides = Record<string, string>;
 export type BranchContinuationSourceByOriginId = Record<string, string>;

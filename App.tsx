@@ -550,6 +550,27 @@ const App: React.FC = () => {
         ],
     );
 
+    useEffect(() => {
+        setError((currentError) => {
+            if (!currentError) {
+                return currentError;
+            }
+
+            const candidateHistoryId = currentStageAsset?.sourceHistoryId || selectedHistoryId;
+            const candidateHistoryItem = candidateHistoryId ? getHistoryTurnById(candidateHistoryId) : null;
+            if (candidateHistoryItem?.status === 'failed') {
+                return buildStageErrorState(
+                    t,
+                    candidateHistoryItem.failure,
+                    candidateHistoryItem.error || t('statusFailed'),
+                    candidateHistoryItem.failureContext,
+                );
+            }
+
+            return buildStageErrorState(t, currentError.failure, currentError.rawError, currentError.displayContext);
+        });
+    }, [currentStageAsset?.sourceHistoryId, getHistoryTurnById, selectedHistoryId, setError, t]);
+
     const currentViewedCompletedHistoryId = useMemo(() => {
         const candidateHistoryId = currentStageAsset?.sourceHistoryId || selectedHistoryId;
         const candidateHistoryItem = getHistoryTurnById(candidateHistoryId);

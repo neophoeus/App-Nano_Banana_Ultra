@@ -1,5 +1,24 @@
 # Changelog
 
+## v3.5.8 - 2026-04-18
+
+- Release title: Nano Banana Ultra 3.5.8 - Localized Failure Surfaces & Adaptive Compact Composer Layout
+- Release summary:
+    - localized stage and failure surfaces:
+        - failed stage messages, reopened failed history turns, queued batch import errors, and related failure notices now all render through one shared canonical failure formatter, so visible error copy stays aligned with the current UI language instead of leaking raw provider wording or mixed-language fallback text
+        - restored and already-saved failed history items now rebuild canonical failure metadata from legacy stored error text plus persisted response hints, so older workspace snapshots can relocalize correctly after reopen instead of freezing previously saved language output
+        - dynamic failure values such as policy block reasons, finish reasons, and blocked safety categories now resolve through maintained locale dictionaries rather than surfacing raw enum tokens like `IMAGE_SAFETY` or `PROHIBITED_CONTENT` directly to users
+        - stage error state now preserves both raw failure context and localized display state separately, allowing the active stage failure message to refresh cleanly when the UI language changes or when a failed history item is reopened onto the stage
+
+    - always-open composer tools on non-desktop layouts:
+        - removed the outer composer Image Tools collapse on non-desktop layouts so the tool surface is visible immediately instead of requiring an extra expand step before use
+        - removed the outer composer Advanced settings collapse on non-desktop layouts so the advanced-settings entry point stays directly available in compact composer flows
+        - kept References as its own separate inner toggle so compact layouts still avoid forcing the full reference uploader open by default
+
+    - image-tools layout now adapts to the composer slot position:
+        - when Image Tools is stacked above the instruction textarea, the Image Tools body now switches to a two-column layout with Upload Image To Repaint and Repaint Current Image on the left and Draw Reference Sketch plus References on the right
+        - when Image Tools sits to the left of the instruction textarea in the side-by-side composer layout, the Image Tools body stays in the original single-column stack instead of adopting the two-column grouping
+
 ## v3.5.7 - 2026-04-17
 
 - Release title: Nano Banana Ultra 3.5.7 - Queued Batch Import Detail, Safer Queue Profile & Clearer Queue Cards

@@ -887,6 +887,15 @@ const openProgressDetailModal = async (page: Page) => {
     await expect(page.getByTestId('workspace-progress-detail-modal')).toBeVisible();
 };
 
+const expectProgressDetailEmptyStateVisible = async (page: Page) => {
+    const modal = page.getByTestId('workspace-progress-detail-modal');
+
+    await expect(modal.getByTestId('workspace-progress-detail-layout')).toBeVisible();
+    await expect(modal.getByTestId('workspace-progress-detail-navigator')).toBeVisible();
+    await expect(modal.getByTestId('workspace-progress-detail-empty')).toBeVisible();
+    await expect(modal.getByTestId('workspace-progress-detail-selected-panel')).toBeVisible();
+};
+
 const openQueuedBatchDetailModal = async (page: Page) => {
     const modal = page.getByTestId('workspace-queued-batch-detail-modal');
     if (await isLocatorVisible(modal)) {
@@ -1130,7 +1139,11 @@ const installBasicImageGenerateCaptureRoute = async (page: Page, responseText: s
     return capturedBodies;
 };
 
-const readPersistedHistoryTurnByText = async (page: Page, targetText: string) => {
+const readPersistedHistoryTurnByText = async (
+    page: Page,
+    targetText: string,
+    options?: { waitForPromotedSelection?: boolean },
+) => {
     await expect
         .poll(async () =>
             page.evaluate((expectedText) => {
@@ -1148,6 +1161,33 @@ const readPersistedHistoryTurnByText = async (page: Page, targetText: string) =>
             }, targetText),
         )
         .not.toBeNull();
+
+    if (options?.waitForPromotedSelection) {
+        await expect
+            .poll(async () =>
+                page.evaluate((expectedText) => {
+                    const raw = localStorage.getItem('nbu_workspaceSnapshot');
+                    if (!raw) {
+                        return false;
+                    }
+
+                    const snapshot = JSON.parse(raw);
+                    const generatedTurn = Array.isArray(snapshot.history)
+                        ? snapshot.history.find((item: { text?: string; id?: string }) => item.text === expectedText)
+                        : null;
+
+                    if (!generatedTurn?.id) {
+                        return false;
+                    }
+
+                    return (
+                        snapshot.workspaceSession?.sourceHistoryId === generatedTurn.id &&
+                        snapshot.viewState?.selectedHistoryId === generatedTurn.id
+                    );
+                }, targetText),
+            )
+            .toBe(true);
+    }
 
     return page.evaluate((expectedText) => {
         const raw = localStorage.getItem('nbu_workspaceSnapshot');
@@ -2008,11 +2048,7 @@ const ensureSideToolsExpanded = async (page: Page) => {
     const sideTools = page.locator('[data-testid="workspace-side-tool-panel"]:visible').first();
     await expect(sideTools).toBeVisible();
 
-    const actions = sideTools.getByTestId('workspace-side-tools-actions').first();
-    if (!(await actions.isVisible())) {
-        await sideTools.getByTestId('workspace-side-tool-panel-summary').click();
-        await expect(actions).toBeVisible();
-    }
+    await expect(sideTools.getByTestId('workspace-side-tools-actions').first()).toBeVisible();
 
     return sideTools;
 };
@@ -2518,7 +2554,9 @@ test.describe('workspace restore flows', () => {
         expect(String(capturedBodies[0]?.prompt || '')).toContain(prompt);
         await expect(page.getByTestId('image-editor')).toHaveCount(0);
 
-        const persistedState = await readPersistedHistoryTurnByText(page, responseText);
+        const persistedState = await readPersistedHistoryTurnByText(page, responseText, {
+            waitForPromotedSelection: true,
+        });
 
         expect(persistedState).not.toBeNull();
         expect(persistedState?.generatedTurn).toEqual(
@@ -2560,7 +2598,9 @@ test.describe('workspace restore flows', () => {
         expect(String(capturedBodies[0]?.prompt || '')).toContain(prompt);
         await expect(page.getByTestId('image-editor')).toHaveCount(0);
 
-        const persistedState = await readPersistedHistoryTurnByText(page, responseText);
+        const persistedState = await readPersistedHistoryTurnByText(page, responseText, {
+            waitForPromotedSelection: true,
+        });
 
         expect(persistedState).not.toBeNull();
         expect(persistedState?.generatedTurn).toEqual(
@@ -2668,7 +2708,9 @@ test.describe('workspace restore flows', () => {
         await expect.poll(() => capturedBodies.length).toBe(1);
         expect(String(capturedBodies[0]?.prompt || '')).toContain('Upload-only stage follow-up prompt');
 
-        const persistedState = await readPersistedHistoryTurnByText(page, responseText);
+        const persistedState = await readPersistedHistoryTurnByText(page, responseText, {
+            waitForPromotedSelection: true,
+        });
 
         expect(persistedState).not.toBeNull();
         expect(persistedState?.generatedTurn).toEqual(
@@ -2719,8 +2761,12 @@ test.describe('workspace restore flows', () => {
         expect(requestPrompt).toContain('Treat the submitted frame as the approved composition');
         expect(requestPrompt).toContain('Preserve all currently visible content exactly as shown');
         expect(requestPrompt).toContain('Regenerate only the transparent or blank regions along the bottom side');
-        expect(requestPrompt).toContain('Do not recenter, zoom out, or recompose the scene unless the prompt explicitly asks for it');
-        expect(requestPrompt).not.toContain('Preserve the current zoomed crop, subject placement, and camera framing exactly as shown');
+        expect(requestPrompt).toContain(
+            'Do not recenter, zoom out, or recompose the scene unless the prompt explicitly asks for it',
+        );
+        expect(requestPrompt).not.toContain(
+            'Preserve the current zoomed crop, subject placement, and camera framing exactly as shown',
+        );
         expect(requestPrompt).not.toContain('Composer prompt stays outside crop zoom editor');
 
         const persistedState = await readPersistedHistoryTurnByText(page, responseText);
@@ -2789,9 +2835,13 @@ test.describe('workspace restore flows', () => {
         expect(requestPrompt).toContain(
             'Regenerate only the transparent or blank regions along the left side and the bottom side',
         );
-        expect(requestPrompt).toContain('Do not recenter, zoom out, or recompose the scene unless the prompt explicitly asks for it');
+        expect(requestPrompt).toContain(
+            'Do not recenter, zoom out, or recompose the scene unless the prompt explicitly asks for it',
+        );
         expect(requestPrompt).not.toContain('Keep the existing crop anchored to the top-right corner of the frame');
-        expect(requestPrompt).not.toContain('Keep the existing crop locked to the top edge and the right edge that already touch the frame');
+        expect(requestPrompt).not.toContain(
+            'Keep the existing crop locked to the top edge and the right edge that already touch the frame',
+        );
         expect(requestPrompt).not.toContain('Composer prompt stays outside anchored crop zoom editor');
 
         const persistedState = await readPersistedHistoryTurnByText(page, responseText);
@@ -2810,7 +2860,9 @@ test.describe('workspace restore flows', () => {
         await openFreshWorkspace(page);
         await composer(page).fill('Local composer prompt');
 
-        const initialHistoryCount = await readWorkspaceSummaryCount(page.getByTestId('workspace-unified-history-count'));
+        const initialHistoryCount = await readWorkspaceSummaryCount(
+            page.getByTestId('workspace-unified-history-count'),
+        );
         const initialBranchCount = await readWorkspaceSummaryCount(
             page.getByTestId('workspace-unified-history-branches'),
         );
@@ -3584,7 +3636,9 @@ test.describe('workspace restore flows', () => {
         });
         expect(String(queuedBatchRequestBody?.editingInput || '')).toMatch(/^data:image\/png;base64,/);
         expect(String(queuedBatchRequestBody?.editingInput || '')).not.toContain('/api/load-image?filename=');
-        expect(String(queuedBatchRequestBody?.prompt || '')).toContain('Treat the submitted image as the approved composition');
+        expect(String(queuedBatchRequestBody?.prompt || '')).toContain(
+            'Treat the submitted image as the approved composition',
+        );
         expect(String(queuedBatchRequestBody?.prompt || '')).toContain('Regenerate only the masked region');
         expect(String(queuedBatchRequestBody?.prompt || '')).not.toContain('Composer prompt stays outside editor');
 
@@ -4401,8 +4455,6 @@ test.describe('workspace restore flows', () => {
         await expect(composerPanel.getByTestId('composer-style-strip')).toBeVisible();
         await expect(composerPanel.getByTestId('composer-style-button')).toContainText(tt('styleNone'));
         await expect(composerPanel.getByTestId('composer-style-clear')).toHaveCount(0);
-        await expect(sideTools.getByTestId('workspace-side-tool-panel-disclosure')).toBeVisible();
-        await sideTools.getByTestId('workspace-side-tool-panel-summary').click();
         await expect(sideTools.getByTestId('workspace-side-tools-actions')).toBeVisible();
         const referencesToggle = sideTools.getByTestId('workspace-side-tools-references-toggle');
         await expect(referencesToggle).toHaveAttribute('aria-expanded', 'false');
@@ -4442,8 +4494,7 @@ test.describe('workspace restore flows', () => {
         await page.getByTestId('sketchpad-close').click();
         await expect(page.getByTestId('sketchpad')).toHaveCount(0);
 
-        await expect(composerPanel.getByTestId('composer-advanced-settings-disclosure')).toBeVisible();
-        await composerPanel.getByTestId('composer-advanced-settings-disclosure-summary').click();
+        await expect(composerPanel.getByTestId('composer-advanced-settings-button')).toBeVisible();
         await composerPanel.getByTestId('composer-advanced-settings-button').click();
         await expect(
             page
@@ -4466,7 +4517,7 @@ test.describe('workspace restore flows', () => {
         await expect(progressModal).toContainText(
             localizedMessageByKey('workspaceSnapshotImportedLog', 'ui-import-provenance-live-workspace.json', '1'),
         );
-        await expect(progressModal.getByTestId('workspace-progress-detail-list')).toBeVisible();
+        await expectProgressDetailEmptyStateVisible(page);
         await closeProgressDetailModal(page);
     });
 
@@ -4510,7 +4561,7 @@ test.describe('workspace restore flows', () => {
         await expect(progressModal).toContainText(
             localizedMessageByKey('workspaceSnapshotImportedLog', 'ui-import-provenance-live-workspace.json', '1'),
         );
-        await expect(progressModal.getByTestId('workspace-progress-detail-list')).toBeVisible();
+        await expectProgressDetailEmptyStateVisible(page);
         await expect(progressModal).toContainText(tt('groundingProvenanceThoughtNotRequested'));
         await closeProgressDetailModal(page);
     });
@@ -4552,7 +4603,7 @@ test.describe('workspace restore flows', () => {
         await expect(progressModal).toContainText(
             localizedMessageByKey('workspaceSnapshotImportedLog', 'ui-import-provenance-live-workspace.json', '1'),
         );
-        await expect(progressModal.getByTestId('workspace-progress-detail-list')).toBeVisible();
+        await expectProgressDetailEmptyStateVisible(page);
         await expect(progressModal).toContainText(tt('groundingProvenanceThoughtNotRequested'));
         await closeProgressDetailModal(page);
 

@@ -19,6 +19,7 @@ import {
     getNormalizedConversationTurnIds,
     resolveConversationSelectionState,
 } from './conversationState';
+import { resolveDisplayGenerationFailureInfo } from './generationFailure';
 import { sanitizeSessionHintsForStorage } from './inlineImageDisplay';
 import { buildLineagePresentation } from './lineage';
 import { normalizeImageStyle } from './styleRegistry';
@@ -480,6 +481,25 @@ const sanitizeHistory = (value: unknown): GeneratedImage[] => {
             return [];
         }
 
+        const sessionHints =
+            sanitizeSessionHintsForStorage(
+                isRecord(item.sessionHints) ? (item.sessionHints as Record<string, unknown>) : null,
+            ) || undefined;
+        const normalizedFailure = resolveDisplayGenerationFailureInfo({
+            failure: item.failure,
+            error: typeof item.error === 'string' ? item.error : null,
+            promptBlockReason: isRecord(sessionHints) ? sessionHints.promptBlockReason : null,
+            finishReason: isRecord(sessionHints) ? sessionHints.finishReason : null,
+            blockedSafetyCategories: isRecord(sessionHints) ? sessionHints.blockedSafetyCategories : null,
+            extractionIssue: isRecord(sessionHints) ? sessionHints.extractionIssue : null,
+            returnedTextContent: isRecord(sessionHints) ? sessionHints.textReturned === true : false,
+            returnedThoughtContent: isRecord(sessionHints) ? sessionHints.thoughtsReturned === true : false,
+        });
+        const failureContext =
+            isRecord(item.failureContext) && item.failureContext.hasSiblingSafetyBlockedFailure === true
+                ? { hasSiblingSafetyBlockedFailure: true }
+                : undefined;
+
         return [
             {
                 ...(item as GeneratedImage),
@@ -491,10 +511,9 @@ const sanitizeHistory = (value: unknown): GeneratedImage[] => {
                         : item.openedAt === null
                           ? null
                           : undefined,
-                sessionHints:
-                    sanitizeSessionHintsForStorage(
-                        isRecord(item.sessionHints) ? (item.sessionHints as Record<string, unknown>) : null,
-                    ) || undefined,
+                failure: normalizedFailure || undefined,
+                failureContext,
+                sessionHints,
             },
         ];
     });

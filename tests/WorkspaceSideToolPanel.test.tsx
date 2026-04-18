@@ -38,8 +38,7 @@ describe('WorkspaceSideToolPanel', () => {
         expect(markup).toContain('workspace-side-tools-actions-card');
         expect(markup).toContain('workspace-side-tools-references-card');
         expect(markup).toContain('workspace-side-tools-actions');
-        expect(markup).toContain('workspace-side-tool-panel-disclosure');
-        expect(markup).toContain('workspace-side-tool-panel-summary');
+        expect(markup).toContain('workspace-side-tool-panel-header');
         expect(markup).toContain('workspace-side-tools-references-toggle');
         expect(markup).toContain('workspace-side-tools-references-clear-all');
         expect(markup).toContain('workspace-side-tools-references-summary');
@@ -53,10 +52,14 @@ describe('WorkspaceSideToolPanel', () => {
         expect(markup).toContain('aria-expanded="false"');
         expect(markup).toContain('justify-start');
         expect(markup).toContain('overflow-visible');
+        expect(markup).toContain('grid-cols-2');
+        expect(markup).toContain('lg:grid-cols-1');
         expect(markup).toContain('text-[12px]');
         expect(markup).toContain('leading-[1.15]');
         expect(markup).toContain('h-5');
         expect(markup).not.toContain('data-testid="workspace-side-tool-references"');
+        expect(markup).not.toContain('workspace-side-tool-panel-disclosure');
+        expect(markup).not.toContain('workspace-side-tool-panel-summary');
         expect(markup).not.toContain('M12 6v12M6 12h12');
         expect(markup).not.toContain('Actions');
         expect(markup).not.toContain('Upload Base Image');

@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import Button from './Button';
 import InfoTooltip from './InfoTooltip';
 import { useAnchoredFloatingPlacement } from '../hooks/useAnchoredFloatingPlacement';
-import { useResponsivePanelState } from '../hooks/useResponsivePanelState';
 import { MODEL_CAPABILITIES, OUTPUT_FORMATS, THINKING_LEVELS } from '../constants';
 import { getGroundingModeLabel } from '../utils/groundingMode';
 import { getTranslation, Language } from '../utils/translations';
@@ -233,11 +232,6 @@ function ComposerSettingsPanel({
     const sendIntentInfoAutoCloseTimerRef = React.useRef<number | null>(null);
     const workspaceFloatingLayer = useWorkspaceFloatingLayer();
     const usesWorkspaceFloatingLayer = Boolean(workspaceFloatingLayer?.hostElement);
-    const {
-        isDesktop: isDesktopAdvancedSettings,
-        isOpen: isAdvancedSettingsSectionOpen,
-        setIsOpen: setIsAdvancedSettingsSectionOpen,
-    } = useResponsivePanelState();
     const [sendIntentInfoOpen, setSendIntentInfoOpen] = React.useState(false);
     const [sendIntentInfoVariant, setSendIntentInfoVariant] = React.useState<StickySendIntent | 'memory-unavailable'>(
         stickySendIntent,
@@ -303,8 +297,6 @@ function ComposerSettingsPanel({
     const promptToolIconClassName =
         'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-transparent bg-amber-100/80 text-amber-700 transition-colors group-hover:bg-amber-200 dark:border-amber-200/30 dark:bg-amber-400/95 dark:text-amber-50 dark:shadow-[0_10px_28px_rgba(0,0,0,0.32)] dark:group-hover:border-amber-100/45 dark:group-hover:bg-amber-500/92 dark:group-hover:text-white';
     const promptToolLabelClassName = 'block min-w-0 truncate leading-[1.1] tracking-normal';
-    const mobileDisclosureSummaryClassName =
-        'nbu-inline-panel flex cursor-pointer list-none items-center justify-between gap-2 rounded-[20px] px-2.5 py-2 text-left [&::-webkit-details-marker]:hidden';
     const newConversationButtonClassName =
         'inline-flex items-center justify-center rounded-full border border-red-200/80 bg-red-50/90 px-2.5 py-1.5 text-[11px] font-semibold text-red-600 transition-colors hover:border-red-300 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-200 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200 dark:hover:border-red-800 dark:hover:bg-red-950/50 dark:focus:ring-red-900/40';
     const compactModelLabel = modelLabel.replace(/\s*\([^)]*\)$/, '');
@@ -703,21 +695,6 @@ function ComposerSettingsPanel({
         trackedQueueCount > 0
             ? Math.max(0, Math.min(100, Math.round((settledQueueCount / trackedQueueCount) * 100)))
             : 0;
-    const renderDisclosureChevron = () => (
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 text-gray-400 transition-transform group-open:rotate-180 dark:text-gray-500"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            aria-hidden="true"
-        >
-            <path
-                fillRule="evenodd"
-                d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 011.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                clipRule="evenodd"
-            />
-        </svg>
-    );
     const advancedSettingsButton = (
         <button
             type="button"
@@ -953,39 +930,7 @@ function ComposerSettingsPanel({
                                     {renderClearIcon()}
                                 </button>
                             </div>
-                            <div className="space-y-1.5">
-                                {isDesktopAdvancedSettings ? (
-                                    advancedSettingsButton
-                                ) : (
-                                    <details
-                                        data-testid="composer-advanced-settings-disclosure"
-                                        open={isAdvancedSettingsSectionOpen}
-                                        onToggle={(event) => setIsAdvancedSettingsSectionOpen(event.currentTarget.open)}
-                                        className="group"
-                                    >
-                                        <summary
-                                            data-testid="composer-advanced-settings-disclosure-summary"
-                                            className={mobileDisclosureSummaryClassName}
-                                        >
-                                            <div className={summaryStripContentClassName}>
-                                                <span className={summaryStripAnchorClassName}>
-                                                    {t('composerToolbarAdvancedSettings')}
-                                                </span>
-                                                {advancedSummaryItems.map((item) => (
-                                                    <span
-                                                        key={item.key}
-                                                        className={`${summaryStripChipClassName} ${item.className}`.trim()}
-                                                    >
-                                                        {item.value}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                            {renderDisclosureChevron()}
-                                        </summary>
-                                        <div className="mt-1.5">{advancedSettingsButton}</div>
-                                    </details>
-                                )}
-                            </div>
+                            <div className="space-y-1.5">{advancedSettingsButton}</div>
                         </div>
                     </div>
                 </div>

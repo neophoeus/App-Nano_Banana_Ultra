@@ -18,6 +18,7 @@ import {
     QueuedBatchJobState,
     StageAsset,
 } from '../types';
+import { formatGenerationFailureDisplayMessage } from '../utils/generationFailure';
 import { extractSavedFilename, persistHistoryThumbnail, saveImageToLocal } from '../utils/imageSaveUtils';
 import { buildImageSidecarMetadata } from '../utils/imageSidecarMetadata';
 import { resolveCurrentStageSelectionFirstSourceOverride } from '../utils/generationSourceOverride';
@@ -143,6 +144,32 @@ const buildQueuedBatchImportIssues = (results: QueuedBatchImportResultLike[]): Q
             },
         ];
     });
+
+const localizeQueuedBatchFailureMessage = (
+    t: (key: string) => string,
+    error: string | null | undefined,
+    importIssues?: QueuedBatchJobImportIssue[] | null,
+) => {
+    if (!error) {
+        return null;
+    }
+
+    const representativeIssue = Array.isArray(importIssues) ? importIssues[0] : null;
+    return (
+        formatGenerationFailureDisplayMessage(
+            t,
+            {
+                error,
+                finishReason: representativeIssue?.finishReason,
+                blockedSafetyCategories: representativeIssue?.blockedSafetyCategories,
+                extractionIssue: representativeIssue?.extractionIssue,
+                returnedTextContent: representativeIssue?.returnedTextContent,
+                returnedThoughtContent: representativeIssue?.returnedThoughtContent,
+            },
+            { includeRetryDetail: false },
+        ) || error
+    );
+};
 
 const normalizeQueuedBatchStateLabel = (state: QueuedBatchJobState) => state.replace('JOB_STATE_', '').toLowerCase();
 
@@ -836,7 +863,11 @@ export function useQueuedBatchWorkflow({
                         if (nextJob.hasInlinedResponses === false) {
                             showNotification(t('queuedBatchNoPayloadResultsNotice'), 'error');
                         } else if (nextJob.error) {
-                            showNotification(nextJob.error, 'error');
+                            showNotification(
+                                localizeQueuedBatchFailureMessage(t, nextJob.error, nextJob.importIssues) ||
+                                    nextJob.error,
+                                'error',
+                            );
                         } else if (isQueuedBatchJobImportReady(nextJob)) {
                             showNotification(formatMessage('queuedBatchReadyToImportNotice', job.displayName), 'info');
                         } else {
@@ -848,7 +879,8 @@ export function useQueuedBatchWorkflow({
                         nextJob.state === 'JOB_STATE_EXPIRED'
                     ) {
                         showNotification(
-                            nextJob.error ||
+                            localizeQueuedBatchFailureMessage(t, nextJob.error, nextJob.importIssues) ||
+                                nextJob.error ||
                                 formatMessage(
                                     'queuedBatchFinishedStateNotice',
                                     job.displayName,
@@ -1161,10 +1193,15 @@ export function useQueuedBatchWorkflow({
                                 `Queued batch import found no usable image results for ${job.name}: ${importFailureSummary}`,
                             );
                         }
+                        const localizedImportFailureMessage = localizeQueuedBatchFailureMessage(
+                            t,
+                            importFailureMessage,
+                            importIssues,
+                        );
                         const notificationMessage =
                             importDiagnostic === 'no-payload'
                                 ? t('queuedBatchNoPayloadResultsNotice')
-                                : importFailureMessage || t('queuedBatchNoImportableResultsNotice');
+                                : localizedImportFailureMessage || t('queuedBatchNoImportableResultsNotice');
                         showNotification(notificationMessage, 'error');
                     }
                     return 0;
