@@ -1,11 +1,20 @@
 import { useCallback, useMemo } from 'react';
-import { GeneratedImage, QueuedBatchJob, StageAsset, WorkspaceSessionState } from '../types';
+import {
+    GeneratedImage,
+    QueuedBatchJob,
+    StageAsset,
+    StickySendIntent,
+    WorkspaceConversationState,
+    WorkspaceSessionState,
+} from '../types';
 
 type UseQueuedBatchPresentationArgs = {
     currentStageAsset: StageAsset | null;
     objectImageCount: number;
     characterImageCount: number;
+    stickySendIntent: StickySendIntent;
     workspaceSession: WorkspaceSessionState;
+    conversationState: WorkspaceConversationState;
     history: GeneratedImage[];
     t: (key: string) => string;
 };
@@ -28,10 +37,56 @@ export function useQueuedBatchPresentation({
     currentStageAsset,
     objectImageCount,
     characterImageCount,
+    stickySendIntent,
     workspaceSession,
+    conversationState,
     history,
     t,
 }: UseQueuedBatchPresentationArgs) {
+    const hasConversationRecords = useMemo(
+        () => Object.keys(conversationState.byBranchOriginId).length > 0,
+        [conversationState.byBranchOriginId],
+    );
+
+    const hasOfficialConversationContext = useMemo(
+        () =>
+            Boolean(
+                workspaceSession.conversationId ||
+                    workspaceSession.conversationBranchOriginId ||
+                    workspaceSession.conversationActiveSourceHistoryId,
+            ) || hasConversationRecords,
+        [
+            hasConversationRecords,
+            workspaceSession.conversationActiveSourceHistoryId,
+            workspaceSession.conversationBranchOriginId,
+            workspaceSession.conversationId,
+        ],
+    );
+
+    const isFreshMemoryQueueSession = useMemo(
+        () => !hasOfficialConversationContext,
+        [hasOfficialConversationContext],
+    );
+
+    const canQueueComposerBatch = useMemo(
+        () => stickySendIntent === 'independent' || isFreshMemoryQueueSession,
+        [isFreshMemoryQueueSession, stickySendIntent],
+    );
+
+    const showEditorQueueBatch = useMemo(() => stickySendIntent === 'independent', [stickySendIntent]);
+
+    const isQueueBatchDisabled = useMemo(() => !canQueueComposerBatch, [canQueueComposerBatch]);
+
+    const queueBatchDisabledReason = useMemo(
+        () => (isQueueBatchDisabled ? t('queueBatchMemoryContinuationDisabledReason') : null),
+        [isQueueBatchDisabled, t],
+    );
+
+    const editorQueueDisabledReason = useMemo(
+        () => (!showEditorQueueBatch ? t('queueBatchMemoryContinuationDisabledReason') : null),
+        [showEditorQueueBatch, t],
+    );
+
     const queueBatchModeSummary = useMemo(() => {
         if (currentStageAsset?.url) {
             return t('queueBatchModeStage');
@@ -45,18 +100,8 @@ export function useQueuedBatchPresentation({
     }, [characterImageCount, currentStageAsset?.url, objectImageCount, t]);
 
     const queueBatchConversationNotice = useMemo(
-        () =>
-            workspaceSession.conversationId ||
-            workspaceSession.conversationBranchOriginId ||
-            workspaceSession.conversationActiveSourceHistoryId
-                ? t('queueBatchConversationNotice')
-                : null,
-        [
-            t,
-            workspaceSession.conversationActiveSourceHistoryId,
-            workspaceSession.conversationBranchOriginId,
-            workspaceSession.conversationId,
-        ],
+        () => (hasOfficialConversationContext ? t('queueBatchConversationNotice') : null),
+        [hasOfficialConversationContext, t],
     );
 
     const queuedBatchHistoryByJobName = useMemo(() => {
@@ -111,6 +156,12 @@ export function useQueuedBatchPresentation({
     );
 
     return {
+        isFreshMemoryQueueSession,
+        canQueueComposerBatch,
+        showEditorQueueBatch,
+        isQueueBatchDisabled,
+        queueBatchDisabledReason,
+        editorQueueDisabledReason,
         queueBatchModeSummary,
         queueBatchConversationNotice,
         getImportedQueuedHistoryItems,

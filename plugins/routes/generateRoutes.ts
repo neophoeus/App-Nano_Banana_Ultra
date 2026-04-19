@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI } from '@google/genai/node';
 import type { ConversationRequestContext, ResultPart } from '../../types';
 import {
     getGenerationFailureHttpStatus,

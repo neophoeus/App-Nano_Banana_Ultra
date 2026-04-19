@@ -909,7 +909,7 @@ export type RemoteQueuedBatchJob = {
     startTime?: string;
     endTime?: string;
     error?: string | null;
-    hasInlinedResponses: boolean;
+    hasImportablePayload: boolean;
     inlinedResponseCount?: number;
     batchStats?: QueuedBatchJobStats | null;
 };

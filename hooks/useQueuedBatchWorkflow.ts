@@ -206,7 +206,7 @@ type RemoteQueuedJobSeed = Pick<
     | 'batchSize'
     | 'objectImageCount'
     | 'characterImageCount'
-    | 'hasInlinedResponses'
+    | 'hasImportablePayload'
     | 'submissionPending'
     | 'importDiagnostic'
     | 'importIssues'
@@ -228,7 +228,7 @@ type RemoteQueuedJob = {
     startTime?: string;
     endTime?: string;
     error?: string | null;
-    hasInlinedResponses: boolean;
+    hasImportablePayload: boolean;
     inlinedResponseCount?: number;
     batchStats?: QueuedBatchJobStats | null;
 };
@@ -267,6 +267,10 @@ type UseQueuedBatchWorkflowArgs = {
     showNotification: (message: string, type?: 'info' | 'error') => void;
     setHistory: Dispatch<SetStateAction<GeneratedImage[]>>;
     historySelectRef: MutableRefObject<((item: GeneratedImage) => void) | null>;
+    canQueueComposerBatch: boolean;
+    queueBatchDisabledReason: string | null;
+    canQueueEditorBatch: boolean;
+    editorQueueDisabledReason: string | null;
     t: (key: string) => string;
 };
 
@@ -375,6 +379,10 @@ export function useQueuedBatchWorkflow({
     showNotification,
     setHistory,
     historySelectRef,
+    canQueueComposerBatch,
+    queueBatchDisabledReason,
+    canQueueEditorBatch,
+    editorQueueDisabledReason,
     t,
 }: UseQueuedBatchWorkflowArgs): UseQueuedBatchWorkflowReturn {
     const formatMessage = useCallback(
@@ -431,11 +439,10 @@ export function useQueuedBatchWorkflow({
             : editingInput
               ? 'High resolution, seamless integration with surrounding context, maintain consistent lighting and texture.'
               : buildStyleTransferPrompt(imageStyle);
-        const generationMode = currentStageAsset?.url
-            ? 'Follow-up Edit'
-            : objectImages.length > 0 || characterImages.length > 0
-              ? 'Image to Image/Mixing'
-              : 'Text to Image';
+        const generationMode =
+            currentStageAsset?.url || objectImages.length > 0 || characterImages.length > 0
+                ? 'Image to Image/Mixing'
+                : 'Text to Image';
         const sourceOverride = editingInput
             ? resolveCurrentStageSelectionFirstSourceOverride({
                   sourceHistoryId: currentStageAsset?.sourceHistoryId ?? null,
@@ -501,12 +508,12 @@ export function useQueuedBatchWorkflow({
             const startedAt = parseBatchJobTimestamp(remoteJob.startTime);
             const completedAt = parseBatchJobTimestamp(remoteJob.endTime);
             const state = normalizeQueuedBatchJobState(remoteJob.state);
-            const hasInlinedResponses = Boolean(remoteJob.hasInlinedResponses);
+            const hasImportablePayload = Boolean(remoteJob.hasImportablePayload);
             const resolvedBatchSize = resolveQueuedBatchRequestCount(remoteJob, seed.batchSize);
             const importDiagnostic: QueuedBatchJobImportDiagnostic | null =
-                state === 'JOB_STATE_SUCCEEDED' && !hasInlinedResponses
+                state === 'JOB_STATE_SUCCEEDED' && !hasImportablePayload
                     ? 'no-payload'
-                    : hasInlinedResponses && seed.importDiagnostic === 'extraction-failure'
+                    : hasImportablePayload && seed.importDiagnostic === 'extraction-failure'
                       ? 'extraction-failure'
                       : null;
             const resolvedImportIssues =
@@ -543,7 +550,7 @@ export function useQueuedBatchWorkflow({
                 startedAt,
                 completedAt,
                 lastPolledAt: null,
-                hasInlinedResponses,
+                hasImportablePayload,
                 submissionPending: false,
                 importDiagnostic,
                 importIssues: resolvedImportIssues,
@@ -593,7 +600,7 @@ export function useQueuedBatchWorkflow({
                 batchSize: queuedDraft.batchSize,
                 objectImageCount: queuedDraft.finalObjectInputs.length,
                 characterImageCount: queuedDraft.finalCharacterInputs.length,
-                hasInlinedResponses: false,
+                hasImportablePayload: false,
                 submissionPending: true,
                 importDiagnostic: null,
                 importIssues: null,
@@ -631,7 +638,7 @@ export function useQueuedBatchWorkflow({
                 startedAt: null,
                 completedAt: null,
                 lastPolledAt: null,
-                hasInlinedResponses: false,
+                hasImportablePayload: false,
                 submissionPending: true,
                 importDiagnostic: null,
                 importIssues: null,
@@ -688,6 +695,11 @@ export function useQueuedBatchWorkflow({
     );
 
     const handleQueueBatchJob = useCallback(async () => {
+        if (!canQueueComposerBatch) {
+            showNotification(queueBatchDisabledReason || t('queueBatchMemoryContinuationDisabledReason'), 'error');
+            return;
+        }
+
         const draft = buildQueuedJobGenerationDraft();
         if (!draft) {
             showNotification(t('errorNoPrompt'), 'error');
@@ -695,7 +707,14 @@ export function useQueuedBatchWorkflow({
         }
 
         await submitQueuedBatchDraft(draft);
-    }, [buildQueuedJobGenerationDraft, showNotification, submitQueuedBatchDraft, t]);
+    }, [
+        buildQueuedJobGenerationDraft,
+        canQueueComposerBatch,
+        queueBatchDisabledReason,
+        showNotification,
+        submitQueuedBatchDraft,
+        t,
+    ]);
 
     const handleQueueBatchJobFromEditor = useCallback(
         async ({
@@ -709,6 +728,16 @@ export function useQueuedBatchWorkflow({
             generationMode = 'Editor Edit',
             sourceOverride,
         }: EditorQueuedBatchJobSubmission) => {
+            if (!canQueueEditorBatch) {
+                showNotification(
+                    editorQueueDisabledReason ||
+                        queueBatchDisabledReason ||
+                        t('queueBatchMemoryContinuationDisabledReason'),
+                    'error',
+                );
+                return;
+            }
+
             if (!editorPrompt.trim() || !editingInput) {
                 showNotification(t('errorNoPrompt'), 'error');
                 return;
@@ -738,12 +767,15 @@ export function useQueuedBatchWorkflow({
         },
         [
             buildQueuedBatchDisplayName,
+            canQueueEditorBatch,
+            editorQueueDisabledReason,
             getGenerationLineageContext,
             googleSearch,
             imageModel,
             imageSearch,
             includeThoughts,
             outputFormat,
+            queueBatchDisabledReason,
             showNotification,
             submitQueuedBatchDraft,
             t,
@@ -786,7 +818,7 @@ export function useQueuedBatchWorkflow({
                     if (nextJob.state === 'JOB_STATE_SUCCEEDED') {
                         if (hasImportedResultsInCurrentWorkspace) {
                             showNotification(formatMessage('queuedBatchPolledLog', job.name, remoteJob.state), 'info');
-                        } else if (nextJob.hasInlinedResponses === false) {
+                        } else if (nextJob.hasImportablePayload === false) {
                             showNotification(t('queuedBatchNoPayloadResultsNotice'), 'error');
                         } else if (nextJob.error) {
                             showNotification(
@@ -1020,7 +1052,7 @@ export function useQueuedBatchWorkflow({
                 );
 
                 if (importedHistoryItems.length === 0) {
-                    const importDiagnostic: QueuedBatchJobImportDiagnostic = remoteJob.hasInlinedResponses
+                    const importDiagnostic: QueuedBatchJobImportDiagnostic = remoteJob.hasImportablePayload
                         ? 'extraction-failure'
                         : 'no-payload';
                     const importFailureMessage = importFailureSummary || remoteJob.error || null;

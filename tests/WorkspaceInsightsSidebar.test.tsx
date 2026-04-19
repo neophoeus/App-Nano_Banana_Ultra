@@ -116,7 +116,7 @@ describe('WorkspaceInsightsSidebar', () => {
                             startedAt: null,
                             completedAt: null,
                             lastPolledAt: null,
-                            hasInlinedResponses: true,
+                            hasImportablePayload: true,
                             error: null,
                         },
                         {
@@ -144,7 +144,7 @@ describe('WorkspaceInsightsSidebar', () => {
                             startedAt: null,
                             completedAt: null,
                             lastPolledAt: null,
-                            hasInlinedResponses: false,
+                            hasImportablePayload: false,
                             error: null,
                         },
                         {

@@ -372,13 +372,17 @@ export const de = {
     queueBatchModeEditor:
         'Dies sendet einen offiziellen bildkonditionierten Batch auf Editor-Basis mit der aktuellen Editoreingabe und den vorbereiteten Referenzen. Batchauftrage in der Warteschlange verwenden immer reine Bildausgabe und fordern keine zuruckgegebenen Gedanken an.',
     queueBatchModeStage:
-        'Dies sendet einen offiziellen bildkonditionierten Folge-Batch mit dem aktuellen Stufenbild und den vorbereiteten Referenzen. Batchauftrage in der Warteschlange verwenden immer reine Bildausgabe und fordern keine zuruckgegebenen Gedanken an.',
+        'Dies sendet einen offiziellen bildkonditionierten Batch mit dem aktuellen Stufenbild und den vorbereiteten Referenzen. Batchauftrage in der Warteschlange verwenden immer reine Bildausgabe und fordern keine zuruckgegebenen Gedanken an.',
     queueBatchModeReferences:
         'Dies sendet einen offiziellen referenzgesteuerten Batch mit dem aktuellen Prompt und der Referenzablage. Batchauftrage in der Warteschlange verwenden immer reine Bildausgabe und fordern keine zuruckgegebenen Gedanken an.',
     queueBatchModePromptOnly:
         'Dies sendet einen offiziellen Batchauftrag nur mit Prompt. Batchauftrage in der Warteschlange verwenden immer reine Bildausgabe und fordern keine zuruckgegebenen Gedanken an.',
     queueBatchConversationNotice:
         'Batchauftrage in der Warteschlange behalten die Quellherkunft bei, senden aber keinen offiziellen Multi-Turn-Konversationsverlauf. Fur Chat-Fortsetzung verwenden Sie den normalen Generierungsablauf.',
+    queueBatchMemoryContinuationDisabledReason:
+        'Warteschlangen-Jobs konnen keine offizielle Memory-Konversation fortsetzen. Starten Sie eine neue Konversation oder wechseln Sie zu Independent send.',
+    queueBatchEditDisabledReason:
+        'Wartende Batch-Jobs unterstutzen derzeit keine Folge- oder Editor-Bearbeitungen. Verwenden Sie zuerst den normalen Generierungsablauf.',
     queuedBatchJobsTitle: 'Wartende Batch-Jobs',
     queuedBatchJobsDesc:
         'Gespeicherte offizielle Gemini Batch API-Jobs bleiben hier im Blick, solange sie ausstehend oder in Ausfuhrung sind, sodass Statusprufung, Ergebnisimport und Aufraumen als Arbeitsablauf erfolgen konnen.',

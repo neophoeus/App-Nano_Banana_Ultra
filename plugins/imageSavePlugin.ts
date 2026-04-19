@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI } from '@google/genai/node';
 import type { Plugin } from 'vite';
 import { sendClassifiedApiError, sendJson } from './utils/apiHelpers';
 import { extractImageDetailsFromDataUrl } from './utils/imageDimensions';

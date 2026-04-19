@@ -55,7 +55,7 @@ const buildQueuedJob = (overrides: Partial<QueuedBatchJob> = {}): QueuedBatchJob
     startedAt: overrides.startedAt ?? null,
     completedAt: overrides.completedAt ?? null,
     lastPolledAt: overrides.lastPolledAt ?? null,
-    hasInlinedResponses: overrides.hasInlinedResponses ?? true,
+    hasImportablePayload: overrides.hasImportablePayload ?? true,
     submissionPending: overrides.submissionPending ?? false,
     importDiagnostic: overrides.importDiagnostic ?? null,
     importIssues: overrides.importIssues ?? null,

@@ -1387,6 +1387,27 @@ const App: React.FC = () => {
         t,
     });
     const {
+        canQueueComposerBatch,
+        showEditorQueueBatch,
+        isQueueBatchDisabled,
+        queueBatchDisabledReason,
+        editorQueueDisabledReason,
+        queueBatchModeSummary,
+        queueBatchConversationNotice,
+        getImportedQueuedHistoryItems,
+        getImportedQueuedResultCount,
+        getQueuedBatchPositionLabel,
+    } = useQueuedBatchPresentation({
+        currentStageAsset,
+        objectImageCount: objectImages.length,
+        characterImageCount: characterImages.length,
+        stickySendIntent,
+        workspaceSession,
+        conversationState,
+        history,
+        t,
+    });
+    const {
         queuedJobs,
         setQueuedJobs,
         handleQueueBatchJob,
@@ -1432,23 +1453,13 @@ const App: React.FC = () => {
         showNotification,
         setHistory,
         historySelectRef: queuedBatchHistorySelectRef,
+        canQueueComposerBatch,
+        queueBatchDisabledReason,
+        canQueueEditorBatch: showEditorQueueBatch,
+        editorQueueDisabledReason,
         t,
     });
     useQueuedBatchSpacePersistence({ queuedJobs, setQueuedJobs });
-    const {
-        queueBatchModeSummary,
-        queueBatchConversationNotice,
-        getImportedQueuedHistoryItems,
-        getImportedQueuedResultCount,
-        getQueuedBatchPositionLabel,
-    } = useQueuedBatchPresentation({
-        currentStageAsset,
-        objectImageCount: objectImages.length,
-        characterImageCount: characterImages.length,
-        workspaceSession,
-        history,
-        t,
-    });
 
     const { composeCurrentWorkspaceSnapshot } = useWorkspaceSnapshotPersistence({
         history,
@@ -2038,6 +2049,8 @@ const App: React.FC = () => {
         maxObjects: capability.maxObjects,
         maxCharacters: capability.maxCharacters,
         queuedJobs,
+        isQueueBatchDisabled,
+        queueBatchDisabledReason,
         queueBatchModeSummary,
         queueBatchConversationNotice,
         getImportedQueuedResultCount,
@@ -3219,7 +3232,8 @@ const App: React.FC = () => {
                                     batchSize={batchSize}
                                     onBatchSizeChange={setBatchSize}
                                     onGenerate={handleEditorGenerate}
-                                    onQueueBatch={handleEditorQueueBatch}
+                                    onQueueBatch={showEditorQueueBatch ? handleEditorQueueBatch : undefined}
+                                    queueBatchDisabledReason={showEditorQueueBatch ? null : editorQueueDisabledReason}
                                     onCancel={closeEditor}
                                     isGenerating={isGenerating}
                                     currentLanguage={currentLang}

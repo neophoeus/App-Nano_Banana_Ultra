@@ -1,4 +1,4 @@
-import { GoogleGenAI, HarmBlockThreshold, HarmCategory } from '@google/genai';
+import { GoogleGenAI, HarmBlockThreshold, HarmCategory } from '@google/genai/node';
 import { cleanResponseText } from './apiHelpers';
 
 export const PERMISSIVE_SAFETY_SETTINGS = [

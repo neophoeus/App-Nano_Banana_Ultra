@@ -15,8 +15,13 @@ const generateContentMock = vi.fn();
 const batchCreateMock = vi.fn();
 const batchGetMock = vi.fn();
 const batchCancelMock = vi.fn();
+const batchCreateInlinedGenerateContentRequestMock = vi.fn();
+const filesUploadMock = vi.fn();
+const filesGetMock = vi.fn();
+const filesDownloadMock = vi.fn();
+const uploadedBatchManifestContents: string[] = [];
 
-vi.mock('@google/genai', () => {
+vi.mock('@google/genai/node', () => {
     class MockGoogleGenAI {
         constructor(_options: unknown) {}
 
@@ -28,6 +33,13 @@ vi.mock('@google/genai', () => {
             create: batchCreateMock,
             get: batchGetMock,
             cancel: batchCancelMock,
+            createInlinedGenerateContentRequest: batchCreateInlinedGenerateContentRequestMock,
+        };
+
+        files = {
+            upload: filesUploadMock,
+            get: filesGetMock,
+            download: filesDownloadMock,
         };
 
         models = {
@@ -142,6 +154,11 @@ describe('imageSavePlugin official conversation integration', () => {
         batchCreateMock.mockReset();
         batchGetMock.mockReset();
         batchCancelMock.mockReset();
+        batchCreateInlinedGenerateContentRequestMock.mockReset();
+        filesUploadMock.mockReset();
+        filesGetMock.mockReset();
+        filesDownloadMock.mockReset();
+        uploadedBatchManifestContents.length = 0;
 
         chatSendMessageMock.mockResolvedValue({
             candidates: [
@@ -167,6 +184,76 @@ describe('imageSavePlugin official conversation integration', () => {
             sendMessage: chatSendMessageMock,
         });
 
+        batchCreateInlinedGenerateContentRequestMock.mockImplementation(({ src }: { src?: Array<any> }) => ({
+            body: {
+                batch: {
+                    inputConfig: {
+                        requests: {
+                            requests: (src || []).map((request) => ({
+                                request: {
+                                    contents: request.contents,
+                                    generationConfig: request.config,
+                                },
+                            })),
+                        },
+                    },
+                },
+            },
+        }));
+
+        filesUploadMock.mockImplementation(async ({ file, config }: { file: string; config?: { mimeType?: string } }) => {
+            const mimeType = config?.mimeType;
+            if (mimeType === 'jsonl') {
+                uploadedBatchManifestContents.push(fs.readFileSync(file, 'utf8'));
+                return {
+                    name: `files/batch-manifest-${uploadedBatchManifestContents.length}`,
+                    mimeType: 'jsonl',
+                    state: 'ACTIVE',
+                };
+            }
+
+            return {
+                name: `files/uploaded-image-${Date.now()}`,
+                uri: `https://example.com/uploaded/${path.basename(String(file))}`,
+                mimeType: mimeType || 'image/png',
+                state: 'ACTIVE',
+            };
+        });
+        filesGetMock.mockImplementation(async ({ name }: { name: string }) => ({
+            name,
+            uri: `https://example.com/files/${name.replace(/[^a-zA-Z0-9_-]+/g, '-')}`,
+            mimeType: name.includes('manifest') ? 'jsonl' : 'image/png',
+            state: 'ACTIVE',
+        }));
+        filesDownloadMock.mockImplementation(async ({ downloadPath }: { file: string; downloadPath: string }) => {
+            fs.writeFileSync(
+                downloadPath,
+                JSON.stringify({
+                    key: 'request-1',
+                    response: {
+                        candidates: [
+                            {
+                                content: {
+                                    parts: [
+                                        {
+                                            inlineData: {
+                                                mimeType: 'image/png',
+                                                data: 'BBB',
+                                            },
+                                        },
+                                        {
+                                            text: 'Imported queued batch response',
+                                        },
+                                    ],
+                                },
+                            },
+                        ],
+                    },
+                }),
+                'utf8',
+            );
+        });
+
         batchCreateMock.mockResolvedValue({
             name: 'batches/test-job',
             displayName: 'Queued test job',
@@ -185,29 +272,7 @@ describe('imageSavePlugin official conversation integration', () => {
             startTime: '2025-01-01T00:01:00.000Z',
             endTime: '2025-01-01T00:05:00.000Z',
             dest: {
-                inlinedResponses: [
-                    {
-                        response: {
-                            candidates: [
-                                {
-                                    content: {
-                                        parts: [
-                                            {
-                                                inlineData: {
-                                                    mimeType: 'image/png',
-                                                    data: 'BBB',
-                                                },
-                                            },
-                                            {
-                                                text: 'Imported queued batch response',
-                                            },
-                                        ],
-                                    },
-                                },
-                            ],
-                        },
-                    },
-                ],
+                fileName: 'files/batch-results',
             },
         });
     });
@@ -371,10 +436,35 @@ describe('imageSavePlugin official conversation integration', () => {
         expect(batchCreateMock).toHaveBeenCalledWith(
             expect.objectContaining({
                 model: 'gemini-3.1-flash-image-preview',
-                src: expect.any(Array),
+                src: expect.stringMatching(/^files\//),
             }),
         );
-        expect(batchCreateMock.mock.calls[0]?.[0]?.src).toHaveLength(2);
+        expect(uploadedBatchManifestContents).toHaveLength(1);
+        expect(uploadedBatchManifestContents[0].split(/\r?\n/u)).toHaveLength(2);
+        const firstManifestRequest = JSON.parse(uploadedBatchManifestContents[0].split(/\r?\n/u)[0]);
+        expect(firstManifestRequest).toEqual(
+            expect.objectContaining({
+                key: 'request-1',
+                request: expect.objectContaining({
+                    contents: [
+                        expect.objectContaining({
+                            parts: [expect.objectContaining({ text: 'Create a queued panorama' })],
+                        }),
+                    ],
+                }),
+            }),
+        );
+        expect(firstManifestRequest.request.generationConfig).toEqual(
+            expect.objectContaining({
+                responseModalities: ['IMAGE'],
+                imageConfig: expect.objectContaining({
+                    aspectRatio: '16:9',
+                    imageSize: '1K',
+                }),
+                temperature: 1,
+            }),
+        );
+        expect(firstManifestRequest.request.generationConfig.thinkingConfig).toBeUndefined();
         expect(createResponse.body.job).toEqual(
             expect.objectContaining({
                 name: 'batches/test-job',
@@ -388,6 +478,11 @@ describe('imageSavePlugin official conversation integration', () => {
 
         expect(importResponse.status).toBe(200);
         expect(batchGetMock).toHaveBeenCalledWith({ name: 'batches/test-job' });
+        expect(filesDownloadMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                file: 'files/batch-results',
+            }),
+        );
         expect(importResponse.body.job).toEqual(
             expect.objectContaining({
                 name: 'batches/test-job',
@@ -442,28 +537,25 @@ describe('imageSavePlugin official conversation integration', () => {
         });
 
         expect(response.status).toBe(200);
+        expect(uploadedBatchManifestContents).toHaveLength(1);
+        const [manifestRequest] = uploadedBatchManifestContents[0].split(/\r?\n/u).map((line) => JSON.parse(line));
         expect(batchCreateMock).toHaveBeenCalledWith(
             expect.objectContaining({
-                src: [
-                    expect.objectContaining({
-                        contents: [
-                            expect.objectContaining({
-                                role: 'user',
-                                parts: [
-                                    { text: '[Edit_1]' },
-                                    {
-                                        inlineData: {
-                                            mimeType: 'image/png',
-                                            data: ONE_BY_ONE_PNG_BASE64,
-                                        },
-                                    },
-                                    { text: 'Queue a staged follow-up edit' },
-                                ],
-                            }),
-                        ],
-                    }),
-                ],
+                src: expect.stringMatching(/^files\//),
             }),
+        );
+        expect(manifestRequest.request.contents[0].parts).toEqual([
+            { text: '[Edit_1]' },
+            {
+                fileData: {
+                    fileUri: expect.stringContaining('https://example.com/uploaded/'),
+                    mimeType: 'image/png',
+                },
+            },
+            { text: 'Queue a staged follow-up edit' },
+        ]);
+        expect(manifestRequest.request.contents[0].parts).not.toContainEqual(
+            expect.objectContaining({ inlineData: expect.anything() }),
         );
     });
 
@@ -657,7 +749,7 @@ describe('imageSavePlugin official conversation integration', () => {
                     startedAt: 105,
                     completedAt: null,
                     lastPolledAt: 109,
-                    hasInlinedResponses: true,
+                    hasImportablePayload: true,
                     submissionPending: false,
                     importDiagnostic: null,
                     importIssues: null,
@@ -1210,24 +1302,39 @@ describe('imageSavePlugin official conversation integration', () => {
 
         expect(response.status).toBe(200);
         expect(batchCreateMock).toHaveBeenCalledTimes(1);
+        expect(uploadedBatchManifestContents).toHaveLength(1);
+        const [manifestRequest] = uploadedBatchManifestContents[0].split(/\r?\n/u).map((line) => JSON.parse(line));
         expect(batchCreateMock).toHaveBeenCalledWith(
             expect.objectContaining({
-                src: [
-                    expect.objectContaining({
-                        contents: [
-                            expect.objectContaining({
-                                role: 'user',
-                                parts: expect.arrayContaining([
-                                    expect.objectContaining({ text: '[Edit_1]' }),
-                                    expect.objectContaining({ text: '[Obj_1]' }),
-                                    expect.objectContaining({ text: '[Char_1]' }),
-                                    expect.objectContaining({ text: 'Queue a staged follow-up edit' }),
-                                ]),
-                            }),
-                        ],
-                    }),
-                ],
+                src: expect.stringMatching(/^files\//),
             }),
+        );
+        expect(manifestRequest.request.contents[0].parts).toEqual([
+            { text: '[Edit_1]' },
+            {
+                fileData: {
+                    fileUri: expect.stringContaining('https://example.com/uploaded/'),
+                    mimeType: 'image/png',
+                },
+            },
+            { text: '[Obj_1]' },
+            {
+                fileData: {
+                    fileUri: expect.stringContaining('https://example.com/uploaded/'),
+                    mimeType: 'image/png',
+                },
+            },
+            { text: '[Char_1]' },
+            {
+                fileData: {
+                    fileUri: expect.stringContaining('https://example.com/uploaded/'),
+                    mimeType: 'image/png',
+                },
+            },
+            { text: 'Queue a staged follow-up edit' },
+        ]);
+        expect(manifestRequest.request.contents[0].parts).not.toContainEqual(
+            expect.objectContaining({ inlineData: expect.anything() }),
         );
     });
 

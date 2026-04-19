@@ -374,6 +374,7 @@ const phaseEGroup2ShellParityKeys = [
     'queueBatchModeReferences',
     'queueBatchModePromptOnly',
     'queueBatchConversationNotice',
+    'queueBatchMemoryContinuationDisabledReason',
 ] as const;
 
 const phaseEGroup3ShellParityKeys = [
@@ -1536,12 +1537,14 @@ const zhTwQueuedBatchWordingBaseline = {
     queueBatchModeEditor:
         '這會以目前編輯輸入影像與已暫存參考圖送出一個官方編輯批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
     queueBatchModeStage:
-        '這會以目前的階段圖像與已暫存參考圖送出一個官方後續延伸批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
+        '這會以目前的階段圖像與已暫存參考圖送出一個官方影像條件批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
     queueBatchModeReferences:
         '這會以目前提示詞與參考圖托盤送出一個官方參考驅動批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
     queueBatchModePromptOnly: '這會送出一個僅依提示詞的官方批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
     queueBatchConversationNotice:
         '佇列批次工作會保留來源延續脈絡，但不會送出官方多輪對話歷史。若要延續對話，請使用開始生成。',
+    queueBatchMemoryContinuationDisabledReason:
+        '佇列工作不能延續官方 memory 對話。請先開始新對話，或切換到 Independent send。',
     queuedBatchJobsWorkflowHint: '先在這裡追蹤佇列狀態，結果就緒後匯入歷史，流程完成後再清除這筆工作。',
     queuedBatchJobsConversationNoticeLabel: '延續提醒',
     queuedBatchJobsMonitorGroup: '監看',
@@ -1553,12 +1556,14 @@ const zhCnQueuedBatchWordingBaseline = {
     queueBatchModeEditor:
         '这会以当前编辑输入图像和已暂存参考图提交一个官方编辑批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
     queueBatchModeStage:
-        '这会以当前阶段图像和已暂存参考图提交一个官方后续延展批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
+        '这会以当前阶段图像和已暂存参考图提交一个官方图像条件批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
     queueBatchModeReferences:
         '这会以当前提示词和参考图托盘提交一个官方参考驱动批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
     queueBatchModePromptOnly: '这会提交一个仅基于提示词的官方批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
     queueBatchConversationNotice:
         '队列批处理任务会保留来源延续脉络，但不会发送官方多轮对话历史。若要继续对话，请使用开始生成。',
+    queueBatchMemoryContinuationDisabledReason:
+        '队列任务不能延续官方 memory 对话。请先开始新对话，或切换到 Independent send。',
     queuedBatchJobsWorkflowHint: '先在这里跟踪队列状态，结果就绪后导入历史，流程完成后再清除这条任务。',
     queuedBatchJobsConversationNoticeLabel: '延续提醒',
     queuedBatchJobsMonitorGroup: '监看',
@@ -1580,13 +1585,15 @@ const jaQueuedBatchWordingBaseline = {
     queueBatchModeEditor:
         'これは、現在のエディター入力とステージ済み参照を使って、編集ベースの公式画像条件付きバッチを送信します。キュー投入バッチは常に画像のみを出力し、思考の返却は要求しません。',
     queueBatchModeStage:
-        'これは、現在のステージ画像とステージ済み参照を使って、後続生成向けの公式画像条件付きバッチを送信します。キュー投入バッチは常に画像のみを出力し、思考の返却は要求しません。',
+        'これは、現在のステージ画像とステージ済み参照を使って、公式の画像条件付きバッチを送信します。キュー投入バッチは常に画像のみを出力し、思考の返却は要求しません。',
     queueBatchModeReferences:
         'これは、現在のプロンプトと参照トレイを使って、参照駆動の公式バッチを送信します。キュー投入バッチは常に画像のみを出力し、思考の返却は要求しません。',
     queueBatchModePromptOnly:
         'これは、プロンプトのみの公式バッチジョブを送信します。キュー投入バッチは常に画像のみを出力し、思考の返却は要求しません。',
     queueBatchConversationNotice:
         'キュー投入バッチジョブはソースの系統を保持しますが、公式の複数ターン会話履歴は送信しません。会話を継続する場合は通常の生成を使ってください。',
+    queueBatchMemoryContinuationDisabledReason:
+        'キュー投入ジョブは公式の memory 会話を継続できません。新しい会話を開始するか、Independent send に切り替えてください。',
     queuedBatchJobsWorkflowHint:
         'ここでキューを見守り、結果の準備ができたら履歴へ取り込み、作業が終わったらこのエントリをクリアします。',
     queuedBatchJobsConversationNoticeLabel: '継続メモ',
@@ -1601,13 +1608,15 @@ const koQueuedBatchWordingBaseline = {
     queueBatchModeEditor:
         '이 작업은 현재 에디터 입력과 스테이징된 참조를 사용해 편집 기반의 공식 이미지 조건부 배치 작업을 제출합니다. 대기열 배치 작업은 항상 이미지 전용 출력만 사용하며 사고 내용 반환은 요청하지 않습니다.',
     queueBatchModeStage:
-        '이 작업은 현재 스테이지 이미지와 스테이징된 참조를 사용해 후속 생성용 공식 이미지 조건부 배치 작업을 제출합니다. 대기열 배치 작업은 항상 이미지 전용 출력만 사용하며 사고 내용 반환은 요청하지 않습니다.',
+        '이 작업은 현재 스테이지 이미지와 스테이징된 참조를 사용해 공식 이미지 조건부 배치 작업을 제출합니다. 대기열 배치 작업은 항상 이미지 전용 출력만 사용하며 사고 내용 반환은 요청하지 않습니다.',
     queueBatchModeReferences:
         '이 작업은 현재 프롬프트와 참조 트레이를 사용해 공식 참조 기반 배치 작업을 제출합니다. 대기열 배치 작업은 항상 이미지 전용 출력만 사용하며 사고 내용 반환은 요청하지 않습니다.',
     queueBatchModePromptOnly:
         '이 작업은 프롬프트만 사용하는 공식 배치 작업을 제출합니다. 대기열 배치 작업은 항상 이미지 전용 출력만 사용하며 사고 내용 반환은 요청하지 않습니다.',
     queueBatchConversationNotice:
         '대기열 배치 작업은 원본 계보를 유지하지만 공식 다중 턴 대화 기록은 전송하지 않습니다. 대화를 이어가려면 일반 생성 흐름을 사용하세요.',
+    queueBatchMemoryContinuationDisabledReason:
+        '대기열 작업은 공식 memory 대화를 이어갈 수 없습니다. 새 대화를 시작하거나 Independent send로 전환하세요.',
     queuedBatchJobsWorkflowHint:
         '여기서 대기열을 살피고, 결과가 준비되면 히스토리로 가져온 뒤 작업이 끝나면 이 항목을 정리합니다.',
     queuedBatchJobsConversationNoticeLabel: '연속성 메모',
@@ -1622,13 +1631,15 @@ const esQueuedBatchWordingBaseline = {
     queueBatchModeEditor:
         'Esto enviara un lote oficial condicionado por imagen basado en el editor usando la entrada actual del editor y las referencias preparadas. Los lotes en cola siempre usan salida solo de imagen y no solicitan pensamientos devueltos.',
     queueBatchModeStage:
-        'Esto enviara un lote oficial condicionado por imagen de seguimiento usando la imagen actual del escenario y las referencias preparadas. Los lotes en cola siempre usan salida solo de imagen y no solicitan pensamientos devueltos.',
+        'Esto enviara un lote oficial condicionado por imagen usando la imagen actual del escenario y las referencias preparadas. Los lotes en cola siempre usan salida solo de imagen y no solicitan pensamientos devueltos.',
     queueBatchModeReferences:
         'Esto enviara un lote oficial guiado por referencias usando el prompt actual y la bandeja de referencias. Los lotes en cola siempre usan salida solo de imagen y no solicitan pensamientos devueltos.',
     queueBatchModePromptOnly:
         'Esto enviara un lote oficial basado solo en el prompt. Los lotes en cola siempre usan salida solo de imagen y no solicitan pensamientos devueltos.',
     queueBatchConversationNotice:
         'Los trabajos por lotes en cola conservan el linaje de origen, pero no envian el historial oficial de conversacion de varios turnos. Para continuar un chat, usa la generacion normal.',
+    queueBatchMemoryContinuationDisabledReason:
+        'Los trabajos en cola no pueden continuar una conversacion oficial de memory. Inicia una conversacion nueva o cambia a Independent send.',
     queuedBatchJobsWorkflowHint:
         'Supervisa la cola aqui, importa los resultados terminados al historial cuando esten listos y limpia la entrada cuando el flujo haya terminado.',
     queuedBatchJobsConversationNoticeLabel: 'Nota de continuidad',
@@ -1643,13 +1654,15 @@ const frQueuedBatchWordingBaseline = {
     queueBatchModeEditor:
         "Cela enverra un lot officiel conditionne par image base sur l'editeur en utilisant l'entree actuelle de l'editeur et les references preparees. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
     queueBatchModeStage:
-        "Cela enverra un lot officiel conditionne par image de suivi en utilisant l'image actuelle de la scene et les references preparees. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
+        "Cela enverra un lot officiel conditionne par image en utilisant l'image actuelle de la scene et les references preparees. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
     queueBatchModeReferences:
         "Cela enverra un lot officiel pilote par references avec le prompt actuel et le bac de references. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
     queueBatchModePromptOnly:
         "Cela enverra un lot officiel base uniquement sur le prompt. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
     queueBatchConversationNotice:
         "Les lots en file d'attente conservent la lignee source, mais n'envoient pas l'historique officiel des conversations multi-tours. Pour poursuivre une conversation, utilisez le flux de generation normal.",
+    queueBatchMemoryContinuationDisabledReason:
+        "Les travaux en file ne peuvent pas poursuivre une conversation officielle memory. Demarrez une nouvelle conversation ou passez a Independent send.",
     queuedBatchJobsWorkflowHint:
         "Surveillez la file ici, importez les resultats termines dans l'historique lorsqu'ils sont prets, puis effacez l'entree une fois le flux termine.",
     queuedBatchJobsConversationNoticeLabel: 'Note de continuite',
@@ -1664,13 +1677,15 @@ const deQueuedBatchWordingBaseline = {
     queueBatchModeEditor:
         'Dies sendet einen offiziellen bildkonditionierten Batch auf Editor-Basis mit der aktuellen Editoreingabe und den vorbereiteten Referenzen. Batchauftrage in der Warteschlange verwenden immer reine Bildausgabe und fordern keine zuruckgegebenen Gedanken an.',
     queueBatchModeStage:
-        'Dies sendet einen offiziellen bildkonditionierten Folge-Batch mit dem aktuellen Stufenbild und den vorbereiteten Referenzen. Batchauftrage in der Warteschlange verwenden immer reine Bildausgabe und fordern keine zuruckgegebenen Gedanken an.',
+        'Dies sendet einen offiziellen bildkonditionierten Batch mit dem aktuellen Stufenbild und den vorbereiteten Referenzen. Batchauftrage in der Warteschlange verwenden immer reine Bildausgabe und fordern keine zuruckgegebenen Gedanken an.',
     queueBatchModeReferences:
         'Dies sendet einen offiziellen referenzgesteuerten Batch mit dem aktuellen Prompt und der Referenzablage. Batchauftrage in der Warteschlange verwenden immer reine Bildausgabe und fordern keine zuruckgegebenen Gedanken an.',
     queueBatchModePromptOnly:
         'Dies sendet einen offiziellen Batchauftrag nur mit Prompt. Batchauftrage in der Warteschlange verwenden immer reine Bildausgabe und fordern keine zuruckgegebenen Gedanken an.',
     queueBatchConversationNotice:
         'Batchauftrage in der Warteschlange behalten die Quellherkunft bei, senden aber keinen offiziellen Multi-Turn-Konversationsverlauf. Fur Chat-Fortsetzung verwenden Sie den normalen Generierungsablauf.',
+    queueBatchMemoryContinuationDisabledReason:
+        'Warteschlangen-Jobs konnen keine offizielle Memory-Konversation fortsetzen. Starten Sie eine neue Konversation oder wechseln Sie zu Independent send.',
     queuedBatchJobsWorkflowHint:
         'Uberwachen Sie die Warteschlange hier, holen Sie fertige Ergebnisse in den Verlauf, und entfernen Sie den Eintrag, sobald der Ablauf abgeschlossen ist.',
     queuedBatchJobsConversationNoticeLabel: 'Kontinuitatshinweis',
@@ -1685,13 +1700,15 @@ const ruQueuedBatchWordingBaseline = {
     queueBatchModeEditor:
         'Это отправит официальный пакет с условием по изображению на основе редактора, используя текущий ввод редактора и подготовленные референсы. Пакетные задачи в очереди всегда используют вывод только изображений и не запрашивают возврат мыслей.',
     queueBatchModeStage:
-        'Это отправит официальный пакет с условием по изображению для продолжения, используя текущее изображение сцены и подготовленные референсы. Пакетные задачи в очереди всегда используют вывод только изображений и не запрашивают возврат мыслей.',
+        'Это отправит официальный пакет с условием по изображению, используя текущее изображение сцены и подготовленные референсы. Пакетные задачи в очереди всегда используют вывод только изображений и не запрашивают возврат мыслей.',
     queueBatchModeReferences:
         'Это отправит официальный пакет с опорой на референсы, используя текущий промпт и лоток референсов. Пакетные задачи в очереди всегда используют вывод только изображений и не запрашивают возврат мыслей.',
     queueBatchModePromptOnly:
         'Это отправит официальный пакет только по промпту. Пакетные задачи в очереди всегда используют вывод только изображений и не запрашивают возврат мыслей.',
     queueBatchConversationNotice:
         'Пакетные задачи в очереди сохраняют линию происхождения источника, но не отправляют официальный многходовый контекст диалога. Чтобы продолжить диалог, используйте обычную генерацию.',
+    queueBatchMemoryContinuationDisabledReason:
+        'Задания в очереди не могут продолжать официальный memory-диалог. Начните новый диалог или переключитесь на Independent send.',
     queuedBatchJobsWorkflowHint:
         'Следите здесь за очередью, переносите готовые результаты в историю, а после завершения работы очищайте эту запись.',
     queuedBatchJobsConversationNoticeLabel: 'Заметка о продолжении',

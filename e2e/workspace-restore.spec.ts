@@ -561,7 +561,7 @@ const queuedBatchPanelSnapshot = {
             startedAt: 1710400015000,
             completedAt: 1710400020000,
             lastPolledAt: 1710400030000,
-            hasInlinedResponses: true,
+            hasImportablePayload: true,
             error: null,
         },
         {
@@ -589,7 +589,7 @@ const queuedBatchPanelSnapshot = {
             startedAt: 1710400045000,
             completedAt: 1710400050000,
             lastPolledAt: 1710400060000,
-            error: null,
+                    hasImportablePayload: false,
         },
         {
             localId: 'job-failed',
@@ -1988,7 +1988,7 @@ const installQueuedBatchGetFixtureRoute = async (page: Page, snapshot: Record<st
                     startTime: typeof job.startedAt === 'number' ? new Date(job.startedAt).toISOString() : undefined,
                     endTime: typeof job.completedAt === 'number' ? new Date(job.completedAt).toISOString() : undefined,
                     error: typeof job.error === 'string' ? job.error : null,
-                    hasInlinedResponses: false,
+                    hasImportablePayload: false,
                 } as Record<string, unknown>,
             ]),
     );

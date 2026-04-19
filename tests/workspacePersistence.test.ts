@@ -341,7 +341,7 @@ describe('workspacePersistence', () => {
             expect.objectContaining({
                 localId: 'legacy-succeeded-job',
                 state: 'JOB_STATE_SUCCEEDED',
-                hasInlinedResponses: true,
+                hasImportablePayload: true,
             }),
         );
         expect(restored.queuedJobs[0]?.importDiagnostic ?? null).toBeNull();
@@ -376,7 +376,7 @@ describe('workspacePersistence', () => {
                     startedAt: 1710400001000,
                     completedAt: 1710400005000,
                     lastPolledAt: 1710400005000,
-                    hasInlinedResponses: true,
+                    hasImportablePayload: true,
                     importDiagnostic: 'extraction-failure',
                     importIssues: [
                         {

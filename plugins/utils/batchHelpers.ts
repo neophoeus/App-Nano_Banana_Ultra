@@ -11,7 +11,8 @@ export type BatchJobResponsePayload = {
     startTime?: string;
     endTime?: string;
     error?: string | null;
-    hasInlinedResponses: boolean;
+    responseFileName?: string;
+    hasImportablePayload: boolean;
     inlinedResponseCount?: number;
     batchStats?: BatchJobStatsPayload | null;
 };
@@ -126,6 +127,10 @@ function serializeBatchJobStats(batchStats: any): BatchJobStatsPayload | null {
 
 export function serializeBatchJob(batchJob: any): BatchJobResponsePayload {
     const inlinedResponses = Array.isArray(batchJob?.dest?.inlinedResponses) ? batchJob.dest.inlinedResponses : [];
+    const responseFileName =
+        typeof batchJob?.dest?.fileName === 'string' && batchJob.dest.fileName.trim().length > 0
+            ? batchJob.dest.fileName
+            : undefined;
 
     return {
         name: String(batchJob?.name || ''),
@@ -137,9 +142,10 @@ export function serializeBatchJob(batchJob: any): BatchJobResponsePayload {
         startTime: typeof batchJob?.startTime === 'string' ? batchJob.startTime : undefined,
         endTime: typeof batchJob?.endTime === 'string' ? batchJob.endTime : undefined,
         error: batchJob?.error?.message || batchJob?.error?.details || null,
+        responseFileName,
         inlinedResponseCount: inlinedResponses.length,
         batchStats: serializeBatchJobStats(batchJob?.batchStats),
-        hasInlinedResponses: inlinedResponses.length > 0,
+        hasImportablePayload: inlinedResponses.length > 0 || Boolean(responseFileName),
     };
 }
 
@@ -157,6 +163,40 @@ function readBatchJobErrorMessage(error: any): string | undefined {
     return undefined;
 }
 
+function resolveBatchResultIndexFromRequestKey(key: unknown, fallbackIndex: number): number {
+    if (typeof key !== 'string') {
+        return fallbackIndex;
+    }
+
+    const match = key.match(/(\d+)$/u);
+    if (!match) {
+        return fallbackIndex;
+    }
+
+    const parsedIndex = Number(match[1]);
+    if (!Number.isFinite(parsedIndex) || parsedIndex <= 0) {
+        return fallbackIndex;
+    }
+
+    return parsedIndex - 1;
+}
+
+function looksLikeGenerateContentResponse(value: unknown): boolean {
+    return Boolean(
+        value &&
+            typeof value === 'object' &&
+            ('candidates' in value || 'promptFeedback' in value || 'usageMetadata' in value || 'responseId' in value),
+    );
+}
+
+function looksLikeBatchStatusObject(value: unknown): boolean {
+    return Boolean(
+        value &&
+            typeof value === 'object' &&
+            ('error' in value || 'message' in value || 'code' in value || 'details' in value),
+    );
+}
+
 function resolveGroundingMetadataReturned(response: any, groundingDetails: ReturnType<typeof extractGroundingDetails>) {
     const candidate = response?.candidates?.[0] ?? response?.response?.candidates?.[0];
     return (
@@ -169,82 +209,155 @@ function resolveGroundingMetadataReturned(response: any, groundingDetails: Retur
     );
 }
 
+function buildBatchImportResultFromResponse(
+    response: any,
+    index: number,
+    extractGeneratedContent: (response: any) => ExtractedGeneratedContent,
+    options?: { requestKey?: string; entryErrorMessage?: string },
+): BatchImportResultPayload {
+    const extracted = extractGeneratedContent(response);
+    const groundingDetails = extractGroundingDetails(response);
+    const blockedSafetyCategories = getBlockedSafetyCategories(extracted.safetyRatings);
+    const failure = extracted.imageUrl
+        ? null
+        : resolveGenerationFailureInfo({
+              explicitError: options?.entryErrorMessage,
+              text: extracted.text,
+              thoughts: extracted.thoughts,
+              promptBlockReason: extracted.promptBlockReason,
+              finishReason: extracted.finishReason,
+              safetyRatings: extracted.safetyRatings,
+              extractionIssue: extracted.extractionIssue,
+          });
+
+    return {
+        index,
+        status: extracted.imageUrl ? 'success' : 'failed',
+        imageUrl: extracted.imageUrl,
+        text: extracted.text,
+        thoughts: extracted.thoughts,
+        grounding: {
+            enabled:
+                groundingDetails.sources.length > 0 ||
+                groundingDetails.webQueries.length > 0 ||
+                groundingDetails.imageQueries.length > 0,
+            imageSearch: groundingDetails.imageQueries.length > 0,
+            webQueries: groundingDetails.webQueries,
+            imageQueries: groundingDetails.imageQueries,
+            searchEntryPointAvailable: groundingDetails.searchEntryPointAvailable,
+            searchEntryPointRenderedContent: groundingDetails.searchEntryPointRenderedContent,
+            supports: groundingDetails.supports,
+            sources: groundingDetails.sources,
+        },
+        sessionHints: {
+            requestKey: options?.requestKey,
+            groundingMetadataReturned: resolveGroundingMetadataReturned(response, groundingDetails),
+            textReturned: Boolean(extracted.text),
+            thoughtsReturned: Boolean(extracted.thoughts),
+            thoughtSignatureReturned: extracted.thoughtSignaturePresent,
+            thoughtSignature: extracted.thoughtSignature,
+            promptBlockReason: extracted.promptBlockReason,
+            finishReason: extracted.finishReason,
+            safetyRatingsReturned: Array.isArray(extracted.safetyRatings) ? extracted.safetyRatings.length : 0,
+            blockedSafetyCategories,
+            extractionIssue: extracted.extractionIssue,
+            candidateCount: extracted.candidateCount ?? 0,
+            partCount: extracted.partCount ?? 0,
+            imagePartCount: extracted.imagePartCount ?? 0,
+            entryErrorPresent: Boolean(options?.entryErrorMessage),
+            entryErrorMessage: options?.entryErrorMessage,
+            actualImageWidth: extracted.imageDimensions?.width,
+            actualImageHeight: extracted.imageDimensions?.height,
+            actualImageMimeType: extracted.imageMimeType,
+            actualImageDimensions: extracted.imageDimensions
+                ? `${extracted.imageDimensions.width}x${extracted.imageDimensions.height}`
+                : undefined,
+            sourcesReturned: groundingDetails.sources.length,
+            webQueriesReturned: groundingDetails.webQueries.length,
+            imageQueriesReturned: groundingDetails.imageQueries.length,
+            groundingSupportsReturned: groundingDetails.supports.length,
+        },
+        error: failure?.message,
+    };
+}
+
+function extractBatchImportResultsFromJsonlContent(
+    jsonlContent: string,
+    extractGeneratedContent: (response: any) => ExtractedGeneratedContent,
+): BatchImportResultPayload[] {
+    return jsonlContent
+        .split(/\r?\n/u)
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0)
+        .map((line, lineIndex) => {
+            try {
+                const parsedLine = JSON.parse(line) as Record<string, unknown>;
+                const requestKey = typeof parsedLine.key === 'string' ? parsedLine.key : undefined;
+                const index = resolveBatchResultIndexFromRequestKey(requestKey, lineIndex);
+                const responsePayload =
+                    parsedLine.response ?? (looksLikeGenerateContentResponse(parsedLine) ? parsedLine : null);
+
+                if (responsePayload) {
+                    return buildBatchImportResultFromResponse(responsePayload, index, extractGeneratedContent, {
+                        requestKey,
+                        entryErrorMessage: readBatchJobErrorMessage(parsedLine.error),
+                    });
+                }
+
+                const errorPayload =
+                    parsedLine.error ?? (looksLikeBatchStatusObject(parsedLine) ? parsedLine : { message: undefined });
+                const entryErrorMessage = readBatchJobErrorMessage(errorPayload);
+
+                return {
+                    index,
+                    status: 'failed',
+                    sessionHints: {
+                        requestKey,
+                        entryErrorPresent: Boolean(entryErrorMessage),
+                        entryErrorMessage,
+                        rawLineType: looksLikeBatchStatusObject(errorPayload) ? 'status' : 'unknown',
+                    },
+                    error: entryErrorMessage || 'Batch request failed.',
+                };
+            } catch (error: any) {
+                const message = error?.message || 'Failed to parse batch result line.';
+                return {
+                    index: lineIndex,
+                    status: 'failed',
+                    sessionHints: {
+                        entryErrorPresent: true,
+                        entryErrorMessage: message,
+                        rawLineType: 'invalid-json',
+                    },
+                    error: message,
+                };
+            }
+        })
+        .sort((left, right) => left.index - right.index);
+}
+
 export function extractBatchImportResults(
     batchJob: any,
     extractGeneratedContent: (response: any) => ExtractedGeneratedContent,
+    jsonlContent?: string,
 ): BatchImportResultPayload[] {
     const state = resolveBatchJobStateName(batchJob?.state);
     if (state !== 'JOB_STATE_SUCCEEDED') {
         return [];
     }
 
+    if (typeof jsonlContent === 'string') {
+        return extractBatchImportResultsFromJsonlContent(jsonlContent, extractGeneratedContent);
+    }
+
     const responses = Array.isArray(batchJob?.dest?.inlinedResponses) ? batchJob.dest.inlinedResponses : [];
     return responses.map((entry: any, index: number) => {
         if (entry?.response) {
-            const extracted = extractGeneratedContent(entry.response);
-            const groundingDetails = extractGroundingDetails(entry.response);
-            const blockedSafetyCategories = getBlockedSafetyCategories(extracted.safetyRatings);
             const entryErrorMessage =
                 readBatchJobErrorMessage(entry?.error) || readBatchJobErrorMessage(entry?.response?.error);
-            const failure = extracted.imageUrl
-                ? null
-                : resolveGenerationFailureInfo({
-                      explicitError: entryErrorMessage,
-                      text: extracted.text,
-                      thoughts: extracted.thoughts,
-                      promptBlockReason: extracted.promptBlockReason,
-                      finishReason: extracted.finishReason,
-                      safetyRatings: extracted.safetyRatings,
-                      extractionIssue: extracted.extractionIssue,
-                  });
-            return {
-                index,
-                status: extracted.imageUrl ? 'success' : 'failed',
-                imageUrl: extracted.imageUrl,
-                text: extracted.text,
-                thoughts: extracted.thoughts,
-                grounding: {
-                    enabled:
-                        groundingDetails.sources.length > 0 ||
-                        groundingDetails.webQueries.length > 0 ||
-                        groundingDetails.imageQueries.length > 0,
-                    imageSearch: groundingDetails.imageQueries.length > 0,
-                    webQueries: groundingDetails.webQueries,
-                    imageQueries: groundingDetails.imageQueries,
-                    searchEntryPointAvailable: groundingDetails.searchEntryPointAvailable,
-                    searchEntryPointRenderedContent: groundingDetails.searchEntryPointRenderedContent,
-                    supports: groundingDetails.supports,
-                    sources: groundingDetails.sources,
-                },
-                sessionHints: {
-                    groundingMetadataReturned: resolveGroundingMetadataReturned(entry.response, groundingDetails),
-                    textReturned: Boolean(extracted.text),
-                    thoughtsReturned: Boolean(extracted.thoughts),
-                    thoughtSignatureReturned: extracted.thoughtSignaturePresent,
-                    thoughtSignature: extracted.thoughtSignature,
-                    promptBlockReason: extracted.promptBlockReason,
-                    finishReason: extracted.finishReason,
-                    safetyRatingsReturned: Array.isArray(extracted.safetyRatings) ? extracted.safetyRatings.length : 0,
-                    blockedSafetyCategories,
-                    extractionIssue: extracted.extractionIssue,
-                    candidateCount: extracted.candidateCount ?? 0,
-                    partCount: extracted.partCount ?? 0,
-                    imagePartCount: extracted.imagePartCount ?? 0,
-                    entryErrorPresent: Boolean(entryErrorMessage),
-                    entryErrorMessage,
-                    actualImageWidth: extracted.imageDimensions?.width,
-                    actualImageHeight: extracted.imageDimensions?.height,
-                    actualImageMimeType: extracted.imageMimeType,
-                    actualImageDimensions: extracted.imageDimensions
-                        ? `${extracted.imageDimensions.width}x${extracted.imageDimensions.height}`
-                        : undefined,
-                    sourcesReturned: groundingDetails.sources.length,
-                    webQueriesReturned: groundingDetails.webQueries.length,
-                    imageQueriesReturned: groundingDetails.imageQueries.length,
-                    groundingSupportsReturned: groundingDetails.supports.length,
-                },
-                error: failure?.message,
-            };
+            return buildBatchImportResultFromResponse(entry.response, index, extractGeneratedContent, {
+                entryErrorMessage,
+            });
         }
 
         const entryErrorMessage = readBatchJobErrorMessage(entry?.error);

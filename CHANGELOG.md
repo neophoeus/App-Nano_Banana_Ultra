@@ -1,5 +1,22 @@
 # Changelog
 
+## v3.6.2 - 2026-04-19
+
+- Release title: Nano Banana Ultra 3.6.2 - File-Backed Batch Source, Response-File Import Readiness & Queue Continuation Policy
+- Release summary:
+    - file-backed official batch transport:
+        - queued batch creation now uploads queue input images through the File API, writes newline-delimited batch request manifests, uploads that manifest as a reusable file resource, and creates official batch jobs from that uploaded source instead of relying on inline request arrays
+        - queued batch request assembly now uses a dedicated manifest-normalization path, preserving queue-supported image settings while removing interactive-only controls that do not belong in the official image batch manifest shape
+
+    - response-file import readiness and failure truth:
+        - queued batch import now supports response-file-backed jobs, so completed batches can be imported from downloaded JSONL result payloads rather than depending only on inline response bodies
+        - queued job readiness now tracks whether a batch has any importable payload, including downloaded response files, so `no payload` and `extraction failure` remain separate product states instead of collapsing into one generic import outcome
+        - queued batch finish reasons now surface as readable humanized detail instead of collapsing into generic fallback wording when the provider returns a concrete non-neutral finish reason
+
+    - queued job continuation policy:
+        - Independent send can queue both composer stage-image submissions and queued editor edits as standalone batch jobs without implying official memory continuation
+        - Memory send can queue only from a fresh new-conversation state, while editor queue stays hidden in memory mode instead of appearing as a supported continuation path
+
 ## v3.6.1 - 2026-04-19
 
 - Release title: Nano Banana Ultra 3.6.1 - Viewer Settings Apply, Stable Viewer Context & Truthful Viewer Metadata

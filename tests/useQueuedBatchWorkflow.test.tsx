@@ -71,7 +71,7 @@ const buildQueuedJob = (overrides: Partial<QueuedBatchJob> = {}): QueuedBatchJob
     startedAt: overrides.startedAt ?? 1710400001000,
     completedAt: overrides.completedAt ?? 1710400004000,
     lastPolledAt: overrides.lastPolledAt ?? 1710400005000,
-    hasInlinedResponses: overrides.hasInlinedResponses ?? true,
+    hasImportablePayload: overrides.hasImportablePayload ?? true,
     submissionPending: overrides.submissionPending ?? false,
     importDiagnostic: overrides.importDiagnostic ?? null,
     importIssues: overrides.importIssues ?? null,
@@ -152,6 +152,10 @@ describe('useQueuedBatchWorkflow', () => {
                 },
                 history: latestHistory,
                 historySelectRef,
+                canQueueComposerBatch: overrides.canQueueComposerBatch ?? true,
+                queueBatchDisabledReason: overrides.queueBatchDisabledReason ?? null,
+                canQueueEditorBatch: overrides.canQueueEditorBatch ?? true,
+                editorQueueDisabledReason: overrides.editorQueueDisabledReason ?? null,
                 t:
                     overrides.t ??
                     ((key) => {
@@ -160,6 +164,9 @@ describe('useQueuedBatchWorkflow', () => {
                             queuedBatchSubmittedNotice: 'Queued batch job submitted to the official Batch API.',
                             queuedBatchSubmittedLog: 'Queued official batch job {0}.',
                             queuedBatchSubmissionFailedLog: 'Queued batch submission failed: {0}',
+                            queueBatchEditDisabledReason: 'Queued edits are disabled.',
+                            queueBatchMemoryContinuationDisabledReason:
+                                'Queued jobs cannot continue an official memory conversation. Start a new conversation or switch to Independent send.',
                             queuedBatchNoPayloadResultsNotice: 'Queued batch finished without inline payload.',
                             queuedBatchNoImportableResultsNotice: 'No importable queued results.',
                             queuedBatchImportedNotice: 'Imported {0} queued batch results.',
@@ -281,18 +288,7 @@ describe('useQueuedBatchWorkflow', () => {
         vi.restoreAllMocks();
     });
 
-    it('submits explicit editor queue drafts as Editor Edit jobs', async () => {
-        const submitDeferred = createDeferred<{
-            name: string;
-            displayName: string;
-            state: string;
-            model: string;
-            createTime: string;
-            updateTime: string;
-            error: null;
-            batchStats: null;
-            hasInlinedResponses: boolean;
-        }>();
+    it('submits explicit editor queue drafts when editor queue policy allows', async () => {
         const getGenerationLineageContext = vi.fn(({ sourceOverride }) => ({
             parentHistoryId: sourceOverride?.sourceHistoryId || 'parent-turn-1',
             rootHistoryId: sourceOverride?.sourceHistoryId || 'root-turn-1',
@@ -305,7 +301,17 @@ describe('useQueuedBatchWorkflow', () => {
             sourceLineageAction: 'branch' as const,
         };
 
-        submitQueuedBatchJobMock.mockReturnValue(submitDeferred.promise);
+        submitQueuedBatchJobMock.mockResolvedValue({
+            name: 'batches/editor-queue-job',
+            displayName: 'Editor queue job',
+            state: 'JOB_STATE_PENDING',
+            model: 'gemini-3.1-flash-image-preview',
+            createTime: '2025-01-01T00:00:00.000Z',
+            updateTime: '2025-01-01T00:00:00.000Z',
+            error: null,
+            batchStats: null,
+            hasImportablePayload: false,
+        });
 
         renderHook([], [], {
             getGenerationLineageContext,
@@ -313,10 +319,8 @@ describe('useQueuedBatchWorkflow', () => {
             includeThoughts: true,
         });
 
-        let submitPromise: Promise<void>;
-
         await act(async () => {
-            submitPromise = latestHook!.handleQueueBatchJobFromEditor({
+            await latestHook!.handleQueueBatchJobFromEditor({
                 prompt: 'Queue this editor revision',
                 editingInput: 'data:image/png;base64,editor-canvas',
                 batchSize: 3,
@@ -326,7 +330,6 @@ describe('useQueuedBatchWorkflow', () => {
                 characterImageInputs: ['data:image/png;base64,character-ref'],
                 sourceOverride,
             });
-            await Promise.resolve();
         });
 
         expect(getGenerationLineageContext).toHaveBeenCalledWith(
@@ -334,43 +337,10 @@ describe('useQueuedBatchWorkflow', () => {
                 sourceOverride,
             }),
         );
-
-        expect(latestHook!.queuedJobs[0]).toEqual(
-            expect.objectContaining({
-                state: 'JOB_STATE_PENDING',
-                generationMode: 'Editor Edit',
-                submissionPending: true,
-                outputFormat: 'images-only',
-                includeThoughts: false,
-                sourceHistoryId: 'editor-source-turn',
-                rootHistoryId: 'editor-source-turn',
-                lineageAction: 'branch',
-            }),
-        );
-
-        await act(async () => {
-            submitDeferred.resolve({
-                name: 'batches/job-editor-queue',
-                displayName: 'Editor queue job',
-                state: 'JOB_STATE_PENDING',
-                model: 'gemini-3.1-flash-image-preview',
-                createTime: '2025-01-01T00:00:00.000Z',
-                updateTime: '2025-01-01T00:00:00.000Z',
-                error: null,
-                batchStats: null,
-                hasInlinedResponses: false,
-            });
-            await submitPromise!;
-        });
-
         expect(submitQueuedBatchJobMock).toHaveBeenCalledWith(
             expect.objectContaining({
                 prompt: 'Queue this editor revision',
                 editingInput: 'data:image/png;base64,editor-canvas',
-                requestCount: 3,
-                imageSize: '2K',
-                aspectRatio: '16:9',
-                style: 'None',
                 objectImageInputs: ['data:image/png;base64,object-ref'],
                 characterImageInputs: ['data:image/png;base64,character-ref'],
                 outputFormat: 'images-only',
@@ -379,19 +349,11 @@ describe('useQueuedBatchWorkflow', () => {
         );
         expect(latestHook!.queuedJobs[0]).toEqual(
             expect.objectContaining({
-                name: 'batches/job-editor-queue',
                 generationMode: 'Editor Edit',
-                batchSize: 3,
-                imageSize: '2K',
-                aspectRatio: '16:9',
-                outputFormat: 'images-only',
-                includeThoughts: false,
+                sourceHistoryId: 'editor-source-turn',
+                lineageAction: 'branch',
             }),
         );
-        expect(notifications).toContainEqual({
-            message: 'Queued batch job submitted to the official Batch API.',
-            type: 'info',
-        });
     });
 
     it('keeps main queue submissions as Text to Image without stale editor state', async () => {
@@ -404,7 +366,7 @@ describe('useQueuedBatchWorkflow', () => {
             updateTime: string;
             error: null;
             batchStats: null;
-            hasInlinedResponses: boolean;
+            hasImportablePayload: boolean;
         }>();
         submitQueuedBatchJobMock.mockReturnValue(submitDeferred.promise);
 
@@ -441,7 +403,7 @@ describe('useQueuedBatchWorkflow', () => {
                 updateTime: '2025-01-01T00:00:00.000Z',
                 error: null,
                 batchStats: null,
-                hasInlinedResponses: false,
+                hasImportablePayload: false,
             });
             await submitPromise!;
         });
@@ -474,7 +436,7 @@ describe('useQueuedBatchWorkflow', () => {
             updateTime: string;
             error: null;
             batchStats: null;
-            hasInlinedResponses: boolean;
+            hasImportablePayload: boolean;
         }>();
         submitQueuedBatchJobMock.mockReturnValue(submitDeferred.promise);
 
@@ -501,7 +463,7 @@ describe('useQueuedBatchWorkflow', () => {
                 updateTime: '2025-01-01T00:00:00.000Z',
                 error: null,
                 batchStats: null,
-                hasInlinedResponses: false,
+                hasImportablePayload: false,
             });
             await submitPromise!;
         });
@@ -521,18 +483,7 @@ describe('useQueuedBatchWorkflow', () => {
         );
     });
 
-    it('queues upload-only follow-up edits as fresh roots instead of inheriting stale workspace lineage', async () => {
-        const submitDeferred = createDeferred<{
-            name: string;
-            displayName: string;
-            state: string;
-            model: string;
-            createTime: string;
-            updateTime: string;
-            error: null;
-            batchStats: null;
-            hasInlinedResponses: boolean;
-        }>();
+    it('queues upload-only staged image edits after resetting lineage to a fresh root', async () => {
         const getGenerationLineageContext = vi.fn(({ sourceOverride }) => ({
             parentHistoryId: sourceOverride?.sourceHistoryId || null,
             rootHistoryId: sourceOverride?.sourceHistoryId || null,
@@ -545,7 +496,17 @@ describe('useQueuedBatchWorkflow', () => {
             lineageDepth: sourceOverride?.sourceHistoryId ? 1 : 0,
         }));
 
-        submitQueuedBatchJobMock.mockReturnValue(submitDeferred.promise);
+        submitQueuedBatchJobMock.mockResolvedValue({
+            name: 'batches/upload-stage-queue-job',
+            displayName: 'Upload stage queue job',
+            state: 'JOB_STATE_PENDING',
+            model: 'gemini-3.1-flash-image-preview',
+            createTime: '2025-01-01T00:00:00.000Z',
+            updateTime: '2025-01-01T00:00:00.000Z',
+            error: null,
+            batchStats: null,
+            hasImportablePayload: false,
+        });
 
         renderHook([], [], {
             prompt: 'Queue the staged upload as a follow-up edit',
@@ -561,45 +522,32 @@ describe('useQueuedBatchWorkflow', () => {
             getGenerationLineageContext,
         });
 
-        let submitPromise: Promise<void>;
-
         await act(async () => {
-            submitPromise = latestHook!.handleQueueBatchJob();
-            await Promise.resolve();
+            await latestHook!.handleQueueBatchJob();
         });
 
         expect(getGenerationLineageContext).toHaveBeenCalledWith(
             expect.objectContaining({
-                mode: 'Follow-up Edit',
+                mode: 'Image to Image/Mixing',
                 sourceOverride: {
                     sourceHistoryId: null,
                     sourceLineageAction: null,
                 },
             }),
         );
-        expect(latestHook!.queuedJobs[0]).toEqual(
+        expect(submitQueuedBatchJobMock).toHaveBeenCalledWith(
             expect.objectContaining({
-                generationMode: 'Follow-up Edit',
-                sourceHistoryId: null,
-                lineageAction: 'root',
-                lineageDepth: 0,
+                prompt: 'Queue the staged upload as a follow-up edit',
+                editingInput: 'data:image/png;base64,UPLOAD',
             }),
         );
-
-        await act(async () => {
-            submitDeferred.resolve({
-                name: 'batches/job-upload-follow-up',
-                displayName: 'Upload follow-up queue job',
-                state: 'JOB_STATE_PENDING',
-                model: 'gemini-3.1-flash-image-preview',
-                createTime: '2025-01-01T00:00:00.000Z',
-                updateTime: '2025-01-01T00:00:00.000Z',
-                error: null,
-                batchStats: null,
-                hasInlinedResponses: false,
-            });
-            await submitPromise!;
-        });
+        expect(latestHook!.queuedJobs[0]).toEqual(
+            expect.objectContaining({
+                generationMode: 'Image to Image/Mixing',
+                sourceHistoryId: null,
+                lineageAction: 'root',
+            }),
+        );
     });
 
     it('imports a ready queued job into workspace history and marks it imported', async () => {
@@ -615,7 +563,7 @@ describe('useQueuedBatchWorkflow', () => {
                 startTime: '2025-01-01T00:01:00.000Z',
                 endTime: '2025-01-01T00:05:00.000Z',
                 error: null,
-                hasInlinedResponses: true,
+                hasImportablePayload: true,
             },
             results: [
                 {
@@ -693,7 +641,7 @@ describe('useQueuedBatchWorkflow', () => {
                 startTime: '2025-01-01T00:01:00.000Z',
                 endTime: '2025-01-01T00:05:00.000Z',
                 error: null,
-                hasInlinedResponses: true,
+                hasImportablePayload: true,
             },
             results: [
                 {
@@ -755,7 +703,7 @@ describe('useQueuedBatchWorkflow', () => {
                     startTime: '2025-01-01T00:01:00.000Z',
                     endTime: '2025-01-01T00:02:00.000Z',
                     error: null,
-                    hasInlinedResponses: true,
+                    hasImportablePayload: true,
                 },
                 results: [
                     {
@@ -777,7 +725,7 @@ describe('useQueuedBatchWorkflow', () => {
                     startTime: '2025-01-01T00:01:00.000Z',
                     endTime: '2025-01-01T00:03:00.000Z',
                     error: null,
-                    hasInlinedResponses: true,
+                    hasImportablePayload: true,
                 },
                 results: [
                     {
@@ -836,7 +784,7 @@ describe('useQueuedBatchWorkflow', () => {
                 startTime: '2025-01-01T00:01:00.000Z',
                 endTime: '2025-01-01T00:02:00.000Z',
                 error: null,
-                hasInlinedResponses: true,
+                hasImportablePayload: true,
             },
             results: [
                 {
@@ -898,7 +846,7 @@ describe('useQueuedBatchWorkflow', () => {
             startTime: '2025-01-01T00:01:00.000Z',
             endTime: '2025-01-01T00:05:00.000Z',
             error: null,
-            hasInlinedResponses: true,
+            hasImportablePayload: true,
         });
 
         renderHook([runningJob]);
@@ -944,7 +892,7 @@ describe('useQueuedBatchWorkflow', () => {
             startTime: '2025-01-01T00:01:00.000Z',
             endTime: '2025-01-01T00:05:00.000Z',
             error: null,
-            hasInlinedResponses: false,
+            hasImportablePayload: false,
         });
 
         renderHook([runningJob]);
@@ -957,7 +905,7 @@ describe('useQueuedBatchWorkflow', () => {
             expect.objectContaining({
                 localId: runningJob.localId,
                 state: 'JOB_STATE_SUCCEEDED',
-                hasInlinedResponses: false,
+                hasImportablePayload: false,
                 importDiagnostic: 'no-payload',
             }),
         );
@@ -1260,7 +1208,7 @@ describe('useQueuedBatchWorkflow', () => {
                 startTime: '2025-01-01T00:01:00.000Z',
                 endTime: '2025-01-01T00:05:00.000Z',
                 error: null,
-                hasInlinedResponses: false,
+                hasImportablePayload: false,
             },
             results: [],
         });
@@ -1275,7 +1223,7 @@ describe('useQueuedBatchWorkflow', () => {
         expect(latestHook!.queuedJobs[0]).toEqual(
             expect.objectContaining({
                 localId: readyJob.localId,
-                hasInlinedResponses: false,
+                hasImportablePayload: false,
                 importDiagnostic: 'no-payload',
             }),
         );
@@ -1303,7 +1251,7 @@ describe('useQueuedBatchWorkflow', () => {
                 startTime: '2025-01-01T00:01:00.000Z',
                 endTime: '2025-01-01T00:05:00.000Z',
                 error: null,
-                hasInlinedResponses: true,
+                hasImportablePayload: true,
             },
             results: [
                 {
@@ -1324,7 +1272,7 @@ describe('useQueuedBatchWorkflow', () => {
         expect(latestHook!.queuedJobs[0]).toEqual(
             expect.objectContaining({
                 localId: readyJob.localId,
-                hasInlinedResponses: true,
+                hasImportablePayload: true,
                 importDiagnostic: 'extraction-failure',
                 error: 'Model returned no image data.',
             }),
@@ -1358,7 +1306,7 @@ describe('useQueuedBatchWorkflow', () => {
                 endTime: '2025-01-01T00:05:00.000Z',
                 error: null,
                 batchStats: null,
-                hasInlinedResponses: true,
+                hasImportablePayload: true,
             },
             results: [
                 {
@@ -1395,6 +1343,41 @@ describe('useQueuedBatchWorkflow', () => {
         );
     });
 
+    it('blocks queued composer jobs before submission when memory continuation policy disallows queueing', async () => {
+        renderHook([], [], {
+            canQueueComposerBatch: false,
+            queueBatchDisabledReason: 'Memory queue blocked.',
+        });
+
+        await act(async () => {
+            await latestHook!.handleQueueBatchJob();
+        });
+
+        expect(submitQueuedBatchJobMock).not.toHaveBeenCalled();
+        expect(notifications).toContainEqual({ message: 'Memory queue blocked.', type: 'error' });
+    });
+
+    it('blocks queued editor edits before submission when editor queue policy disallows them', async () => {
+        renderHook([], [], {
+            canQueueEditorBatch: false,
+            editorQueueDisabledReason: 'Editor queue hidden in memory mode.',
+        });
+
+        await act(async () => {
+            await latestHook!.handleQueueBatchJobFromEditor({
+                prompt: 'Queue this editor revision',
+                editingInput: 'data:image/png;base64,AAA',
+                batchSize: 1,
+                imageSize: '1K',
+                aspectRatio: '1:1',
+                generationMode: 'Editor Edit',
+            });
+        });
+
+        expect(submitQueuedBatchJobMock).not.toHaveBeenCalled();
+        expect(notifications).toContainEqual({ message: 'Editor queue hidden in memory mode.', type: 'error' });
+    });
+
     it('preserves per-request import issues when a multi-request queued batch fails to import', async () => {
         const readyJob = buildQueuedJob({
             localId: 'job-multi-issue-extraction-failure',
@@ -1414,7 +1397,7 @@ describe('useQueuedBatchWorkflow', () => {
                 startTime: '2025-01-01T00:01:00.000Z',
                 endTime: '2025-01-01T00:05:00.000Z',
                 error: null,
-                hasInlinedResponses: true,
+                hasImportablePayload: true,
             },
             results: [
                 {
@@ -1493,7 +1476,7 @@ describe('useQueuedBatchWorkflow', () => {
             startTime: '2025-01-01T00:01:00.000Z',
             endTime: '2025-01-01T00:05:00.000Z',
             error: null,
-            hasInlinedResponses: true,
+            hasImportablePayload: true,
         });
 
         renderHook([failedImportJob]);
@@ -1522,7 +1505,7 @@ describe('useQueuedBatchWorkflow', () => {
             name: 'batches/job-failed',
             displayName: 'Failed queue job',
             state: 'JOB_STATE_FAILED',
-            hasInlinedResponses: false,
+            hasImportablePayload: false,
             error: 'Upstream batch failed.',
         });
         const extractionFailureJob = buildQueuedJob({
@@ -1536,7 +1519,7 @@ describe('useQueuedBatchWorkflow', () => {
             localId: 'job-no-payload-clear',
             name: 'batches/job-no-payload-clear',
             displayName: 'No payload queue job',
-            hasInlinedResponses: false,
+            hasImportablePayload: false,
             importDiagnostic: 'no-payload',
         });
         const runningJob = buildQueuedJob({
@@ -1545,7 +1528,7 @@ describe('useQueuedBatchWorkflow', () => {
             displayName: 'Running queue job',
             state: 'JOB_STATE_RUNNING',
             completedAt: null,
-            hasInlinedResponses: false,
+            hasImportablePayload: false,
             importDiagnostic: null,
             error: null,
         });

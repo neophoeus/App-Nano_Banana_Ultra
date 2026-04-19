@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI } from '@google/genai/node';
 import { cleanResponseText, readJsonBody, sendClassifiedApiError, sendJson } from '../utils/apiHelpers';
 import {
     buildImageToPromptInstruction,

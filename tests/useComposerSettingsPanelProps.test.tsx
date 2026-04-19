@@ -57,6 +57,8 @@ function HookHarness({ currentLanguage, stickySendIntent, getStageOriginLabel, g
         maxObjects: 10,
         maxCharacters: 4,
         queuedJobs: [],
+        isQueueBatchDisabled: true,
+        queueBatchDisabledReason: 'Queued edits are disabled.',
         queueBatchModeSummary: 'Queue summary',
         queueBatchConversationNotice: null,
         getImportedQueuedResultCount: () => 0,

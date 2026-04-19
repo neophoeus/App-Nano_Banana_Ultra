@@ -18,7 +18,7 @@ describe('submitQueuedBatchJob', () => {
                         displayName: 'test job',
                         state: 'JOB_STATE_PENDING',
                         model: 'gemini-2.5-flash-image',
-                        hasInlinedResponses: false,
+                        hasImportablePayload: false,
                     },
                 }),
                 {
@@ -59,7 +59,7 @@ describe('submitQueuedBatchJob', () => {
                         displayName: 'test style job',
                         state: 'JOB_STATE_PENDING',
                         model: 'gemini-3.1-flash-image-preview',
-                        hasInlinedResponses: false,
+                        hasImportablePayload: false,
                     },
                 }),
                 {
@@ -114,7 +114,7 @@ describe('submitQueuedBatchJob', () => {
                         displayName: 'test transfer job',
                         state: 'JOB_STATE_PENDING',
                         model: 'gemini-3.1-flash-image-preview',
-                        hasInlinedResponses: false,
+                        hasImportablePayload: false,
                     },
                 }),
                 {

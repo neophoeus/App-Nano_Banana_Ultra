@@ -12,14 +12,14 @@ export const isQueuedBatchJobClosedIssue = (job: QueuedBatchJob) =>
     job.state === 'JOB_STATE_FAILED' || job.state === 'JOB_STATE_CANCELLED' || job.state === 'JOB_STATE_EXPIRED';
 
 export const isQueuedBatchJobImportReady = (job: QueuedBatchJob) =>
-    job.state === 'JOB_STATE_SUCCEEDED' && job.hasInlinedResponses === true;
+    job.state === 'JOB_STATE_SUCCEEDED' && job.hasImportablePayload === true;
 
 export const getQueuedBatchJobImportDiagnostic = (job: QueuedBatchJob) => {
     if (job.importDiagnostic) {
         return job.importDiagnostic;
     }
 
-    if (job.state === 'JOB_STATE_SUCCEEDED' && job.hasInlinedResponses === false) {
+    if (job.state === 'JOB_STATE_SUCCEEDED' && job.hasImportablePayload === false) {
         return 'no-payload';
     }
 

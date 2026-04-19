@@ -53,6 +53,8 @@ function AdvancedSettingsHarness() {
                 isAdvancedSettingsOpen={isOpen}
                 generateLabel="Generate"
                 queuedJobs={[]}
+                isQueueBatchDisabled={false}
+                queueBatchDisabledReason={null}
                 queueBatchModeSummary="Queued batch runs as a separate official job workflow."
                 queueBatchConversationNotice="Official chat continuation stays out of queued batch mode."
                 getImportedQueuedResultCount={() => 0}

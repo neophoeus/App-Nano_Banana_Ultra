@@ -58,6 +58,8 @@ export type ComposerSettingsPanelProps = {
     isAdvancedSettingsOpen: boolean;
     generateLabel: string;
     queuedJobs: QueuedBatchJob[];
+    isQueueBatchDisabled: boolean;
+    queueBatchDisabledReason: string | null;
     queueBatchModeSummary: string;
     queueBatchConversationNotice: string | null;
     getImportedQueuedResultCount: (job: QueuedBatchJob) => number;
@@ -184,6 +186,8 @@ function ComposerSettingsPanel({
     isAdvancedSettingsOpen,
     generateLabel,
     queuedJobs,
+    isQueueBatchDisabled,
+    queueBatchDisabledReason,
     queueBatchModeSummary,
     queueBatchConversationNotice,
     getImportedQueuedResultCount,
@@ -1034,15 +1038,16 @@ function ComposerSettingsPanel({
                         <Button
                             variant="secondary"
                             onClick={onQueueBatchJob}
-                            disabled={isGenerating}
+                            disabled={isGenerating || isQueueBatchDisabled}
+                            title={isQueueBatchDisabled ? queueBatchDisabledReason || queueBatchModeSummary : undefined}
                             className="min-h-10 min-w-0 flex-1 rounded-[16px]"
                         >
                             {t('composerQueueBatchJob')}
                         </Button>
                         <InfoTooltip
-                            content={queueBatchModeSummary}
+                            content={queueBatchDisabledReason || queueBatchModeSummary}
                             buttonLabel={t('composerQueueBatchJob')}
-                            ariaLabel={queueBatchModeSummary}
+                            ariaLabel={queueBatchDisabledReason || queueBatchModeSummary}
                             dataTestId="composer-queue-batch-mode-hint"
                             tone="light"
                             align="right"

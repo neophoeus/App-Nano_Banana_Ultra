@@ -35,7 +35,7 @@ describe('WorkspaceProgressDetailPanel', () => {
             {
                 localId: 'job-ready',
                 state: 'JOB_STATE_SUCCEEDED',
-                hasInlinedResponses: true,
+                hasImportablePayload: true,
             },
             {
                 localId: 'job-issue',

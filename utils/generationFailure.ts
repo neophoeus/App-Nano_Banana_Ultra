@@ -524,13 +524,16 @@ const localizePromptBlockReason = (t: TranslationGetter, promptBlockReason?: str
     return t(promptBlockReasonTranslationKeys[normalizedReason] || 'generationFailureValuePromptBlockReasonOther');
 };
 
+const humanizeReasonToken = (reason: string): string => reason.toLowerCase().replace(/_/g, ' ');
+
 const localizeFinishReason = (t: TranslationGetter, finishReason?: string | null): string | null => {
     const normalizedReason = normalizeReasonToken(finishReason);
     if (!normalizedReason) {
         return null;
     }
 
-    return t(finishReasonTranslationKeys[normalizedReason] || 'generationFailureValueFinishReasonOther');
+    const translationKey = finishReasonTranslationKeys[normalizedReason];
+    return translationKey ? t(translationKey) : humanizeReasonToken(normalizedReason);
 };
 
 const localizeSafetyCategories = (t: TranslationGetter, categories?: string[] | null): string | null => {

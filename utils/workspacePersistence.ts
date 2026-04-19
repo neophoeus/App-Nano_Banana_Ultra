@@ -649,9 +649,11 @@ export const sanitizeQueuedBatchJobs = (value: unknown): QueuedBatchJob[] => {
                 : null;
         const hasExplicitImportIssues = Array.isArray(item.importIssues) || item.importIssues === null;
         const importIssues = sanitizeQueuedBatchJobImportIssues(item.importIssues);
-        const migratedHasInlinedResponses =
-            typeof item.hasInlinedResponses === 'boolean'
-                ? item.hasInlinedResponses
+                const migratedHasImportablePayload =
+                        typeof item.hasImportablePayload === 'boolean'
+                                ? item.hasImportablePayload
+                                : typeof item.hasInlinedResponses === 'boolean'
+                                    ? item.hasInlinedResponses
                 : importDiagnostic === 'extraction-failure'
                   ? true
                   : importDiagnostic === 'no-payload'
@@ -669,8 +671,8 @@ export const sanitizeQueuedBatchJobs = (value: unknown): QueuedBatchJob[] => {
                 style: normalizeImageStyle(item.style),
                 ...(importDiagnostic ? { importDiagnostic } : {}),
                 ...(hasExplicitImportIssues ? { importIssues: importIssues.length > 0 ? importIssues : null } : {}),
-                ...(typeof migratedHasInlinedResponses === 'boolean'
-                    ? { hasInlinedResponses: migratedHasInlinedResponses }
+                ...(typeof migratedHasImportablePayload === 'boolean'
+                    ? { hasImportablePayload: migratedHasImportablePayload }
                     : {}),
             },
         ];

@@ -36,6 +36,8 @@ const baseProps = {
     isAdvancedSettingsOpen: true,
     generateLabel: 'Generate',
     queuedJobs: [],
+    isQueueBatchDisabled: false,
+    queueBatchDisabledReason: null,
     queueBatchModeSummary: 'Queued batch runs as a separate official job workflow.',
     queueBatchConversationNotice: 'Official chat continuation stays out of queued batch mode.',
     getImportedQueuedResultCount: () => 0,
@@ -402,7 +404,7 @@ describe('ComposerSettingsPanel toolbar layout', () => {
                             completedAt: null,
                             lastPolledAt: null,
                             submissionPending: true,
-                            hasInlinedResponses: false,
+                            hasImportablePayload: false,
                             error: null,
                         },
                         {
@@ -430,7 +432,7 @@ describe('ComposerSettingsPanel toolbar layout', () => {
                             startedAt: 1710400001000,
                             completedAt: 1710400002000,
                             lastPolledAt: 1710400002000,
-                            hasInlinedResponses: false,
+                            hasImportablePayload: false,
                             error: null,
                         },
                         {
@@ -458,7 +460,7 @@ describe('ComposerSettingsPanel toolbar layout', () => {
                             startedAt: 1710400003000,
                             completedAt: 1710400004000,
                             lastPolledAt: 1710400004000,
-                            hasInlinedResponses: true,
+                            hasImportablePayload: true,
                             error: null,
                         },
                     ] as any

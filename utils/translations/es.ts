@@ -369,13 +369,17 @@ export const es = {
     queueBatchModeEditor:
         'Esto enviara un lote oficial condicionado por imagen basado en el editor usando la entrada actual del editor y las referencias preparadas. Los lotes en cola siempre usan salida solo de imagen y no solicitan pensamientos devueltos.',
     queueBatchModeStage:
-        'Esto enviara un lote oficial condicionado por imagen de seguimiento usando la imagen actual del escenario y las referencias preparadas. Los lotes en cola siempre usan salida solo de imagen y no solicitan pensamientos devueltos.',
+        'Esto enviara un lote oficial condicionado por imagen usando la imagen actual del escenario y las referencias preparadas. Los lotes en cola siempre usan salida solo de imagen y no solicitan pensamientos devueltos.',
     queueBatchModeReferences:
         'Esto enviara un lote oficial guiado por referencias usando el prompt actual y la bandeja de referencias. Los lotes en cola siempre usan salida solo de imagen y no solicitan pensamientos devueltos.',
     queueBatchModePromptOnly:
         'Esto enviara un lote oficial basado solo en el prompt. Los lotes en cola siempre usan salida solo de imagen y no solicitan pensamientos devueltos.',
     queueBatchConversationNotice:
         'Los trabajos por lotes en cola conservan el linaje de origen, pero no envian el historial oficial de conversacion de varios turnos. Para continuar un chat, usa la generacion normal.',
+    queueBatchMemoryContinuationDisabledReason:
+        'Los trabajos en cola no pueden continuar una conversacion oficial de memory. Inicia una conversacion nueva o cambia a Independent send.',
+    queueBatchEditDisabledReason:
+        'Los trabajos por lotes en cola no admiten actualmente ediciones de seguimiento ni del editor. Usa primero el flujo de generacion normal.',
     queuedBatchJobsTitle: 'Trabajos por lotes en cola',
     queuedBatchJobsDesc:
         'Los trabajos oficiales persistidos de Gemini Batch API se siguen aqui mientras estan en espera o en ejecucion, para avanzar por comprobacion de estado, importacion de resultados y limpieza.',

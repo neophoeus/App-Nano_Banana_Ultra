@@ -25,7 +25,7 @@ describe('serializeBatchJob', () => {
             failedRequestCount: 1,
             pendingRequestCount: 2,
         });
-        expect(serialized.hasInlinedResponses).toBe(false);
+        expect(serialized.hasImportablePayload).toBe(false);
     });
 
     it('normalizes model resource names returned by the batch list API', () => {
@@ -53,7 +53,7 @@ describe('serializeBatchJob', () => {
             },
         });
 
-        expect(serialized.hasInlinedResponses).toBe(true);
+        expect(serialized.hasImportablePayload).toBe(true);
         expect(serialized.inlinedResponseCount).toBe(1);
     });
 
@@ -69,8 +69,24 @@ describe('serializeBatchJob', () => {
         });
 
         expect(serialized.batchStats).toBeNull();
-        expect(serialized.hasInlinedResponses).toBe(true);
+        expect(serialized.hasImportablePayload).toBe(true);
         expect(serialized.inlinedResponseCount).toBe(2);
+    });
+
+    it('marks jobs with response files as importable payload candidates', () => {
+        const serialized = serializeBatchJob({
+            name: 'batches/test-job-file',
+            displayName: 'Queued file batch',
+            state: 'JOB_STATE_SUCCEEDED',
+            model: 'gemini-3.1-flash-image-preview',
+            dest: {
+                fileName: 'files/batch-results',
+            },
+        });
+
+        expect(serialized.responseFileName).toBe('files/batch-results');
+        expect(serialized.hasImportablePayload).toBe(true);
+        expect(serialized.inlinedResponseCount).toBe(0);
     });
 });
 
@@ -288,6 +304,47 @@ describe('extractBatchImportResults', () => {
                 sessionHints: expect.objectContaining({
                     entryErrorPresent: true,
                     entryErrorMessage: 'The batch request entry failed upstream.',
+                }),
+            }),
+        ]);
+    });
+
+    it('parses file-backed JSONL batch results that mix responses and per-request errors', () => {
+        const results = extractBatchImportResults(
+            {
+                state: 'JOB_STATE_SUCCEEDED',
+                dest: {
+                    fileName: 'files/batch-results',
+                },
+            },
+            () => ({
+                imageUrl: 'data:image/png;base64,CCC',
+                text: 'Imported from JSONL result file',
+                thoughtSignaturePresent: false,
+            }),
+            [
+                JSON.stringify({ key: 'request-2', response: { candidates: [{ content: { parts: [] } }] } }),
+                JSON.stringify({ key: 'request-1', error: { message: 'The first request failed upstream.' } }),
+            ].join('\n'),
+        );
+
+        expect(results).toEqual([
+            expect.objectContaining({
+                index: 0,
+                status: 'failed',
+                error: 'The first request failed upstream.',
+                sessionHints: expect.objectContaining({
+                    requestKey: 'request-1',
+                    entryErrorMessage: 'The first request failed upstream.',
+                }),
+            }),
+            expect.objectContaining({
+                index: 1,
+                status: 'success',
+                imageUrl: 'data:image/png;base64,CCC',
+                text: 'Imported from JSONL result file',
+                sessionHints: expect.objectContaining({
+                    requestKey: 'request-2',
                 }),
             }),
         ]);

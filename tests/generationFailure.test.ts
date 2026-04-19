@@ -215,6 +215,22 @@ describe('generationFailure helpers', () => {
         expect(stageError.detail).toContain('Retry detail');
     });
 
+    it('humanizes unmapped finish reasons instead of falling back to generic copy', () => {
+        const stageError = buildStageErrorState(
+            t,
+            {
+                code: 'no-image-data',
+                message: 'Model returned no image data (finish reason: MALFORMED_FUNCTION_CALL).',
+                finishReason: 'MALFORMED_FUNCTION_CALL',
+                extractionIssue: 'missing-parts',
+            },
+            null,
+        );
+
+        expect(stageError.detail).toContain('Finish reason: malformed function call.');
+        expect(stageError.detail).toContain('Retry detail');
+    });
+
     it('relocalizes legacy translated fallback safety copy into the current language', () => {
         const stageError = buildStageErrorState(
             t,

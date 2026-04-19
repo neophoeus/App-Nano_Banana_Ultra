@@ -72,6 +72,7 @@ interface ImageEditorProps {
         characterImages?: string[],
         targetRatio?: AspectRatio,
     ) => void | Promise<void>;
+    queueBatchDisabledReason?: string | null;
     onCancel: (options?: { discardSharedContext?: boolean }) => void;
     isGenerating: boolean;
     currentLanguage?: Language;
@@ -142,6 +143,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     onBatchSizeChange,
     onGenerate,
     onQueueBatch,
+    queueBatchDisabledReason = null,
     onCancel,
     isGenerating,
     currentLanguage = 'en' as Language,
@@ -771,7 +773,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     };
 
     const handleQueueBatchClick = () => {
-        if (!onQueueBatch) return;
+        if (!onQueueBatch || queueBatchDisabledReason) return;
 
         const submission = buildEditorSubmissionPayload();
         if (!submission) return;
@@ -1384,7 +1386,8 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                 data-testid="editor-queue-batch"
                                 variant="secondary"
                                 onClick={handleQueueBatchClick}
-                                disabled={isGenerating}
+                                disabled={isGenerating || Boolean(queueBatchDisabledReason)}
+                                title={queueBatchDisabledReason || undefined}
                                 className="flex-1 min-w-0 rounded-full border border-gray-300/70 px-5 py-3.5 text-sm font-extrabold tracking-[0.12em] text-gray-800 shadow-[0_12px_30px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-0.5 dark:border-gray-600/70 dark:text-gray-100 sm:text-base"
                             >
                                 <span className="text-center leading-tight">{t('composerQueueBatchJob')}</span>

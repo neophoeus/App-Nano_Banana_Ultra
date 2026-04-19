@@ -339,13 +339,17 @@ export const zh_TW = {
     queueBatchModeEditor:
         '這會以目前編輯輸入影像與已暫存參考圖送出一個官方編輯批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
     queueBatchModeStage:
-        '這會以目前的階段圖像與已暫存參考圖送出一個官方後續延伸批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
+        '這會以目前的階段圖像與已暫存參考圖送出一個官方影像條件批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
     queueBatchModeReferences:
         '這會以目前提示詞與參考圖托盤送出一個官方參考驅動批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
     queueBatchModePromptOnly:
         '這會送出一個僅依提示詞的官方批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
     queueBatchConversationNotice:
         '佇列批次工作會保留來源延續脈絡，但不會送出官方多輪對話歷史。若要延續對話，請使用開始生成。',
+    queueBatchMemoryContinuationDisabledReason:
+        '佇列工作不能延續官方 memory 對話。請先開始新對話，或切換到 Independent send。',
+    queueBatchEditDisabledReason:
+        '佇列中的影像條件式後續編修目前暫時停用，因為官方批次結果一直不穩定。請改用開始生成。',
     queuedBatchJobsTitle: '佇列批次工作',
     queuedBatchJobsDesc:
         '已保存的官方 Gemini 批次 API 工作會在這裡持續追蹤。官方 Batch API 的目標是 24 小時內完成，但圖像批次最長可能要到 48 小時後才會過期。',

@@ -62,6 +62,8 @@ type UseComposerSettingsPanelPropsArgs = {
     maxObjects: number;
     maxCharacters: number;
     queuedJobs: QueuedBatchJob[];
+    isQueueBatchDisabled: boolean;
+    queueBatchDisabledReason: string | null;
     queueBatchModeSummary: string;
     queueBatchConversationNotice: string | null;
     getImportedQueuedResultCount: (job: QueuedBatchJob) => number;
@@ -135,6 +137,8 @@ export function useComposerSettingsPanelProps({
     maxObjects,
     maxCharacters,
     queuedJobs,
+    isQueueBatchDisabled,
+    queueBatchDisabledReason,
     queueBatchModeSummary,
     queueBatchConversationNotice,
     getImportedQueuedResultCount,
@@ -333,6 +337,8 @@ export function useComposerSettingsPanelProps({
             maxObjects,
             maxCharacters,
             queuedJobs,
+            isQueueBatchDisabled,
+            queueBatchDisabledReason,
             queueBatchModeSummary,
             queueBatchConversationNotice,
             getImportedQueuedResultCount: (job: QueuedBatchJob) =>
@@ -416,6 +422,8 @@ export function useComposerSettingsPanelProps({
             maxObjects,
             maxCharacters,
             queuedJobs,
+            isQueueBatchDisabled,
+            queueBatchDisabledReason,
             queueBatchModeSummary,
             queueBatchConversationNotice,
             activeImportedQueuedHistoryId,

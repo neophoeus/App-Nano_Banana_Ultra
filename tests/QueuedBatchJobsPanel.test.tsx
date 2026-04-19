@@ -79,7 +79,7 @@ describe('QueuedBatchJobsPanel', () => {
                         startedAt: 1710400015000,
                         completedAt: 1710400020000,
                         lastPolledAt: 1710400030000,
-                        hasInlinedResponses: true,
+                        hasImportablePayload: true,
                         error: null,
                     },
                     {
@@ -316,7 +316,7 @@ describe('QueuedBatchJobsPanel', () => {
                         startedAt: 1710400015000,
                         completedAt: 1710400020000,
                         lastPolledAt: 1710400030000,
-                        hasInlinedResponses: true,
+                        hasImportablePayload: true,
                         error: null,
                     },
                 ]}
@@ -465,7 +465,7 @@ describe('QueuedBatchJobsPanel', () => {
                         startedAt: 1710400015000,
                         completedAt: 1710400020000,
                         lastPolledAt: 1710400030000,
-                        hasInlinedResponses: false,
+                        hasImportablePayload: false,
                         importDiagnostic: 'no-payload',
                         error: null,
                     },
@@ -525,7 +525,7 @@ describe('QueuedBatchJobsPanel', () => {
                         startedAt: 1710400015000,
                         completedAt: 1710400020000,
                         lastPolledAt: 1710400030000,
-                        hasInlinedResponses: true,
+                        hasImportablePayload: true,
                         importDiagnostic: 'extraction-failure',
                         error: 'Prompt was rejected by policy (block reason: PROHIBITED_CONTENT).',
                     },
@@ -587,7 +587,7 @@ describe('QueuedBatchJobsPanel', () => {
                         startedAt: 1710400015000,
                         completedAt: 1710400020000,
                         lastPolledAt: 1710400030000,
-                        hasInlinedResponses: true,
+                        hasImportablePayload: true,
                         importDiagnostic: 'extraction-failure',
                         importIssues: [
                             {

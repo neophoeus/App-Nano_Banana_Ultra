@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('@google/genai', () => ({
+vi.mock('@google/genai/node', () => ({
     GoogleGenAI: class MockGoogleGenAI {},
     HarmBlockThreshold: { BLOCK_NONE: 'BLOCK_NONE' },
     HarmCategory: {

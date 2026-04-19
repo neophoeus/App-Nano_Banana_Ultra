@@ -368,13 +368,17 @@ export const fr = {
     queueBatchModeEditor:
         "Cela enverra un lot officiel conditionne par image base sur l'editeur en utilisant l'entree actuelle de l'editeur et les references preparees. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
     queueBatchModeStage:
-        "Cela enverra un lot officiel conditionne par image de suivi en utilisant l'image actuelle de la scene et les references preparees. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
+        "Cela enverra un lot officiel conditionne par image en utilisant l'image actuelle de la scene et les references preparees. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
     queueBatchModeReferences:
         'Cela enverra un lot officiel pilote par references avec le prompt actuel et le bac de references. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.',
     queueBatchModePromptOnly:
         'Cela enverra un lot officiel base uniquement sur le prompt. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.',
     queueBatchConversationNotice:
         "Les lots en file d'attente conservent la lignee source, mais n'envoient pas l'historique officiel des conversations multi-tours. Pour poursuivre une conversation, utilisez le flux de generation normal.",
+    queueBatchMemoryContinuationDisabledReason:
+        "Les travaux en file ne peuvent pas poursuivre une conversation officielle memory. Demarrez une nouvelle conversation ou passez a Independent send.",
+    queueBatchEditDisabledReason:
+        "Les lots en file d'attente ne prennent actuellement pas en charge les retouches de suivi ou de l'editeur. Utilisez d'abord le flux de generation normal.",
     queuedBatchJobsTitle: "Lots en file d'attente",
     queuedBatchJobsDesc:
         "Les jobs officiels persistants Gemini Batch API restent suivis ici lorsqu'ils sont en attente ou en cours, afin d'avancer par verification d'etat, import des resultats et nettoyage.",

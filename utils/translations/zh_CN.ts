@@ -389,13 +389,17 @@ export const zh_CN = {
     queueBatchModeEditor:
         '这会以当前编辑输入图像和已暂存参考图提交一个官方编辑批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
     queueBatchModeStage:
-        '这会以当前阶段图像和已暂存参考图提交一个官方后续延展批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
+        '这会以当前阶段图像和已暂存参考图提交一个官方图像条件批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
     queueBatchModeReferences:
         '这会以当前提示词和参考图托盘提交一个官方参考驱动批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
     queueBatchModePromptOnly:
         '这会提交一个仅基于提示词的官方批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
     queueBatchConversationNotice:
         '队列批处理任务会保留来源延续脉络，但不会发送官方多轮对话历史。若要继续对话，请使用开始生成。',
+    queueBatchMemoryContinuationDisabledReason:
+        '队列任务不能延续官方 memory 对话。请先开始新对话，或切换到 Independent send。',
+    queueBatchEditDisabledReason:
+        '队列中的图像条件式后续编辑目前暂时停用，因为官方批处理结果一直不稳定。请改用开始生成。',
     queuedBatchJobsTitle: '队列批处理任务',
     queuedBatchJobsDesc:
         '已保存的官方 Gemini 批处理 API 任务会在这里持续跟踪。官方 Batch API 的目标是 24 小时内完成，但图像批处理最长可能要到 48 小时后才会过期。',

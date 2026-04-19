@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 
@@ -7,6 +8,27 @@ const RAW_BASE64_PATTERN = /^[A-Za-z0-9+/=]+$/u;
 export type ResolvedInlineImage = {
     data: string;
     mimeType: string;
+};
+
+export type ResolvedLocalImageFile = {
+    filePath: string;
+    mimeType: string;
+    cleanup: () => void;
+};
+
+export type ResolvedFileImage = {
+    fileUri: string;
+    mimeType: string;
+};
+
+type InlineGeneratePart = {
+    text?: string;
+    inlineData?: { data: string; mimeType: string };
+};
+
+type FileGeneratePart = {
+    text?: string;
+    fileData?: ResolvedFileImage;
 };
 
 type ReferenceImage = {
@@ -20,6 +42,47 @@ type GenerateImageBodyLike = {
     editingInput?: string;
     objectImageInputs?: string[];
     characterImageInputs?: string[];
+};
+
+const inferExtensionFromMimeType = (mimeType: string): string => {
+    if (mimeType === 'image/jpeg') {
+        return 'jpg';
+    }
+    if (mimeType === 'image/webp') {
+        return 'webp';
+    }
+    if (mimeType === 'image/gif') {
+        return 'gif';
+    }
+
+    return 'png';
+};
+
+const resolveSafeSavedImagePath = (savedFilename: string, resolvedDir: string): string => {
+    const safeFilename = path.basename(savedFilename);
+    const filePath = path.join(resolvedDir, safeFilename);
+    if (!filePath.startsWith(resolvedDir) || !fs.existsSync(filePath)) {
+        throw new Error(`Referenced image file could not be loaded: ${safeFilename}`);
+    }
+
+    return filePath;
+};
+
+const writeTempImageFile = (buffer: Buffer, mimeType: string, tempDir: string): ResolvedLocalImageFile => {
+    fs.mkdirSync(tempDir, { recursive: true });
+    const extension = inferExtensionFromMimeType(mimeType);
+    const filePath = path.join(tempDir, `${crypto.randomUUID()}.${extension}`);
+    fs.writeFileSync(filePath, buffer);
+
+    return {
+        filePath,
+        mimeType,
+        cleanup: () => {
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        },
+    };
 };
 
 export function inferMimeTypeFromReference(reference?: ReferenceImage | null): string {
@@ -121,8 +184,41 @@ export function resolveInlineImageInput(image: string, resolvedDir: string): Res
     throw new Error('Unsupported image input format. Expected a data URL, raw base64, or /api/load-image?filename=...');
 }
 
+export function resolveLocalImageInputFile(
+    image: string,
+    resolvedDir: string,
+    tempDir: string,
+): ResolvedLocalImageFile {
+    const trimmedImage = image.trim();
+    const dataUrlMatch = trimmedImage.match(/^data:([^;]+);base64,(.+)$/i);
+
+    if (dataUrlMatch?.[2]) {
+        return writeTempImageFile(
+            Buffer.from(dataUrlMatch[2], 'base64'),
+            dataUrlMatch[1] || 'image/png',
+            tempDir,
+        );
+    }
+
+    const savedFilename = extractSavedFilenameFromLoadImageUrl(trimmedImage);
+    if (savedFilename) {
+        const filePath = resolveSafeSavedImagePath(savedFilename, resolvedDir);
+        return {
+            filePath,
+            mimeType: inferMimeTypeFromReference({ savedFilename }),
+            cleanup: () => {},
+        };
+    }
+
+    if (RAW_BASE64_PATTERN.test(trimmedImage)) {
+        return writeTempImageFile(Buffer.from(trimmedImage, 'base64'), 'image/png', tempDir);
+    }
+
+    throw new Error('Unsupported image input format. Expected a data URL, raw base64, or /api/load-image?filename=...');
+}
+
 export function pushImagesToParts(
-    parts: Array<{ text?: string; inlineData?: { data: string; mimeType: string } }>,
+    parts: InlineGeneratePart[],
     images: string[] | undefined,
     prefix: string,
     resolvedDir: string,
@@ -142,6 +238,27 @@ export function pushImagesToParts(
     }
 }
 
+async function pushFileImagesToParts(
+    parts: FileGeneratePart[],
+    images: string[] | undefined,
+    prefix: string,
+    resolveFileImage: (image: string) => Promise<ResolvedFileImage>,
+): Promise<void> {
+    if (!images?.length) {
+        return;
+    }
+
+    for (let index = 0; index < images.length; index += 1) {
+        const image = images[index];
+        if (!image) {
+            continue;
+        }
+
+        parts.push({ text: `[${prefix}_${index + 1}]` });
+        parts.push({ fileData: await resolveFileImage(image) });
+    }
+}
+
 export function normalizeReferenceImages(body: GenerateImageBodyLike): {
     objectImageInputs: string[];
     characterImageInputs: string[];
@@ -155,9 +272,9 @@ export function normalizeReferenceImages(body: GenerateImageBodyLike): {
 export function buildGenerateParts(
     body: GenerateImageBodyLike,
     resolvedDir: string,
-): Array<{ text?: string; inlineData?: { data: string; mimeType: string } }> {
+): InlineGeneratePart[] {
     const { objectImageInputs, characterImageInputs } = normalizeReferenceImages(body);
-    const parts: Array<{ text?: string; inlineData?: { data: string; mimeType: string } }> = [];
+    const parts: InlineGeneratePart[] = [];
     const prompt = String(body.prompt || 'A creative image.');
 
     pushImagesToParts(parts, body.editingInput ? [body.editingInput] : [], 'Edit', resolvedDir);
@@ -166,6 +283,22 @@ export function buildGenerateParts(
     parts.push({
         text: prompt,
     });
+
+    return parts;
+}
+
+export async function buildGenerateFileParts(
+    body: GenerateImageBodyLike,
+    resolveFileImage: (image: string) => Promise<ResolvedFileImage>,
+): Promise<FileGeneratePart[]> {
+    const { objectImageInputs, characterImageInputs } = normalizeReferenceImages(body);
+    const parts: FileGeneratePart[] = [];
+    const prompt = String(body.prompt || 'A creative image.');
+
+    await pushFileImagesToParts(parts, body.editingInput ? [body.editingInput] : [], 'Edit', resolveFileImage);
+    await pushFileImagesToParts(parts, objectImageInputs, 'Obj', resolveFileImage);
+    await pushFileImagesToParts(parts, characterImageInputs, 'Char', resolveFileImage);
+    parts.push({ text: prompt });
 
     return parts;
 }
