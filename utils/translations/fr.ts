@@ -122,8 +122,7 @@ export const fr = {
     generationFailureDetailThoughtsOnly:
         'Seuls les resumes internes du modele ont ete renvoyes, sans aucun octet dimage produit.',
     generationFailureDetailMissingCandidates: 'Le modele na renvoye aucun resultat candidat.',
-    generationFailureDetailMissingParts:
-        'Le modele a renvoye un resultat candidat, mais sans bloc de contenu.',
+    generationFailureDetailMissingParts: 'Le modele a renvoye un resultat candidat, mais sans bloc de contenu.',
     generationFailureDetailPossibleBatchSafetySuppression:
         'Un autre resultat de ce lot a ete explicitement bloque par les filtres de securite dimage. Cette tentative a peut-etre ete supprimee pour la meme raison, mais la reponse ne fournit pas assez de signal pour le confirmer.',
     generationFailureDetailFinishReason: 'Raison de fin du modele : {0}.',
@@ -371,9 +370,9 @@ export const fr = {
     queueBatchModeStage:
         "Cela enverra un lot officiel conditionne par image de suivi en utilisant l'image actuelle de la scene et les references preparees. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
     queueBatchModeReferences:
-        "Cela enverra un lot officiel pilote par references avec le prompt actuel et le bac de references. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
+        'Cela enverra un lot officiel pilote par references avec le prompt actuel et le bac de references. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.',
     queueBatchModePromptOnly:
-        "Cela enverra un lot officiel base uniquement sur le prompt. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.",
+        'Cela enverra un lot officiel base uniquement sur le prompt. Les lots en file utilisent toujours une sortie image uniquement et ne demandent pas de pensees renvoyees.',
     queueBatchConversationNotice:
         "Les lots en file d'attente conservent la lignee source, mais n'envoient pas l'historique officiel des conversations multi-tours. Pour poursuivre une conversation, utilisez le flux de generation normal.",
     queuedBatchJobsTitle: "Lots en file d'attente",
@@ -662,6 +661,9 @@ export const fr = {
     workspaceViewerUploadBaseToEdit: 'Importer une image pour modifier',
     workspaceViewerApplyPrompt: 'Appliquer le prompt au compositeur',
     workspaceViewerPromptAppliedNotice: 'Le prompt du compositeur a ete remplace par le prompt du visualiseur.',
+    workspaceViewerApplySettings: 'Appliquer les reglages au compositeur',
+    workspaceViewerSettingsAppliedNotice:
+        'Les reglages du compositeur ont ete mis a jour depuis l image du visualiseur.',
     workspaceImportReviewEyebrow: "Verification d'import",
     workspaceImportReviewTitle: "Verifiez l'espace de travail importe avant de remplacer l'actuel.",
     workspaceImportReviewDesc:

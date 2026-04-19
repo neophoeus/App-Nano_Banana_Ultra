@@ -119,11 +119,9 @@ export const en = {
     generationFailureDetailPromptBlockReason: 'Policy block reason: {0}.',
     generationFailureDetailSafetyCategories: 'Safety categories: {0}.',
     generationFailureDetailTextOnly: 'Text content was returned, but no image bytes were emitted.',
-    generationFailureDetailThoughtsOnly:
-        'Only model thought summaries were returned, but no image bytes were emitted.',
+    generationFailureDetailThoughtsOnly: 'Only model thought summaries were returned, but no image bytes were emitted.',
     generationFailureDetailMissingCandidates: 'No model output candidates were returned in the response.',
-    generationFailureDetailMissingParts:
-        'A model output candidate was returned, but it contained no content blocks.',
+    generationFailureDetailMissingParts: 'A model output candidate was returned, but it contained no content blocks.',
     generationFailureDetailPossibleBatchSafetySuppression:
         'Another result in this batch was explicitly blocked by image safety filters. This attempt may have been suppressed for the same reason, but the response did not provide enough signal to confirm it.',
     generationFailureDetailFinishReason: 'Model finish reason: {0}.',
@@ -559,6 +557,8 @@ export const en = {
     workspaceViewerUploadBaseToEdit: 'Upload Image To Edit',
     workspaceViewerApplyPrompt: 'Apply Prompt to Composer',
     workspaceViewerPromptAppliedNotice: 'Composer prompt replaced with the viewer prompt.',
+    workspaceViewerApplySettings: 'Apply Settings to Composer',
+    workspaceViewerSettingsAppliedNotice: 'Composer settings updated from the viewer image.',
     workspaceImportReviewEyebrow: 'Import Review',
     workspaceImportReviewTitle: 'Review the imported workspace before replacing the current one.',
     workspaceImportReviewDesc:

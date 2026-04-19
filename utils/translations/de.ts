@@ -665,6 +665,8 @@ export const de = {
     workspaceViewerUploadBaseToEdit: 'Bild zum Bearbeiten hochladen',
     workspaceViewerApplyPrompt: 'Prompt im Composer anwenden',
     workspaceViewerPromptAppliedNotice: 'Der Composer-Prompt wurde durch den Viewer-Prompt ersetzt.',
+    workspaceViewerApplySettings: 'Einstellungen im Composer anwenden',
+    workspaceViewerSettingsAppliedNotice: 'Die Composer-Einstellungen wurden aus dem Viewer-Bild ubernommen.',
     workspaceImportReviewEyebrow: 'Importprufung',
     workspaceImportReviewTitle: 'Prufen Sie den importierten Arbeitsbereich, bevor Sie den aktuellen ersetzen.',
     workspaceImportReviewDesc:

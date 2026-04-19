@@ -342,7 +342,8 @@ export const zh_TW = {
         '這會以目前的階段圖像與已暫存參考圖送出一個官方後續延伸批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
     queueBatchModeReferences:
         '這會以目前提示詞與參考圖托盤送出一個官方參考驅動批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
-    queueBatchModePromptOnly: '這會送出一個僅依提示詞的官方批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
+    queueBatchModePromptOnly:
+        '這會送出一個僅依提示詞的官方批次工作。佇列批次一律使用僅輸出圖像，且不要求回傳思考內容。',
     queueBatchConversationNotice:
         '佇列批次工作會保留來源延續脈絡，但不會送出官方多輪對話歷史。若要延續對話，請使用開始生成。',
     queuedBatchJobsTitle: '佇列批次工作',
@@ -529,6 +530,8 @@ export const zh_TW = {
     workspaceViewerUploadBaseToEdit: '上傳圖片開始編輯',
     workspaceViewerApplyPrompt: '套用提示詞到編輯區',
     workspaceViewerPromptAppliedNotice: '已用檢視器中的提示詞取代目前提示詞。',
+    workspaceViewerApplySettings: '套用設定到編輯區',
+    workspaceViewerSettingsAppliedNotice: '已將檢視器圖片的設定套用到編輯區。',
     workspaceImportReviewEyebrow: '匯入檢視',
     workspaceImportReviewTitle: '在取代目前工作區之前，先檢查匯入的工作區內容。',
     workspaceImportReviewDesc:

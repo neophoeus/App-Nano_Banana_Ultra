@@ -2,7 +2,7 @@ import { Dispatch, ReactNode, SetStateAction, useCallback, useMemo } from 'react
 import type GeneratedImageStage from '../components/GeneratedImage';
 import type WorkspaceViewerOverlay from '../components/WorkspaceViewerOverlay';
 import { StageTopRightAction, StageTopRightChip } from '../components/GeneratedImage';
-import { ImageModel } from '../types';
+import { ImageModel, ViewerComposerSettingsSnapshot } from '../types';
 import { StageTopRightLayoutBucket, useStageTopRightLayoutBucket } from './useStageTopRightLayoutBucket';
 import { Language, getTranslation } from '../utils/translations';
 
@@ -246,6 +246,9 @@ type UseWorkspaceStageViewerArgs = {
     formatSessionHintKey: (key: string) => string;
     formatSessionHintValue: (key: string, value: unknown) => string;
     onApplyPrompt?: (value: string) => void;
+    settingsSnapshot?: ViewerComposerSettingsSnapshot | null;
+    onApplySettings?: (snapshot: ViewerComposerSettingsSnapshot) => void;
+    onCloseViewer?: () => void;
 };
 
 export function useWorkspaceStageViewer({
@@ -290,6 +293,9 @@ export function useWorkspaceStageViewer({
     formatSessionHintKey,
     formatSessionHintValue,
     onApplyPrompt,
+    settingsSnapshot,
+    onApplySettings,
+    onCloseViewer,
 }: UseWorkspaceStageViewerArgs) {
     const stageTopRightLayoutBucket = useStageTopRightLayoutBucket();
     const activeViewerHistoryItem = useMemo(() => {
@@ -325,8 +331,9 @@ export function useWorkspaceStageViewer({
     }, [activeViewerImage, setIsViewerOpen]);
 
     const closeViewer = useCallback(() => {
+        onCloseViewer?.();
         setIsViewerOpen(false);
-    }, [setIsViewerOpen]);
+    }, [onCloseViewer, setIsViewerOpen]);
 
     const stageTopRight = useMemo(
         () =>
@@ -418,6 +425,8 @@ export function useWorkspaceStageViewer({
                 onClose: closeViewer,
                 onMoveViewer: moveViewer,
                 onApplyPrompt,
+                settingsSnapshot,
+                onApplySettings,
             }) satisfies WorkspaceViewerOverlayProps,
         [
             activeViewerImage,
@@ -431,8 +440,10 @@ export function useWorkspaceStageViewer({
             metadataItems,
             moveViewer,
             onApplyPrompt,
+            onApplySettings,
             prompt,
             provenancePanel,
+            settingsSnapshot,
             sessionHintEntries,
             metadataStateMessage,
             thoughtStateMessage,

@@ -162,6 +162,20 @@ describe('usePromptTools', () => {
         expect(prompt).toBe('優化後提示詞');
     });
 
+    it('shows an immediate error toast and keeps the failure log when rewrite fails', async () => {
+        prompt = 'rewrite me';
+        enhancePromptWithGeminiMock.mockRejectedValue(new Error('rewrite exploded'));
+        renderHook();
+
+        await act(async () => {
+            await latestHook?.handleSmartRewrite();
+        });
+
+        expect(notifications).toEqual([{ message: 'Rewrite failed.', type: 'error' }]);
+        expect(logs).toEqual(['Rewrite failed.']);
+        expect(prompt).toBe('rewrite me');
+    });
+
     it('rejects non-image files before hitting the image-to-prompt service', async () => {
         renderHook();
 
@@ -196,5 +210,40 @@ describe('usePromptTools', () => {
         expect(generatePromptFromImageMock).toHaveBeenCalledWith('data:image/png;base64,AAA', 'es');
         expect(prompt).toBe(imagePrompt);
         expect(logs).toEqual(['Image prompt ok.']);
+    });
+
+    it('shows an immediate error toast and keeps the failure log when image-to-prompt fails', async () => {
+        const imageFile = new File(['img'], 'reference.png', { type: 'image/png' });
+        prepareImageAssetFromFileMock.mockResolvedValue({
+            dataUrl: 'data:image/png;base64,AAA',
+            wasResized: false,
+            width: 1,
+            height: 1,
+            mimeType: 'image/png',
+        });
+        generatePromptFromImageMock.mockRejectedValue(new Error('upstream failed'));
+        renderHook();
+
+        await act(async () => {
+            await latestHook?.handleImageToPrompt(imageFile);
+        });
+
+        expect(notifications).toEqual([{ message: 'Image prompt failed.', type: 'error' }]);
+        expect(logs).toEqual(['Image prompt failed.']);
+        expect(prompt).toBe('');
+    });
+
+    it('keeps invalid-image failures on the validation toast path without adding the generic prompt toast', async () => {
+        const imageFile = new File(['img'], 'reference.png', { type: 'image/png' });
+        prepareImageAssetFromFileMock.mockRejectedValue(new Error('failed to load image payload'));
+        renderHook();
+
+        await act(async () => {
+            await latestHook?.handleImageToPrompt(imageFile);
+        });
+
+        expect(notifications).toEqual([{ message: 'Invalid image.', type: 'error' }]);
+        expect(logs).toEqual(['Image prompt failed.']);
+        expect(generatePromptFromImageMock).not.toHaveBeenCalled();
     });
 });

@@ -8,6 +8,7 @@ import { registerBatchRoutes } from './routes/batchRoutes';
 import { registerGenerateRoutes } from './routes/generateRoutes';
 import { registerPromptRoutes } from './routes/promptRoutes';
 import { registerWorkspaceRoutes } from './routes/workspaceRoutes';
+import { normalizeImageSidecarMetadata } from '../utils/imageSidecarMetadata';
 
 type ImageSavePluginOptions = {
     outputDir?: string;
@@ -99,18 +100,30 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
                         // F5: Write metadata sidecar JSON if provided
                         if (metadata && typeof metadata === 'object') {
                             const jsonPath = resolveSidecarPath(filePath);
-                            const sidecar = {
-                                ...metadata,
-                                actualOutput: imageDetails?.dimensions
-                                    ? {
-                                          width: imageDetails.dimensions.width,
-                                          height: imageDetails.dimensions.height,
-                                          mimeType: imageDetails.mimeType,
-                                      }
-                                    : null,
-                                filename: safeFilename,
-                                timestamp: new Date().toISOString(),
-                            };
+                            const sidecar =
+                                normalizeImageSidecarMetadata({
+                                    ...metadata,
+                                    actualOutput: imageDetails?.dimensions
+                                        ? {
+                                              width: imageDetails.dimensions.width,
+                                              height: imageDetails.dimensions.height,
+                                              mimeType: imageDetails.mimeType,
+                                          }
+                                        : null,
+                                    filename: safeFilename,
+                                    timestamp: new Date().toISOString(),
+                                }) || {
+                                    ...metadata,
+                                    actualOutput: imageDetails?.dimensions
+                                        ? {
+                                              width: imageDetails.dimensions.width,
+                                              height: imageDetails.dimensions.height,
+                                              mimeType: imageDetails.mimeType,
+                                          }
+                                        : null,
+                                    filename: safeFilename,
+                                    timestamp: new Date().toISOString(),
+                                };
                             fs.writeFileSync(jsonPath, JSON.stringify(sidecar, null, 2), 'utf-8');
                         }
 

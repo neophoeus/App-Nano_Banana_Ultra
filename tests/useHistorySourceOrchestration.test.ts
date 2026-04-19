@@ -258,6 +258,50 @@ describe('useHistorySourceOrchestration', () => {
         );
     });
 
+    it('defers viewer lineage promotion until the viewer closes', () => {
+        const historyTurn = buildTurn({
+            id: 'history-turn',
+            text: 'Viewed result',
+            lineageAction: 'continue',
+        });
+        const {
+            handle,
+            promoteResultArtifactsToSession,
+            setConversationState,
+            setBranchContinuationSourceByBranchOriginId,
+            upsertViewerStageSource,
+        } = renderHook(historyTurn);
+
+        flushSync(() => {
+            handle.handleHistorySelect(historyTurn, { deferLineageCommit: true });
+        });
+
+        expect(promoteResultArtifactsToSession).not.toHaveBeenCalled();
+        expect(setConversationState).not.toHaveBeenCalled();
+        expect(setBranchContinuationSourceByBranchOriginId).not.toHaveBeenCalled();
+        expect(upsertViewerStageSource).toHaveBeenCalledWith(
+            expect.objectContaining({
+                sourceHistoryId: historyTurn.id,
+                lineageAction: 'continue',
+            }),
+        );
+
+        flushSync(() => {
+            handle.commitPendingViewerSelection();
+        });
+
+        expect(promoteResultArtifactsToSession).toHaveBeenCalledWith(
+            expect.objectContaining({ historyId: historyTurn.id }),
+            'history',
+            expect.objectContaining({
+                sessionSourceHistoryId: historyTurn.id,
+                sourceLineageAction: 'continue',
+            }),
+        );
+        expect(setConversationState).toHaveBeenCalledTimes(1);
+        expect(setBranchContinuationSourceByBranchOriginId).toHaveBeenCalledTimes(1);
+    });
+
     it('auto-branches when the selected history turn is no longer the latest turn on its branch', () => {
         const historyTurn = buildTurn({
             id: 'history-turn',

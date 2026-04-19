@@ -25,6 +25,11 @@ type PendingImportedWorkspaceAction = {
     historyId: string;
 } | null;
 
+type PendingViewerSelection = {
+    historyId: string;
+    lineageAction: ContinuationLineageAction;
+} | null;
+
 type PromoteResultArtifactsToSession = (
     artifacts: ResultArtifacts | null,
     source: SessionContinuitySource | null,
@@ -173,6 +178,7 @@ export function useHistorySourceOrchestration({
     const [pendingImportedWorkspaceAction, setPendingImportedWorkspaceAction] =
         useState<PendingImportedWorkspaceAction>(null);
     const selectedHistoryLineageActionRef = useRef<TurnLineageAction | undefined>(currentStageLineageAction);
+    const pendingViewerSelectionRef = useRef<PendingViewerSelection>(null);
     const historyThumbnailRepairInFlightRef = useRef<Set<string>>(new Set());
     const repairLegacyHistoryThumbnail = useCallback(
         async (item: GeneratedImageType, fullImageUrl?: string | null) => {
@@ -280,11 +286,12 @@ export function useHistorySourceOrchestration({
     );
 
     const handleHistorySelect = useCallback(
-        (item: GeneratedImageType, options?: { lineageAction?: TurnLineageAction }) => {
+        (item: GeneratedImageType, options?: { lineageAction?: TurnLineageAction; deferLineageCommit?: boolean }) => {
             const lineageAction =
                 options?.lineageAction ||
                 (item.status === 'success' ? resolveDefaultHistorySelectionLineageAction(item) : 'reopen');
             const isRouteMutation = lineageAction === 'continue' || lineageAction === 'branch';
+            const shouldDeferLineageCommit = Boolean(options?.deferLineageCommit && isRouteMutation);
             const shortHistoryId = item.id.slice(0, 8);
 
             if (isGenerating) {
@@ -336,7 +343,15 @@ export function useHistorySourceOrchestration({
             setGeneratedImageUrls([item.url]);
             setSelectedImageIndex(0);
             applySelectedResultArtifacts(historyArtifacts);
-            if (isRouteMutation) {
+            if (shouldDeferLineageCommit) {
+                pendingViewerSelectionRef.current = {
+                    historyId: item.id,
+                    lineageAction,
+                };
+            } else {
+                pendingViewerSelectionRef.current = null;
+            }
+            if (isRouteMutation && !shouldDeferLineageCommit) {
                 setBranchContinuationSourceByBranchOriginId((prev) => ({
                     ...prev,
                     [branchOriginId]: item.id,
@@ -355,26 +370,28 @@ export function useHistorySourceOrchestration({
                 });
             }
             setError(null);
-            setLogs([
-                `[${new Date(item.createdAt).toLocaleTimeString()}] ${encodeWorkflowMessage('historySourceLoadedLog')}`,
-            ]);
+            if (!shouldDeferLineageCommit) {
+                setLogs([
+                    `[${new Date(item.createdAt).toLocaleTimeString()}] ${encodeWorkflowMessage('historySourceLoadedLog')}`,
+                ]);
 
-            if (lineageAction === 'continue') {
-                showNotification(
-                    item.variantGroupId ? t('historySourceVariantContinueNotice') : t('historySourceContinueNotice'),
-                    'info',
-                );
-                addLog(
-                    item.variantGroupId
-                        ? encodeWorkflowMessage('historySourceVariantContinueLog', shortHistoryId)
-                        : encodeWorkflowMessage('historySourceContinueLog', shortHistoryId),
-                );
-            } else if (lineageAction === 'branch') {
-                showNotification(t('historySourceBranchNotice'), 'info');
-                addLog(encodeWorkflowMessage('historySourceBranchLog', shortHistoryId));
-            } else {
-                showNotification(t('historySourceReopenNotice'), 'info');
-                addLog(encodeWorkflowMessage('historySourceReopenLog', shortHistoryId));
+                if (lineageAction === 'continue') {
+                    showNotification(
+                        item.variantGroupId ? t('historySourceVariantContinueNotice') : t('historySourceContinueNotice'),
+                        'info',
+                    );
+                    addLog(
+                        item.variantGroupId
+                            ? encodeWorkflowMessage('historySourceVariantContinueLog', shortHistoryId)
+                            : encodeWorkflowMessage('historySourceContinueLog', shortHistoryId),
+                    );
+                } else if (lineageAction === 'branch') {
+                    showNotification(t('historySourceBranchNotice'), 'info');
+                    addLog(encodeWorkflowMessage('historySourceBranchLog', shortHistoryId));
+                } else {
+                    showNotification(t('historySourceReopenNotice'), 'info');
+                    addLog(encodeWorkflowMessage('historySourceReopenLog', shortHistoryId));
+                }
             }
 
             selectedHistoryLineageActionRef.current = lineageAction;
@@ -543,11 +560,35 @@ export function useHistorySourceOrchestration({
         upsertViewerStageSource,
     ]);
 
+    const commitPendingViewerSelection = useCallback(() => {
+        const pendingSelection = pendingViewerSelectionRef.current;
+        if (!pendingSelection) {
+            return;
+        }
+
+        pendingViewerSelectionRef.current = null;
+
+        if (
+            workspaceSession.sourceHistoryId === pendingSelection.historyId &&
+            workspaceSession.sourceLineageAction === pendingSelection.lineageAction
+        ) {
+            return;
+        }
+
+        const item = getHistoryTurnById(pendingSelection.historyId);
+        if (!item || item.status !== 'success') {
+            return;
+        }
+
+        handleHistorySelect(item, { lineageAction: pendingSelection.lineageAction });
+    }, [getHistoryTurnById, handleHistorySelect, workspaceSession.sourceHistoryId, workspaceSession.sourceLineageAction]);
+
     return {
         handleStartNewConversation,
         handleHistorySelect,
         handleContinueFromHistoryTurn,
         handleBranchFromHistoryTurn,
         handleImportReviewDirectAction,
+        commitPendingViewerSelection,
     };
 }

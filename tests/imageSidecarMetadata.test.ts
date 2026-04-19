@@ -36,4 +36,67 @@ describe('imageSidecarMetadata', () => {
 
         expect(metadata?.style).toBe('Comic Illustration');
     });
+
+    it('omits unsupported requested size and advanced flags for nano banana 1 metadata', () => {
+        const metadata = buildImageSidecarMetadata({
+            ...baseMetadataArgs,
+            model: 'gemini-2.5-flash-image',
+            requestedImageSize: '4K',
+            thinkingLevel: 'high' as const,
+            includeThoughts: true,
+            googleSearch: true,
+            imageSearch: true,
+            style: 'None',
+        });
+
+        expect(metadata.requestedImageSize).toBeUndefined();
+        expect(metadata.size).toBeUndefined();
+        expect(metadata.thinkingLevel).toBe('disabled');
+        expect(metadata.includeThoughts).toBe(false);
+        expect(metadata.googleSearch).toBe(false);
+        expect(metadata.imageSearch).toBe(false);
+        expect(metadata.groundingMode).toBe('off');
+    });
+
+    it('derives actual output size separately from requested size when the output is smaller', () => {
+        const metadata = normalizeImageSidecarMetadata({
+            ...baseMetadataArgs,
+            requestedImageSize: '4K',
+            size: '4K',
+            actualOutput: {
+                width: 1024,
+                height: 1024,
+                mimeType: 'image/png',
+            },
+        });
+
+        expect(metadata?.requestedImageSize).toBe('4K');
+        expect(metadata?.size).toBe('1K');
+    });
+
+    it('cleans legacy persisted no-size metadata by dropping fake requests and keeping actual output', () => {
+        const metadata = normalizeImageSidecarMetadata({
+            ...baseMetadataArgs,
+            model: 'gemini-2.5-flash-image',
+            requestedImageSize: '4K',
+            size: '4K',
+            thinkingLevel: 'high',
+            includeThoughts: true,
+            googleSearch: true,
+            imageSearch: true,
+            actualOutput: {
+                width: 1024,
+                height: 1024,
+                mimeType: 'image/png',
+            },
+        });
+
+        expect(metadata?.requestedImageSize).toBeUndefined();
+        expect(metadata?.size).toBe('1K');
+        expect(metadata?.thinkingLevel).toBe('disabled');
+        expect(metadata?.includeThoughts).toBe(false);
+        expect(metadata?.googleSearch).toBe(false);
+        expect(metadata?.imageSearch).toBe(false);
+        expect(metadata?.groundingMode).toBe('off');
+    });
 });

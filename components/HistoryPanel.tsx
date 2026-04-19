@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { WORKSPACE_OVERLAY_Z_INDEX } from '../constants/workspaceOverlays';
 import { BatchPreviewTile, BranchNameOverrides, GeneratedImage } from '../types';
 import { Language, getTranslation } from '../utils/translations';
@@ -46,18 +46,34 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
     const [showConfirm, setShowConfirm] = useState(false);
     const pageSize = 4;
     const t = (key: string) => getTranslation(currentLanguage, key);
+    const visibleHistory = useMemo(
+        () =>
+            history.filter(
+                (item) =>
+                    item.status === 'failed' ||
+                    Boolean(item.url.trim()) ||
+                    Boolean(item.savedFilename) ||
+                    Boolean(item.thumbnailSavedFilename) ||
+                    item.thumbnailInline === true ||
+                    item.prompt.trim().length > 0 ||
+                    Boolean(item.text?.trim()) ||
+                    Boolean(item.thoughts?.trim()) ||
+                    Boolean(item.resultParts?.length),
+            ),
+        [history],
+    );
 
     // Reset to first page when history changes (e.g. new image generated)
     useEffect(() => {
         setPage(0);
-    }, [history, previewTiles.length]);
+    }, [previewTiles.length, visibleHistory]);
 
-    if (history.length === 0 && previewTiles.length === 0) return null;
+    if (visibleHistory.length === 0 && previewTiles.length === 0) return null;
 
     const resolvedTitle = title || t('workspaceSheetTitleHistory');
 
-    const totalPages = continuous ? 1 : Math.ceil(history.length / pageSize);
-    const displayedHistory = continuous ? history : history.slice(page * pageSize, (page + 1) * pageSize);
+    const totalPages = continuous ? 1 : Math.ceil(visibleHistory.length / pageSize);
+    const displayedHistory = continuous ? visibleHistory : visibleHistory.slice(page * pageSize, (page + 1) * pageSize);
     const isEmbedded = surface === 'embedded';
     const panelClassName = isEmbedded
         ? `transition-opacity duration-300 ${disabled ? 'opacity-40 pointer-events-none select-none' : ''}`

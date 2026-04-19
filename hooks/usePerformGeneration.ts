@@ -30,7 +30,7 @@ import {
     persistHistoryThumbnail,
     saveImageToLocal,
 } from '../utils/imageSaveUtils';
-import { buildImageSidecarMetadata } from '../utils/imageSidecarMetadata';
+import { buildImageSidecarMetadata, normalizeImageSidecarMetadata } from '../utils/imageSidecarMetadata';
 import { deriveExecutionMode } from '../utils/executionMode';
 import { sanitizeSessionHintsForStorage } from '../utils/inlineImageDisplay';
 import { buildStyleTransferPrompt } from '../utils/styleRegistry';
@@ -519,10 +519,11 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                         text: res.text,
                         thoughts: res.thoughts,
                         resultParts: persistedResultParts,
-                        metadata: {
-                            ...sidecarMetadata,
-                            ...(res.metadata || {}),
-                        },
+                        metadata:
+                            normalizeImageSidecarMetadata({
+                                ...sidecarMetadata,
+                                ...(res.metadata || {}),
+                            }) || sidecarMetadata,
                         grounding: res.grounding,
                         sessionHints: sanitizedSessionHints || undefined,
                         conversationId: res.conversation?.conversationId || null,

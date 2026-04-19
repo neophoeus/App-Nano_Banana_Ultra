@@ -36,6 +36,18 @@ export default defineConfig(({ mode }) => {
                             return 'workspace-i18n';
                         }
 
+                        if (id.includes('/hooks/')) {
+                            return 'workspace-hooks';
+                        }
+
+                        if (id.includes('/constants/')) {
+                            return 'workspace-constants';
+                        }
+
+                        if (id.includes('/utils/')) {
+                            return 'workspace-utils';
+                        }
+
                         if (id.includes('node_modules')) {
                             if (id.includes('react') || id.includes('scheduler')) {
                                 return 'react-vendor';

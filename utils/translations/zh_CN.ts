@@ -133,6 +133,8 @@ export const zh_CN = {
     workspaceViewerUploadBaseToEdit: '上传图片开始编辑',
     workspaceViewerApplyPrompt: '将提示词应用到编辑区',
     workspaceViewerPromptAppliedNotice: '已用查看器中的提示词替换当前提示词。',
+    workspaceViewerApplySettings: '将设置应用到编辑区',
+    workspaceViewerSettingsAppliedNotice: '已将查看器图片的设置应用到编辑区。',
     statusPanelLocalApi: '本地 API',
     statusPanelGeminiKey: 'Gemini 密钥',
     statusPanelLive: '正常',
@@ -390,7 +392,8 @@ export const zh_CN = {
         '这会以当前阶段图像和已暂存参考图提交一个官方后续延展批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
     queueBatchModeReferences:
         '这会以当前提示词和参考图托盘提交一个官方参考驱动批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
-    queueBatchModePromptOnly: '这会提交一个仅基于提示词的官方批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
+    queueBatchModePromptOnly:
+        '这会提交一个仅基于提示词的官方批处理任务。队列批处理一律只输出图像，且不请求返回思考内容。',
     queueBatchConversationNotice:
         '队列批处理任务会保留来源延续脉络，但不会发送官方多轮对话历史。若要继续对话，请使用开始生成。',
     queuedBatchJobsTitle: '队列批处理任务',

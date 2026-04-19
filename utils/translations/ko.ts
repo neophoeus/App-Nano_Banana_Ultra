@@ -642,6 +642,8 @@ export const ko = {
     workspaceViewerUploadBaseToEdit: '이미지를 업로드해 편집',
     workspaceViewerApplyPrompt: '이 프롬프트를 컴포저에 적용',
     workspaceViewerPromptAppliedNotice: '뷰어 프롬프트로 컴포저 프롬프트를 교체했습니다.',
+    workspaceViewerApplySettings: '이 설정을 컴포저에 적용',
+    workspaceViewerSettingsAppliedNotice: '뷰어 이미지의 설정을 컴포저에 적용했습니다.',
     workspaceImportReviewEyebrow: '가져오기 검토',
     workspaceImportReviewTitle: '현재 워크스페이스를 교체하기 전에 가져온 내용을 검토하세요.',
     workspaceImportReviewDesc:

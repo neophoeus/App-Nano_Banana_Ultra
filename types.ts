@@ -353,8 +353,8 @@ export interface ImageSidecarMetadata {
     model: ImageModel | string;
     style: ImageStyle | string;
     aspectRatio: AspectRatio | string;
-    requestedImageSize: ImageSize | string;
-    size: ImageSize | string;
+    requestedImageSize?: ImageSize | string;
+    size?: ImageSize | string;
     outputFormat: OutputFormat | string;
     temperature: number;
     thinkingLevel: ThinkingLevel | string;
@@ -442,6 +442,20 @@ export interface WorkspaceComposerState {
     stickySendIntent?: StickySendIntent;
     generationMode: string;
     executionMode: ExecutionMode;
+}
+
+export interface ViewerComposerSettingsSnapshot {
+    aspectRatio: AspectRatio;
+    imageSize?: ImageSize;
+    imageStyle: ImageStyle;
+    imageModel: ImageModel;
+    batchSize: number;
+    outputFormat?: OutputFormat;
+    temperature?: number;
+    thinkingLevel?: ThinkingLevel;
+    includeThoughts?: boolean;
+    googleSearch?: boolean;
+    imageSearch?: boolean;
 }
 
 export interface WorkspaceSessionState {

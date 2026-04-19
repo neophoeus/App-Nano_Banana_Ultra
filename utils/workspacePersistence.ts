@@ -366,8 +366,20 @@ const buildRuntimeWorkspaceSnapshot = (snapshot: WorkspacePersistenceSnapshot): 
     const historyWithRuntimeAssets = normalized.history.map((item) =>
         buildRuntimeHistoryItem(item, preservedInlineHistoryIds),
     );
+    const filteredHistoryWithRuntimeAssets = historyWithRuntimeAssets.filter(
+        (item) =>
+            item.status === 'failed' ||
+            isNonEmptyAssetUrl(item.url) ||
+            Boolean(item.savedFilename) ||
+            Boolean(item.thumbnailSavedFilename) ||
+            item.thumbnailInline === true ||
+            item.prompt.trim().length > 0 ||
+            Boolean(item.text?.trim()) ||
+            Boolean(item.thoughts?.trim()) ||
+            Boolean(item.resultParts?.length),
+    );
     const selectedHistoryItem =
-        historyWithRuntimeAssets.find((item) => item.id === normalized.viewState.selectedHistoryId) || null;
+        filteredHistoryWithRuntimeAssets.find((item) => item.id === normalized.viewState.selectedHistoryId) || null;
     const stagedAssetsWithRuntimeAssets = normalized.stagedAssets.map((asset) =>
         buildRuntimeStageAsset(asset, preservedInlineHistoryIds),
     );
@@ -382,12 +394,13 @@ const buildRuntimeWorkspaceSnapshot = (snapshot: WorkspacePersistenceSnapshot): 
 
     return sanitizeWorkspaceSnapshot({
         ...normalized,
-        history: historyWithRuntimeAssets,
+        history: filteredHistoryWithRuntimeAssets,
         stagedAssets: stagedAssetsWithRuntimeAssets,
         viewState: {
             ...normalized.viewState,
             generatedImageUrls: restoredStageUrl ? [restoredStageUrl] : filteredGeneratedImageUrls,
             selectedImageIndex: 0,
+            selectedHistoryId: selectedHistoryItem?.id || null,
         },
     });
 };
@@ -643,16 +656,16 @@ export const sanitizeQueuedBatchJobs = (value: unknown): QueuedBatchJob[] => {
                   ? true
                   : importDiagnostic === 'no-payload'
                     ? false
-                                        : item.state === 'JOB_STATE_SUCCEEDED'
+                    : item.state === 'JOB_STATE_SUCCEEDED'
                       ? true
-                                            : undefined;
-                const { importedAt: _importedAt, ...queuedJobWithoutImportedAt } = item as QueuedBatchJob & {
-                        importedAt?: unknown;
-                };
+                      : undefined;
+        const { importedAt: _importedAt, ...queuedJobWithoutImportedAt } = item as QueuedBatchJob & {
+            importedAt?: unknown;
+        };
 
         return [
             {
-                                ...queuedJobWithoutImportedAt,
+                ...queuedJobWithoutImportedAt,
                 style: normalizeImageStyle(item.style),
                 ...(importDiagnostic ? { importDiagnostic } : {}),
                 ...(hasExplicitImportIssues ? { importIssues: importIssues.length > 0 ? importIssues : null } : {}),

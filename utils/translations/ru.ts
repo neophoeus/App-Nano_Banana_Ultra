@@ -660,6 +660,8 @@ export const ru = {
     workspaceViewerUploadBaseToEdit: 'Загрузить изображение для редактирования',
     workspaceViewerApplyPrompt: 'Применить промпт в компоновщик',
     workspaceViewerPromptAppliedNotice: 'Промпт компоновщика заменен промптом из окна просмотра.',
+    workspaceViewerApplySettings: 'Применить настройки в компоновщик',
+    workspaceViewerSettingsAppliedNotice: 'Настройки компоновщика обновлены по изображению из окна просмотра.',
     workspaceImportReviewEyebrow: 'Проверка импорта',
     workspaceImportReviewTitle: 'Проверьте импортированный workspace перед заменой текущего.',
     workspaceImportReviewDesc:

@@ -18,6 +18,7 @@ import {
     StageAsset,
     ResultArtifacts,
     SessionContinuitySource,
+    ViewerComposerSettingsSnapshot,
     WorkspaceSettingsDraft,
 } from './types';
 import ComposerAdvancedSettingsDialog from './components/ComposerAdvancedSettingsDialog';
@@ -111,7 +112,9 @@ import {
     createImageSidecarMetadataState,
     getImageSidecarMetadataState,
     isPersistedImageSidecarMetadata,
+    normalizeImageSidecarMetadata,
 } from './utils/imageSidecarMetadata';
+import { buildViewerComposerSettingsSnapshot } from './utils/viewerComposerSettings';
 
 const ImageEditor = lazy(() => import('./components/ImageEditor'));
 const GeneratedImage = lazy(() => import('./components/GeneratedImage'));
@@ -332,6 +335,7 @@ const App: React.FC = () => {
         setStickySendIntent,
         composerState,
         applyComposerState,
+        applyViewerComposerSettingsSnapshot,
         setGroundingMode,
         restoreEditorComposerState,
     } = useComposerState({
@@ -593,7 +597,7 @@ const App: React.FC = () => {
     const currentViewedCompletedHistoryMetadata = useMemo(() => {
         const metadata = currentViewedCompletedHistoryItem?.metadata;
         return metadata && typeof metadata === 'object' && !Array.isArray(metadata)
-            ? (metadata as Record<string, unknown>)
+            ? normalizeImageSidecarMetadata(metadata)
             : null;
     }, [currentViewedCompletedHistoryItem]);
 
@@ -639,9 +643,13 @@ const App: React.FC = () => {
             }
 
             const mergedMetadata =
-                metadata && currentViewedCompletedHistoryMetadata
-                    ? ({ ...currentViewedCompletedHistoryMetadata, ...metadata } as Record<string, unknown>)
-                    : metadata;
+                metadata
+                    ? normalizeImageSidecarMetadata(
+                          currentViewedCompletedHistoryMetadata
+                              ? { ...currentViewedCompletedHistoryMetadata, ...metadata }
+                              : metadata,
+                      )
+                    : null;
 
             setSelectedMetadata(mergedMetadata || createImageSidecarMetadataState('missing'));
         });
@@ -1627,6 +1635,7 @@ const App: React.FC = () => {
         handleContinueFromHistoryTurn,
         handleBranchFromHistoryTurn,
         handleImportReviewDirectAction,
+        commitPendingViewerSelection,
     } = useHistorySourceOrchestration({
         history,
         generatedImageUrls,
@@ -2191,6 +2200,17 @@ const App: React.FC = () => {
         },
         [replaceComposerPromptText],
     );
+    const handleApplySettingsFromViewer = useCallback(
+        (snapshot: ViewerComposerSettingsSnapshot) => {
+            applyViewerComposerSettingsSnapshot(snapshot);
+            showNotification(t('workspaceViewerSettingsAppliedNotice'), 'info');
+            focusComposerPromptTextarea({
+                delayFrames: 2,
+                ensureVisible: true,
+            });
+        },
+        [applyViewerComposerSettingsSnapshot, focusComposerPromptTextarea, showNotification, t],
+    );
     const getOutputFormatSummaryLabel = useCallback(
         (value: string) => OUTPUT_FORMATS.find((option) => option.value === value)?.label ?? value,
         [],
@@ -2228,6 +2248,20 @@ const App: React.FC = () => {
     }, []);
     const viewerMetadataSidecarState = getImageSidecarMetadataState(selectedMetadata);
     const viewerHasPersistedSidecarMetadata = isPersistedImageSidecarMetadata(selectedMetadata);
+    const viewerSettingsMetadata = useMemo(() => {
+        if (!currentViewedCompletedHistoryMetadata && !viewerHasPersistedSidecarMetadata) {
+            return null;
+        }
+
+        return normalizeImageSidecarMetadata({
+            ...(currentViewedCompletedHistoryMetadata || {}),
+            ...(viewerHasPersistedSidecarMetadata ? (selectedMetadata as Record<string, unknown>) : {}),
+        });
+    }, [currentViewedCompletedHistoryMetadata, selectedMetadata, viewerHasPersistedSidecarMetadata]);
+    const viewerSettingsSnapshot = useMemo(
+        () => buildViewerComposerSettingsSnapshot(currentViewedCompletedHistoryItem, viewerSettingsMetadata),
+        [currentViewedCompletedHistoryItem, viewerSettingsMetadata],
+    );
     const viewerMetadataStatus = useMemo(() => {
         if (!currentViewedCompletedHistoryItem) {
             return 'ready' as const;
@@ -2278,13 +2312,20 @@ const App: React.FC = () => {
         typeof selectedMetadata?.aspectRatio === 'string' ? selectedMetadata.aspectRatio : null,
         viewSettings.aspectRatio,
     );
+    const viewerMetadataModel =
+        viewerSettingsMetadata?.model === 'gemini-3.1-flash-image-preview' ||
+        viewerSettingsMetadata?.model === 'gemini-3-pro-image-preview' ||
+        viewerSettingsMetadata?.model === 'gemini-2.5-flash-image'
+            ? viewerSettingsMetadata.model
+            : currentViewedCompletedHistoryItem?.model || viewSettings.model;
+    const viewerMetadataModelSupportsSizeControl = MODEL_CAPABILITIES[viewerMetadataModel].supportedSizes.length > 0;
     const viewerMetadataSize = resolveViewerMetadataValue(
-        typeof selectedMetadata?.requestedImageSize === 'string'
-            ? selectedMetadata.requestedImageSize
-            : typeof selectedMetadata?.size === 'string'
-              ? selectedMetadata.size
+        typeof viewerSettingsMetadata?.size === 'string'
+            ? viewerSettingsMetadata.size
+            : viewerMetadataModelSupportsSizeControl && typeof viewerSettingsMetadata?.requestedImageSize === 'string'
+              ? viewerSettingsMetadata.requestedImageSize
               : null,
-        viewSettings.size,
+        viewerMetadataModelSupportsSizeControl ? viewSettings.size : viewerMetadataUnavailableLabel,
     );
     const viewerMetadataStyleLabel = resolveViewerMetadataValue(
         typeof selectedMetadata?.style === 'string' ? getStyleLabel(selectedMetadata.style as ImageStyle) : null,
@@ -2441,7 +2482,7 @@ const App: React.FC = () => {
         (historyId: string) => {
             const historyItem = getHistoryTurnById(historyId);
             if (historyItem) {
-                handleHistorySelect(historyItem);
+                handleHistorySelect(historyItem, { deferLineageCommit: true });
             }
         },
         [getHistoryTurnById, handleHistorySelect],
@@ -2486,6 +2527,9 @@ const App: React.FC = () => {
         formatSessionHintKey,
         formatSessionHintValue,
         onApplyPrompt: handleApplyPromptFromViewer,
+        settingsSnapshot: viewerSettingsSnapshot,
+        onApplySettings: handleApplySettingsFromViewer,
+        onCloseViewer: commitPendingViewerSelection,
     });
     const handleCloseWorkspacePickerSheet = useCallback(() => {
         if (activePickerSheet === 'settings') {

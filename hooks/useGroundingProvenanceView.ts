@@ -8,6 +8,7 @@ import {
     sanitizeInlineImageDisplayValue,
     sanitizeSensitiveDisplayText,
 } from '../utils/inlineImageDisplay';
+import { MODEL_CAPABILITIES } from '../utils/modelCapabilities';
 import { GroundingSelection } from './useSelectedResultState';
 
 type UseGroundingProvenanceViewArgs = {
@@ -139,11 +140,19 @@ export function useGroundingProvenanceView({
     const normalizedSessionActualDimensions = normalizeOptionalDisplayString(
         effectiveSessionHints?.actualImageDimensions,
     );
-    const metadataRequestedImageSize =
-        normalizeOptionalDisplayString(effectiveMetadata?.requestedImageSize) ||
-        normalizeOptionalDisplayString(effectiveMetadata?.size);
-    const normalizedRequestedImageSize =
-        metadataRequestedImageSize || normalizeOptionalDisplayString(effectiveSessionHints?.imageSizeRequested);
+    const requestedSizeModel =
+        effectiveMetadata?.model === 'gemini-3.1-flash-image-preview' ||
+        effectiveMetadata?.model === 'gemini-3-pro-image-preview' ||
+        effectiveMetadata?.model === 'gemini-2.5-flash-image'
+            ? effectiveMetadata.model
+            : viewSettings.model;
+    const requestedSizeModelSupportsSizeControl = MODEL_CAPABILITIES[requestedSizeModel].supportedSizes.length > 0;
+    const metadataRequestedImageSize = requestedSizeModelSupportsSizeControl
+        ? normalizeOptionalDisplayString(effectiveMetadata?.requestedImageSize)
+        : null;
+    const normalizedRequestedImageSize = requestedSizeModelSupportsSizeControl
+        ? metadataRequestedImageSize || normalizeOptionalDisplayString(effectiveSessionHints?.imageSizeRequested)
+        : null;
     const metadataActualOutputDimensions =
         typeof effectiveMetadata?.actualOutput === 'object' &&
         effectiveMetadata?.actualOutput !== null &&
@@ -153,7 +162,9 @@ export function useGroundingProvenanceView({
             : null;
     const actualOutputDimensions = metadataActualOutputDimensions || normalizedSessionActualDimensions;
     const requestedImageSize = normalizedRequestedImageSize;
-    const fallbackRequestedImageSize = normalizeOptionalDisplayString(viewSettings.size);
+    const fallbackRequestedImageSize = requestedSizeModelSupportsSizeControl
+        ? normalizeOptionalDisplayString(viewSettings.size)
+        : null;
     const actualOutputSizeLabel = actualOutputDimensions
         ? OUTPUT_DIMENSION_SIZE_LABELS[actualOutputDimensions] || actualOutputDimensions
         : null;
@@ -284,6 +295,7 @@ export function useGroundingProvenanceView({
             metadataGroundingLabel,
             metadataRequestedImageSize,
             requestedImageSize,
+            requestedSizeModelSupportsSizeControl,
             resolveMetadataInsightValue,
             t,
             viewSettings.googleSearch,

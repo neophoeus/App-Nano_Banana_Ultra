@@ -647,6 +647,8 @@ export const ja = {
     workspaceViewerUploadBaseToEdit: '画像をアップロードして編集',
     workspaceViewerApplyPrompt: 'このプロンプトをコンポーザーに適用',
     workspaceViewerPromptAppliedNotice: 'ビューアーのプロンプトでコンポーザープロンプトを置き換えました。',
+    workspaceViewerApplySettings: 'この設定をコンポーザーに適用',
+    workspaceViewerSettingsAppliedNotice: 'ビューアー画像の設定をコンポーザーに反映しました。',
     workspaceImportReviewEyebrow: 'インポート確認',
     workspaceImportReviewTitle: '現在のワークスペースを置き換える前に、インポート内容を確認してください。',
     workspaceImportReviewDesc:

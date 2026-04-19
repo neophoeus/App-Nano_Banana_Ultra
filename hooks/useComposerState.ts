@@ -10,9 +10,11 @@ import {
     OutputFormat,
     StickySendIntent,
     ThinkingLevel,
+    ViewerComposerSettingsSnapshot,
     WorkspaceComposerState,
 } from '../types';
 import { getGroundingFlagsFromMode } from '../utils/groundingMode';
+import { normalizeViewerComposerSettingsSnapshot } from '../utils/viewerComposerSettings';
 import { buildDisplaySettingsFromComposerState } from '../utils/workspaceSnapshotState';
 
 type UseComposerStateArgs = {
@@ -53,6 +55,7 @@ type UseComposerStateReturn = {
     setStickySendIntent: Dispatch<SetStateAction<StickySendIntent>>;
     composerState: WorkspaceComposerState;
     applyComposerState: (nextComposerState: WorkspaceComposerState) => void;
+    applyViewerComposerSettingsSnapshot: (snapshot: ViewerComposerSettingsSnapshot) => void;
     setGroundingMode: (mode: GroundingMode) => void;
     restoreEditorComposerState: (
         snapshot: {
@@ -161,6 +164,30 @@ export function useComposerState({
         [syncPresentationState],
     );
 
+    const applyViewerComposerSettingsSnapshot = useCallback(
+        (snapshot: ViewerComposerSettingsSnapshot) => {
+            const normalizedSettings = normalizeViewerComposerSettingsSnapshot(snapshot, composerState.imageSize);
+            const nextComposerState: WorkspaceComposerState = {
+                ...composerState,
+                ...normalizedSettings,
+            };
+
+            setAspectRatio(normalizedSettings.aspectRatio);
+            setImageSize(normalizedSettings.imageSize);
+            setImageStyle(normalizedSettings.imageStyle);
+            setImageModel(normalizedSettings.imageModel);
+            setBatchSize(normalizedSettings.batchSize);
+            setOutputFormat(normalizedSettings.outputFormat);
+            setTemperature(normalizedSettings.temperature);
+            setThinkingLevel(normalizedSettings.thinkingLevel);
+            setIncludeThoughts(normalizedSettings.includeThoughts);
+            setGoogleSearch(normalizedSettings.googleSearch);
+            setImageSearch(normalizedSettings.imageSearch);
+            setDisplaySettings(buildDisplaySettingsFromComposerState(nextComposerState));
+        },
+        [composerState, setDisplaySettings],
+    );
+
     const setGroundingMode = useCallback((mode: GroundingMode) => {
         const nextFlags = getGroundingFlagsFromMode(mode);
         setGoogleSearch(nextFlags.googleSearch);
@@ -248,6 +275,7 @@ export function useComposerState({
         setStickySendIntent,
         composerState,
         applyComposerState,
+        applyViewerComposerSettingsSnapshot,
         setGroundingMode,
         restoreEditorComposerState,
     };

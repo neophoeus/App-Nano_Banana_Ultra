@@ -62,6 +62,7 @@ export function usePromptTools({
             addLog(t('logRewriteOk'));
         } catch (e) {
             console.error(e);
+            showNotification(t('logRewriteFailed'), 'error');
             addLog(t('logRewriteFailed'));
         } finally {
             setIsEnhancingPrompt(false);
@@ -116,6 +117,8 @@ export function usePromptTools({
                 console.error(error);
                 if (error instanceof Error && /invalid image|failed to read|failed to load/i.test(error.message)) {
                     showNotification(t('errInvalidImage'), 'error');
+                } else {
+                    showNotification(t('logImageToPromptFailed'), 'error');
                 }
                 addLog(t('logImageToPromptFailed'));
             } finally {

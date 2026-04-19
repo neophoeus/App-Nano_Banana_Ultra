@@ -1,5 +1,30 @@
 # Changelog
 
+## v3.6.1 - 2026-04-19
+
+- Release title: Nano Banana Ultra 3.6.1 - Viewer Settings Apply, Stable Viewer Context & Truthful Viewer Metadata
+- Release summary:
+    - viewer settings reuse from history:
+        - added `Apply Settings to Composer` in the viewer so a viewed history item can send its generation settings back to the composer without replacing the current prompt
+        - viewer-applied settings now respect the viewed model’s supported controls, so unsupported ratios, sizes, thinking modes, and grounding options fall back to valid composer state instead of surfacing mismatched values
+
+    - calmer viewer browsing flow:
+        - browsing different history items inside the viewer no longer immediately changes branch source, continue source, or other lineage-linked workspace context
+        - the viewed item stays as a preview until the viewer closes or the user applies something back to the main workspace
+
+    - cleaner workspace history after clear:
+        - `Clear Workspace` no longer leaves behind empty history cards that have no real prompt or image content
+        - restore and history views now ignore those ghost entries while keeping legitimate placeholders that still contain meaningful state
+
+    - more truthful viewer metadata:
+        - saved history items and reopened viewer entries now show settings and metadata that match what the selected model could actually honor
+        - models that do not support requested size or certain advanced options no longer reopen with stale or misleading values in the viewer
+        - requested size and actual output size are now treated separately in the viewer, so reopened items do not imply unsupported requested settings
+
+    - clearer prompt tool failure feedback:
+        - `Auto Rewrite` and `Image to Prompt` now show an immediate localized failure toast on the main workspace surface when the helper request fails
+        - invalid image input still uses its dedicated validation toast instead of stacking an extra generic failure message
+
 ## v3.6.0 - 2026-04-18
 
 - Release title: Nano Banana Ultra 3.6.0 - Independent Batch Space, Truthful Queue Import State & Clearer Queue Action Naming

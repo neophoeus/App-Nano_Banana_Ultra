@@ -662,6 +662,8 @@ export const es = {
     workspaceViewerUploadBaseToEdit: 'Subir imagen para editar',
     workspaceViewerApplyPrompt: 'Aplicar prompt al compositor',
     workspaceViewerPromptAppliedNotice: 'El prompt del compositor se reemplazo con el prompt del visor.',
+    workspaceViewerApplySettings: 'Aplicar ajustes al compositor',
+    workspaceViewerSettingsAppliedNotice: 'Los ajustes del compositor se actualizaron desde la imagen del visor.',
     workspaceImportReviewEyebrow: 'Revision de importacion',
     workspaceImportReviewTitle: 'Revisa el espacio de trabajo importado antes de reemplazar el actual.',
     workspaceImportReviewDesc:

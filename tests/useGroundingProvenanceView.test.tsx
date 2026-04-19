@@ -53,6 +53,8 @@ describe('useGroundingProvenanceView', () => {
         imageSize = '1K',
         workspaceSessionOverrides: Record<string, unknown> = {},
         selectedGrounding: any = null,
+        model: 'gemini-3.1-flash-image-preview' | 'gemini-3-pro-image-preview' | 'gemini-2.5-flash-image' =
+            'gemini-3.1-flash-image-preview',
     ) => {
         function TestComponent() {
             latestHook = useGroundingProvenanceView({
@@ -81,7 +83,7 @@ describe('useGroundingProvenanceView', () => {
                     aspectRatio: '1:1',
                     size: imageSize,
                     style: 'None',
-                    model: 'gemini-3.1-flash-image-preview',
+                    model,
                     batchSize: 1,
                     outputFormat: 'images-only',
                     temperature: 1,
@@ -181,6 +183,34 @@ describe('useGroundingProvenanceView', () => {
 
         expect(latestHook?.requestedImageSize).toBeNull();
         expect(latestHook?.insightRows.find((row) => row.label === 'Requested size')?.value).toBe('512');
+    });
+
+    it('does not report requested size for models without size control', () => {
+        renderHook(
+            {
+                model: 'gemini-2.5-flash-image',
+                requestedImageSize: '4K',
+                size: '1K',
+                outputFormat: 'images-only',
+                temperature: 1,
+                thinkingLevel: 'disabled',
+                includeThoughts: false,
+                actualOutput: {
+                    width: 1024,
+                    height: 1024,
+                    mimeType: 'image/png',
+                },
+            },
+            { imageSizeRequested: '4K' },
+            '4K',
+            {},
+            null,
+            'gemini-2.5-flash-image',
+        );
+
+        expect(latestHook?.requestedImageSize).toBeNull();
+        expect(latestHook?.insightRows.find((row) => row.label === 'Requested size')?.value).toBe('None');
+        expect(latestHook?.insightRows.find((row) => row.label === 'Actual output')?.value).toBe('1024x1024');
     });
 
     it('builds localized session continuity signals for provenance summary chips', () => {

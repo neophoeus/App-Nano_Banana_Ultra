@@ -1109,4 +1109,36 @@ describe('workspacePersistence', () => {
         const storedPayload = localStorage.getItem(WORKSPACE_SNAPSHOT_STORAGE_KEY) || '';
         expect(storedPayload).not.toContain('data:image/');
     });
+
+    it('drops blank non-persisted history items when restoring a clean workspace snapshot', () => {
+        localStorage.setItem(
+            WORKSPACE_SNAPSHOT_STORAGE_KEY,
+            JSON.stringify({
+                ...EMPTY_WORKSPACE_SNAPSHOT,
+                history: [
+                    {
+                        id: 'blank-turn',
+                        url: '',
+                        prompt: '',
+                        aspectRatio: '1:1',
+                        size: '1K',
+                        style: 'None',
+                        model: 'gemini-3.1-flash-image-preview',
+                        createdAt: 123,
+                    },
+                ],
+                viewState: {
+                    generatedImageUrls: [],
+                    selectedImageIndex: 0,
+                    selectedHistoryId: 'blank-turn',
+                },
+            } satisfies WorkspacePersistenceSnapshot),
+        );
+
+        const restored = loadWorkspaceSnapshot();
+
+        expect(restored.history).toEqual([]);
+        expect(restored.viewState.generatedImageUrls).toEqual([]);
+        expect(restored.viewState.selectedHistoryId).toBeNull();
+    });
 });
