@@ -19,7 +19,7 @@ import {
     getNormalizedConversationTurnIds,
     resolveConversationSelectionState,
 } from './conversationState';
-import { resolveDisplayGenerationFailureInfo } from './generationFailure';
+import { normalizeGenerationFailureInfo, resolveDisplayGenerationFailureInfo } from './generationFailure';
 import { sanitizeSessionHintsForStorage } from './inlineImageDisplay';
 import { buildLineagePresentation } from './lineage';
 import { normalizeImageStyle } from './styleRegistry';
@@ -96,6 +96,92 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const isInlineAssetUrl = (value: string): boolean => value.startsWith(INLINE_ASSET_URL_PREFIX);
 const isNonEmptyAssetUrl = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0;
 
+const normalizeFiniteNumber = (value: unknown): number | undefined =>
+    typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+const normalizeOptionalString = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
+const normalizeNullableString = (value: unknown): string | null | undefined =>
+    value === null ? null : typeof value === 'string' ? value : undefined;
+const normalizeStringArrayOrNull = (value: unknown): string[] | null =>
+    Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === 'string') : null;
+const ASPECT_RATIO_VALUES = new Set<GeneratedImage['aspectRatio']>([
+    '1:1',
+    '16:9',
+    '9:16',
+    '4:3',
+    '3:4',
+    '2:3',
+    '3:2',
+    '21:9',
+    '4:5',
+    '5:4',
+    '1:4',
+    '4:1',
+    '1:8',
+    '8:1',
+]);
+const IMAGE_SIZE_VALUES = new Set<GeneratedImage['size']>(['512', '1K', '2K', '4K']);
+const IMAGE_MODEL_VALUES = new Set<GeneratedImage['model']>([
+    'gemini-3.1-flash-image-preview',
+    'gemini-3-pro-image-preview',
+    'gemini-2.5-flash-image',
+]);
+const OUTPUT_FORMAT_VALUES = new Set<WorkspaceComposerState['outputFormat']>(['images-only', 'images-and-text']);
+const THINKING_LEVEL_VALUES = new Set<WorkspaceComposerState['thinkingLevel']>(['disabled', 'minimal', 'high']);
+const QUEUED_BATCH_JOB_STATE_VALUES = new Set<QueuedBatchJob['state']>([
+    'JOB_STATE_PENDING',
+    'JOB_STATE_RUNNING',
+    'JOB_STATE_SUCCEEDED',
+    'JOB_STATE_FAILED',
+    'JOB_STATE_CANCELLED',
+    'JOB_STATE_EXPIRED',
+]);
+const EXECUTION_MODE_VALUES = new Set<NonNullable<GeneratedImage['executionMode']>>([
+    'single-turn',
+    'interactive-batch-variants',
+    'chat-continuation',
+    'queued-batch-job',
+]);
+const STAGE_ASSET_ROLE_VALUES = new Set<StageAsset['role']>(['object', 'character', 'stage-source']);
+const STAGE_ASSET_ORIGIN_VALUES = new Set<StageAsset['origin']>(['upload', 'sketch', 'generated', 'history', 'editor']);
+const LINEAGE_ACTION_VALUES = new Set<NonNullable<GeneratedImage['lineageAction']>>([
+    'root',
+    'continue',
+    'branch',
+    'editor-follow-up',
+    'reopen',
+]);
+const GENERATED_IMAGE_STATUS_VALUES = new Set<NonNullable<GeneratedImage['status']>>(['success', 'failed']);
+const FAILURE_EXTRACTION_ISSUE_VALUES = new Set<NonNullable<QueuedBatchJobImportIssue['extractionIssue']>>([
+    'missing-candidates',
+    'missing-parts',
+    'no-image-data',
+]);
+
+const isAspectRatio = (value: unknown): value is GeneratedImage['aspectRatio'] =>
+    typeof value === 'string' && ASPECT_RATIO_VALUES.has(value as GeneratedImage['aspectRatio']);
+const isImageSize = (value: unknown): value is GeneratedImage['size'] =>
+    typeof value === 'string' && IMAGE_SIZE_VALUES.has(value as GeneratedImage['size']);
+const isImageModel = (value: unknown): value is GeneratedImage['model'] =>
+    typeof value === 'string' && IMAGE_MODEL_VALUES.has(value as GeneratedImage['model']);
+const isOutputFormat = (value: unknown): value is WorkspaceComposerState['outputFormat'] =>
+    typeof value === 'string' && OUTPUT_FORMAT_VALUES.has(value as WorkspaceComposerState['outputFormat']);
+const isThinkingLevel = (value: unknown): value is WorkspaceComposerState['thinkingLevel'] =>
+    typeof value === 'string' && THINKING_LEVEL_VALUES.has(value as WorkspaceComposerState['thinkingLevel']);
+const isQueuedBatchJobState = (value: unknown): value is QueuedBatchJob['state'] =>
+    typeof value === 'string' && QUEUED_BATCH_JOB_STATE_VALUES.has(value as QueuedBatchJob['state']);
+const isExecutionMode = (value: unknown): value is NonNullable<GeneratedImage['executionMode']> =>
+    typeof value === 'string' && EXECUTION_MODE_VALUES.has(value as NonNullable<GeneratedImage['executionMode']>);
+const isStageAssetRole = (value: unknown): value is StageAsset['role'] =>
+    typeof value === 'string' && STAGE_ASSET_ROLE_VALUES.has(value as StageAsset['role']);
+const isStageAssetOrigin = (value: unknown): value is StageAsset['origin'] =>
+    typeof value === 'string' && STAGE_ASSET_ORIGIN_VALUES.has(value as StageAsset['origin']);
+const isLineageAction = (value: unknown): value is NonNullable<GeneratedImage['lineageAction']> =>
+    typeof value === 'string' && LINEAGE_ACTION_VALUES.has(value as NonNullable<GeneratedImage['lineageAction']>);
+const isGeneratedImageStatus = (value: unknown): value is NonNullable<GeneratedImage['status']> =>
+    typeof value === 'string' && GENERATED_IMAGE_STATUS_VALUES.has(value as NonNullable<GeneratedImage['status']>);
+const isFailureExtractionIssue = (value: unknown): value is NonNullable<QueuedBatchJobImportIssue['extractionIssue']> =>
+    typeof value === 'string' && FAILURE_EXTRACTION_ISSUE_VALUES.has(value as NonNullable<QueuedBatchJobImportIssue['extractionIssue']>);
+
 const buildLoadImageUrl = (savedFilename: string): string =>
     `${LOAD_IMAGE_ENDPOINT}?filename=${encodeURIComponent(savedFilename)}`;
 
@@ -107,7 +193,7 @@ const sanitizeResultParts = (value: unknown): ResultPart[] | undefined => {
         return undefined;
     }
 
-    return value.flatMap((part) => {
+    return value.flatMap((part): ResultPart[] => {
         if (!isRecord(part) || typeof part.sequence !== 'number' || typeof part.kind !== 'string') {
             return [];
         }
@@ -361,7 +447,7 @@ const buildRuntimeStageAsset = (asset: StageAsset, preservedInlineHistoryIds: Se
     return asset;
 };
 
-const buildRuntimeWorkspaceSnapshot = (snapshot: WorkspacePersistenceSnapshot): WorkspacePersistenceSnapshot => {
+const buildRuntimeWorkspaceSnapshot = (snapshot: unknown): WorkspacePersistenceSnapshot => {
     const normalized = sanitizeWorkspaceSnapshot(snapshot);
     const preservedInlineHistoryIds = collectRuntimeInlineHistoryIds(normalized.history, normalized);
     const historyWithRuntimeAssets = normalized.history.map((item) =>
@@ -474,9 +560,13 @@ const sanitizeBranchNameOverrides = (value: unknown): BranchNameOverrides => {
         return {};
     }
 
-    return Object.fromEntries(
-        Object.entries(value).filter(([key, item]) => typeof key === 'string' && typeof item === 'string'),
-    );
+    return Object.entries(value).reduce<BranchNameOverrides>((overrides, [key, item]) => {
+        if (typeof item === 'string') {
+            overrides[key] = item;
+        }
+
+        return overrides;
+    }, {});
 };
 
 const sanitizeHistory = (value: unknown): GeneratedImage[] => {
@@ -484,7 +574,7 @@ const sanitizeHistory = (value: unknown): GeneratedImage[] => {
         return [];
     }
 
-    return value.flatMap((item) => {
+    return value.flatMap((item): GeneratedImage[] => {
         if (
             !(
                 isRecord(item) &&
@@ -500,37 +590,92 @@ const sanitizeHistory = (value: unknown): GeneratedImage[] => {
             sanitizeSessionHintsForStorage(
                 isRecord(item.sessionHints) ? (item.sessionHints as Record<string, unknown>) : null,
             ) || undefined;
+        const promptBlockReason = sessionHints ? normalizeNullableString(sessionHints.promptBlockReason) ?? null : null;
+        const finishReason = sessionHints ? normalizeNullableString(sessionHints.finishReason) ?? null : null;
+        const blockedSafetyCategories = sessionHints ? normalizeStringArrayOrNull(sessionHints.blockedSafetyCategories) : null;
+        const extractionIssue =
+            sessionHints && isFailureExtractionIssue(sessionHints.extractionIssue) ? sessionHints.extractionIssue : null;
         const normalizedFailure = resolveDisplayGenerationFailureInfo({
-            failure: item.failure,
+            failure: normalizeGenerationFailureInfo(item.failure),
             error: typeof item.error === 'string' ? item.error : null,
-            promptBlockReason: isRecord(sessionHints) ? sessionHints.promptBlockReason : null,
-            finishReason: isRecord(sessionHints) ? sessionHints.finishReason : null,
-            blockedSafetyCategories: isRecord(sessionHints) ? sessionHints.blockedSafetyCategories : null,
-            extractionIssue: isRecord(sessionHints) ? sessionHints.extractionIssue : null,
-            returnedTextContent: isRecord(sessionHints) ? sessionHints.textReturned === true : false,
-            returnedThoughtContent: isRecord(sessionHints) ? sessionHints.thoughtsReturned === true : false,
+            promptBlockReason,
+            finishReason,
+            blockedSafetyCategories,
+            extractionIssue,
+            returnedTextContent: sessionHints ? sessionHints.textReturned === true : false,
+            returnedThoughtContent: sessionHints ? sessionHints.thoughtsReturned === true : false,
         });
         const failureContext =
             isRecord(item.failureContext) && item.failureContext.hasSiblingSafetyBlockedFailure === true
                 ? { hasSiblingSafetyBlockedFailure: true }
                 : undefined;
+        const resultParts = sanitizeResultParts(item.resultParts);
+        const savedFilename = normalizeOptionalString(item.savedFilename);
+        const thumbnailSavedFilename = normalizeOptionalString(item.thumbnailSavedFilename);
+        const thumbnailInline = typeof item.thumbnailInline === 'boolean' ? item.thumbnailInline : undefined;
+        const mode = normalizeOptionalString(item.mode);
+        const executionMode = isExecutionMode(item.executionMode) ? item.executionMode : undefined;
+        const variantGroupId = normalizeNullableString(item.variantGroupId);
+        const status = isGeneratedImageStatus(item.status) ? item.status : undefined;
+        const error = normalizeOptionalString(item.error);
+        const text = normalizeOptionalString(item.text);
+        const thoughts = normalizeOptionalString(item.thoughts);
+        const metadata = isRecord(item.metadata) ? item.metadata : undefined;
+        const grounding =
+            isRecord(item.grounding) && typeof item.grounding.enabled === 'boolean'
+                ? (item.grounding as unknown as GeneratedImage['grounding'])
+                : undefined;
+        const conversationId = normalizeNullableString(item.conversationId);
+        const conversationBranchOriginId = normalizeNullableString(item.conversationBranchOriginId);
+        const conversationSourceHistoryId = normalizeNullableString(item.conversationSourceHistoryId);
+        const conversationTurnIndex =
+            normalizeFiniteNumber(item.conversationTurnIndex) ??
+            (item.conversationTurnIndex === null ? null : undefined);
+        const parentHistoryId = normalizeNullableString(item.parentHistoryId);
+        const rootHistoryId = normalizeNullableString(item.rootHistoryId);
+        const sourceHistoryId = normalizeNullableString(item.sourceHistoryId);
+        const lineageAction = isLineageAction(item.lineageAction) ? item.lineageAction : undefined;
+        const lineageDepth = normalizeFiniteNumber(item.lineageDepth);
+        const openedAt = normalizeFiniteNumber(item.openedAt) ?? (item.openedAt === null ? null : undefined);
 
-        return [
-            {
-                ...(item as GeneratedImage),
-                style: normalizeImageStyle(item.style),
-                resultParts: sanitizeResultParts(item.resultParts),
-                openedAt:
-                    typeof item.openedAt === 'number' && Number.isFinite(item.openedAt)
-                        ? item.openedAt
-                        : item.openedAt === null
-                          ? null
-                          : undefined,
-                failure: normalizedFailure || undefined,
-                failureContext,
-                sessionHints,
-            },
-        ];
+        const sanitizedHistoryItem: GeneratedImage = {
+            id: item.id,
+            url: item.url,
+            prompt: item.prompt,
+            aspectRatio: isAspectRatio(item.aspectRatio) ? item.aspectRatio : EMPTY_WORKSPACE_COMPOSER_STATE.aspectRatio,
+            size: isImageSize(item.size) ? item.size : EMPTY_WORKSPACE_COMPOSER_STATE.imageSize,
+            style: normalizeImageStyle(item.style),
+            model: isImageModel(item.model) ? item.model : EMPTY_WORKSPACE_COMPOSER_STATE.imageModel,
+            createdAt: normalizeFiniteNumber(item.createdAt) ?? 0,
+            ...(savedFilename !== undefined ? { savedFilename } : {}),
+            ...(thumbnailSavedFilename !== undefined ? { thumbnailSavedFilename } : {}),
+            ...(thumbnailInline !== undefined ? { thumbnailInline } : {}),
+            ...(mode !== undefined ? { mode } : {}),
+            ...(executionMode !== undefined ? { executionMode } : {}),
+            ...(variantGroupId !== undefined ? { variantGroupId } : {}),
+            ...(status !== undefined ? { status } : {}),
+            ...(error !== undefined ? { error } : {}),
+            ...(openedAt !== undefined ? { openedAt } : {}),
+            ...(text !== undefined ? { text } : {}),
+            ...(thoughts !== undefined ? { thoughts } : {}),
+            ...(resultParts ? { resultParts } : {}),
+            ...(metadata ? { metadata } : {}),
+            ...(grounding ? { grounding } : {}),
+            ...(sessionHints ? { sessionHints } : {}),
+            ...(normalizedFailure ? { failure: normalizedFailure } : {}),
+            ...(failureContext ? { failureContext } : {}),
+            ...(conversationId !== undefined ? { conversationId } : {}),
+            ...(conversationBranchOriginId !== undefined ? { conversationBranchOriginId } : {}),
+            ...(conversationSourceHistoryId !== undefined ? { conversationSourceHistoryId } : {}),
+            ...(conversationTurnIndex !== undefined ? { conversationTurnIndex } : {}),
+            ...(parentHistoryId !== undefined ? { parentHistoryId } : {}),
+            ...(rootHistoryId !== undefined ? { rootHistoryId } : {}),
+            ...(sourceHistoryId !== undefined ? { sourceHistoryId } : {}),
+            ...(lineageAction !== undefined ? { lineageAction } : {}),
+            ...(lineageDepth !== undefined ? { lineageDepth } : {}),
+        };
+
+        return [sanitizedHistoryItem];
     });
 };
 
@@ -545,21 +690,32 @@ const sanitizeStagedAssets = (value: unknown): StageAsset[] => {
                 isRecord(item) &&
                 typeof item.id === 'string' &&
                 typeof item.url === 'string' &&
-                typeof item.role === 'string' &&
-                typeof item.origin === 'string' &&
-                typeof item.createdAt === 'number'
+                isStageAssetRole(item.role) &&
+                isStageAssetOrigin(item.origin) &&
+                typeof item.createdAt === 'number' &&
+                Number.isFinite(item.createdAt)
             )
         ) {
             return [];
         }
 
-        const aspectRatio =
-            typeof item.aspectRatio === 'string' && item.aspectRatio.trim().length > 0 ? item.aspectRatio : undefined;
+        const savedFilename = normalizeOptionalString(item.savedFilename);
+        const aspectRatio = isAspectRatio(item.aspectRatio) ? item.aspectRatio : undefined;
+        const sourceHistoryId = normalizeOptionalString(item.sourceHistoryId);
+        const lineageAction = isLineageAction(item.lineageAction) ? item.lineageAction : undefined;
 
         return [
             {
-                ...item,
-                ...(aspectRatio ? { aspectRatio } : {}),
+                id: item.id,
+                url: item.url,
+                role: item.role,
+                origin: item.origin,
+                createdAt: item.createdAt,
+                ...(savedFilename !== undefined ? { savedFilename } : {}),
+                ...(item.isSketch === true ? { isSketch: true } : {}),
+                ...(aspectRatio !== undefined ? { aspectRatio } : {}),
+                ...(sourceHistoryId !== undefined ? { sourceHistoryId } : {}),
+                ...(lineageAction !== undefined ? { lineageAction } : {}),
             },
         ];
     });
@@ -640,7 +796,7 @@ export const sanitizeQueuedBatchJobs = (value: unknown): QueuedBatchJob[] => {
                 typeof item.submissionGroupId === 'string' &&
                 typeof item.submissionItemIndex === 'number' &&
                 typeof item.submissionItemCount === 'number' &&
-                typeof item.state === 'string' &&
+                isQueuedBatchJobState(item.state) &&
                 typeof item.model === 'string' &&
                 typeof item.prompt === 'string' &&
                 typeof item.aspectRatio === 'string' &&
@@ -690,21 +846,78 @@ export const sanitizeQueuedBatchJobs = (value: unknown): QueuedBatchJob[] => {
                     : item.state === 'JOB_STATE_SUCCEEDED'
                       ? true
                       : undefined;
-        const { importedAt: _importedAt, ...queuedJobWithoutImportedAt } = item as QueuedBatchJob & {
-            importedAt?: unknown;
+        const startedAt = normalizeFiniteNumber(item.startedAt) ?? null;
+        const completedAt = normalizeFiniteNumber(item.completedAt) ?? null;
+        const lastPolledAt = normalizeFiniteNumber(item.lastPolledAt) ?? null;
+        const generationMode = normalizeOptionalString(item.generationMode);
+        const restoredFromSnapshot = typeof item.restoredFromSnapshot === 'boolean' ? item.restoredFromSnapshot : undefined;
+        const batchStats =
+            isRecord(item.batchStats) &&
+            typeof item.batchStats.requestCount === 'number' &&
+            typeof item.batchStats.successfulRequestCount === 'number' &&
+            typeof item.batchStats.failedRequestCount === 'number' &&
+            typeof item.batchStats.pendingRequestCount === 'number'
+                ? {
+                      requestCount: item.batchStats.requestCount,
+                      successfulRequestCount: item.batchStats.successfulRequestCount,
+                      failedRequestCount: item.batchStats.failedRequestCount,
+                      pendingRequestCount: item.batchStats.pendingRequestCount,
+                  }
+                : item.batchStats === null
+                  ? null
+                  : undefined;
+        const error = typeof item.error === 'string' ? item.error : null;
+        const parentHistoryId = normalizeNullableString(item.parentHistoryId);
+        const rootHistoryId = normalizeNullableString(item.rootHistoryId);
+        const sourceHistoryId = normalizeNullableString(item.sourceHistoryId);
+        const lineageAction = isLineageAction(item.lineageAction) ? item.lineageAction : undefined;
+        const lineageDepth = normalizeFiniteNumber(item.lineageDepth);
+
+        const sanitizedQueuedJob: QueuedBatchJob = {
+            localId: item.localId,
+            name: item.name,
+            displayName: item.displayName,
+            submissionGroupId: item.submissionGroupId,
+            submissionItemIndex: item.submissionItemIndex,
+            submissionItemCount: item.submissionItemCount,
+            state: item.state,
+            model: isImageModel(item.model) ? item.model : EMPTY_WORKSPACE_COMPOSER_STATE.imageModel,
+            prompt: item.prompt,
+            ...(generationMode !== undefined ? { generationMode } : {}),
+            aspectRatio: isAspectRatio(item.aspectRatio) ? item.aspectRatio : EMPTY_WORKSPACE_COMPOSER_STATE.aspectRatio,
+            imageSize: isImageSize(item.imageSize) ? item.imageSize : EMPTY_WORKSPACE_COMPOSER_STATE.imageSize,
+            style: normalizeImageStyle(item.style),
+            outputFormat: isOutputFormat(item.outputFormat) ? item.outputFormat : EMPTY_WORKSPACE_COMPOSER_STATE.outputFormat,
+            temperature: item.temperature,
+            thinkingLevel: isThinkingLevel(item.thinkingLevel) ? item.thinkingLevel : EMPTY_WORKSPACE_COMPOSER_STATE.thinkingLevel,
+            includeThoughts: item.includeThoughts,
+            googleSearch: item.googleSearch,
+            imageSearch: item.imageSearch,
+            batchSize: item.batchSize,
+            ...(batchStats !== undefined ? { batchStats } : {}),
+            objectImageCount: item.objectImageCount,
+            characterImageCount: item.characterImageCount,
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt,
+            startedAt,
+            completedAt,
+            lastPolledAt,
+            ...(typeof resolvedHasImportablePayload === 'boolean'
+                ? { hasImportablePayload: resolvedHasImportablePayload }
+                : {}),
+            ...(typeof restoredFromSnapshot === 'boolean' ? { restoredFromSnapshot } : {}),
+            ...(item.submissionPending === true ? { submissionPending: true } : {}),
+            ...(importDiagnostic ? { importDiagnostic } : {}),
+            ...(hasExplicitImportIssues ? { importIssues: importIssues.length > 0 ? importIssues : null } : {}),
+            error,
+            ...(parentHistoryId !== undefined ? { parentHistoryId } : {}),
+            ...(rootHistoryId !== undefined ? { rootHistoryId } : {}),
+            ...(sourceHistoryId !== undefined ? { sourceHistoryId } : {}),
+            ...(lineageAction !== undefined ? { lineageAction } : {}),
+            ...(lineageDepth !== undefined ? { lineageDepth } : {}),
         };
 
-        return [
-            {
-                ...queuedJobWithoutImportedAt,
-                style: normalizeImageStyle(item.style),
-                ...(importDiagnostic ? { importDiagnostic } : {}),
-                ...(hasExplicitImportIssues ? { importIssues: importIssues.length > 0 ? importIssues : null } : {}),
-                ...(typeof resolvedHasImportablePayload === 'boolean'
-                    ? { hasImportablePayload: resolvedHasImportablePayload }
-                    : {}),
-            },
-        ];
+        return [sanitizedQueuedJob];
     });
 };
 
@@ -1205,7 +1418,11 @@ const sanitizeBranchContinuationSourceByOriginId = (value: unknown): BranchConti
         return {};
     }
 
-    return Object.fromEntries(
-        Object.entries(value).filter(([key, item]) => typeof key === 'string' && typeof item === 'string'),
-    );
+    return Object.entries(value).reduce<BranchContinuationSourceByOriginId>((sources, [key, item]) => {
+        if (typeof item === 'string') {
+            sources[key] = item;
+        }
+
+        return sources;
+    }, {});
 };
