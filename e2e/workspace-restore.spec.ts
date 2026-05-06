@@ -3872,7 +3872,7 @@ test.describe('workspace restore flows', () => {
         await openQueuedBatchDetailModal(page);
         const panel = queuedBatchDetailModal(page).getByTestId('queued-batch-panel');
         await expect(panel).toContainText('Editor queue job');
-        await expect(panel).toContainText('Editor Edit');
+        await expect(panel).toContainText(tt('generationModeEditorEdit'));
     });
 
     test('editor queue batch from a restored older stage turn keeps branch topology', async ({ page }) => {
@@ -3953,7 +3953,7 @@ test.describe('workspace restore flows', () => {
         await openQueuedBatchDetailModal(page);
         const panel = queuedBatchDetailModal(page).getByTestId('queued-batch-panel');
         await expect(panel).toContainText('Editor branch queue job');
-        await expect(panel).toContainText('Editor Edit');
+        await expect(panel).toContainText(tt('generationModeEditorEdit'));
     });
 
     test('replace imported inherited provenance exposes continuity summary and recovered sources', async ({ page }) => {
