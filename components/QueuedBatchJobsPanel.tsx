@@ -13,6 +13,7 @@ import {
     isQueuedBatchJobNoPayload,
     isQueuedBatchJobRetryableImport,
 } from '../utils/queuedBatchJobs';
+import { resolveGenerationModeLabel } from '../utils/generationMode';
 import InfoTooltip from './InfoTooltip';
 
 type QueuedBatchJobsPanelProps = {
@@ -58,8 +59,7 @@ type QueuedBatchSubmissionGroup = {
 };
 
 const getQueuedSubmissionGroupId = (job: Pick<QueuedBatchJob, 'localId' | 'submissionGroupId'>) => {
-    const submissionGroupId =
-        typeof job.submissionGroupId === 'string' ? job.submissionGroupId.trim() : '';
+    const submissionGroupId = typeof job.submissionGroupId === 'string' ? job.submissionGroupId.trim() : '';
 
     return submissionGroupId.length > 0 ? submissionGroupId : `legacy-${job.localId}`;
 };
@@ -285,25 +285,8 @@ export default function QueuedBatchJobsPanel({
     const showTitleAndGuidance = !isEmbedded;
     const showConversationNoticeInline = Boolean(queueBatchConversationNotice);
     const showHeaderMetaRow = showTitleAndGuidance || showConversationNoticeInline;
-    const getTranslatedGenerationModeLabel = (mode?: string | null) => {
-        if (!mode) return t('modeTextToImg');
-        if (mode.includes('Inpaint') || mode.includes('Retouch')) return t('modeInpaint');
-        if (mode.includes('Editor Edit')) return 'Editor Edit';
-        if (mode.includes('Text')) return t('modeTextToImg');
-        if (mode.includes('Image to')) return t('modeImgToImg');
-        if (mode.includes('Follow-up')) return t('workspaceViewerFollowUpEdit');
-        if (
-            mode.includes('Outpaint') ||
-            mode.includes('Reframe') ||
-            mode.includes('Reposition') ||
-            mode.includes('Upscale') ||
-            mode.includes('Refine')
-        ) {
-            return t('modeOutpaint');
-        }
-
-        return mode;
-    };
+    const getTranslatedGenerationModeLabel = (mode?: string | null) =>
+        mode ? resolveGenerationModeLabel(mode, t) : t('generationModeTextToImage');
     const neutralActionButtonClassName =
         'nbu-control-button px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-40';
     const primaryImportActionButtonClassName =
@@ -1019,7 +1002,10 @@ export default function QueuedBatchJobsPanel({
                         return null;
                     }
 
-                    const groupedSubmissionItemCount = Math.max(group.jobs.length, getQueuedSubmissionItemCount(leadJob));
+                    const groupedSubmissionItemCount = Math.max(
+                        group.jobs.length,
+                        getQueuedSubmissionItemCount(leadJob),
+                    );
 
                     if (group.jobs.length <= 1 && groupedSubmissionItemCount <= 1) {
                         return renderQueuedJobCard(leadJob);

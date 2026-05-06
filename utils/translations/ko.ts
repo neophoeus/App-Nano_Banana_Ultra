@@ -190,6 +190,9 @@ export const ko = {
     lblHistoryFailed: '실패',
     modeTextToImg: '텍스트 생성',
     modeImgToImg: '이미지 생성',
+    generationModeTextToImage: '텍스트로 이미지 생성',
+    generationModeReferenceImage: '참조 이미지 생성',
+    generationModeEditorEdit: '에디터 다시 그리기',
     clearHistory: '작업공간 비우기',
 
     // Clear History Dialog

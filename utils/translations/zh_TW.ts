@@ -177,6 +177,9 @@ export const zh_TW = {
     lblHistoryFailed: '失敗',
     modeTextToImg: '文生圖',
     modeImgToImg: '圖生圖',
+    generationModeTextToImage: '文生圖',
+    generationModeReferenceImage: '參考圖生成',
+    generationModeEditorEdit: '編輯器重繪',
     clearHistory: '清空工作區',
 
     // Clear History Dialog

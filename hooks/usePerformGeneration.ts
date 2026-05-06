@@ -33,6 +33,10 @@ import {
 import { buildImageSidecarMetadata, normalizeImageSidecarMetadata } from '../utils/imageSidecarMetadata';
 import { deriveExecutionMode } from '../utils/executionMode';
 import { sanitizeSessionHintsForStorage } from '../utils/inlineImageDisplay';
+import {
+    buildResultPartFilenameStem as buildSavedResultPartFilenameStem,
+    buildSavedImageFilenameStem,
+} from '../utils/savedImageFilename';
 import { buildStyleTransferPrompt } from '../utils/styleRegistry';
 
 const MODEL_TRANSLATION_KEYS: Record<ImageModel, string> = {
@@ -80,24 +84,15 @@ function buildFailureDisplayContext(
     return undefined;
 }
 
-function buildResultPartFilenameStem(
-    prefix: string,
-    slotIndex: number,
-    sequence: number,
-    sourceSavedFilename?: string,
-): string {
-    const baseStem = sourceSavedFilename
-        ? sourceSavedFilename.replace(/\.[^.]+$/, '')
-        : `${prefix}-${String(slotIndex + 1).padStart(2, '0')}`;
-
-    return `${baseStem}-part-${String(sequence).padStart(2, '0')}`;
-}
-
 async function persistResultParts(
     resultParts: ResultPart[] | undefined,
     options: {
+        model: ImageModel;
+        mode: string;
         prefix: string;
         slotIndex: number;
+        requestCreatedAt: Date;
+        requestId: string;
         sourceSavedFilename?: string;
         primaryOutputImageUrl?: string;
         primaryOutputDisplayUrl?: string;
@@ -130,7 +125,15 @@ async function persistResultParts(
                     slotIndex: options.slotIndex,
                     sequence: part.sequence,
                 },
-                buildResultPartFilenameStem(options.prefix, options.slotIndex, part.sequence, options.sourceSavedFilename),
+                buildSavedResultPartFilenameStem({
+                    model: options.model,
+                    mode: options.mode,
+                    slotIndex: options.slotIndex,
+                    createdAt: options.requestCreatedAt,
+                    requestId: options.requestId,
+                    sequence: part.sequence,
+                    sourceSavedFilename: options.sourceSavedFilename,
+                }),
             );
             const savedFilename = extractSavedFilename(savedPath);
 
@@ -356,6 +359,8 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                 addLog(t('logMode').replace('{0}', currentMode));
                 addLog(t('logSource').replace('{0}', getModelLabel(t, targetModel)));
                 addLog(t('logRequesting').replace('{0}', currentBatchSize.toString()).replace('{1}', currentImageSize));
+                const requestCreatedAt = new Date();
+                const requestId = crypto.randomUUID();
 
                 const handleImageReceived = async (url: string, slotIndex: number): Promise<ImageReceivedResult> => {
                     const metadata = buildImageSidecarMetadata({
@@ -376,7 +381,18 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                         batchResultIndex: slotIndex,
                     });
                     const prefix = editingInput ? `${targetModel}-edit` : `${targetModel}-gen`;
-                    const savedPath = await saveImageToLocal(url, prefix, metadata);
+                    const savedPath = await saveImageToLocal(
+                        url,
+                        prefix,
+                        metadata,
+                        buildSavedImageFilenameStem({
+                            model: targetModel,
+                            mode: currentMode,
+                            slotIndex,
+                            createdAt: requestCreatedAt,
+                            requestId,
+                        }),
+                    );
                     const filename = extractSavedFilename(savedPath);
                     const displayUrl = filename ? buildSavedImageLoadUrl(filename) : url;
 
@@ -482,8 +498,12 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                     });
                     const prefix = editingInput ? `${targetModel}-edit` : `${targetModel}-gen`;
                     const persistedResultParts = await persistResultParts(res.resultParts, {
+                        model: targetModel,
+                        mode: currentMode,
                         prefix,
                         slotIndex: batchResultIndex,
+                        requestCreatedAt,
+                        requestId,
                         sourceSavedFilename: res.savedFilename,
                         primaryOutputImageUrl: res.url,
                         primaryOutputDisplayUrl: res.displayUrl,

@@ -2,6 +2,7 @@ import React, { Dispatch, SetStateAction } from 'react';
 import { GeneratedImage, GroundingMetadata } from '../types';
 import { GroundingSelection } from '../hooks/useSelectedResultState';
 import { GroundingAttributionOverviewRow } from '../utils/groundingProvenance';
+import { resolveGenerationModeLabel } from '../utils/generationMode';
 import { getTranslation, Language } from '../utils/translations';
 import InfoTooltip from './InfoTooltip';
 
@@ -132,21 +133,7 @@ function GroundingProvenancePanel({
             return t('historyModeImage');
         }
 
-        if (mode.includes('Inpaint') || mode.includes('Retouch')) return t('modeInpaint');
-        if (mode.includes('Text')) return t('modeTextToImg');
-        if (mode.includes('Image to')) return t('modeImgToImg');
-        if (mode.includes('Follow-up')) return t('workspaceViewerFollowUpEdit');
-        if (
-            mode.includes('Outpaint') ||
-            mode.includes('Reframe') ||
-            mode.includes('Reposition') ||
-            mode.includes('Upscale') ||
-            mode.includes('Refine')
-        ) {
-            return t('modeOutpaint');
-        }
-
-        return mode;
+        return resolveGenerationModeLabel(mode, t);
     };
     const getTranslatedSourceTypeLabel = (sourceType?: string | null) => {
         if (sourceType === 'web') return t('groundingPanelAttributionSourceTypeWeb');

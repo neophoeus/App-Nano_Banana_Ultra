@@ -1,5 +1,26 @@
 # Changelog
 
+## v3.6.7 - 2026-05-06
+
+- Release title: Nano Banana Ultra 3.6.7 - Precise Workflow Labels, Deterministic Saved Filenames & Browser Save Verification
+- Release summary:
+    - precise workflow label normalization across runtime surfaces:
+        - generation mode handling now resolves through one shared normalization helper instead of repeated local `includes(...)` checks, so text-to-image, reference-image generation, follow-up edit, editor edit, retouch, and reframe all map through one canonical runtime contract
+        - generated-image cards, queued batch panels, provenance surfaces, import-review summaries, workspace generation context, and provenance continuation logic now use the same workflow semantics and localized label resolution instead of mixing fragile English substring checks with hard-coded fallback text
+
+    - broader workflow-label localization parity:
+        - maintained locale dictionaries now include dedicated precise workflow keys for `Text to Image`, `Reference Image Generation`, and `Editor Re-render`, so the product no longer falls back to older short labels or English-only wording on those workflow surfaces
+        - queued batch and viewer-facing workflow readback now consistently show the newer precise workflow naming family, including localized editor rerender wording and the new reference-image generation label instead of older mixed `Img2Img`-style shells
+
+    - deterministic model-aligned saved filename contract:
+        - interactive generation and queued batch import now save primary images with one explicit filename-stem helper using `{modelId}_{yyyyMMdd-HHmmss}_{slotNumber}-{shortId}_{workflowSlug}`, so saved filenames align with the actual model id and workflow instead of older prefix-plus-random naming
+        - workflow slugs now stay stable and ASCII-safe through the saved filename contract, with canonical values such as `txt2img`, `ref2img`, `followup`, `editor-edit`, `editor-retouch`, and `editor-reframe`
+        - result-part images now derive from the same saved primary basename when available, and newly generated thumbnails continue following the saved primary basename through the `-thumbnail` suffix instead of drifting onto unrelated stems
+
+    - stronger verification around filename and workflow behavior:
+        - new unit coverage now validates generation-mode normalization, translation-key coverage across maintained locales, deterministic saved filename stem construction, and the updated interactive / queued save-call expectations for the new naming contract
+        - new browser Playwright coverage now verifies that a mocked generate flow still persists real output files, thumbnails, and sidecar metadata to disk under the new filename contract, and that file-backed restore flows accept the current thumbnail basename pattern
+
 ## v3.6.6 - 2026-04-23
 
 - Release title: Nano Banana Ultra 3.6.6 - Stage-Image Wording Parity, Locked Reference Ratio Priority & Visible Ratio-Switch Feedback

@@ -194,6 +194,9 @@ export const fr = {
     lblHistoryFailed: 'Échec',
     modeTextToImg: 'Texte vers Image',
     modeImgToImg: 'Image vers Image',
+    generationModeTextToImage: 'Texte vers image',
+    generationModeReferenceImage: "Génération à partir d'une image de référence",
+    generationModeEditorEdit: "Nouveau rendu de l'éditeur",
     clearHistory: "Effacer l'espace de travail",
 
     // Clear History Dialog

@@ -875,7 +875,7 @@ describe('QueuedBatchJobsPanel', () => {
         expect(markup).toContain('已過期');
         expect(markup).toContain('文生圖');
         expect(markup).toContain('後續編修');
-        expect(markup).toContain('圖生圖');
+        expect(markup).toContain('參考圖生成');
         expect(markup).not.toContain('Text to Image');
         expect(markup).not.toContain('Follow-up Edit');
         expect(markup).not.toContain('Image to Image');
@@ -931,7 +931,7 @@ describe('QueuedBatchJobsPanel', () => {
             />,
         );
 
-        expect(markup).toContain('Editor Edit');
+        expect(markup).toContain('エディタ再描画');
     });
 
     it('shows workflow guidance when no queued jobs are currently tracked', () => {

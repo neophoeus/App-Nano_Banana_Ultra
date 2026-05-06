@@ -27,6 +27,7 @@ import {
     isQueuedBatchJobClearableIssue,
     isQueuedBatchJobRefreshable,
 } from '../utils/queuedBatchJobs';
+import { buildSavedImageFilenameStem } from '../utils/savedImageFilename';
 import { buildStyleTransferPrompt } from '../utils/styleRegistry';
 import { useQueuedBatchJobs } from './useQueuedBatchJobs';
 
@@ -1132,6 +1133,8 @@ export function useQueuedBatchWorkflow({
                 const { job: remoteJob, results } = await importQueuedBatchJobResults(job.name);
                 const successfulResults = results.filter((result) => result.status === 'success' && result.imageUrl);
                 const failedResults = results.filter((result) => result.status !== 'success' || !result.imageUrl);
+                const importCreatedAt = new Date();
+                const importRequestId = crypto.randomUUID();
                 const resolvedBatchSize = 1;
                 const resolvedJobSeed = {
                     ...job,
@@ -1169,6 +1172,13 @@ export function useQueuedBatchWorkflow({
                                 result.imageUrl as string,
                                 `${job.model}-batch`,
                                 sidecarMetadata,
+                                buildSavedImageFilenameStem({
+                                    model: job.model,
+                                    mode: job.generationMode || 'Queued Batch Job',
+                                    slotIndex: result.index,
+                                    createdAt: importCreatedAt,
+                                    requestId: importRequestId,
+                                }),
                             );
                             savedFilename = extractSavedFilename(savedPath);
                         } catch {

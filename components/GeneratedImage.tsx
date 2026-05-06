@@ -2,6 +2,7 @@ import React from 'react';
 import Button from './Button';
 import HexagonHUD from './HexagonHUD';
 import { AspectRatio, ExecutionMode, ImageSize, ImageStyle, StageErrorState } from '../types';
+import { normalizeGenerationModeKind, resolveGenerationModeLabel } from '../utils/generationMode';
 import { Language, getTranslation } from '../utils/translations';
 
 export type StageTopRightChipKey = 'current-source' | 'origin' | 'branch' | 'continuation-differs' | 'result-status';
@@ -146,39 +147,20 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
 
     // Helper for mode colors
     const getModeColor = (mode: string) => {
-        // Inpaint / Retouch
-        if (mode.includes('Inpaint') || mode.includes('Retouch')) {
+        const modeKind = normalizeGenerationModeKind(mode);
+
+        if (modeKind === 'retouch') {
             return 'text-pink-600 dark:text-pink-300 border-pink-300 dark:border-pink-500/30 bg-pink-50 dark:bg-pink-500/10 shadow-pink-500/20';
         }
-        // Outpaint / Reframe (and catch-all for any legacy upscale labels)
-        if (
-            mode.includes('Outpaint') ||
-            mode.includes('Reframe') ||
-            mode.includes('Reposition') ||
-            mode.includes('Upscale') ||
-            mode.includes('Refine')
-        ) {
+
+        if (modeKind === 'reframe') {
             return 'text-blue-600 dark:text-blue-300 border-blue-300 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 shadow-blue-500/20';
         }
+
         return 'text-amber-600 dark:text-amber-300 border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 shadow-amber-500/20';
     };
 
-    const getTranslatedMode = (mode: string) => {
-        if (mode.includes('Inpaint') || mode.includes('Retouch')) {
-            return t('modeInpaint');
-        }
-        // Consolidate all resizing/extending modes to Reframe (Outpaint)
-        if (
-            mode.includes('Outpaint') ||
-            mode.includes('Reframe') ||
-            mode.includes('Reposition') ||
-            mode.includes('Upscale') ||
-            mode.includes('Refine')
-        ) {
-            return t('modeOutpaint');
-        }
-        return mode;
-    };
+    const getTranslatedMode = (mode: string) => resolveGenerationModeLabel(mode, t);
 
     const StageFrame = ({ children }: { children: React.ReactNode }) => (
         <div className="mx-auto flex h-full min-h-0 w-full flex-1 items-center justify-center">

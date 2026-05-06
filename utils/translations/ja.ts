@@ -190,6 +190,9 @@ export const ja = {
     lblHistoryFailed: '失敗',
     modeTextToImg: 'テキスト生成',
     modeImgToImg: '画像生成',
+    generationModeTextToImage: 'テキストから画像生成',
+    generationModeReferenceImage: '参照画像生成',
+    generationModeEditorEdit: 'エディタ再描画',
     clearHistory: 'ワークスペースを消去',
 
     // Clear History Dialog

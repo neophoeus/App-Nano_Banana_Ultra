@@ -358,6 +358,7 @@ describe('usePerformGeneration', () => {
                 size: '2K',
                 mode: 'Inpainting',
             }),
+            expect.stringMatching(/^gemini-3\.1-flash-image-preview_\d{8}-\d{6}_01-[a-z0-9]{8}_editor-retouch$/),
         );
         expect(persistHistoryThumbnailMock).toHaveBeenCalledWith(
             'data:image/png;base64,AAA',
@@ -863,7 +864,7 @@ describe('usePerformGeneration', () => {
                 slotIndex: 0,
                 sequence: 0,
             }),
-            'gemini-3.1-flash-image-preview-gen-01-part-00',
+            expect.stringMatching(/^gemini-3\.1-flash-image-preview_\d{8}-\d{6}_01-[a-z0-9]{8}_txt2img-part-00$/),
         );
         expect(latestHistory).toHaveLength(1);
         expect(latestHistory[0]).toEqual(

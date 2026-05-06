@@ -8,6 +8,7 @@ import {
     WorkspaceConversationState,
     WorkspaceSessionState,
 } from '../types';
+import { normalizeGenerationModeKind } from '../utils/generationMode';
 import { recordConversationTurn } from '../utils/conversationState';
 
 type PromoteResultArtifactsToSession = (
@@ -51,7 +52,7 @@ type UseProvenanceContinuationArgs = {
 };
 
 const getContinuitySourceFromMode = (mode?: string): SessionContinuitySource => {
-    if (!mode || mode === 'Text to Image') {
+    if (!mode || normalizeGenerationModeKind(mode) === 'text-to-image') {
         return 'generated';
     }
 
@@ -105,11 +106,11 @@ export function useProvenanceContinuation({
 
             const resolvedSourceHistoryId = options?.useExplicitSource
                 ? (sourceHistoryId ?? null)
-                : sourceHistoryId ??
+                : (sourceHistoryId ??
                   currentStageAssetSourceHistoryId ??
                   workspaceSession.provenanceSourceHistoryId ??
                   workspaceSession.sourceHistoryId ??
-                  null;
+                  null);
 
             setPendingProvenanceContext({
                 grounding,

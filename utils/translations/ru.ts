@@ -193,6 +193,9 @@ export const ru = {
     lblHistoryFailed: 'Сбой',
     modeTextToImg: 'Текст в Картинку',
     modeImgToImg: 'Картинка в Картинку',
+    generationModeTextToImage: 'Текст в изображение',
+    generationModeReferenceImage: 'Генерация по референсному изображению',
+    generationModeEditorEdit: 'Повторный рендер в редакторе',
     clearHistory: 'Очистить рабочее пространство',
 
     // Clear History Dialog

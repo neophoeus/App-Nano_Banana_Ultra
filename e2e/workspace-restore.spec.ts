@@ -1,10 +1,11 @@
 // @ts-nocheck -- Local Playwright specs resolve runtime tooling from dev-environment/ rather than the root product manifest.
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import type { Locator, Page } from '@playwright/test';
 import playwrightTest from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 import { formatTemperature } from '../utils/temperature';
 import { getTranslation, preloadAllTranslations, SUPPORTED_LANGUAGES, type Language } from '../utils/translations';
+import { resolvePlaywrightAppPath } from './utils/playwrightPaths';
 
 const { expect, test } = playwrightTest;
 
@@ -1240,6 +1241,8 @@ const readPersistedHistoryTurnByText = async (
                 prompt: generatedTurn.prompt,
                 mode: generatedTurn.mode,
                 executionMode: generatedTurn.executionMode,
+                savedFilename: generatedTurn.savedFilename,
+                thumbnailSavedFilename: generatedTurn.thumbnailSavedFilename,
                 sourceHistoryId: generatedTurn.sourceHistoryId,
                 lineageAction: generatedTurn.lineageAction,
                 rootHistoryId: generatedTurn.rootHistoryId,
@@ -2303,7 +2306,48 @@ const openFirstHistoryRenameDialog = async (page: Page) => {
 
 test.describe('workspace restore flows', () => {
     const repairedHistoryPreviewPattern =
-        /^(data:image\/jpeg;base64,|\/api\/load-image\?filename=(?:gemini-3\.1-flash-image-preview-history-thumb_.+\.jpg|file-backed-turn-thumbnail\.jpg)$)/;
+        /^(data:image\/jpeg;base64,|\/api\/load-image\?filename=[^?]+-thumbnail\.jpg$)/;
+
+    test('browser generate persists the real saved filename and thumbnail basename contract', async ({ page }) => {
+        const responseText = 'Browser saved filename reply';
+        const capturedBodies = await installBasicImageGenerateCaptureRoute(page, responseText);
+
+        await openFreshWorkspace(page);
+        await composer(page).fill('Browser saved filename prompt');
+        await generateButton(page).click();
+
+        await expect.poll(() => capturedBodies.length).toBe(1);
+
+        const persistedState = await readPersistedHistoryTurnByText(page, responseText, {
+            waitForPromotedSelection: true,
+        });
+
+        expect(persistedState).not.toBeNull();
+
+        const savedFilename = persistedState?.generatedTurn?.savedFilename;
+        const thumbnailSavedFilename = persistedState?.generatedTurn?.thumbnailSavedFilename;
+
+        expect(savedFilename).toMatch(/^gemini-3\.1-flash-image-preview_\d{8}-\d{6}_01-[a-z0-9]{8}_txt2img\.png$/);
+        expect(thumbnailSavedFilename).toBe(`${String(savedFilename).replace(/\.[^.]+$/, '')}-thumbnail.jpg`);
+
+        const savedImagePath = resolvePlaywrightAppPath('output', String(savedFilename));
+        const thumbnailPath = resolvePlaywrightAppPath('output', String(thumbnailSavedFilename));
+        const sidecarPath = savedImagePath.replace(/\.[^.]+$/, '.json');
+
+        expect(existsSync(savedImagePath)).toBe(true);
+        expect(existsSync(thumbnailPath)).toBe(true);
+        expect(existsSync(sidecarPath)).toBe(true);
+
+        const sidecar = JSON.parse(readFileSync(sidecarPath, 'utf8')) as Record<string, unknown>;
+        expect(sidecar).toEqual(
+            expect.objectContaining({
+                filename: savedFilename,
+                model: 'gemini-3.1-flash-image-preview',
+                generationMode: 'Text to Image',
+                batchResultIndex: 0,
+            }),
+        );
+    });
 
     test('editor floating shared controls show compact settings summary and button-only actions', async ({ page }) => {
         await openFreshWorkspace(page);

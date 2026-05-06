@@ -182,6 +182,9 @@ export const en = {
     lblHistoryFailed: 'Failed',
     modeTextToImg: 'Txt2Img',
     modeImgToImg: 'Img2Img',
+    generationModeTextToImage: 'Text to Image',
+    generationModeReferenceImage: 'Reference Image Generation',
+    generationModeEditorEdit: 'Editor Re-render',
     clearHistory: 'Clear Workspace',
 
     // Clear History Dialog

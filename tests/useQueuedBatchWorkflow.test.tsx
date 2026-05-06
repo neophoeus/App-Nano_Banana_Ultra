@@ -644,6 +644,7 @@ describe('useQueuedBatchWorkflow', () => {
                 batchJobName: readyJob.name,
                 batchResultIndex: 0,
             }),
+            expect.stringMatching(/^gemini-3\.1-flash-image-preview_\d{8}-\d{6}_01-[a-z0-9]{8}_txt2img$/),
         );
         expect(persistHistoryThumbnailMock).toHaveBeenCalledWith(
             'data:image/png;base64,AAA',

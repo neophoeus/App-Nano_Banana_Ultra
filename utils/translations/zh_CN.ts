@@ -225,6 +225,9 @@ export const zh_CN = {
     lblHistoryFailed: '失败',
     modeTextToImg: '文生图',
     modeImgToImg: '图生图',
+    generationModeTextToImage: '文生图',
+    generationModeReferenceImage: '参考图生成',
+    generationModeEditorEdit: '编辑器重绘',
     clearHistory: '清空工作区',
 
     // Clear History Dialog

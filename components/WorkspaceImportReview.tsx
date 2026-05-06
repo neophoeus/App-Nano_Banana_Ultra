@@ -2,6 +2,7 @@ import React from 'react';
 import { WorkspaceImportReviewState } from '../hooks/useWorkspaceSnapshotActions';
 import { WORKSPACE_OVERLAY_Z_INDEX } from '../constants/workspaceOverlays';
 import { BranchSummary } from '../utils/lineage';
+import { resolveGenerationModeLabel } from '../utils/generationMode';
 import { GeneratedImage } from '../types';
 import { getTranslation, Language } from '../utils/translations';
 import InfoTooltip from './InfoTooltip';
@@ -67,16 +68,7 @@ const WorkspaceImportReview: React.FC<WorkspaceImportReviewProps> = ({
             return '';
         }
 
-        const normalized = mode.toLowerCase();
-        if (normalized.includes('text')) {
-            return t('modeTextToImg');
-        }
-
-        if (normalized.includes('image to') || normalized.includes('img2img')) {
-            return t('modeImgToImg');
-        }
-
-        return mode;
+        return resolveGenerationModeLabel(mode, t);
     };
 
     const getExecutionLabel = (item: GeneratedImage) => {

@@ -9,6 +9,7 @@ import {
     WorkspaceSessionState,
 } from '../types';
 import { buildConversationRequestContext, resolveConversationSelectionState } from '../utils/conversationState';
+import { isEditingGenerationMode } from '../utils/generationMode';
 import { resolveSelectionFirstSourceOverride } from '../utils/generationSourceOverride';
 
 type GenerationSourceOverride = {
@@ -46,9 +47,7 @@ export function useWorkspaceGenerationContext({
             sourceOverride?: GenerationSourceOverride | null;
         }) => {
             const hasSourceOverride = sourceOverride !== undefined;
-            const isEditingRequest = Boolean(
-                editingInput || mode.includes('Inpaint') || mode.includes('Retouch') || mode.includes('Editor'),
-            );
+            const isEditingRequest = isEditingGenerationMode(mode, editingInput);
             const sourceHistoryId = hasSourceOverride
                 ? (sourceOverride?.sourceHistoryId ?? null)
                 : isEditingRequest
