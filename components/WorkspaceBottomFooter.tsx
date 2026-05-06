@@ -22,7 +22,7 @@ function WorkspaceBottomFooter() {
                             Neophoeus Art
                         </a>
                         <span aria-hidden="true"> • </span>
-                        <span>Powered by Gemini</span>
+                        <span>Powered by Gemini AI</span>
                     </p>
                 </div>
             </div>

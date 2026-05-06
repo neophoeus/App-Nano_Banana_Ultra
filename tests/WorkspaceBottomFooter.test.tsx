@@ -15,7 +15,7 @@ describe('WorkspaceBottomFooter', () => {
         expect(markup).toContain('🍌 NANO BANANA ULTRA');
         expect(markup).toContain('Designed by');
         expect(markup).toContain('Neophoeus Art');
-        expect(markup).toContain('Powered by Gemini');
+        expect(markup).toContain('Powered by Gemini AI');
         expect(markup).toContain('href="https://neophoeus.art/"');
         expect(markup).toContain('target="_blank"');
         expect(markup).toContain('rel="noreferrer"');

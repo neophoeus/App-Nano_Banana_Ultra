@@ -2,7 +2,7 @@
 
 ## v3.6.7 - 2026-05-06
 
-- Release title: Nano Banana Ultra 3.6.7 - Precise Workflow Labels & Deterministic Saved Filenames
+- Release title: Nano Banana Ultra 3.6.7 - Precise Workflow Labels, Status Copy Refresh & Deterministic Saved Filenames
 - Release summary:
     - precise workflow label normalization across runtime surfaces:
         - generation mode handling now resolves through one shared normalization helper instead of repeated local `includes(...)` checks, so text-to-image, reference-image generation, follow-up edit, editor edit, retouch, and reframe all map through one canonical runtime contract
@@ -11,6 +11,10 @@
     - broader workflow-label localization parity:
         - maintained locale dictionaries now include dedicated precise workflow keys for `Text to Image`, `Reference Image Generation`, and `Editor Re-render`, so the product no longer falls back to older short labels or English-only wording on those workflow surfaces
         - queued batch and viewer-facing workflow readback now consistently show the newer precise workflow naming family, including localized editor rerender wording and the new reference-image generation label instead of older mixed `Img2Img`-style shells
+
+    - refreshed shell branding and runtime status copy:
+        - the fixed workspace footer now reads `Powered by Gemini AI`, matching the updated product branding instead of the older Gemini footer wording
+        - header health chips now use the shorter `Server` and `API Key` naming family across maintained locales instead of the older `Local API` and `Gemini Key` labels, while preserving the existing translation-driven runtime path
 
     - deterministic model-aligned saved filename contract:
         - interactive generation and queued batch import now save primary images with one explicit filename-stem helper using `{modelId}_{yyyyMMdd-HHmmss}_{slotNumber}-{shortId}_{workflowSlug}`, so saved filenames align with the actual model id and workflow instead of older prefix-plus-random naming
