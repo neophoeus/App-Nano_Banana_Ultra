@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { ThinkingLevel } from '@google/genai/node';
 import { buildGenerateParts } from '../plugins/utils/imageReferences';
 import { buildImageRequestConfig, validateCapabilityRequest } from '../plugins/utils/requestConfig';
 
@@ -84,6 +85,33 @@ describe('buildImageRequestConfig', () => {
         });
 
         expect(result.requestConfig.temperature).toBe(1.05);
+    });
+
+    it('maps app thinking levels to Gemini SDK enums without changing images-only modality behavior', () => {
+        const result = buildImageRequestConfig('gemini-3.1-flash-image-preview', {
+            outputFormat: 'images-only',
+            thinkingLevel: 'minimal',
+            includeThoughts: true,
+        });
+
+        expect(result.effectiveThinkingLevel).toBe('minimal');
+        expect(result.resolvedResponseModalities).toEqual(['IMAGE']);
+        expect(result.requestConfig.thinkingConfig).toEqual({
+            thinkingLevel: ThinkingLevel.MINIMAL,
+            includeThoughts: true,
+        });
+    });
+
+    it('omits disabled thinkingLevel from the outbound thinkingConfig', () => {
+        const result = buildImageRequestConfig('gemini-3-pro-image-preview', {
+            outputFormat: 'images-only',
+            includeThoughts: true,
+        });
+
+        expect(result.effectiveThinkingLevel).toBe('disabled');
+        expect(result.requestConfig.thinkingConfig).toEqual({
+            includeThoughts: true,
+        });
     });
 });
 

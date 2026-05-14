@@ -20,6 +20,7 @@ import WorkspaceBottomFooter from './components/WorkspaceBottomFooter';
 import WorkspaceTopHeader from './components/WorkspaceTopHeader';
 import WorkspaceUnifiedHistoryPanel from './components/WorkspaceUnifiedHistoryPanel';
 import WorkspaceProgressCard from './components/WorkspaceProgressCard';
+import type { WorkspaceProgressThoughtImageDownloadRequest } from './components/WorkspaceProgressDetailPanel';
 import { WorkspaceFloatingLayerContext } from './components/WorkspaceFloatingLayerContext';
 import { resolveStyleLabel } from './utils/styleRegistry';
 import {
@@ -91,7 +92,13 @@ import { useWorkspaceTransientUiState } from './hooks/useWorkspaceTransientUiSta
 import { useLegacyWorkspaceSnapshotMigration } from './hooks/useLegacyWorkspaceSnapshotMigration';
 import { resolveCurrentStageSelectionFirstSourceOverride } from './utils/generationSourceOverride';
 import { buildSavedImageLoadUrl, loadImageMetadata } from './utils/imageSaveUtils';
-import { createImageSidecarMetadataState, normalizeImageSidecarMetadata } from './utils/imageSidecarMetadata';
+import {
+    buildImageSidecarMetadata,
+    createImageSidecarMetadataState,
+    normalizeImageSidecarMetadata,
+} from './utils/imageSidecarMetadata';
+import { buildResultPartFilenameStem, buildSavedImageFilenameStem } from './utils/savedImageFilename';
+import { downloadImageSource, downloadJsonDocument, stripFilenameExtension } from './utils/browserDownload';
 import { WORKSPACE_OVERLAY_Z_INDEX } from './constants/workspaceOverlays';
 
 const ImageEditor = lazy(() => import('./components/ImageEditor'));
@@ -1897,6 +1904,120 @@ const App: React.FC = () => {
         },
         [getHistoryTurnById, handleHistorySelect],
     );
+    const handleDownloadStageImage = useCallback(
+        async (imageUrl: string) => {
+            try {
+                const matchedHistoryItem =
+                    history.find(
+                        (item) =>
+                            item.status === 'success' &&
+                            (item.savedFilename ? buildSavedImageLoadUrl(item.savedFilename) : item.url) === imageUrl,
+                    ) || null;
+                const preferredMetadata =
+                    matchedHistoryItem?.id === currentViewedCompletedHistoryItem?.id
+                        ? normalizeImageSidecarMetadata(selectedMetadata)
+                        : null;
+                const persistedHistoryMetadata = normalizeImageSidecarMetadata(matchedHistoryItem?.metadata);
+                const fallbackMetadata = buildImageSidecarMetadata({
+                    prompt: matchedHistoryItem?.prompt || viewSettings.prompt,
+                    model: matchedHistoryItem?.model || stageViewerSettings.model,
+                    style: matchedHistoryItem?.style || stageViewerSettings.imageStyle,
+                    aspectRatio: matchedHistoryItem?.aspectRatio || stageViewerSettings.aspectRatio,
+                    requestedImageSize: matchedHistoryItem?.size || stageViewerSettings.imageSize,
+                    outputFormat,
+                    temperature,
+                    thinkingLevel,
+                    includeThoughts,
+                    googleSearch,
+                    imageSearch,
+                    generationMode: matchedHistoryItem?.mode || generationMode,
+                    executionMode: matchedHistoryItem?.executionMode || executionMode,
+                    batchSize: stageViewerSettings.batchSize,
+                });
+                const baseMetadata = preferredMetadata || persistedHistoryMetadata || fallbackMetadata;
+                const imageFilename = await downloadImageSource(imageUrl, {
+                    filename: matchedHistoryItem?.savedFilename,
+                    filenameStem: buildSavedImageFilenameStem({
+                        model: matchedHistoryItem?.model || stageViewerSettings.model,
+                        mode: matchedHistoryItem?.mode || generationMode,
+                        slotIndex: selectedImageIndex,
+                        createdAt: matchedHistoryItem ? new Date(matchedHistoryItem.createdAt) : new Date(),
+                        requestId: matchedHistoryItem?.id || crypto.randomUUID(),
+                    }),
+                });
+                const metadataFilename = `${stripFilenameExtension(imageFilename)}.json`;
+                downloadJsonDocument(
+                    {
+                        ...baseMetadata,
+                        filename: baseMetadata.filename || imageFilename,
+                        timestamp:
+                            typeof baseMetadata.timestamp === 'string' && baseMetadata.timestamp.trim()
+                                ? baseMetadata.timestamp
+                                : new Date(matchedHistoryItem?.createdAt || Date.now()).toISOString(),
+                    },
+                    metadataFilename,
+                );
+                showNotification(t('stageDownloadCompleteNotice'), 'info');
+            } catch (error) {
+                console.error('Failed to download stage image', error);
+                showNotification(t('stageDownloadFailedNotice'), 'error');
+            }
+        },
+        [
+            currentViewedCompletedHistoryItem?.id,
+            executionMode,
+            generationMode,
+            googleSearch,
+            history,
+            imageSearch,
+            includeThoughts,
+            outputFormat,
+            selectedImageIndex,
+            selectedMetadata,
+            showNotification,
+            stageViewerSettings.aspectRatio,
+            stageViewerSettings.batchSize,
+            stageViewerSettings.imageSize,
+            stageViewerSettings.imageStyle,
+            stageViewerSettings.model,
+            t,
+            temperature,
+            thinkingLevel,
+            viewSettings.prompt,
+        ],
+    );
+    const handleDownloadThoughtImage = useCallback(
+        async ({ imageUrl, mimeType, savedFilename, entryId, slotIndex, sequence }: WorkspaceProgressThoughtImageDownloadRequest) => {
+            try {
+                const historyItem = getHistoryTurnById(entryId);
+                await downloadImageSource(imageUrl, {
+                    filename: savedFilename,
+                    filenameStem: buildResultPartFilenameStem({
+                        model: historyItem?.model || stageViewerSettings.model,
+                        mode: historyItem?.mode || generationMode,
+                        slotIndex: typeof slotIndex === 'number' ? slotIndex : selectedImageIndex,
+                        createdAt: historyItem ? new Date(historyItem.createdAt) : new Date(),
+                        requestId: historyItem?.id || entryId || crypto.randomUUID(),
+                        sequence,
+                        sourceSavedFilename: historyItem?.savedFilename,
+                    }),
+                    mimeType,
+                });
+                showNotification(t('thoughtImageDownloadCompleteNotice'), 'info');
+            } catch (error) {
+                console.error('Failed to download thought image', error);
+                showNotification(t('thoughtImageDownloadFailedNotice'), 'error');
+            }
+        },
+        [
+            generationMode,
+            getHistoryTurnById,
+            selectedImageIndex,
+            showNotification,
+            stageViewerSettings.model,
+            t,
+        ],
+    );
     const { workspaceViewerOverlayProps, generatedImageStageProps } = useWorkspaceStageViewer({
         generatedImageUrls,
         selectedImageIndex,
@@ -1917,6 +2038,7 @@ const App: React.FC = () => {
         onGenerate: handleGenerate,
         onEdit: handleOpenEditor,
         onClear: handleClearCurrentStage,
+        onDownloadStageImage: handleDownloadStageImage,
         onAddToObjectReference: handleAddToObjectReference,
         onAddToCharacterReference: capability.maxCharacters > 0 ? handleAddToCharacterReference : undefined,
         currentLanguage: currentLang,
@@ -2215,6 +2337,7 @@ const App: React.FC = () => {
                                 <WorkspaceProgressDetailPanel
                                     currentLanguage={currentLang}
                                     thoughtEntries={progressThoughtEntries}
+                                    onDownloadThoughtImage={handleDownloadThoughtImage}
                                     latestWorkflowEntry={latestWorkflowEntry}
                                     isGenerating={isGenerating}
                                     batchProgress={batchProgress}

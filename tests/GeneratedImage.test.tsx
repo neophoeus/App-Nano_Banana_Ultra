@@ -48,6 +48,12 @@ describe('GeneratedImage', () => {
                             emphasis: 'secondary',
                             onClick: () => {},
                         },
+                        {
+                            key: 'download-image',
+                            label: 'Download',
+                            emphasis: 'secondary',
+                            onClick: () => {},
+                        },
                     ],
                     overflowActions: [
                         {
@@ -83,6 +89,7 @@ describe('GeneratedImage', () => {
         expect(markup).toContain('stage-top-right-action-continue-from-here');
         expect(markup).toContain('stage-top-right-action-edit');
         expect(markup).toContain('stage-top-right-action-open-viewer');
+        expect(markup).toContain('stage-top-right-action-download-image');
         expect(markup).toContain('stage-top-right-overflow-action-add-object-reference');
         expect(markup).toContain('stage-top-right-overflow-action-add-character-reference');
         expect(markup).toContain('stage-top-right-overflow-action-branch-from-here');
@@ -101,6 +108,9 @@ describe('GeneratedImage', () => {
         );
         expect(getTestIdIndex(markup, 'stage-top-right-action-edit')).toBeLessThan(
             getTestIdIndex(markup, 'stage-top-right-action-open-viewer'),
+        );
+        expect(getTestIdIndex(markup, 'stage-top-right-action-open-viewer')).toBeLessThan(
+            getTestIdIndex(markup, 'stage-top-right-action-download-image'),
         );
         expect(getTestIdIndex(markup, 'stage-top-right-overflow-action-add-object-reference')).toBeLessThan(
             getTestIdIndex(markup, 'stage-top-right-overflow-action-add-character-reference'),
@@ -149,6 +159,12 @@ describe('GeneratedImage', () => {
                             onClick: () => {},
                         },
                         {
+                            key: 'download-image',
+                            label: 'Download',
+                            emphasis: 'secondary',
+                            onClick: () => {},
+                        },
+                        {
                             key: 'add-object-reference',
                             label: 'Add to Object Reference',
                             emphasis: 'secondary',
@@ -172,6 +188,7 @@ describe('GeneratedImage', () => {
         expect(markup).toContain('stage-top-right-chip-origin');
         expect(markup).toContain('stage-top-right-action-edit');
         expect(markup).toContain('stage-top-right-action-open-viewer');
+        expect(markup).toContain('stage-top-right-action-download-image');
         expect(markup).toContain('stage-top-right-action-add-object-reference');
         expect(markup).not.toContain('stage-top-right-action-continue-from-here');
         expect(markup).not.toContain('stage-top-right-overflow-action-branch-from-here');
@@ -181,6 +198,9 @@ describe('GeneratedImage', () => {
             markup.indexOf('stage-top-right-action-open-viewer'),
         );
         expect(markup.indexOf('stage-top-right-action-open-viewer')).toBeLessThan(
+            markup.indexOf('stage-top-right-action-download-image'),
+        );
+        expect(markup.indexOf('stage-top-right-action-download-image')).toBeLessThan(
             markup.indexOf('stage-top-right-action-add-object-reference'),
         );
         expect(markup).not.toContain('Test prompt');
@@ -355,6 +375,12 @@ describe('GeneratedImage', () => {
                     ],
                     overflowActions: [
                         {
+                            key: 'download-image',
+                            label: 'Download',
+                            emphasis: 'secondary',
+                            onClick: () => {},
+                        },
+                        {
                             key: 'open-viewer',
                             label: 'Open Viewer',
                             emphasis: 'secondary',
@@ -378,6 +404,7 @@ describe('GeneratedImage', () => {
         expect(markup).toContain('stage-top-right-overflow-chip-result-status');
         expect(markup).toContain('stage-top-right-action-continue-from-here');
         expect(markup).toContain('stage-top-right-action-edit');
+        expect(markup).toContain('stage-top-right-overflow-action-download-image');
         expect(markup).not.toContain('data-testid="stage-top-right-action-open-viewer"');
         expect(markup).toContain('stage-top-right-overflow-action-open-viewer');
         expect(markup).toContain('stage-top-right-overflow-action-add-object-reference');

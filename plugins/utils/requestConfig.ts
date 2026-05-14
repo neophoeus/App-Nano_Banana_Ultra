@@ -2,7 +2,7 @@ import type { AspectRatio, ImageModel, ImageSize } from '../../types';
 import { buildGroundingToolConfig, deriveGroundingMode } from '../../utils/groundingMode';
 import { MODEL_CAPABILITIES } from '../../utils/modelCapabilities';
 import { normalizeTemperature } from '../../utils/temperature';
-import { PERMISSIVE_SAFETY_SETTINGS } from './promptHelpers';
+import { buildGeminiResponseModalities, PERMISSIVE_SAFETY_SETTINGS, toGeminiThinkingLevel } from './geminiApiConfig';
 
 type ImageGenerateBodyLike = {
     model?: string;
@@ -15,6 +15,8 @@ type ImageGenerateBodyLike = {
     googleSearch?: boolean;
     imageSearch?: boolean;
 };
+
+type AppThinkingLevel = NonNullable<ImageGenerateBodyLike['thinkingLevel']>;
 
 export function validateCapabilityRequest(model: string, body: ImageGenerateBodyLike): string | null {
     const capability = MODEL_CAPABILITIES[model as ImageModel];
@@ -63,7 +65,7 @@ export function buildImageRequestConfig(
     requestConfig: Record<string, unknown>;
     resolvedResponseModalities: string[];
     groundingMode: ReturnType<typeof deriveGroundingMode>;
-    effectiveThinkingLevel: string;
+    effectiveThinkingLevel: AppThinkingLevel;
     shouldIncludeThoughts: boolean;
 } {
     const imageConfig: Record<string, string> = {};
@@ -75,8 +77,10 @@ export function buildImageRequestConfig(
     }
 
     const requiresTextForGroundingMetadata = Boolean(body.imageSearch);
-    const resolvedResponseModalities =
-        body.outputFormat === 'images-and-text' || requiresTextForGroundingMetadata ? ['IMAGE', 'TEXT'] : ['IMAGE'];
+    const resolvedResponseModalities = buildGeminiResponseModalities(
+        body.outputFormat,
+        requiresTextForGroundingMetadata,
+    );
 
     const requestConfig: Record<string, unknown> = {
         responseModalities: resolvedResponseModalities,
@@ -86,12 +90,13 @@ export function buildImageRequestConfig(
     };
 
     const capability = MODEL_CAPABILITIES[model as ImageModel];
-    const effectiveThinkingLevel =
+    const effectiveThinkingLevel: AppThinkingLevel =
         body.thinkingLevel || (model === 'gemini-3.1-flash-image-preview' ? 'minimal' : 'disabled');
     const shouldIncludeThoughts = Boolean(body.includeThoughts) && capability.supportsIncludeThoughts;
-    if (effectiveThinkingLevel !== 'disabled' || shouldIncludeThoughts) {
+    const geminiThinkingLevel = toGeminiThinkingLevel(effectiveThinkingLevel);
+    if (geminiThinkingLevel || shouldIncludeThoughts) {
         requestConfig.thinkingConfig = {
-            ...(effectiveThinkingLevel !== 'disabled' ? { thinkingLevel: effectiveThinkingLevel } : {}),
+            ...(geminiThinkingLevel ? { thinkingLevel: geminiThinkingLevel } : {}),
             includeThoughts: shouldIncludeThoughts,
         };
     }

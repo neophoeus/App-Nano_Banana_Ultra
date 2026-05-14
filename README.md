@@ -10,6 +10,8 @@ Nano Banana Ultra is a Gemini-powered image workspace for creation, guided editi
 
 Instead of treating image generation as a disposable one-shot action, Nano Banana Ultra keeps prompting, references, history, editing, reuse, and restore inside one connected workspace flow.
 
+This repository is the local API edition of Nano Banana Ultra. If you already subscribe to Google AI Pro or Google AI Ultra, you can also use [App-Nano_Banana_Ultra_lite](https://github.com/neophoeus/App-Nano_Banana_Ultra_lite) by uploading it into Google AI Studio and running it there. That AI Studio path gives a similar day-to-day experience while usually being more quota-efficient for Google AI Pro and Google AI Ultra subscribers.
+
 ## At a Glance
 
 - selection-first Gemini image workspace instead of a single prompt box
@@ -106,9 +108,9 @@ Nano Banana Ultra currently supports three Gemini image-model paths. The UI expo
 
 ## Version Overview
 
-### Latest Release: 3.6.7
+### Latest Release: 3.6.8
 
-Latest release: 3.6.7. See [CHANGELOG.md](CHANGELOG.md) for release details.
+Latest release: 3.6.8. See [CHANGELOG.md](CHANGELOG.md) for release details.
 
 ### 3.5.x
 
@@ -180,6 +182,8 @@ Playwright sidebar actions and browser-opening flows can invoke `playwright.conf
 Nano Banana Ultra 是一個以 Google Gemini 影像模型為核心的影像創作工作區，聚焦在生成、引導式編修，以及多輪延伸創作。它不是只給你一個 prompt 輸入框，而是把提示詞、參考圖、歷史、編輯、重用與還原都放進同一個持續運作的工作區裡。
 
 它更像一個可以推進整條創作脈絡的影像 workspace，而不是一次性的生圖工具。你可以從草稿開始，一路做到批次探索、來源接續、局部編修、版本比較、工作區回復，最後再把有價值的結果帶回下一輪。
+
+這個 repo 是 Nano Banana Ultra 的本機 API 版本。如果你已經訂閱 Google AI Pro 或 Google AI Ultra，也可以改用 [App-Nano_Banana_Ultra_lite](https://github.com/neophoeus/App-Nano_Banana_Ultra_lite)：只要把它上傳到 Google AI Studio 裡執行，就能獲得相近的使用體驗，而且對 Google AI Pro / Ultra 訂閱者來說，額度通常也會更划算。
 
 ## 產品概要
 
@@ -277,9 +281,9 @@ Nano Banana Ultra 目前支援三條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：3.6.7
+### 最新版本：3.6.8
 
-最新版本：3.6.7。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
+最新版本：3.6.8。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 3.5.x
 

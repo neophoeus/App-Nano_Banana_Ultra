@@ -3,7 +3,7 @@
 import { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import WorkspaceProgressDetailPanel from '../components/WorkspaceProgressDetailPanel';
 import { QueuedBatchJob } from '../types';
 
@@ -250,6 +250,7 @@ describe('WorkspaceProgressDetailPanel', () => {
                                     sequence: 1,
                                     kind: 'thought-image',
                                     imageUrl: '/api/load-image?filename=failed-thought.png',
+                                    mimeType: 'image/png',
                                 },
                             ],
                             createdAtLabel: '10:17',
@@ -291,5 +292,58 @@ describe('WorkspaceProgressDetailPanel', () => {
                 ) as HTMLImageElement | null
             )?.getAttribute('src'),
         ).toBe('/api/load-image?filename=failed-thought.png');
+    });
+
+    it('renders thought-image download buttons and forwards the image payload', () => {
+        const handleDownloadThoughtImage = vi.fn();
+
+        act(() => {
+            root.render(
+                <WorkspaceProgressDetailPanel
+                    currentLanguage="en"
+                    onDownloadThoughtImage={handleDownloadThoughtImage}
+                    thoughtEntries={[
+                        {
+                            id: 'turn-download',
+                            shortId: 'turn-dl',
+                            prompt: 'Keep the sketch note but export the thought image.',
+                            thoughts: 'Thought image is the main artifact here.',
+                            resultParts: [
+                                {
+                                    sequence: 2,
+                                    kind: 'thought-image',
+                                    imageUrl: '/api/load-image?filename=thought-download.png',
+                                    mimeType: 'image/png',
+                                    savedFilename: 'thought-download.png',
+                                },
+                            ],
+                            createdAtLabel: '10:19',
+                            createdAtMs: 1710253140000,
+                            slotIndex: 1,
+                        },
+                    ]}
+                />,
+            );
+        });
+
+        const downloadButton = container.querySelector(
+            '[data-testid="workspace-progress-detail-part-image-download-turn-dl-2"]',
+        ) as HTMLButtonElement | null;
+
+        expect(downloadButton?.textContent).toContain('Download image');
+
+        act(() => {
+            downloadButton?.click();
+        });
+
+        expect(handleDownloadThoughtImage).toHaveBeenCalledWith({
+            entryId: 'turn-download',
+            shortId: 'turn-dl',
+            slotIndex: 1,
+            sequence: 2,
+            imageUrl: '/api/load-image?filename=thought-download.png',
+            mimeType: 'image/png',
+            savedFilename: 'thought-download.png',
+        });
     });
 });

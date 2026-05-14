@@ -18,6 +18,7 @@ export type StageTopRightActionKey =
     | 'continue-from-here'
     | 'edit'
     | 'open-viewer'
+    | 'download-image'
     | 'add-object-reference'
     | 'add-character-reference'
     | 'branch-from-here'

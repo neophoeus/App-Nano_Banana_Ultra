@@ -22,6 +22,16 @@ export type WorkspaceProgressThoughtEntry = {
     isFailed?: boolean;
 };
 
+export type WorkspaceProgressThoughtImageDownloadRequest = {
+    entryId: string;
+    shortId: string;
+    slotIndex?: number;
+    sequence: number;
+    imageUrl: string;
+    mimeType?: string;
+    savedFilename?: string;
+};
+
 const isThoughtResultPart = (part: ResultPart) => part.kind === 'thought-text' || part.kind === 'thought-image';
 
 const getEntryThoughtParts = (entry: WorkspaceProgressThoughtEntry): ResultPart[] =>
@@ -65,7 +75,11 @@ const getPreferredSelectedEntryId = (
     allEntries: WorkspaceProgressThoughtEntry[],
 ) => liveEntries[0]?.id ?? archivedEntries[0]?.id ?? allEntries[0]?.id ?? null;
 
-const renderThoughtEntryContent = (entry: WorkspaceProgressThoughtEntry, t: (key: string) => string) => {
+const renderThoughtEntryContent = (
+    entry: WorkspaceProgressThoughtEntry,
+    t: (key: string) => string,
+    onDownloadThoughtImage?: (request: WorkspaceProgressThoughtImageDownloadRequest) => void,
+) => {
     const thoughtParts = getEntryThoughtParts(entry);
 
     if (thoughtParts.length > 0) {
@@ -82,8 +96,29 @@ const renderThoughtEntryContent = (entry: WorkspaceProgressThoughtEntry, t: (key
                 <figure
                     key={`${entry.id}-${part.sequence}`}
                     data-testid={`workspace-progress-detail-part-image-${entry.shortId}-${part.sequence}`}
-                    className="overflow-hidden rounded-[20px] border border-amber-200/80 bg-slate-950/70 p-2 dark:border-amber-500/20"
+                    className="relative overflow-hidden rounded-[20px] border border-amber-200/80 bg-slate-950/70 p-2 dark:border-amber-500/20"
                 >
+                    {onDownloadThoughtImage ? (
+                        <button
+                            type="button"
+                            data-testid={`workspace-progress-detail-part-image-download-${entry.shortId}-${part.sequence}`}
+                            onClick={() =>
+                                onDownloadThoughtImage({
+                                    entryId: entry.id,
+                                    shortId: entry.shortId,
+                                    slotIndex: entry.slotIndex,
+                                    sequence: part.sequence,
+                                    imageUrl: part.imageUrl,
+                                    mimeType: part.mimeType,
+                                    savedFilename: part.savedFilename,
+                                })
+                            }
+                            className="absolute right-4 top-4 z-10 rounded-full border border-white/20 bg-slate-950/80 px-3 py-1 text-[11px] font-semibold text-white transition-colors hover:border-amber-300/60 hover:text-amber-100"
+                            aria-label={t('thoughtImageDownload')}
+                        >
+                            {t('thoughtImageDownload')}
+                        </button>
+                    ) : null}
                     <img
                         src={part.imageUrl}
                         alt={t('workspaceViewerThoughts')}
@@ -111,6 +146,7 @@ type WorkflowEntryLike = {
 type WorkspaceProgressDetailPanelProps = {
     currentLanguage: Language;
     thoughtEntries?: WorkspaceProgressThoughtEntry[];
+    onDownloadThoughtImage?: (request: WorkspaceProgressThoughtImageDownloadRequest) => void;
     latestWorkflowEntry?: WorkflowEntryLike | null;
     isGenerating?: boolean;
     batchProgress?: {
@@ -128,6 +164,7 @@ type WorkspaceProgressDetailPanelProps = {
 function WorkspaceProgressDetailPanel({
     currentLanguage,
     thoughtEntries = [],
+    onDownloadThoughtImage,
     latestWorkflowEntry = null,
     isGenerating = false,
     batchProgress = { completed: 0, total: 0 },
@@ -626,7 +663,7 @@ function WorkspaceProgressDetailPanel({
                                 data-testid="workspace-progress-detail-selected-content"
                                 className="mt-4 space-y-3"
                             >
-                                {renderThoughtEntryContent(selectedEntry, t)}
+                                {renderThoughtEntryContent(selectedEntry, t, onDownloadThoughtImage)}
                             </div>
                         </>
                     ) : (

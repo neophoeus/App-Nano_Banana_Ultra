@@ -1,5 +1,20 @@
 # Changelog
 
+## v3.6.8 - 2026-05-14
+
+- Release title: Nano Banana Ultra 3.6.8 - Gemini Enum Request Alignment
+- Release summary:
+    - Gemini request enum alignment for AI Studio and SDK-backed image flows:
+        - interactive Gemini image requests now keep app-facing thinking states such as `minimal`, `high`, and `disabled` in product state while converting outbound `thinkingLevel` values to official Gemini enum tokens only at the API boundary
+        - disabled thinking now omits `thinkingLevel` from outbound Gemini requests instead of sending a non-existent disabled enum value
+
+    - centralized outbound Gemini request constants:
+        - response modalities and permissive safety settings now resolve through one shared Gemini API config helper, keeping outbound `IMAGE` / `TEXT` modalities and existing `BLOCK_NONE` safety behavior consistent across request paths
+        - prompt-helper paths continue using the same centralized permissive safety settings contract instead of maintaining duplicate local definitions
+
+    - preserved batch-safe request shaping:
+        - queued batch request shaping now continues to exclude interactive-only thinking config while preserving the existing batch-safe image, modality, temperature, and safety-setting behavior
+
 ## v3.6.7 - 2026-05-06
 
 - Release title: Nano Banana Ultra 3.6.7 - Precise Workflow Labels, Status Copy Refresh & Deterministic Saved Filenames

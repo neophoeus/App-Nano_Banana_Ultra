@@ -28,6 +28,7 @@ type BuildStageTopRightModelArgs = {
     resultStatusTone: 'warning' | 'success' | null;
     onEdit?: () => void;
     onOpenViewer?: () => void;
+    onDownload?: () => void;
     onAddToObjectReference?: () => void;
     onAddToCharacterReference?: () => void;
     onClear?: () => void;
@@ -75,6 +76,7 @@ export function buildStageTopRightModel({
     resultStatusTone,
     onEdit,
     onOpenViewer,
+    onDownload,
     onAddToObjectReference,
     onAddToCharacterReference,
     onClear,
@@ -148,6 +150,15 @@ export function buildStageTopRightModel({
         });
     }
 
+    if (onDownload) {
+        primaryVisibleActions.push({
+            key: 'download-image',
+            label: t('stageActionDownload'),
+            emphasis: 'secondary',
+            onClick: onDownload,
+        });
+    }
+
     if (!hasLinkedHistoryTurn && onAddToObjectReference) {
         primaryVisibleActions.push({
             key: 'add-object-reference',
@@ -216,6 +227,7 @@ type UseWorkspaceStageViewerArgs = {
     onGenerate: () => void;
     onEdit: () => void;
     onClear: () => void;
+    onDownloadStageImage?: (imageUrl: string) => void | Promise<void>;
     onAddToObjectReference: () => void;
     onAddToCharacterReference?: () => void;
     currentLanguage: Language;
@@ -257,6 +269,7 @@ export function useWorkspaceStageViewer({
     onGenerate,
     onEdit,
     onClear,
+    onDownloadStageImage,
     onAddToObjectReference,
     onAddToCharacterReference,
     currentLanguage,
@@ -305,6 +318,14 @@ export function useWorkspaceStageViewer({
         setIsViewerOpen(false);
     }, [onCloseViewer, setIsViewerOpen]);
 
+    const downloadStageImage = useCallback(() => {
+        if (!activeViewerImage || !onDownloadStageImage) {
+            return;
+        }
+
+        void onDownloadStageImage(activeViewerImage);
+    }, [activeViewerImage, onDownloadStageImage]);
+
     const stageTopRight = useMemo(
         () =>
             buildStageTopRightModel({
@@ -320,6 +341,7 @@ export function useWorkspaceStageViewer({
                 resultStatusTone,
                 onEdit,
                 onOpenViewer: openViewer,
+                onDownload: onDownloadStageImage ? downloadStageImage : undefined,
                 onAddToObjectReference,
                 onAddToCharacterReference,
                 onClear,
@@ -335,6 +357,8 @@ export function useWorkspaceStageViewer({
             onAddToCharacterReference,
             onAddToObjectReference,
             onClear,
+            onDownloadStageImage,
+            downloadStageImage,
             onEdit,
             openViewer,
             resultStatusSummary,

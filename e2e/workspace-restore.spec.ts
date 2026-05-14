@@ -1,6 +1,6 @@
 // @ts-nocheck -- Local Playwright specs resolve runtime tooling from dev-environment/ rather than the root product manifest.
-import { existsSync, readFileSync } from 'node:fs';
-import type { Locator, Page } from '@playwright/test';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import type { Download, Locator, Page } from '@playwright/test';
 import playwrightTest from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 import { formatTemperature } from '../utils/temperature';
@@ -124,8 +124,54 @@ const editorPortraitContextFixturePath = fileURLToPath(
 const queuedImportedFixtureDataUrl = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
 const distinctUploadStageDataUrl =
     'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%222%22 height=%222%22 viewBox=%220 0 2 2%22%3E%3Crect width=%222%22 height=%222%22 fill=%22%23f59e0b%22/%3E%3Ccircle cx=%221%22 cy=%221%22 r=%220.5%22 fill=%22%230f172a%22/%3E%3C/svg%3E';
+const playwrightDownloadSmokeImageBase64 =
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aRWQAAAAASUVORK5CYII=';
+const playwrightDownloadSmokeImageDataUrl =
+    `data:image/png;base64,${playwrightDownloadSmokeImageBase64}`;
 const editorSharedControlsPrompt = 'Editor surface prompt';
 const sketchSharedControlsPrompt = 'Sketch surface prompt';
+
+const writePlaywrightDownloadSmokeFixture = (savedFilename: string, metadata: Record<string, unknown>) => {
+    const outputDir = resolvePlaywrightAppPath('output');
+    const imagePath = resolvePlaywrightAppPath('output', savedFilename);
+    const metadataPath = imagePath.replace(/\.[^.]+$/, '.json');
+
+    mkdirSync(outputDir, { recursive: true });
+    writeFileSync(imagePath, Buffer.from(playwrightDownloadSmokeImageBase64, 'base64'));
+    writeFileSync(metadataPath, `${JSON.stringify(metadata, null, 2)}\n`, 'utf-8');
+
+    return { imagePath, metadataPath };
+};
+
+const cleanupPlaywrightDownloadSmokeFixture = (...filePaths: string[]) => {
+    for (const filePath of filePaths) {
+        if (existsSync(filePath)) {
+            rmSync(filePath, { force: true });
+        }
+    }
+};
+
+const captureSuggestedFilenames = async (
+    page: Page,
+    expectedCount: number,
+    action: () => Promise<void>,
+): Promise<string[]> => {
+    const suggestedFilenames: string[] = [];
+    const handleDownload = (download: Download) => {
+        suggestedFilenames.push(download.suggestedFilename());
+    };
+
+    page.on('download', handleDownload);
+
+    try {
+        await action();
+        await expect.poll(() => suggestedFilenames.length).toBe(expectedCount);
+        return [...suggestedFilenames];
+    } finally {
+        page.off('download', handleDownload);
+    }
+};
+
 const buildLayoutAlignmentSnapshot = (
     turnCount: number,
     options?: {
@@ -2347,6 +2393,167 @@ test.describe('workspace restore flows', () => {
                 batchResultIndex: 0,
             }),
         );
+    });
+
+    test('stage and thought downloads trigger browser downloads with the expected filenames', async ({ page }) => {
+        const stageSavedFilename = 'playwright-download-smoke-stage.png';
+        const thoughtSavedFilename = 'playwright-download-smoke-thought.png';
+        const createdAt = Date.UTC(2026, 4, 13, 9, 45, 0);
+        const stageImageUrl = `/api/load-image?filename=${encodeURIComponent(stageSavedFilename)}`;
+        const stageMetadata = {
+            prompt: 'Playwright download smoke prompt',
+            model: 'gemini-3.1-flash-image-preview',
+            style: 'None',
+            aspectRatio: '1:1',
+            requestedImageSize: '2K',
+            outputFormat: 'images-only',
+            temperature: 1,
+            thinkingLevel: 'minimal',
+            includeThoughts: true,
+            googleSearch: false,
+            imageSearch: false,
+            groundingMode: 'off',
+            generationMode: 'Text to Image',
+            mode: 'Text to Image',
+            executionMode: 'single-turn',
+            batchSize: 1,
+            filename: stageSavedFilename,
+            timestamp: '2026-05-13T09:45:00.000Z',
+        };
+        const { imagePath, metadataPath } = writePlaywrightDownloadSmokeFixture(stageSavedFilename, stageMetadata);
+
+        try {
+            await openWorkspaceWithSnapshot(page, {
+                history: [
+                    {
+                        id: 'playwright-download-smoke-turn',
+                        url: stageImageUrl,
+                        savedFilename: stageSavedFilename,
+                        prompt: 'Playwright download smoke prompt',
+                        aspectRatio: '1:1',
+                        size: '2K',
+                        style: 'None',
+                        model: 'gemini-3.1-flash-image-preview',
+                        createdAt,
+                        mode: 'Text to Image',
+                        executionMode: 'single-turn',
+                        status: 'success',
+                        text: 'Playwright download smoke result',
+                        thoughts: 'Playwright thought image ready',
+                        metadata: stageMetadata,
+                        resultParts: [
+                            {
+                                sequence: 1,
+                                kind: 'thought-text',
+                                text: 'Inspecting the intermediate visual.',
+                            },
+                            {
+                                sequence: 2,
+                                kind: 'thought-image',
+                                imageUrl: playwrightDownloadSmokeImageDataUrl,
+                                mimeType: 'image/png',
+                                savedFilename: thoughtSavedFilename,
+                            },
+                        ],
+                    },
+                ],
+                stagedAssets: [],
+                workflowLogs: ['[09:45:00] Download smoke snapshot restored.'],
+                workspaceSession: {
+                    activeResult: {
+                        text: 'Playwright download smoke result',
+                        thoughts: 'Playwright thought image ready',
+                        resultParts: [
+                            {
+                                sequence: 1,
+                                kind: 'thought-text',
+                                text: 'Inspecting the intermediate visual.',
+                            },
+                            {
+                                sequence: 2,
+                                kind: 'thought-image',
+                                imageUrl: playwrightDownloadSmokeImageDataUrl,
+                                mimeType: 'image/png',
+                                savedFilename: thoughtSavedFilename,
+                            },
+                        ],
+                        grounding: null,
+                        metadata: stageMetadata,
+                        sessionHints: null,
+                        historyId: 'playwright-download-smoke-turn',
+                    },
+                    continuityGrounding: null,
+                    continuitySessionHints: null,
+                    provenanceMode: null,
+                    provenanceSourceHistoryId: null,
+                    conversationId: null,
+                    conversationBranchOriginId: null,
+                    conversationActiveSourceHistoryId: null,
+                    conversationTurnIds: [],
+                    source: 'history',
+                    sourceHistoryId: 'playwright-download-smoke-turn',
+                    updatedAt: createdAt,
+                },
+                branchState: {
+                    nameOverrides: {},
+                    continuationSourceByBranchOriginId: {},
+                },
+                conversationState: {
+                    byBranchOriginId: {},
+                },
+                viewState: {
+                    generatedImageUrls: [stageImageUrl],
+                    selectedImageIndex: 0,
+                    selectedHistoryId: 'playwright-download-smoke-turn',
+                },
+                composerState: {
+                    prompt: 'Playwright download smoke prompt',
+                    aspectRatio: '1:1',
+                    imageSize: '2K',
+                    imageStyle: 'None',
+                    imageModel: 'gemini-3.1-flash-image-preview',
+                    batchSize: 1,
+                    outputFormat: 'images-only',
+                    temperature: 1,
+                    thinkingLevel: 'minimal',
+                    includeThoughts: true,
+                    googleSearch: false,
+                    imageSearch: false,
+                    generationMode: 'Text to Image',
+                    executionMode: 'single-turn',
+                },
+            });
+
+            const stageDownloadButton = page.getByTestId('stage-top-right-action-download-image');
+            await expect(stageDownloadButton).toBeVisible();
+
+            const stageDownloads = await captureSuggestedFilenames(page, 2, async () => {
+                await stageDownloadButton.click();
+            });
+
+            expect(stageDownloads.sort()).toEqual([
+                stageSavedFilename,
+                'playwright-download-smoke-stage.json',
+            ].sort());
+            await expect(page.getByText(tt('stageDownloadCompleteNotice'), { exact: true })).toBeVisible();
+
+            await openProgressDetailModal(page);
+
+            const thoughtDownloadButton = page
+                .locator('[data-testid^="workspace-progress-detail-part-image-download-"]')
+                .first();
+            await expect(thoughtDownloadButton).toBeVisible();
+
+            const thoughtDownloads = await captureSuggestedFilenames(page, 1, async () => {
+                await thoughtDownloadButton.click();
+            });
+
+            expect(thoughtDownloads).toEqual([thoughtSavedFilename]);
+            await expect(page.getByText(tt('thoughtImageDownloadCompleteNotice'), { exact: true })).toBeVisible();
+            await closeProgressDetailModal(page);
+        } finally {
+            cleanupPlaywrightDownloadSmokeFixture(imagePath, metadataPath);
+        }
     });
 
     test('editor floating shared controls show compact settings summary and button-only actions', async ({ page }) => {

@@ -6,6 +6,7 @@ const translationMap: Record<string, string> = {
     stageGroundingResultStatus: 'Grounding result',
     stageActionEdit: 'Edit',
     stageOpenViewer: 'Open Viewer',
+    stageActionDownload: 'Download',
     stageActionAddToObjectReference: 'Add to Object Reference',
     stageActionAddToCharacterReference: 'Add to Character Reference',
     stageActionClear: 'Clear',
@@ -27,6 +28,7 @@ const createArgs = (
     resultStatusTone: 'warning',
     onEdit: vi.fn(),
     onOpenViewer: vi.fn(),
+    onDownload: vi.fn(),
     onAddToObjectReference: vi.fn(),
     onAddToCharacterReference: vi.fn(),
     onClear: vi.fn(),
@@ -40,7 +42,7 @@ describe('buildStageTopRightModel', () => {
 
         expect(model?.contextChips.map((chip) => chip.key)).toEqual(['current-source', 'branch', 'result-status']);
         expect(model?.overflowContextChips).toEqual([]);
-        expect(model?.visibleActions.map((action) => action.key)).toEqual(['edit', 'open-viewer']);
+        expect(model?.visibleActions.map((action) => action.key)).toEqual(['edit', 'open-viewer', 'download-image']);
         expect(model?.overflowActions.map((action) => action.key)).toEqual([
             'add-object-reference',
             'add-character-reference',
@@ -59,7 +61,7 @@ describe('buildStageTopRightModel', () => {
 
         expect(model?.contextChips.map((chip) => chip.key)).toEqual(['current-source', 'branch']);
         expect(model?.overflowContextChips).toEqual([]);
-        expect(model?.visibleActions.map((action) => action.key)).toEqual(['edit', 'open-viewer']);
+        expect(model?.visibleActions.map((action) => action.key)).toEqual(['edit', 'open-viewer', 'download-image']);
         expect(model?.overflowActions.map((action) => action.key)).toEqual([
             'add-object-reference',
             'add-character-reference',
@@ -83,6 +85,7 @@ describe('buildStageTopRightModel', () => {
         expect(model?.visibleActions.map((action) => action.key)).toEqual([
             'edit',
             'open-viewer',
+            'download-image',
             'add-object-reference',
         ]);
         expect(model?.overflowActions.map((action) => action.key)).toEqual(['add-character-reference', 'clear']);
@@ -95,6 +98,7 @@ describe('buildStageTopRightModel', () => {
         expect(model?.overflowContextChips).toEqual([]);
         expect(model?.visibleActions.map((action) => action.key)).toEqual(['edit', 'open-viewer']);
         expect(model?.overflowActions.map((action) => action.key)).toEqual([
+            'download-image',
             'add-object-reference',
             'add-character-reference',
             'clear',
@@ -117,6 +121,7 @@ describe('buildStageTopRightModel', () => {
         expect(model?.overflowContextChips).toEqual([]);
         expect(model?.visibleActions.map((action) => action.key)).toEqual(['edit', 'open-viewer']);
         expect(model?.overflowActions.map((action) => action.key)).toEqual([
+            'download-image',
             'add-object-reference',
             'add-character-reference',
             'clear',
@@ -130,6 +135,17 @@ describe('buildStageTopRightModel', () => {
         expect(model?.overflowContextChips).toEqual([]);
         expect(model?.visibleActions.map((action) => action.key)).toEqual(['generating']);
         expect(model?.overflowActions).toEqual([]);
+    });
+
+    it('omits the download action when no download callback is provided', () => {
+        const model = buildStageTopRightModel(createArgs({ onDownload: undefined }));
+
+        expect(model?.visibleActions.map((action) => action.key)).toEqual(['edit', 'open-viewer']);
+        expect(model?.overflowActions.map((action) => action.key)).toEqual([
+            'add-object-reference',
+            'add-character-reference',
+            'clear',
+        ]);
     });
 
     it('drops the source chip when the staged history image is not the operative current source', () => {
