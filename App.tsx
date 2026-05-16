@@ -151,6 +151,7 @@ const App: React.FC = () => {
     const initialActiveResult = initialWorkspaceSnapshot.workspaceSession.activeResult;
     const initialComposerState = initialWorkspaceSnapshot.composerState || EMPTY_WORKSPACE_COMPOSER_STATE;
     const [apiKeyReady, setApiKeyReady] = useState(false);
+    const [isCancelFinalizing, setIsCancelFinalizing] = useState(false);
     const isDarkTheme = useDocumentThemeMode();
     const [currentLang, setCurrentLang] = useState<Language>(() => {
         const preferredLanguage = resolvePreferredLanguage();
@@ -246,6 +247,7 @@ const App: React.FC = () => {
         getActiveImageUrl,
         handleClearResults,
     } = useImageGeneration(initialWorkspaceSnapshot);
+    const isForegroundGenerationLocked = isGenerating && !isCancelFinalizing;
 
     const {
         prompt,
@@ -1012,6 +1014,7 @@ const App: React.FC = () => {
         setApiKeyReady,
         handleApiKeyConnect,
         setIsGenerating,
+        setIsCancelFinalizing,
         setError,
         setGeneratedImageUrls,
         setSelectedImageIndex,
@@ -1136,6 +1139,7 @@ const App: React.FC = () => {
 
     const { handleGenerate, handleFollowUpGenerate, handleCancelGeneration } = useWorkspaceGenerationActions({
         abortControllerRef,
+        setIsCancelFinalizing,
         isSurfaceWorkspaceOpen: isSharedControlsSurfaceOpen,
         prompt,
         aspectRatio,
@@ -1719,7 +1723,9 @@ const App: React.FC = () => {
         prompt,
         placeholder: t('placeholder'),
         enterToSubmit,
-        isGenerating,
+        isGenerating: isForegroundGenerationLocked,
+        isActionLocked: isGenerating,
+        isCancelFinalizing,
         isEnhancingPrompt: isEnhancingComposerPrompt,
         activePromptTool: activeComposerPromptTool,
         currentLanguage: currentLang,
@@ -2032,7 +2038,14 @@ const App: React.FC = () => {
         ],
     );
     const handleDownloadThoughtImage = useCallback(
-        async ({ imageUrl, mimeType, savedFilename, entryId, slotIndex, sequence }: WorkspaceProgressThoughtImageDownloadRequest) => {
+        async ({
+            imageUrl,
+            mimeType,
+            savedFilename,
+            entryId,
+            slotIndex,
+            sequence,
+        }: WorkspaceProgressThoughtImageDownloadRequest) => {
             try {
                 const historyItem = getHistoryTurnById(entryId);
                 await downloadImageSource(imageUrl, {
@@ -2054,14 +2067,7 @@ const App: React.FC = () => {
                 showNotification(t('thoughtImageDownloadFailedNotice'), 'error');
             }
         },
-        [
-            generationMode,
-            getHistoryTurnById,
-            selectedImageIndex,
-            showNotification,
-            stageViewerSettings.model,
-            t,
-        ],
+        [generationMode, getHistoryTurnById, selectedImageIndex, showNotification, stageViewerSettings.model, t],
     );
     const { workspaceViewerOverlayProps, generatedImageStageProps } = useWorkspaceStageViewer({
         generatedImageUrls,
@@ -2069,7 +2075,7 @@ const App: React.FC = () => {
         isViewerOpen,
         setIsViewerOpen,
         isGenerating,
-        showStageGeneratingState: isGenerating && generatedImageUrls.length === 0,
+        showStageGeneratingState: isForegroundGenerationLocked && generatedImageUrls.length === 0,
         viewerItems: viewerHistoryItems,
         viewerSelectedHistoryId: currentViewedCompletedHistoryId,
         onSelectViewerItem: handleViewerSelectHistoryItem,
@@ -2142,7 +2148,7 @@ const App: React.FC = () => {
         objectImages: surfaceObjectImages,
         characterImages: surfaceCharacterImages,
         setObjectImages: setSurfaceObjectImages,
-        isGenerating,
+        isGenerating: isForegroundGenerationLocked,
         showNotification,
         handleRemoveObjectReference: handleSurfaceRemoveObjectReference,
         setCharacterImages: setSurfaceCharacterImages,
@@ -2277,7 +2283,7 @@ const App: React.FC = () => {
                 maxCharacters={capability.maxCharacters}
                 setObjectImages={setObjectImages}
                 setCharacterImages={setCharacterImages}
-                isGenerating={isGenerating}
+                isGenerating={isForegroundGenerationLocked}
                 showNotification={showNotification}
                 handleRemoveObjectReference={handleRemoveObjectReference}
                 handleRemoveCharacterReference={handleRemoveCharacterReference}
@@ -2296,7 +2302,7 @@ const App: React.FC = () => {
             handleOpenUploadToRepaint,
             handleRemoveCharacterReference,
             handleRemoveObjectReference,
-            isGenerating,
+            isForegroundGenerationLocked,
             objectImages,
             setCharacterImages,
             setObjectImages,

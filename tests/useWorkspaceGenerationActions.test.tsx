@@ -47,6 +47,7 @@ describe('useWorkspaceGenerationActions', () => {
 
         props = {
             abortControllerRef: { current: null },
+            setIsCancelFinalizing: vi.fn(),
             isSurfaceWorkspaceOpen: false,
             prompt: 'Refine the staged image',
             aspectRatio: '1:1',
@@ -281,6 +282,7 @@ describe('useWorkspaceGenerationActions', () => {
 
         expect(controller.signal.aborted).toBe(true);
         expect(props.abortControllerRef.current).toBe(controller);
+        expect(props.setIsCancelFinalizing).toHaveBeenCalledWith(true);
         expect(props.addLog).toHaveBeenCalledWith('logCancelled');
     });
 });

@@ -78,6 +78,9 @@ export const en = {
     statusPanelLive: 'Live',
     statusPanelHealthFailed: 'Health check failed',
     statusGenerating: 'Generating…',
+    composerCancelFinalizingLabel: 'Finalizing cancelled run',
+    composerCancelFinalizingNote:
+        'Completed images are still being written to history in the background. You can keep preparing the next prompt while generation actions stay locked.',
     statusProcessing: 'Processing...',
     statusScanning: 'Scanning...',
     statusInitializing: 'Warming up...',

@@ -126,8 +126,7 @@ const distinctUploadStageDataUrl =
     'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%222%22 height=%222%22 viewBox=%220 0 2 2%22%3E%3Crect width=%222%22 height=%222%22 fill=%22%23f59e0b%22/%3E%3Ccircle cx=%221%22 cy=%221%22 r=%220.5%22 fill=%22%230f172a%22/%3E%3C/svg%3E';
 const playwrightDownloadSmokeImageBase64 =
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aRWQAAAAASUVORK5CYII=';
-const playwrightDownloadSmokeImageDataUrl =
-    `data:image/png;base64,${playwrightDownloadSmokeImageBase64}`;
+const playwrightDownloadSmokeImageDataUrl = `data:image/png;base64,${playwrightDownloadSmokeImageBase64}`;
 const editorSharedControlsPrompt = 'Editor surface prompt';
 const sketchSharedControlsPrompt = 'Sketch surface prompt';
 
@@ -1221,10 +1220,11 @@ const installAbortAwareBatchCancelFetchMock = async (
     options: {
         firstText: string;
         secondText?: string;
+        abortRejectDelayMs?: number;
     },
 ) => {
     await page.addInitScript(
-        ({ firstText, secondText }) => {
+        ({ firstText, secondText, abortRejectDelayMs }) => {
             const originalFetch = window.fetch.bind(window);
             const responseImageUrl =
                 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aRWQAAAAASUVORK5CYII=';
@@ -1262,16 +1262,13 @@ const installAbortAwareBatchCancelFetchMock = async (
                 abortedRequestCount: 0,
             };
 
-            (window as typeof window & { __NBU_ULTRA_PLAYWRIGHT_ABORT_STATE__?: typeof state }).__NBU_ULTRA_PLAYWRIGHT_ABORT_STATE__ =
-                state;
+            (
+                window as typeof window & { __NBU_ULTRA_PLAYWRIGHT_ABORT_STATE__?: typeof state }
+            ).__NBU_ULTRA_PLAYWRIGHT_ABORT_STATE__ = state;
 
             window.fetch = (input, init) => {
                 const requestUrl =
-                    typeof input === 'string'
-                        ? input
-                        : input instanceof URL
-                          ? input.toString()
-                          : input.url;
+                    typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
 
                 const isStreamRequest = requestUrl.includes('/api/images/generate-stream');
                 const isBlockingRequest = /\/api\/images\/generate(?:\?|$)/.test(requestUrl);
@@ -1307,17 +1304,21 @@ const installAbortAwareBatchCancelFetchMock = async (
                 return new Promise((resolve, reject) => {
                     let settled = false;
                     let fallbackTimer: number | null = null;
+                    let abortRejectTimer: number | null = null;
 
                     const cleanup = () => {
                         if (fallbackTimer !== null) {
                             clearTimeout(fallbackTimer);
+                        }
+                        if (abortRejectTimer !== null) {
+                            clearTimeout(abortRejectTimer);
                         }
                         if (signal) {
                             signal.removeEventListener('abort', handleAbort);
                         }
                     };
 
-                    const handleAbort = () => {
+                    const rejectAbortedRequest = () => {
                         if (settled) {
                             return;
                         }
@@ -1326,6 +1327,26 @@ const installAbortAwareBatchCancelFetchMock = async (
                         state.abortedRequestCount += 1;
                         cleanup();
                         reject(new DOMException('The operation was aborted.', 'AbortError'));
+                    };
+
+                    const handleAbort = () => {
+                        if (settled) {
+                            return;
+                        }
+
+                        if ((abortRejectDelayMs || 0) > 0) {
+                            if (fallbackTimer !== null) {
+                                clearTimeout(fallbackTimer);
+                                fallbackTimer = null;
+                            }
+
+                            abortRejectTimer = window.setTimeout(() => {
+                                rejectAbortedRequest();
+                            }, abortRejectDelayMs);
+                            return;
+                        }
+
+                        rejectAbortedRequest();
                     };
 
                     if (signal?.aborted) {
@@ -1342,12 +1363,15 @@ const installAbortAwareBatchCancelFetchMock = async (
                         cleanup();
                         resolve(
                             isStreamRequest
-                                ? new Response(`${buildStreamBody(delayedPayload, 'ultra-playwright-cancel-slot-2')}\n`, {
-                                      status: 200,
-                                      headers: {
-                                          'Content-Type': 'application/x-ndjson; charset=utf-8',
+                                ? new Response(
+                                      `${buildStreamBody(delayedPayload, 'ultra-playwright-cancel-slot-2')}\n`,
+                                      {
+                                          status: 200,
+                                          headers: {
+                                              'Content-Type': 'application/x-ndjson; charset=utf-8',
+                                          },
                                       },
-                                  })
+                                  )
                                 : new Response(JSON.stringify(delayedPayload), {
                                       status: 200,
                                       headers: {
@@ -1366,6 +1390,7 @@ const installAbortAwareBatchCancelFetchMock = async (
         {
             firstText: options.firstText,
             secondText: options.secondText || 'Ultra playwright cancel slot 2',
+            abortRejectDelayMs: options.abortRejectDelayMs || 0,
         },
     );
 };
@@ -2549,9 +2574,11 @@ test.describe('workspace restore flows', () => {
         );
     });
 
-    test('browser batch cancel keeps ready previews stage-only and commits only the completed result', async ({ page }) => {
+    test('browser batch cancel keeps ready previews stage-only and commits only the completed result', async ({
+        page,
+    }) => {
         const firstText = 'Ultra playwright cancel slot 1';
-        await installAbortAwareBatchCancelFetchMock(page, { firstText });
+        await installAbortAwareBatchCancelFetchMock(page, { firstText, abortRejectDelayMs: 1500 });
 
         await openFreshWorkspace(page);
         const initialHistoryLength = await page.evaluate(() => {
@@ -2586,8 +2613,26 @@ test.describe('workspace restore flows', () => {
 
         await primaryGenerateButton.click();
 
-        await expect(page.locator('[data-testid^="history-card-"]:visible:not([data-testid$="-image"])')).toHaveCount(1);
+        const composerTextarea = composer(page);
+        await expect(page.getByTestId('composer-cancel-finalizing-button')).toBeVisible();
+        await expect(page.getByTestId('composer-cancel-finalizing-note')).toBeVisible();
+        await expect(page.locator('[data-testid="stage-top-right-action-open-viewer"]:visible')).toHaveCount(0);
+        await composerTextarea.fill('Ultra prompt while finalizing');
+        await expect(composerTextarea).toHaveValue('Ultra prompt while finalizing');
+        await page.getByTestId('composer-settings-button').click();
+        await expect(page.getByTestId('workspace-picker-sheet')).toBeVisible();
+        await page
+            .getByTestId('workspace-generation-settings-controls-pane')
+            .getByRole('button', { name: '1', exact: true })
+            .click();
+        await page.getByTestId('generation-settings-apply').click();
+        await expect(page.getByTestId('workspace-picker-sheet')).toHaveCount(0);
+
+        await expect(page.locator('[data-testid^="history-card-"]:visible:not([data-testid$="-image"])')).toHaveCount(
+            1,
+        );
         await expect(page.locator('[data-testid^="history-preview-tile-"]:visible')).toHaveCount(0);
+        await expect(page.getByTestId('composer-cancel-finalizing-button')).toHaveCount(0);
 
         const persistedSummary = await expect
             .poll(async () =>
@@ -2600,13 +2645,17 @@ test.describe('workspace restore flows', () => {
 
                         const snapshot = JSON.parse(raw);
                         const history = Array.isArray(snapshot.history) ? snapshot.history : [];
-                        const matchingTurns = history.filter((item: { text?: string | null }) => item.text === expectedText);
+                        const matchingTurns = history.filter(
+                            (item: { text?: string | null }) => item.text === expectedText,
+                        );
                         return {
                             historyLength: history.length,
                             matchingTurnCount: matchingTurns.length,
                             latestMatchingTurnId: matchingTurns[0]?.id || null,
                             selectedHistoryId: snapshot.viewState?.selectedHistoryId ?? null,
-                            errors: history.map((item: { error?: string | null }) => item.error || null).filter(Boolean),
+                            errors: history
+                                .map((item: { error?: string | null }) => item.error || null)
+                                .filter(Boolean),
                             previousHistoryLength,
                         };
                     },
@@ -2636,12 +2685,14 @@ test.describe('workspace restore flows', () => {
         await expect
             .poll(async () =>
                 page.evaluate(() => {
-                    const state = (window as typeof window & {
-                        __NBU_ULTRA_PLAYWRIGHT_ABORT_STATE__?: {
-                            requestCount: number;
-                            abortedRequestCount: number;
-                        };
-                    }).__NBU_ULTRA_PLAYWRIGHT_ABORT_STATE__;
+                    const state = (
+                        window as typeof window & {
+                            __NBU_ULTRA_PLAYWRIGHT_ABORT_STATE__?: {
+                                requestCount: number;
+                                abortedRequestCount: number;
+                            };
+                        }
+                    ).__NBU_ULTRA_PLAYWRIGHT_ABORT_STATE__;
 
                     return state || null;
                 }),
@@ -2791,10 +2842,7 @@ test.describe('workspace restore flows', () => {
                 await stageDownloadButton.click();
             });
 
-            expect(stageDownloads.sort()).toEqual([
-                stageSavedFilename,
-                'playwright-download-smoke-stage.json',
-            ].sort());
+            expect(stageDownloads.sort()).toEqual([stageSavedFilename, 'playwright-download-smoke-stage.json'].sort());
             await expect(page.getByText(tt('stageDownloadCompleteNotice'), { exact: true })).toBeVisible();
 
             await openProgressDetailModal(page);

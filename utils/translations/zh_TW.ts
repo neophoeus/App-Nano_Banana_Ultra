@@ -75,6 +75,9 @@ export const zh_TW = {
     statusPanelLive: '正常',
     statusPanelHealthFailed: '健康檢查失敗',
     statusGenerating: '正在繪製…',
+    composerCancelFinalizingLabel: '正在背景整理已取消的批次',
+    composerCancelFinalizingNote:
+        '已完成的圖片仍在背景寫入 history。你可以先調整下一輪的提示詞與設定，生成相關操作會等整理完成後再解鎖。',
     statusProcessing: '運算中...',
     statusScanning: '掃描中...',
     statusInitializing: '暖身中...',

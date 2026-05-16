@@ -169,6 +169,7 @@ interface UsePerformGenerationProps {
     setApiKeyReady: (val: boolean) => void;
     handleApiKeyConnect: () => Promise<boolean>;
     setIsGenerating: (val: boolean) => void;
+    setIsCancelFinalizing?: (val: boolean) => void;
     setError: (val: StageErrorState | null) => void;
     setGeneratedImageUrls: (val: React.SetStateAction<string[]>) => void;
     setSelectedImageIndex: (val: number) => void;
@@ -219,6 +220,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
         setApiKeyReady,
         handleApiKeyConnect,
         setIsGenerating,
+        setIsCancelFinalizing,
         setError,
         setGeneratedImageUrls,
         setSelectedImageIndex,
@@ -291,6 +293,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
             }
 
             setIsGenerating(true);
+            setIsCancelFinalizing?.(false);
             setError(null);
             setGeneratedImageUrls([]);
             setSelectedImageIndex(0);
@@ -639,6 +642,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                     onBatchPreviewClear?.({ sessionId: batchSessionId });
                 }
                 onLiveProgressReset?.();
+                setIsCancelFinalizing?.(false);
                 setIsGenerating(false);
                 abortControllerRef.current = null;
                 setBatchProgress({ completed: 0, total: 0 });
@@ -667,6 +671,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
             outputFormat,
             setApiKeyReady,
             setBatchProgress,
+            setIsCancelFinalizing,
             setDisplaySettings,
             setEditingImageSource,
             setError,

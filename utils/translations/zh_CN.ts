@@ -123,6 +123,9 @@ export const zh_CN = {
     statusPanelLive: '正常',
     statusPanelHealthFailed: '健康检查失败',
     statusGenerating: '正在绘制…',
+    composerCancelFinalizingLabel: '正在后台整理已取消的批次',
+    composerCancelFinalizingNote:
+        '已完成的图片仍在后台写入 history。你可以先调整下一轮的提示词与设置，生成相关操作会等整理完成后再解锁。',
     statusProcessing: '运算中...',
     statusScanning: '扫描中...',
     statusInitializing: '准备中...',

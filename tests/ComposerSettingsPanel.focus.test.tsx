@@ -13,6 +13,8 @@ const baseProps = {
     placeholder: 'Type here',
     enterToSubmit: false,
     isGenerating: false,
+    isActionLocked: false,
+    isCancelFinalizing: false,
     isEnhancingPrompt: false,
     activePromptTool: null,
     currentLanguage: 'en' as const,
@@ -272,6 +274,43 @@ describe('ComposerSettingsPanel prompt focus wiring', () => {
         });
 
         expect(onToggleEnterToSubmit).toHaveBeenCalledTimes(1);
+    });
+
+    it('shows background finalizing state after cancel while keeping prompt editing available', () => {
+        const onPromptChange = vi.fn();
+        const onGenerate = vi.fn();
+
+        act(() => {
+            root.render(
+                <ComposerSettingsPanel
+                    {...baseProps}
+                    isActionLocked={true}
+                    isCancelFinalizing={true}
+                    onPromptChange={onPromptChange}
+                    onGenerate={onGenerate}
+                />,
+            );
+        });
+
+        const textarea = container.querySelector('textarea') as HTMLTextAreaElement;
+        const finalizingButton = container.querySelector(
+            '[data-testid="composer-cancel-finalizing-button"]',
+        ) as HTMLButtonElement;
+        const finalizingNote = container.querySelector('[data-testid="composer-cancel-finalizing-note"]');
+        const valueSetter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+
+        act(() => {
+            valueSetter?.call(textarea, 'Queued next prompt');
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+            textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+        });
+
+        expect(finalizingButton.disabled).toBe(true);
+        expect(finalizingButton.textContent).toContain('Finalizing cancelled run');
+        expect(finalizingNote?.textContent).toContain('Completed images are still being written to history');
+        expect(onPromptChange).toHaveBeenCalledWith('Queued next prompt');
+        expect(onGenerate).not.toHaveBeenCalled();
+        expect(container.textContent).not.toContain('Cancel');
     });
 
     it('keeps the active thumb aligned with the selected Enter behavior option', () => {
@@ -633,5 +672,4 @@ describe('ComposerSettingsPanel prompt focus wiring', () => {
         ).toBe('memory');
         expect(container.textContent).toContain('New Conversation');
     });
-
 });

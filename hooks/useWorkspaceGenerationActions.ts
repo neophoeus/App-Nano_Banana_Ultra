@@ -32,6 +32,7 @@ type PerformGeneration = (
 
 type UseWorkspaceGenerationActionsArgs = {
     abortControllerRef: MutableRefObject<AbortController | null>;
+    setIsCancelFinalizing?: (value: boolean) => void;
     isSurfaceWorkspaceOpen: boolean;
     prompt: string;
     aspectRatio: AspectRatio;
@@ -63,6 +64,7 @@ export const resolveEffectiveSurfaceStyle = (imageStyle: ImageStyle, isSurfaceWo
 
 export function useWorkspaceGenerationActions({
     abortControllerRef,
+    setIsCancelFinalizing,
     isSurfaceWorkspaceOpen,
     prompt,
     aspectRatio,
@@ -168,9 +170,10 @@ export function useWorkspaceGenerationActions({
             return;
         }
 
+        setIsCancelFinalizing?.(true);
         abortControllerRef.current.abort('user-cancelled');
         addLog(t('logCancelled'));
-    }, [abortControllerRef, addLog, t]);
+    }, [abortControllerRef, addLog, setIsCancelFinalizing, t]);
 
     return {
         handleGenerate,

@@ -1,5 +1,21 @@
 # Changelog
 
+## v3.7.1 - 2026-05-16
+
+- Release title: Nano Banana Ultra 3.7.1 - Background Cancel Finalization & Safe Prep Unlock
+- Release summary:
+    - background finalization after cancel:
+        - after canceling a multi-image run, the workspace now transitions into a dedicated finalizing state instead of leaving the whole foreground UI frozen until the canceled batch fully settles and writes completed results
+        - the cancel action now hands off cleanly into background finalization while the run owner finishes persistence, history promotion, and cleanup
+
+    - safe prep controls unlock during finalization:
+        - while a canceled run is still finalizing, prompt editing and generation settings can now be adjusted immediately so the next idea can be prepared without waiting for all persistence work to finish
+        - this early unlock is limited to safe prep surfaces only, keeping the broader generation contract truthful instead of pretending the run has fully ended before history commit is complete
+
+    - history and viewer truthfulness preserved during the finalizing window:
+        - fullscreen viewer, history-linked actions, and fresh generation actions remain locked until the completed results are formally written into history, so users cannot interact with half-finalized batch state
+        - the composer now shows an explicit `Finalizing cancelled run` state and guidance instead of leaving an active cancel affordance visible after the cancel request has already been accepted
+
 ## v3.7.0 - 2026-05-16
 
 - Release title: Nano Banana Ultra 3.7.0 - Per-Slot Preview Unlock, Partial Cancel Commit & Disconnect-Aware Batch Cancel
