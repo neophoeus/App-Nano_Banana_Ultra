@@ -651,6 +651,13 @@ export const es = {
     workspaceImportReviewTurns: 'Turnos',
     workspaceImportReviewBranches: 'Ramas',
     workspaceImportReviewStagedAssets: 'Recursos preparados',
+    workspaceImportReviewEmbeddedAssetsTitle: 'Recursos Lite incrustados',
+    workspaceImportReviewEmbeddedAssetsDescription:
+        'Las imagenes incrustadas del export Lite se convirtieron en archivos locales de output antes de esta revision.',
+    workspaceImportReviewEmbeddedAssetsTotal: 'Incrustados',
+    workspaceImportReviewEmbeddedAssetsConverted: 'Convertidos',
+    workspaceImportReviewEmbeddedAssetsRenamed: 'Renombrados',
+    workspaceImportReviewEmbeddedAssetsSkipped: 'Omitidos',
     workspaceImportReviewSnapshotSummary: 'Resumen de la instantanea',
     workspaceImportReviewViewerImages: 'Imagenes del visor',
     workspaceImportReviewNoPromptSaved: 'No hay prompt guardado',

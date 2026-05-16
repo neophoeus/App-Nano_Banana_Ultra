@@ -525,6 +525,13 @@ export const zh_CN = {
     workspaceImportReviewTurns: '历史步骤',
     workspaceImportReviewBranches: '分支',
     workspaceImportReviewStagedAssets: '暂存资源',
+    workspaceImportReviewEmbeddedAssetsTitle: 'Lite 内嵌资源',
+    workspaceImportReviewEmbeddedAssetsDescription:
+        '已先将 Lite 导出中的内嵌图片转换为本地 output 文件，再打开这份导入检查。',
+    workspaceImportReviewEmbeddedAssetsTotal: '内嵌项目',
+    workspaceImportReviewEmbeddedAssetsConverted: '已转换',
+    workspaceImportReviewEmbeddedAssetsRenamed: '已改名',
+    workspaceImportReviewEmbeddedAssetsSkipped: '已跳过',
     workspaceImportReviewSnapshotSummary: '快照摘要',
     workspaceImportReviewViewerImages: '查看图片',
     workspaceImportReviewNoPromptSaved: '没有保存提示词',

@@ -1,5 +1,21 @@
 # Changelog
 
+## v3.8.0 - 2026-05-16
+
+- Release title: Nano Banana Ultra 3.8.0 - Lite Workspace Import Conversion & Local Output Recovery
+- Release summary:
+    - direct Lite workspace import with embedded image assets:
+        - Ultra now accepts Lite workspace exports that embed `assets.savedImages` inside the workspace JSON instead of only handling the shared snapshot wrapper without the real image payloads
+        - imported Lite workspace assets are converted before review so the imported workspace can open with usable local image references instead of silently dropping embedded image data
+
+    - local output-file materialization for imported Lite assets:
+        - embedded Lite images now save out as separate files inside the local `output/` folder with matching sidecar metadata instead of remaining trapped inside one giant JSON export
+        - this conversion covers main generated images, saved thumbnails, embedded thought images, and stage-source assets so imported Lite workspaces can recover the same visual surfaces through the standard file-backed Ultra paths
+
+    - safer repeated imports and truthful review feedback:
+        - imported Lite asset filenames now dedupe safely on write instead of risking overwrite collisions when the same workspace is imported more than once
+        - the import review now shows a conversion summary for embedded Lite assets, including how many were embedded, converted, renamed, or skipped before replace or merge actions proceed
+
 ## v3.7.2 - 2026-05-16
 
 - Release title: Nano Banana Ultra 3.7.2 - Reference Image Persistence During History Viewing

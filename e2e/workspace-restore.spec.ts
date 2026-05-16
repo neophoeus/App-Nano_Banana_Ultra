@@ -103,6 +103,9 @@ const variantSnapshotFilePath = fileURLToPath(
 const invalidSnapshotFilePath = fileURLToPath(
     new URL('./fixtures/restore/ui-import-invalid-workspace.json', import.meta.url),
 );
+const liteEmbeddedSnapshotFilePath = fileURLToPath(
+    new URL('./fixtures/restore/ui-import-lite-embedded-workspace.json', import.meta.url),
+);
 const inheritedProvenanceSnapshotFilePath = fileURLToPath(
     new URL('./fixtures/restore/ui-import-provenance-inherited-workspace.json', import.meta.url),
 );
@@ -129,6 +132,12 @@ const playwrightDownloadSmokeImageBase64 =
 const playwrightDownloadSmokeImageDataUrl = `data:image/png;base64,${playwrightDownloadSmokeImageBase64}`;
 const editorSharedControlsPrompt = 'Editor surface prompt';
 const sketchSharedControlsPrompt = 'Sketch surface prompt';
+const liteEmbeddedImportFilenames = [
+    'playwright-lite-import-turn.png',
+    'playwright-lite-import-turn-thumbnail.jpg',
+    'playwright-lite-import-thought.png',
+    'playwright-lite-import-stage.png',
+] as const;
 
 const writePlaywrightDownloadSmokeFixture = (savedFilename: string, metadata: Record<string, unknown>) => {
     const outputDir = resolvePlaywrightAppPath('output');
@@ -148,6 +157,15 @@ const cleanupPlaywrightDownloadSmokeFixture = (...filePaths: string[]) => {
             rmSync(filePath, { force: true });
         }
     }
+};
+
+const cleanupImportedWorkspaceOutputFiles = (...filenames: readonly string[]) => {
+    cleanupPlaywrightDownloadSmokeFixture(
+        ...filenames.flatMap((filename) => [
+            resolvePlaywrightAppPath('output', filename),
+            resolvePlaywrightAppPath('output', filename.replace(/\.[^.]+$/, '.json')),
+        ]),
+    );
 };
 
 const captureSuggestedFilenames = async (
@@ -4107,6 +4125,67 @@ test.describe('workspace restore flows', () => {
         await expect(page.getByText(tt('workspaceSnapshotImportInvalidFormat'), { exact: true })).toBeVisible();
         await expect(page.getByTestId('workspace-import-review')).toHaveCount(0);
         await expect(page.getByTestId('workspace-restore-notice')).toHaveCount(0);
+    });
+
+    test('Lite embedded workspace import converts assets into output files and surfaces the conversion summary', async ({
+        page,
+    }) => {
+        cleanupImportedWorkspaceOutputFiles(...liteEmbeddedImportFilenames);
+
+        try {
+            await openFreshWorkspace(page);
+
+            const reviewModal = await stageImportReview(
+                page,
+                liteEmbeddedSnapshotFilePath,
+                'ui-import-lite-embedded-workspace.json',
+            );
+
+            await expect(reviewModal.getByTestId('workspace-import-asset-summary')).toBeVisible();
+            await expect(reviewModal.getByTestId('workspace-import-asset-count-total')).toContainText('4');
+            await expect(reviewModal.getByTestId('workspace-import-asset-count-converted')).toContainText('4');
+            await expect(reviewModal.getByTestId('workspace-import-asset-count-renamed')).toContainText('0');
+            await expect(reviewModal.getByTestId('workspace-import-asset-count-skipped')).toContainText('0');
+
+            await reviewModal
+                .getByRole('button', { name: tt('workspaceImportReviewReplaceCurrentWorkspace') })
+                .evaluate((button: HTMLButtonElement) => button.click());
+
+            await expect(page.getByTestId('workspace-import-review')).toHaveCount(0);
+            await expect(page.getByText(tt('workspaceRestoreTitle'))).toBeVisible();
+
+            await expect
+                .poll(async () => {
+                    const raw = await page.evaluate(() => localStorage.getItem('nbu_workspaceSnapshot'));
+                    const snapshot = raw ? JSON.parse(raw) : null;
+
+                    return snapshot
+                        ? {
+                              historyUrl: snapshot.history?.[0]?.url || null,
+                              historySavedFilename: snapshot.history?.[0]?.savedFilename || null,
+                              thoughtPartUrl: snapshot.history?.[0]?.resultParts?.[0]?.imageUrl || null,
+                              stageUrl: snapshot.stagedAssets?.[0]?.url || null,
+                              viewerUrl: snapshot.viewState?.generatedImageUrls?.[0] || null,
+                          }
+                        : null;
+                })
+                .toEqual({
+                    historyUrl: '/api/load-image?filename=playwright-lite-import-turn-thumbnail.jpg',
+                    historySavedFilename: 'playwright-lite-import-turn.png',
+                    thoughtPartUrl: '/api/load-image?filename=playwright-lite-import-thought.png',
+                    stageUrl: '/api/load-image?filename=playwright-lite-import-stage.png',
+                    viewerUrl: '/api/load-image?filename=playwright-lite-import-stage.png',
+                });
+
+            for (const filename of liteEmbeddedImportFilenames) {
+                expect(existsSync(resolvePlaywrightAppPath('output', filename))).toBe(true);
+                expect(existsSync(resolvePlaywrightAppPath('output', filename.replace(/\.[^.]+$/, '.json')))).toBe(
+                    true,
+                );
+            }
+        } finally {
+            cleanupImportedWorkspaceOutputFiles(...liteEmbeddedImportFilenames);
+        }
     });
 
     test('workspace snapshot quota errors do not white-screen the app', async ({ page }) => {

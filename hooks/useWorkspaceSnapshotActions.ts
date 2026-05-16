@@ -20,9 +20,9 @@ import {
     buildWorkspaceSnapshotExportFilename,
     exportWorkspaceSnapshotDocument,
     mergeWorkspaceSnapshots,
-    parseWorkspaceSnapshotDocument,
     sanitizeWorkspaceSnapshot,
 } from '../utils/workspacePersistence';
+import { WorkspaceImportAssetSummary, prepareImportedWorkspaceSnapshotDocument } from '../utils/workspaceImportAssets';
 import {
     deriveAppliedWorkspaceSnapshotState,
     shouldAnnounceRestoreToastForSnapshot,
@@ -33,6 +33,7 @@ import { encodeWorkflowMessage } from '../utils/workflowTimeline';
 export type WorkspaceImportReviewState = {
     fileName: string;
     snapshot: ReturnType<typeof sanitizeWorkspaceSnapshot>;
+    assetSummary?: WorkspaceImportAssetSummary | null;
 };
 
 type UseWorkspaceSnapshotActionsArgs = {
@@ -297,15 +298,15 @@ export const useWorkspaceSnapshotActions = ({
             }
 
             const reader = new FileReader();
-            reader.onload = () => {
+            reader.onload = async () => {
                 if (typeof reader.result !== 'string') {
                     showNotification(t('workspaceSnapshotImportReadTextFailed'), 'error');
                     clearImportInput();
                     return;
                 }
 
-                const snapshot = parseWorkspaceSnapshotDocument(reader.result);
-                if (!snapshot) {
+                const preparedImport = await prepareImportedWorkspaceSnapshotDocument(reader.result);
+                if (!preparedImport) {
                     showNotification(t('workspaceSnapshotImportInvalidFormat'), 'error');
                     clearImportInput();
                     return;
@@ -313,7 +314,8 @@ export const useWorkspaceSnapshotActions = ({
 
                 setWorkspaceImportReview({
                     fileName: file.name,
-                    snapshot,
+                    snapshot: preparedImport.snapshot,
+                    assetSummary: preparedImport.assetSummary,
                 });
                 clearImportInput();
             };

@@ -23,6 +23,24 @@ const resolveSidecarPath = (filePath: string) => {
     return path.join(parsedPath.dir, `${parsedPath.name}.json`);
 };
 
+const resolveAvailableOutputFilename = (resolvedDir: string, filename: string): string => {
+    const parsedFilename = path.parse(path.basename(filename));
+    const baseName = parsedFilename.name || 'image';
+    const extension = parsedFilename.ext || '.png';
+    let candidate = `${baseName}${extension}`;
+    let index = 1;
+
+    while (true) {
+        const candidatePath = resolveSafeOutputFilePath(resolvedDir, candidate);
+        if (!fs.existsSync(candidatePath) && !fs.existsSync(resolveSidecarPath(candidatePath))) {
+            return candidate;
+        }
+
+        candidate = `${baseName}-${index}${extension}`;
+        index += 1;
+    }
+};
+
 function registerMiddlewares(server: any, resolvedDir: string, geminiApiKey?: string): void {
     let aiClient: GoogleGenAI | null = null;
 
@@ -75,7 +93,7 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
                 });
                 req.on('end', () => {
                     try {
-                        const { data, filename, metadata } = JSON.parse(body);
+                        const { data, filename, metadata, dedupe } = JSON.parse(body);
 
                         if (!data || !filename) {
                             sendJson(res, 400, { success: false, error: 'Missing data or filename' });
@@ -92,7 +110,11 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
                         const buffer = Buffer.from(match[2], 'base64');
                         const imageDetails = extractImageDetailsFromDataUrl(data);
                         // Prevent directory traversal attacks
-                        const safeFilename = path.basename(filename);
+                        const requestedFilename = path.basename(filename);
+                        const safeFilename =
+                            dedupe === true
+                                ? resolveAvailableOutputFilename(resolvedDir, requestedFilename)
+                                : requestedFilename;
                         const filePath = resolveSafeOutputFilePath(resolvedDir, safeFilename);
 
                         fs.writeFileSync(filePath, buffer);
@@ -100,34 +122,33 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
                         // F5: Write metadata sidecar JSON if provided
                         if (metadata && typeof metadata === 'object') {
                             const jsonPath = resolveSidecarPath(filePath);
-                            const sidecar =
-                                normalizeImageSidecarMetadata({
-                                    ...metadata,
-                                    actualOutput: imageDetails?.dimensions
-                                        ? {
-                                              width: imageDetails.dimensions.width,
-                                              height: imageDetails.dimensions.height,
-                                              mimeType: imageDetails.mimeType,
-                                          }
-                                        : null,
-                                    filename: safeFilename,
-                                    timestamp: new Date().toISOString(),
-                                }) || {
-                                    ...metadata,
-                                    actualOutput: imageDetails?.dimensions
-                                        ? {
-                                              width: imageDetails.dimensions.width,
-                                              height: imageDetails.dimensions.height,
-                                              mimeType: imageDetails.mimeType,
-                                          }
-                                        : null,
-                                    filename: safeFilename,
-                                    timestamp: new Date().toISOString(),
-                                };
+                            const sidecar = normalizeImageSidecarMetadata({
+                                ...metadata,
+                                actualOutput: imageDetails?.dimensions
+                                    ? {
+                                          width: imageDetails.dimensions.width,
+                                          height: imageDetails.dimensions.height,
+                                          mimeType: imageDetails.mimeType,
+                                      }
+                                    : null,
+                                filename: safeFilename,
+                                timestamp: new Date().toISOString(),
+                            }) || {
+                                ...metadata,
+                                actualOutput: imageDetails?.dimensions
+                                    ? {
+                                          width: imageDetails.dimensions.width,
+                                          height: imageDetails.dimensions.height,
+                                          mimeType: imageDetails.mimeType,
+                                      }
+                                    : null,
+                                filename: safeFilename,
+                                timestamp: new Date().toISOString(),
+                            };
                             fs.writeFileSync(jsonPath, JSON.stringify(sidecar, null, 2), 'utf-8');
                         }
 
-                        sendJson(res, 200, { success: true, path: filePath });
+                        sendJson(res, 200, { success: true, path: filePath, filename: safeFilename });
                     } catch (err: any) {
                         sendClassifiedApiError(res, '/api/save-image', err, 'Failed to save image', {
                             basePayload: { success: false },

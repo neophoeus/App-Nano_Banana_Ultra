@@ -649,6 +649,13 @@ export const ru = {
     workspaceImportReviewTurns: 'Ходы',
     workspaceImportReviewBranches: 'Ветки',
     workspaceImportReviewStagedAssets: 'Подготовленные ресурсы',
+    workspaceImportReviewEmbeddedAssetsTitle: 'Встроенные Lite-ресурсы',
+    workspaceImportReviewEmbeddedAssetsDescription:
+        'Встроенные изображения из Lite-экспорта были преобразованы в локальные файлы output до открытия этой проверки.',
+    workspaceImportReviewEmbeddedAssetsTotal: 'Встроено',
+    workspaceImportReviewEmbeddedAssetsConverted: 'Преобразовано',
+    workspaceImportReviewEmbeddedAssetsRenamed: 'Переименовано',
+    workspaceImportReviewEmbeddedAssetsSkipped: 'Пропущено',
     workspaceImportReviewSnapshotSummary: 'Сводка снимка',
     workspaceImportReviewViewerImages: 'Изображения просмотра',
     workspaceImportReviewNoPromptSaved: 'Промпт не сохранен',

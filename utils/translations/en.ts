@@ -540,6 +540,13 @@ export const en = {
     workspaceImportReviewTurns: 'Turns',
     workspaceImportReviewBranches: 'Branches',
     workspaceImportReviewStagedAssets: 'Staged Assets',
+    workspaceImportReviewEmbeddedAssetsTitle: 'Embedded Lite Assets',
+    workspaceImportReviewEmbeddedAssetsDescription:
+        'Embedded Lite export images were converted into local output files before opening this review.',
+    workspaceImportReviewEmbeddedAssetsTotal: 'Embedded',
+    workspaceImportReviewEmbeddedAssetsConverted: 'Converted',
+    workspaceImportReviewEmbeddedAssetsRenamed: 'Renamed',
+    workspaceImportReviewEmbeddedAssetsSkipped: 'Skipped',
     workspaceImportReviewSnapshotSummary: 'Snapshot Summary',
     workspaceImportReviewViewerImages: 'Viewer Images',
     workspaceImportReviewNoPromptSaved: 'No prompt saved',

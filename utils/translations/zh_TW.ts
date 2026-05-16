@@ -525,6 +525,13 @@ export const zh_TW = {
     workspaceImportReviewTurns: '歷程數',
     workspaceImportReviewBranches: '分支',
     workspaceImportReviewStagedAssets: '暫存資產',
+    workspaceImportReviewEmbeddedAssetsTitle: 'Lite 內嵌資產',
+    workspaceImportReviewEmbeddedAssetsDescription:
+        '已先把 Lite 匯出中的內嵌圖片轉成本地 output 檔案，再開啟這份匯入檢查。',
+    workspaceImportReviewEmbeddedAssetsTotal: '內嵌項目',
+    workspaceImportReviewEmbeddedAssetsConverted: '已轉換',
+    workspaceImportReviewEmbeddedAssetsRenamed: '已改名',
+    workspaceImportReviewEmbeddedAssetsSkipped: '已略過',
     workspaceImportReviewSnapshotSummary: '快照摘要',
     workspaceImportReviewViewerImages: '檢視圖片',
     workspaceImportReviewNoPromptSaved: '沒有儲存提示詞',

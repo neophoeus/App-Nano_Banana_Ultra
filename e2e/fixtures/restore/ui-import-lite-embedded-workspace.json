@@ -1,0 +1,140 @@
+{
+    "format": "nbu-workspace-snapshot",
+    "version": 1,
+    "exportedAt": "2026-05-16T12:00:00.000Z",
+    "snapshot": {
+        "history": [
+            {
+                "id": "lite-turn-root",
+                "url": "",
+                "savedFilename": "playwright-lite-import-turn.png",
+                "thumbnailSavedFilename": "playwright-lite-import-turn-thumbnail.jpg",
+                "prompt": "Lite embedded import smoke prompt",
+                "aspectRatio": "1:1",
+                "size": "1K",
+                "style": "None",
+                "model": "gemini-3.1-flash-image-preview",
+                "createdAt": 1715860800000,
+                "mode": "Text to Image",
+                "executionMode": "single-turn",
+                "status": "success",
+                "text": "Embedded Lite import smoke result",
+                "resultParts": [
+                    {
+                        "sequence": 1,
+                        "kind": "thought-image",
+                        "imageUrl": "",
+                        "mimeType": "image/png",
+                        "savedFilename": "playwright-lite-import-thought.png"
+                    }
+                ],
+                "lineageAction": "root",
+                "lineageDepth": 0,
+                "rootHistoryId": "lite-turn-root"
+            }
+        ],
+        "stagedAssets": [
+            {
+                "id": "lite-stage-source",
+                "url": "/lite/session-images/playwright-lite-import-stage.png",
+                "savedFilename": "playwright-lite-import-stage.png",
+                "role": "stage-source",
+                "origin": "history",
+                "createdAt": 1715860800100,
+                "sourceHistoryId": "lite-turn-root",
+                "lineageAction": "reopen"
+            }
+        ],
+        "workflowLogs": ["[12:00:00] Lite export prepared"],
+        "workspaceSession": {
+            "activeResult": null,
+            "continuityGrounding": null,
+            "continuitySessionHints": null,
+            "provenanceMode": null,
+            "provenanceSourceHistoryId": null,
+            "conversationId": null,
+            "conversationBranchOriginId": null,
+            "conversationActiveSourceHistoryId": null,
+            "conversationTurnIds": [],
+            "source": "history",
+            "sourceHistoryId": "lite-turn-root",
+            "sourceLineageAction": "reopen",
+            "updatedAt": 1715860800200
+        },
+        "branchState": {
+            "nameOverrides": {
+                "lite-turn-root": "Lite Embedded Branch"
+            },
+            "continuationSourceByBranchOriginId": {
+                "lite-turn-root": "lite-turn-root"
+            }
+        },
+        "conversationState": {
+            "byBranchOriginId": {
+                "lite-turn-root": {
+                    "conversationId": null,
+                    "turnIds": ["lite-turn-root"],
+                    "activeSourceHistoryId": "lite-turn-root"
+                }
+            }
+        },
+        "viewState": {
+            "generatedImageUrls": [],
+            "selectedImageIndex": 0,
+            "selectedHistoryId": "lite-turn-root"
+        },
+        "composerState": {
+            "prompt": "Lite embedded import smoke prompt",
+            "aspectRatio": "1:1",
+            "imageSize": "1K",
+            "imageStyle": "None",
+            "imageModel": "gemini-3.1-flash-image-preview",
+            "batchSize": 1,
+            "outputFormat": "images-only",
+            "temperature": 1,
+            "thinkingLevel": "minimal",
+            "includeThoughts": true,
+            "googleSearch": false,
+            "imageSearch": false,
+            "stickySendIntent": "independent",
+            "generationMode": "Text to Image",
+            "executionMode": "single-turn"
+        }
+    },
+    "assets": {
+        "savedImages": {
+            "playwright-lite-import-turn.png": {
+                "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aRWQAAAAASUVORK5CYII=",
+                "metadata": {
+                    "prompt": "Lite embedded import smoke prompt",
+                    "kind": "output-image"
+                },
+                "savedAt": 1715860800000
+            },
+            "playwright-lite-import-turn-thumbnail.jpg": {
+                "dataUrl": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxAQEBAQEA8QDw8QDw8QDw8QEA8PDw8QFREWFhURFRUYHSggGBolGxUVITEhJSkrLi4uFx8zODMsNygtLisBCgoKDg0OGxAQGzMlHyUtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLf/AABEIAAEAAQMBIgACEQEDEQH/xAAXAAEBAQEAAAAAAAAAAAAAAAAAAQID/8QAFhEBAQEAAAAAAAAAAAAAAAAAAAER/9oADAMBAAIQAxAAAAH4gD//xAAXEAADAQAAAAAAAAAAAAAAAAAAAREx/9oACAEBAAEFAtN//8QAFhEBAQEAAAAAAAAAAAAAAAAAABEh/9oACAEDAQE/AYf/xAAVEQEBAAAAAAAAAAAAAAAAAAAQEf/aAAgBAgEBPwGH/8QAFxABAQEBAAAAAAAAAAAAAAAAAQARIf/aAAgBAQAGPwJrH//EABsQAQEBAQADAQAAAAAAAAAAAAERACExQVFh/9oACAEBAAE/IQYR0VXYs9hH6V//2gAMAwEAAgADAAAAEPP/xAAVEQEBAAAAAAAAAAAAAAAAAAAQEf/aAAgBAwEBPxBf/8QAFhEBAQEAAAAAAAAAAAAAAAAAABEh/9oACAECAQE/EFf/xAAaEAEBAQEBAQEAAAAAAAAAAAABEQAhMUFh/9oACAEBAAE/EDicY4x3g5TLFrzGF1R5i//Z",
+                "metadata": {
+                    "prompt": "Lite embedded import smoke prompt",
+                    "kind": "thumbnail"
+                },
+                "savedAt": 1715860800001
+            },
+            "playwright-lite-import-thought.png": {
+                "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aRWQAAAAASUVORK5CYII=",
+                "metadata": {
+                    "prompt": "Lite embedded import smoke prompt",
+                    "kind": "thought-image"
+                },
+                "savedAt": 1715860800002
+            },
+            "playwright-lite-import-stage.png": {
+                "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aRWQAAAAASUVORK5CYII=",
+                "metadata": {
+                    "prompt": "Lite embedded import smoke prompt",
+                    "kind": "stage-source"
+                },
+                "savedAt": 1715860800003
+            }
+        }
+    }
+}

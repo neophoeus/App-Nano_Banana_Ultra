@@ -54,6 +54,8 @@ const WorkspaceImportReview: React.FC<WorkspaceImportReviewProps> = ({
         'rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] font-semibold text-amber-800 hover:border-amber-300 hover:bg-amber-100 dark:border-amber-500/20 dark:bg-amber-950/20 dark:text-amber-100 dark:hover:border-amber-500/40 dark:hover:bg-amber-950/30';
     const secondaryActionClassName = 'nbu-control-button px-3 py-1.5 text-[11px] font-semibold';
     const locale = currentLanguage === 'zh_TW' ? 'zh-TW' : currentLanguage === 'zh_CN' ? 'zh-CN' : currentLanguage;
+    const assetSummary =
+        review.assetSummary && review.assetSummary.totalEmbeddedAssets > 0 ? review.assetSummary : null;
 
     const formatDateTime = (value: string) => new Date(value).toLocaleString(locale);
     const renderPromptPreview = (value?: string | null, limit = 120) => {
@@ -195,6 +197,66 @@ const WorkspaceImportReview: React.FC<WorkspaceImportReviewProps> = ({
                     </div>
                 </div>
             </div>
+
+            {assetSummary && (
+                <div
+                    data-testid="workspace-import-asset-summary"
+                    className="mt-4 rounded-[24px] border border-emerald-200/80 bg-[linear-gradient(180deg,rgba(236,253,245,0.95),rgba(220,252,231,0.92))] p-4 shadow-[0_18px_48px_rgba(16,185,129,0.12)] dark:border-emerald-500/18 dark:bg-[linear-gradient(180deg,rgba(11,46,33,0.62),rgba(13,23,20,0.94))] dark:shadow-[0_18px_48px_rgba(0,0,0,0.22)]"
+                >
+                    <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-200">
+                        {t('workspaceImportReviewEmbeddedAssetsTitle')}
+                    </div>
+                    <div className="mt-2 max-w-3xl text-sm text-emerald-900 dark:text-emerald-100">
+                        {t('workspaceImportReviewEmbeddedAssetsDescription')}
+                    </div>
+                    <div className="mt-3 grid gap-2.5 sm:grid-cols-4">
+                        <div
+                            data-testid="workspace-import-asset-count-total"
+                            className="rounded-2xl border border-white/85 bg-white/80 px-3 py-2.5 shadow-[0_12px_30px_rgba(15,23,42,0.05)] dark:border-emerald-500/10 dark:bg-white/5"
+                        >
+                            <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-200">
+                                {t('workspaceImportReviewEmbeddedAssetsTotal')}
+                            </div>
+                            <div className="mt-2 text-[22px] font-semibold text-gray-900 dark:text-gray-100">
+                                {assetSummary.totalEmbeddedAssets}
+                            </div>
+                        </div>
+                        <div
+                            data-testid="workspace-import-asset-count-converted"
+                            className="rounded-2xl border border-white/85 bg-white/80 px-3 py-2.5 shadow-[0_12px_30px_rgba(15,23,42,0.05)] dark:border-emerald-500/10 dark:bg-white/5"
+                        >
+                            <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-200">
+                                {t('workspaceImportReviewEmbeddedAssetsConverted')}
+                            </div>
+                            <div className="mt-2 text-[22px] font-semibold text-gray-900 dark:text-gray-100">
+                                {assetSummary.convertedAssets}
+                            </div>
+                        </div>
+                        <div
+                            data-testid="workspace-import-asset-count-renamed"
+                            className="rounded-2xl border border-white/85 bg-white/80 px-3 py-2.5 shadow-[0_12px_30px_rgba(15,23,42,0.05)] dark:border-emerald-500/10 dark:bg-white/5"
+                        >
+                            <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-200">
+                                {t('workspaceImportReviewEmbeddedAssetsRenamed')}
+                            </div>
+                            <div className="mt-2 text-[22px] font-semibold text-gray-900 dark:text-gray-100">
+                                {assetSummary.renamedAssets}
+                            </div>
+                        </div>
+                        <div
+                            data-testid="workspace-import-asset-count-skipped"
+                            className="rounded-2xl border border-white/85 bg-white/80 px-3 py-2.5 shadow-[0_12px_30px_rgba(15,23,42,0.05)] dark:border-emerald-500/10 dark:bg-white/5"
+                        >
+                            <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-200">
+                                {t('workspaceImportReviewEmbeddedAssetsSkipped')}
+                            </div>
+                            <div className="mt-2 text-[22px] font-semibold text-gray-900 dark:text-gray-100">
+                                {assetSummary.skippedAssets}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
                 <div className="rounded-[24px] border border-amber-200/80 bg-[linear-gradient(180deg,rgba(255,250,240,0.94),rgba(255,245,230,0.9))] p-4 shadow-[0_18px_48px_rgba(245,158,11,0.1)] dark:border-amber-500/18 dark:bg-[linear-gradient(180deg,rgba(56,38,11,0.4),rgba(20,19,24,0.92))] dark:shadow-[0_18px_48px_rgba(0,0,0,0.22)]">

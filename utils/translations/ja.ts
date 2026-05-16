@@ -638,6 +638,13 @@ export const ja = {
     workspaceImportReviewTurns: 'ターン数',
     workspaceImportReviewBranches: '分岐数',
     workspaceImportReviewStagedAssets: 'ステージ済みアセット',
+    workspaceImportReviewEmbeddedAssetsTitle: 'Lite 埋め込みアセット',
+    workspaceImportReviewEmbeddedAssetsDescription:
+        'Lite エクスポートに埋め込まれていた画像は、このレビューを開く前にローカル output ファイルへ変換されました。',
+    workspaceImportReviewEmbeddedAssetsTotal: '埋め込み数',
+    workspaceImportReviewEmbeddedAssetsConverted: '変換済み',
+    workspaceImportReviewEmbeddedAssetsRenamed: '改名済み',
+    workspaceImportReviewEmbeddedAssetsSkipped: 'スキップ',
     workspaceImportReviewSnapshotSummary: 'スナップショット概要',
     workspaceImportReviewViewerImages: 'ビューアー画像',
     workspaceImportReviewNoPromptSaved: '保存されたプロンプトはありません',

@@ -34,6 +34,11 @@ export type PersistedHistoryThumbnail = {
     thumbnailInline?: boolean;
 };
 
+type SaveImageToLocalOptions = {
+    filename?: string;
+    dedupe?: boolean;
+};
+
 export const buildSavedImageLoadUrl = (savedFilename: string): string =>
     `${LOAD_IMAGE_ENDPOINT}?filename=${encodeURIComponent(savedFilename)}`;
 
@@ -55,6 +60,11 @@ const buildGeneratedFilenameStem = (prefix: string): string => {
 };
 
 const buildFilename = (stem: string, ext: string) => `${stem}.${ext}`;
+
+const sanitizeRequestedFilename = (value: string): string | null => {
+    const filename = value.split(/[\\/]/).pop()?.trim();
+    return filename || null;
+};
 
 const extractFilenameStem = (filename: string): string => filename.replace(/\.[^.]+$/, '');
 
@@ -254,15 +264,19 @@ export async function saveImageToLocal(
     prefix: string = 'gemini',
     metadata?: Record<string, unknown>,
     filenameStem?: string,
+    options?: SaveImageToLocalOptions,
 ): Promise<string | null> {
     const ext = getDataUrlExtension(dataUrl);
-    const filename = buildFilename(filenameStem || buildGeneratedFilenameStem(prefix), ext);
+    const filename = options?.filename
+        ? sanitizeRequestedFilename(options.filename) ||
+          buildFilename(filenameStem || buildGeneratedFilenameStem(prefix), ext)
+        : buildFilename(filenameStem || buildGeneratedFilenameStem(prefix), ext);
 
     try {
         const res = await fetch('/api/save-image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: dataUrl, filename, metadata }),
+            body: JSON.stringify({ data: dataUrl, filename, metadata, dedupe: options?.dedupe === true }),
         });
         const result = await res.json();
         if (result.success) {

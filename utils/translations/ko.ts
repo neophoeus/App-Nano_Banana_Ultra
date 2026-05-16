@@ -634,6 +634,13 @@ export const ko = {
     workspaceImportReviewTurns: '턴 수',
     workspaceImportReviewBranches: '분기 수',
     workspaceImportReviewStagedAssets: '준비된 자산',
+    workspaceImportReviewEmbeddedAssetsTitle: 'Lite 내장 자산',
+    workspaceImportReviewEmbeddedAssetsDescription:
+        'Lite 내보내기에 포함된 이미지를 이 검토를 열기 전에 로컬 output 파일로 변환했습니다.',
+    workspaceImportReviewEmbeddedAssetsTotal: '내장 항목',
+    workspaceImportReviewEmbeddedAssetsConverted: '변환됨',
+    workspaceImportReviewEmbeddedAssetsRenamed: '이름 변경',
+    workspaceImportReviewEmbeddedAssetsSkipped: '건너뜀',
     workspaceImportReviewSnapshotSummary: '스냅샷 요약',
     workspaceImportReviewViewerImages: '뷰어 이미지',
     workspaceImportReviewNoPromptSaved: '저장된 프롬프트 없음',

@@ -651,6 +651,13 @@ export const fr = {
     workspaceImportReviewTurns: 'Tours',
     workspaceImportReviewBranches: 'Branches',
     workspaceImportReviewStagedAssets: 'Ressources preparees',
+    workspaceImportReviewEmbeddedAssetsTitle: 'Ressources Lite integrees',
+    workspaceImportReviewEmbeddedAssetsDescription:
+        "Les images integrees de l'export Lite ont ete converties en fichiers output locaux avant cette revue.",
+    workspaceImportReviewEmbeddedAssetsTotal: 'Integrees',
+    workspaceImportReviewEmbeddedAssetsConverted: 'Converties',
+    workspaceImportReviewEmbeddedAssetsRenamed: 'Renommees',
+    workspaceImportReviewEmbeddedAssetsSkipped: 'Ignorees',
     workspaceImportReviewSnapshotSummary: "Resume de l'instantane",
     workspaceImportReviewViewerImages: 'Images du visualiseur',
     workspaceImportReviewNoPromptSaved: 'Aucun prompt enregistre',

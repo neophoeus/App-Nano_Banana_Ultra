@@ -655,6 +655,13 @@ export const de = {
     workspaceImportReviewTurns: 'Runden',
     workspaceImportReviewBranches: 'Zweige',
     workspaceImportReviewStagedAssets: 'Vorbereitete Assets',
+    workspaceImportReviewEmbeddedAssetsTitle: 'Eingebettete Lite-Assets',
+    workspaceImportReviewEmbeddedAssetsDescription:
+        'Eingebettete Lite-Exportbilder wurden vor dieser Prufansicht in lokale output-Dateien konvertiert.',
+    workspaceImportReviewEmbeddedAssetsTotal: 'Eingebettet',
+    workspaceImportReviewEmbeddedAssetsConverted: 'Konvertiert',
+    workspaceImportReviewEmbeddedAssetsRenamed: 'Umbenannt',
+    workspaceImportReviewEmbeddedAssetsSkipped: 'Ubersprungen',
     workspaceImportReviewSnapshotSummary: 'Zusammenfassung des Schnappschusses',
     workspaceImportReviewViewerImages: 'Bilder im Betrachter',
     workspaceImportReviewNoPromptSaved: 'Kein Prompt gespeichert',
