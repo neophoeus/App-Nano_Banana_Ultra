@@ -9,6 +9,8 @@ vi.mock('@google/genai/node', () => ({
         HARM_CATEGORY_SEXUALLY_EXPLICIT: 'sexual',
         HARM_CATEGORY_DANGEROUS_CONTENT: 'danger',
     },
+    Modality: { IMAGE: 'IMAGE', TEXT: 'TEXT' },
+    ThinkingLevel: { MINIMAL: 'MINIMAL', HIGH: 'HIGH' },
 }));
 
 import { extractGeneratedContent } from '../plugins/routes/generateRoutes';

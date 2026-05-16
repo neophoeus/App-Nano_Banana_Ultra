@@ -1,5 +1,16 @@
 # Changelog
 
+## v3.7.2 - 2026-05-16
+
+- Release title: Nano Banana Ultra 3.7.2 - Reference Image Persistence During History Viewing
+- Release summary:
+    - preserved workspace object and character references while viewing history:
+        - opening or viewing another history image no longer silently clears the current object and character reference images
+        - continue and branch actions from history now keep the current workspace references instead of discarding them through the shared history-selection path
+
+    - explicit reference clearing remains intentional:
+        - object and character reference images are removed only through the user-controlled clear-references action, while stage-source clearing and failed-turn state handling keep their existing behavior
+
 ## v3.7.1 - 2026-05-16
 
 - Release title: Nano Banana Ultra 3.7.1 - Background Cancel Finalization & Safe Prep Unlock

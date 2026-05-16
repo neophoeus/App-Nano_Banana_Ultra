@@ -424,15 +424,12 @@ export function useHistorySourceOrchestration({
                         console.warn('loadFullImage failed:', err.message);
                     });
             }
-
-            clearAssetRoles(['object', 'character']);
         },
         [
             addLog,
             applySelectedResultArtifacts,
             branchOriginIdByTurnId,
             buildResultArtifacts,
-            clearAssetRoles,
             conversationState,
             history,
             isGenerating,

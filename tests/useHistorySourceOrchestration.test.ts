@@ -129,6 +129,7 @@ describe('useHistorySourceOrchestration', () => {
         const setSelectedHistoryId = vi.fn();
         const setError = vi.fn();
         const setLogs = vi.fn();
+        const clearAssetRoles = vi.fn();
         let handle: ReturnType<typeof useHistorySourceOrchestration> | null = null;
         let historyState = overrides.history ?? [item];
 
@@ -157,7 +158,7 @@ describe('useHistorySourceOrchestration', () => {
                 handleClearResults: vi.fn(),
                 resetSelectedOutputState: vi.fn(),
                 resetWorkspaceSession: vi.fn(),
-                clearAssetRoles: vi.fn(),
+                clearAssetRoles,
                 buildResultArtifacts: (historyItem) => ({
                     text: historyItem.text || null,
                     thoughts: historyItem.thoughts || null,
@@ -210,6 +211,7 @@ describe('useHistorySourceOrchestration', () => {
             setSelectedHistoryId,
             setError,
             setLogs,
+            clearAssetRoles,
             getHistoryState: () => historyState,
         };
     };
@@ -255,6 +257,25 @@ describe('useHistorySourceOrchestration', () => {
                 lineageAction: 'continue',
             }),
         );
+    });
+
+    it('preserves object and character references when viewing, continuing, or branching from history', () => {
+        const historyTurn = buildTurn({
+            id: 'history-turn',
+            text: 'Viewed result',
+            lineageAction: 'continue',
+        });
+        const { handle, clearAssetRoles } = renderHook(historyTurn);
+
+        flushSync(() => {
+            handle.handleHistorySelect(historyTurn);
+            handle.handleContinueFromHistoryTurn(historyTurn);
+            handle.handleBranchFromHistoryTurn(historyTurn);
+        });
+
+        const clearedRoles = clearAssetRoles.mock.calls.flatMap(([roles]) => roles);
+        expect(clearedRoles).not.toContain('object');
+        expect(clearedRoles).not.toContain('character');
     });
 
     it('defers viewer lineage promotion until the viewer closes', () => {
