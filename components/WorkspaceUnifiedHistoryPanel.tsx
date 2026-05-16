@@ -23,6 +23,8 @@ type WorkspaceUnifiedHistoryPanelProps = {
     onExportWorkspace?: () => void;
     onClearWorkspace: () => void;
     previewTiles?: BatchPreviewTile[];
+    selectedPreviewSlotIndex?: number | null;
+    onPreviewTileSelect?: (tile: BatchPreviewTile) => void;
 };
 
 function WorkspaceUnifiedHistoryPanel({
@@ -40,6 +42,8 @@ function WorkspaceUnifiedHistoryPanel({
     onExportWorkspace,
     onClearWorkspace,
     previewTiles = [],
+    selectedPreviewSlotIndex = null,
+    onPreviewTileSelect,
 }: WorkspaceUnifiedHistoryPanelProps) {
     const { isDesktop } = useResponsivePanelState();
     const [page, setPage] = useState(0);
@@ -259,6 +263,8 @@ function WorkspaceUnifiedHistoryPanel({
                         <HistoryPanel
                             history={displayedHistory}
                             previewTiles={pagePreviewTiles}
+                            selectedPreviewSlotIndex={selectedPreviewSlotIndex}
+                            onPreviewTileSelect={onPreviewTileSelect}
                             onSelect={onSelect}
                             selectedId={selectedHistoryId || undefined}
                             currentSourceHistoryId={currentSourceHistoryId}

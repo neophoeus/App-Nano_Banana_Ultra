@@ -67,6 +67,10 @@ describe('usePerformGeneration', () => {
     let notifications: Array<{ message: string; type?: 'info' | 'error' }>;
     let liveProgressEvents: unknown[];
     let liveProgressResetCount = 0;
+    let abortControllerRef: { current: AbortController | null };
+    let latestPreviewTiles: Array<{ sessionId: string; tile: Record<string, unknown> }>;
+    let latestPreviewCompletePayload: { sessionId: string; historyItems: GeneratedImage[] } | null;
+    let latestPreviewClearSessionId: string | null;
     let generationLineageContextFactory:
         | ((params: { mode: string; editingInput?: string; sourceOverride?: GenerationSourceOverride | null }) => {
               parentHistoryId: string;
@@ -192,7 +196,7 @@ describe('usePerformGeneration', () => {
                 addLog: (message) => {
                     latestLogs = [...latestLogs, message];
                 },
-                abortControllerRef: { current: null },
+                abortControllerRef,
                 objectImages: overrides.objectImages ?? [],
                 characterImages: overrides.characterImages ?? [],
                 batchSize: 1,
@@ -243,6 +247,15 @@ describe('usePerformGeneration', () => {
                     lastConversationContextArgs = params;
                     return conversationContextFactory?.(params) || null;
                 },
+                onBatchPreviewTileUpdate: ({ sessionId, tile }) => {
+                    latestPreviewTiles = [...latestPreviewTiles, { sessionId, tile }];
+                },
+                onBatchPreviewComplete: ({ sessionId, historyItems }) => {
+                    latestPreviewCompletePayload = { sessionId, historyItems };
+                },
+                onBatchPreviewClear: ({ sessionId }) => {
+                    latestPreviewClearSessionId = sessionId;
+                },
                 onLiveProgressEvent: (event) => {
                     liveProgressEvents.push(event);
                 },
@@ -264,6 +277,7 @@ describe('usePerformGeneration', () => {
         document.body.appendChild(container);
         root = createRoot(container);
         latestHook = null;
+        abortControllerRef = { current: null };
         latestHistory = [];
         latestGeneratedImageUrls = ['stale-url'];
         latestSelectedImageIndex = 99;
@@ -279,6 +293,9 @@ describe('usePerformGeneration', () => {
         notifications = [];
         liveProgressEvents = [];
         liveProgressResetCount = 0;
+        latestPreviewTiles = [];
+        latestPreviewCompletePayload = null;
+        latestPreviewClearSessionId = null;
         generationLineageContextFactory = null;
         conversationContextFactory = null;
         lastGenerationLineageContextArgs = null;
@@ -1106,5 +1123,85 @@ describe('usePerformGeneration', () => {
             'data:image/png;base64,AAA-thumb',
         ]);
         expect(latestHistory.map((item) => item.metadata?.batchResultIndex)).toEqual([1, 0]);
+    });
+
+    it('commits only completed successful slots when the run is user-cancelled mid-batch', async () => {
+        generateImageWithGeminiMock.mockImplementation(
+            async (_request, _batchSize, onImageReceived, _onLog, _signal, onProgress, onResult) => {
+                onProgress(1, 2);
+                const firstReceived = await onImageReceived('data:image/png;base64,AAA', 0);
+                abortControllerRef.current?.abort('user-cancelled');
+                onResult?.({
+                    slotIndex: 1,
+                    status: 'failed',
+                    error: 'Generation cancelled',
+                });
+                onProgress(2, 2);
+
+                return [
+                    {
+                        slotIndex: 0,
+                        status: 'success',
+                        url: 'data:image/png;base64,AAA',
+                        displayUrl: firstReceived?.displayUrl,
+                        savedFilename: firstReceived?.savedFilename,
+                        metadata: { actualOutput: { width: 1024, height: 1024 } },
+                        grounding: null,
+                        sessionHints: null,
+                    },
+                    {
+                        slotIndex: 1,
+                        status: 'failed',
+                        error: 'Generation cancelled',
+                    },
+                ];
+            },
+        );
+
+        renderHook();
+
+        await act(async () => {
+            await latestHook!.performGeneration(
+                'Cancel after first slot succeeds',
+                '1:1',
+                '1K',
+                'None',
+                'gemini-3.1-flash-image-preview',
+                undefined,
+                2,
+            );
+        });
+
+        expect(latestHistory).toHaveLength(1);
+        expect(latestHistory[0]).toEqual(
+            expect.objectContaining({
+                status: 'success',
+                metadata: expect.objectContaining({
+                    batchResultIndex: 0,
+                }),
+            }),
+        );
+        expect(latestPreviewTiles).toContainEqual(
+            expect.objectContaining({
+                tile: expect.objectContaining({
+                    slotIndex: 0,
+                    status: 'ready',
+                    stagePreviewUrl: '/api/load-image?filename=generated.png',
+                }),
+            }),
+        );
+        expect(latestPreviewTiles).not.toContainEqual(
+            expect.objectContaining({
+                tile: expect.objectContaining({
+                    slotIndex: 1,
+                    status: 'failed',
+                }),
+            }),
+        );
+        expect(latestPreviewCompletePayload?.historyItems).toHaveLength(1);
+        expect(latestPreviewClearSessionId).toBeNull();
+        expect(latestError).toBeNull();
+        expect(latestIsGenerating).toBe(false);
+        expect(latestBatchProgress).toEqual({ completed: 0, total: 0 });
     });
 });

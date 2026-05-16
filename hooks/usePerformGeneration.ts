@@ -84,6 +84,14 @@ function buildFailureDisplayContext(
     return undefined;
 }
 
+function isCancelledGenerationResult(result: GenerationResult): boolean {
+    return result.status === 'failed' && (result.error === 'Generation cancelled' || result.error === 'ABORTED');
+}
+
+function isAbortGenerationMessage(message: string): boolean {
+    return message === 'ABORTED' || message === 'Generation cancelled';
+}
+
 async function persistResultParts(
     resultParts: ResultPart[] | undefined,
     options: {
@@ -363,6 +371,10 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                 const requestId = crypto.randomUUID();
 
                 const handleImageReceived = async (url: string, slotIndex: number): Promise<ImageReceivedResult> => {
+                    if (controller.signal.aborted) {
+                        throw new Error('ABORTED');
+                    }
+
                     const metadata = buildImageSidecarMetadata({
                         prompt: finalPrompt,
                         model: targetModel,
@@ -396,6 +408,10 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                     const filename = extractSavedFilename(savedPath);
                     const displayUrl = filename ? buildSavedImageLoadUrl(filename) : url;
 
+                    if (controller.signal.aborted) {
+                        throw new Error('ABORTED');
+                    }
+
                     onBatchPreviewTileUpdate?.({
                         sessionId: batchSessionId,
                         tile: {
@@ -403,6 +419,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                             slotIndex,
                             status: 'ready',
                             previewUrl: displayUrl,
+                            stagePreviewUrl: displayUrl,
                             error: null,
                         },
                     });
@@ -423,6 +440,10 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
 
                 const handleLogCallback = (msg: string) => addLog(msg);
                 const handleResultCallback = (result: GenerationResult) => {
+                    if (controller.signal.aborted && isCancelledGenerationResult(result)) {
+                        return;
+                    }
+
                     if (result.status === 'failed') {
                         onBatchPreviewTileUpdate?.({
                             sessionId: batchSessionId,
@@ -464,12 +485,16 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                     handleResultCallback,
                     onLiveProgressEvent,
                 );
+                const wasCancelled = controller.signal.aborted;
+                const historyResults = wasCancelled
+                    ? results.filter((result) => result.status === 'success')
+                    : results.filter((result) => !isCancelledGenerationResult(result));
 
-                const batchHasSiblingSafetyBlockedFailure = results.some(
+                const batchHasSiblingSafetyBlockedFailure = historyResults.some(
                     (result) => result.status === 'failed' && result.failure?.code === 'safety-blocked',
                 );
                 const newHistoryItems: GeneratedImageType[] = [];
-                for (const [resultIndex, res] of results.entries()) {
+                for (const [resultIndex, res] of historyResults.entries()) {
                     const batchResultIndex =
                         typeof res.slotIndex === 'number' && Number.isFinite(res.slotIndex)
                             ? res.slotIndex
@@ -564,23 +589,25 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
 
                 const orderedHistoryItems = sortBatchHistoryItemsByVisualOrder(newHistoryItems);
 
-                setHistory((prev: GeneratedImageType[]) => [...orderedHistoryItems, ...prev]);
+                if (orderedHistoryItems.length > 0) {
+                    setHistory((prev: GeneratedImageType[]) => [...orderedHistoryItems, ...prev]);
+                }
                 didNotifyBatchPreviewComplete = true;
                 onBatchPreviewComplete?.({
                     sessionId: batchSessionId,
                     historyItems: orderedHistoryItems,
                 });
 
-                const successCount = results.filter((r) => r.status === 'success').length;
-                const failCount = results.filter((r) => r.status === 'failed').length;
+                const successCount = historyResults.filter((r) => r.status === 'success').length;
+                const failCount = historyResults.filter((r) => r.status === 'failed').length;
 
-                if (successCount === 0 && failCount > 0) {
+                if (!wasCancelled && successCount === 0 && failCount > 0) {
                     setError(
                         buildStageErrorState(
                             t,
-                            results[0].failure,
-                            results[0].error || t('errorAllFailed'),
-                            buildFailureDisplayContext(results[0], batchHasSiblingSafetyBlockedFailure),
+                            historyResults[0].failure,
+                            historyResults[0].error || t('errorAllFailed'),
+                            buildFailureDisplayContext(historyResults[0], batchHasSiblingSafetyBlockedFailure),
                         ),
                     );
                 }
@@ -601,6 +628,8 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                     });
                     setApiKeyReady(false);
                     await promptForApiKey();
+                } else if (controller.signal.aborted && isAbortGenerationMessage(errorMessage)) {
+                    addLog(t('logCancelled'));
                 } else {
                     setError(buildStageErrorState(t, getGenerationFailure(err), errorMessage));
                     showNotification(t('statusFailed'), 'error');

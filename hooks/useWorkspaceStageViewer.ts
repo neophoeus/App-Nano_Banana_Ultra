@@ -300,8 +300,12 @@ export function useWorkspaceStageViewer({
             ? viewerItems.find((viewerItem) => viewerItem.id === viewerSelectedHistoryId)
             : null;
 
-        return selectedViewerHistoryItem || viewerItems[0] || null;
-    }, [viewerItems, viewerSelectedHistoryId]);
+        if (selectedViewerHistoryItem) {
+            return selectedViewerHistoryItem;
+        }
+
+        return generatedImageUrls.length > 0 ? null : viewerItems[0] || null;
+    }, [generatedImageUrls.length, viewerItems, viewerSelectedHistoryId]);
     const activeViewerImage = useMemo(
         () => activeViewerHistoryItem?.url || generatedImageUrls[selectedImageIndex] || generatedImageUrls[0] || '',
         [activeViewerHistoryItem, generatedImageUrls, selectedImageIndex],
@@ -332,7 +336,7 @@ export function useWorkspaceStageViewer({
                 hasActiveStageImage: Boolean(activeViewerImage),
                 hasLinkedHistoryTurn: currentStageHasLinkedHistoryTurn,
                 currentStageIsCurrentSource,
-                isGenerating: showStageGeneratingState,
+                isGenerating,
                 layoutBucket: stageTopRightLayoutBucket,
                 currentStageBranchLabel,
                 hasMeaningfulResultStatus: Boolean(
@@ -353,7 +357,7 @@ export function useWorkspaceStageViewer({
             currentStageBranchLabel,
             currentStageHasLinkedHistoryTurn,
             currentStageIsCurrentSource,
-            showStageGeneratingState,
+            isGenerating,
             onAddToCharacterReference,
             onAddToObjectReference,
             onClear,
@@ -454,7 +458,7 @@ export function useWorkspaceStageViewer({
                 selectedImageUrl: generatedImageUrls[selectedImageIndex],
                 currentLanguage,
                 currentLog: showStageGeneratingState ? currentLog : '',
-                onOpenViewer: openViewer,
+                onOpenViewer: isGenerating ? undefined : openViewer,
                 stageTopRight,
             }) satisfies GeneratedImageStageProps,
         [
@@ -464,6 +468,7 @@ export function useWorkspaceStageViewer({
             executionMode,
             generatedImageUrls,
             generationMode,
+            isGenerating,
             showStageGeneratingState,
             onGenerate,
             openViewer,

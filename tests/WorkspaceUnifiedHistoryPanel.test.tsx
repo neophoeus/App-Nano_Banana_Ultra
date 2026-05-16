@@ -412,6 +412,40 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
         expect(container.innerHTML).not.toContain('history-card-turn-01');
     });
 
+    it('forwards ready preview tile selection through the unified history surface', () => {
+        const onPreviewTileSelect = vi.fn();
+
+        renderPanel({
+            previewTiles: [
+                {
+                    id: 'preview-1',
+                    slotIndex: 1,
+                    status: 'ready',
+                    previewUrl: 'https://example.com/preview.png',
+                    stagePreviewUrl: 'https://example.com/preview-full.png',
+                },
+            ],
+            selectedPreviewSlotIndex: 1,
+            onPreviewTileSelect,
+        });
+
+        const previewTile = container.querySelector('[data-testid="history-preview-tile-1"]');
+        expect(previewTile).not.toBeNull();
+
+        flushSync(() => {
+            (previewTile as HTMLButtonElement).dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        });
+
+        expect(onPreviewTileSelect).toHaveBeenCalledWith(
+            expect.objectContaining({
+                slotIndex: 1,
+                status: 'ready',
+                stagePreviewUrl: 'https://example.com/preview-full.png',
+            }),
+        );
+        expect(container.innerHTML).toContain('history-preview-selected-1');
+    });
+
     it('delegates clear confirmation ownership to the parent shell instead of rendering an inline modal', () => {
         const { onClearWorkspace } = renderPanel();
 

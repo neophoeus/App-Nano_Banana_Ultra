@@ -174,6 +174,7 @@ export interface BatchPreviewTile {
     slotIndex: number;
     status: BatchPreviewTileStatus;
     previewUrl?: string | null;
+    stagePreviewUrl?: string | null;
     error?: string | null;
 }
 
@@ -181,6 +182,7 @@ export interface BatchPreviewSession {
     id: string;
     batchSize: number;
     didUserInspectExistingImage: boolean;
+    selectedPreviewSlotIndex?: number | null;
     tiles: BatchPreviewTile[];
 }
 

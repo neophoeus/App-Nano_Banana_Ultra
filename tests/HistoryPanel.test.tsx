@@ -133,6 +133,7 @@ describe('HistoryPanel', () => {
                         slotIndex: 1,
                         status: 'ready',
                         previewUrl: 'https://example.com/preview.png',
+                        stagePreviewUrl: 'https://example.com/preview-full.png',
                     },
                     {
                         id: 'preview-2',
@@ -142,6 +143,8 @@ describe('HistoryPanel', () => {
                     },
                 ]}
                 onSelect={vi.fn()}
+                onPreviewTileSelect={vi.fn()}
+                selectedPreviewSlotIndex={1}
                 currentLanguage="en"
                 thumbnailMode="compact"
             />,
@@ -149,11 +152,11 @@ describe('HistoryPanel', () => {
 
         expect(markup).not.toContain('history-preview-grid');
         expect(markup).toContain('history-preview-pending-0');
-        expect(markup).toContain('history-preview-locked-1');
+        expect(markup).not.toContain('history-preview-locked-1');
+        expect(markup).toContain('history-preview-selected-1');
         expect(markup).toContain('history-preview-failed-2');
         expect(markup).toContain('history-fresh-turn-fresh');
         expect(markup).not.toContain('history-fresh-turn-opened');
-        expect(markup).toContain('backdrop-blur-[3px]');
         expect(markup).toContain('border-[3px] border-emerald-400');
         expect(markup.indexOf('history-preview-tile-2')).toBeLessThan(markup.indexOf('history-preview-tile-1'));
         expect(markup.indexOf('history-preview-tile-1')).toBeLessThan(markup.indexOf('history-preview-tile-0'));

@@ -1,5 +1,22 @@
 # Changelog
 
+## v3.7.0 - 2026-05-16
+
+- Release title: Nano Banana Ultra 3.7.0 - Per-Slot Preview Unlock, Partial Cancel Commit & Disconnect-Aware Batch Cancel
+- Release summary:
+    - preview-only unlock for interactive multi-image generation:
+        - when a batch is generating, each ready preview tile can now be selected individually and shown on the main stage immediately instead of waiting for the full batch to finish
+        - those early ready tiles stay as stage-only previews during generation, so fullscreen viewer and other history-linked actions remain locked until the batch is finalized into real history items
+
+    - truthful partial cancel behavior for multi-image generation:
+        - pressing `Cancel` now aborts only unfinished slots while preserving any already completed results, instead of holding the whole batch hostage until every slot resolves
+        - completed results now commit cleanly into history after cancel, while canceled unfinished slots no longer surface as misleading failed preview/history entries
+        - generation cancel ownership now stays with the generation orchestrator, avoiding premature local unlock races from UI action handlers
+
+    - disconnect-aware backend abort handling:
+        - the local generate and generate-stream routes now bind client disconnects to a route-level abort controller, pass that abort signal through the Gemini request config, and stop writing stream/failure payloads after disconnect
+        - this keeps canceled or disconnected interactive batch runs from continuing to generate and emit stale late results after the client has already gone away
+
 ## v3.6.8 - 2026-05-14
 
 - Release title: Nano Banana Ultra 3.6.8 - Gemini Enum Request Alignment

@@ -1216,6 +1216,160 @@ const installBasicImageGenerateCaptureRoute = async (page: Page, responseText: s
     return capturedBodies;
 };
 
+const installAbortAwareBatchCancelFetchMock = async (
+    page: Page,
+    options: {
+        firstText: string;
+        secondText?: string;
+    },
+) => {
+    await page.addInitScript(
+        ({ firstText, secondText }) => {
+            const originalFetch = window.fetch.bind(window);
+            const responseImageUrl =
+                'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aRWQAAAAASUVORK5CYII=';
+
+            const buildPayload = (text: string) => ({
+                imageUrl: responseImageUrl,
+                text,
+                thoughts: null,
+                sessionHints: null,
+                grounding: null,
+                metadata: null,
+            });
+
+            const buildStreamBody = (responsePayload: Record<string, unknown>, sessionId: string) =>
+                [
+                    JSON.stringify({ type: 'start', sessionId }),
+                    JSON.stringify({
+                        type: 'complete',
+                        sessionId,
+                        response: responsePayload,
+                        summary: {
+                            transportOpened: true,
+                            orderingStable: true,
+                            preCompletionArtifactCount: 0,
+                            firstPreCompletionArtifactKind: null,
+                            thoughtSignatureObserved: false,
+                            finalRenderArrived: true,
+                            truthfulnessOutcome: 'final-only',
+                        },
+                    }),
+                ].join('\n');
+
+            const state = {
+                requestCount: 0,
+                abortedRequestCount: 0,
+            };
+
+            (window as typeof window & { __NBU_ULTRA_PLAYWRIGHT_ABORT_STATE__?: typeof state }).__NBU_ULTRA_PLAYWRIGHT_ABORT_STATE__ =
+                state;
+
+            window.fetch = (input, init) => {
+                const requestUrl =
+                    typeof input === 'string'
+                        ? input
+                        : input instanceof URL
+                          ? input.toString()
+                          : input.url;
+
+                const isStreamRequest = requestUrl.includes('/api/images/generate-stream');
+                const isBlockingRequest = /\/api\/images\/generate(?:\?|$)/.test(requestUrl);
+
+                if (!isStreamRequest && !isBlockingRequest) {
+                    return originalFetch(input, init);
+                }
+
+                state.requestCount += 1;
+                const requestIndex = state.requestCount;
+                const signal = init?.signal ?? (input instanceof Request ? input.signal : undefined);
+                const immediatePayload = buildPayload(firstText);
+                const delayedPayload = buildPayload(secondText || 'Ultra playwright cancel slot 2');
+
+                if (requestIndex === 1) {
+                    return Promise.resolve(
+                        isStreamRequest
+                            ? new Response(`${buildStreamBody(immediatePayload, 'ultra-playwright-cancel-slot-1')}\n`, {
+                                  status: 200,
+                                  headers: {
+                                      'Content-Type': 'application/x-ndjson; charset=utf-8',
+                                  },
+                              })
+                            : new Response(JSON.stringify(immediatePayload), {
+                                  status: 200,
+                                  headers: {
+                                      'Content-Type': 'application/json',
+                                  },
+                              }),
+                    );
+                }
+
+                return new Promise((resolve, reject) => {
+                    let settled = false;
+                    let fallbackTimer: number | null = null;
+
+                    const cleanup = () => {
+                        if (fallbackTimer !== null) {
+                            clearTimeout(fallbackTimer);
+                        }
+                        if (signal) {
+                            signal.removeEventListener('abort', handleAbort);
+                        }
+                    };
+
+                    const handleAbort = () => {
+                        if (settled) {
+                            return;
+                        }
+
+                        settled = true;
+                        state.abortedRequestCount += 1;
+                        cleanup();
+                        reject(new DOMException('The operation was aborted.', 'AbortError'));
+                    };
+
+                    if (signal?.aborted) {
+                        handleAbort();
+                        return;
+                    }
+
+                    fallbackTimer = window.setTimeout(() => {
+                        if (settled) {
+                            return;
+                        }
+
+                        settled = true;
+                        cleanup();
+                        resolve(
+                            isStreamRequest
+                                ? new Response(`${buildStreamBody(delayedPayload, 'ultra-playwright-cancel-slot-2')}\n`, {
+                                      status: 200,
+                                      headers: {
+                                          'Content-Type': 'application/x-ndjson; charset=utf-8',
+                                      },
+                                  })
+                                : new Response(JSON.stringify(delayedPayload), {
+                                      status: 200,
+                                      headers: {
+                                          'Content-Type': 'application/json',
+                                      },
+                                  }),
+                        );
+                    }, 15_000);
+
+                    if (signal) {
+                        signal.addEventListener('abort', handleAbort, { once: true });
+                    }
+                });
+            };
+        },
+        {
+            firstText: options.firstText,
+            secondText: options.secondText || 'Ultra playwright cancel slot 2',
+        },
+    );
+};
+
 const readPersistedHistoryTurnByText = async (
     page: Page,
     targetText: string,
@@ -2393,6 +2547,112 @@ test.describe('workspace restore flows', () => {
                 batchResultIndex: 0,
             }),
         );
+    });
+
+    test('browser batch cancel keeps ready previews stage-only and commits only the completed result', async ({ page }) => {
+        const firstText = 'Ultra playwright cancel slot 1';
+        await installAbortAwareBatchCancelFetchMock(page, { firstText });
+
+        await openFreshWorkspace(page);
+        const initialHistoryLength = await page.evaluate(() => {
+            const raw = localStorage.getItem('nbu_workspaceSnapshot');
+            if (!raw) {
+                return 0;
+            }
+
+            const snapshot = JSON.parse(raw);
+            return Array.isArray(snapshot.history) ? snapshot.history.length : 0;
+        });
+        await composer(page).fill('Ultra playwright cancel smoke prompt');
+
+        await page.getByTestId('composer-settings-button').click();
+        await expect(page.getByTestId('workspace-picker-sheet')).toBeVisible();
+        await page
+            .getByTestId('workspace-generation-settings-controls-pane')
+            .getByRole('button', { name: '2', exact: true })
+            .click();
+        await page.getByTestId('generation-settings-apply').click();
+        await expect(page.getByTestId('workspace-picker-sheet')).toHaveCount(0);
+
+        const primaryGenerateButton = page.getByTestId('composer-generate-card').getByRole('button').first();
+        await primaryGenerateButton.click();
+
+        await expect(page.getByTestId('history-preview-tile-0')).toBeVisible();
+        await page.getByTestId('history-preview-tile-0').click();
+        await expect(page.getByTestId('history-preview-selected-0')).toBeVisible();
+
+        await page.getByTestId('generated-image-stage-frame').click();
+        await expect(page.locator('[data-testid="workspace-viewer-overlay"]:visible')).toHaveCount(0);
+
+        await primaryGenerateButton.click();
+
+        await expect(page.locator('[data-testid^="history-card-"]:visible:not([data-testid$="-image"])')).toHaveCount(1);
+        await expect(page.locator('[data-testid^="history-preview-tile-"]:visible')).toHaveCount(0);
+
+        const persistedSummary = await expect
+            .poll(async () =>
+                page.evaluate(
+                    ({ expectedText, previousHistoryLength }) => {
+                        const raw = localStorage.getItem('nbu_workspaceSnapshot');
+                        if (!raw) {
+                            return null;
+                        }
+
+                        const snapshot = JSON.parse(raw);
+                        const history = Array.isArray(snapshot.history) ? snapshot.history : [];
+                        const matchingTurns = history.filter((item: { text?: string | null }) => item.text === expectedText);
+                        return {
+                            historyLength: history.length,
+                            matchingTurnCount: matchingTurns.length,
+                            latestMatchingTurnId: matchingTurns[0]?.id || null,
+                            selectedHistoryId: snapshot.viewState?.selectedHistoryId ?? null,
+                            errors: history.map((item: { error?: string | null }) => item.error || null).filter(Boolean),
+                            previousHistoryLength,
+                        };
+                    },
+                    { expectedText: firstText, previousHistoryLength: initialHistoryLength },
+                ),
+            )
+            .toEqual({
+                historyLength: initialHistoryLength + 1,
+                matchingTurnCount: 1,
+                latestMatchingTurnId: expect.any(String),
+                selectedHistoryId: expect.any(String),
+                errors: expect.arrayContaining([]),
+                previousHistoryLength: initialHistoryLength,
+            });
+
+        const persistedState = await readPersistedHistoryTurnByText(page, firstText);
+
+        expect(persistedState?.generatedTurn).toEqual(
+            expect.objectContaining({
+                executionMode: 'interactive-batch-variants',
+                prompt: 'Ultra playwright cancel smoke prompt',
+            }),
+        );
+        expect(persistedSummary).toBeUndefined();
+        expect(persistedState?.viewState.selectedHistoryId).toBe(persistedState?.generatedTurn.id);
+
+        await expect
+            .poll(async () =>
+                page.evaluate(() => {
+                    const state = (window as typeof window & {
+                        __NBU_ULTRA_PLAYWRIGHT_ABORT_STATE__?: {
+                            requestCount: number;
+                            abortedRequestCount: number;
+                        };
+                    }).__NBU_ULTRA_PLAYWRIGHT_ABORT_STATE__;
+
+                    return state || null;
+                }),
+            )
+            .toEqual({
+                requestCount: 2,
+                abortedRequestCount: 1,
+            });
+
+        await page.getByTestId('generated-image-stage-frame').click();
+        await expect(page.getByTestId('workspace-viewer-overlay')).toBeVisible();
     });
 
     test('stage and thought downloads trigger browser downloads with the expected filenames', async ({ page }) => {

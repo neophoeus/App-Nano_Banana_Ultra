@@ -53,7 +53,6 @@ type UseWorkspaceGenerationActionsArgs = {
     resetSelectedOutputState: () => void;
     performGeneration: PerformGeneration;
     onPrepareGenerate: () => void;
-    setIsGenerating: (value: boolean) => void;
     addLog: (message: string) => void;
     showNotification: (message: string, type?: 'info' | 'error') => void;
     t: (key: string) => string;
@@ -82,7 +81,6 @@ export function useWorkspaceGenerationActions({
     resetSelectedOutputState,
     performGeneration,
     onPrepareGenerate,
-    setIsGenerating,
     addLog,
     showNotification,
     t,
@@ -171,10 +169,8 @@ export function useWorkspaceGenerationActions({
         }
 
         abortControllerRef.current.abort('user-cancelled');
-        abortControllerRef.current = null;
-        setIsGenerating(false);
         addLog(t('logCancelled'));
-    }, [abortControllerRef, addLog, setIsGenerating, t]);
+    }, [abortControllerRef, addLog, t]);
 
     return {
         handleGenerate,

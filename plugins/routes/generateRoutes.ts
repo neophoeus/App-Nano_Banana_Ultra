@@ -219,6 +219,59 @@ type StreamFailureEvent = {
 const DEFAULT_LIVE_PROGRESS_PROBE_PROMPT =
     'Create a polished studio image of a single yellow banana card on a calm neutral background.';
 
+function isAbortLikeError(error: unknown): boolean {
+    return (
+        (error instanceof DOMException && error.name === 'AbortError') ||
+        (error instanceof Error && error.message === 'ABORTED')
+    );
+}
+
+function throwIfAborted(abortSignal?: AbortSignal): void {
+    if (abortSignal?.aborted) {
+        throw new Error('ABORTED');
+    }
+}
+
+function withAbortSignal(
+    requestConfig: Record<string, unknown>,
+    abortSignal?: AbortSignal,
+): Record<string, unknown> {
+    return abortSignal ? { ...requestConfig, abortSignal } : requestConfig;
+}
+
+function createRequestAbortState(req: any, res: any) {
+    const controller = new AbortController();
+    let clientDisconnected = false;
+
+    const abort = () => {
+        if (res.writableEnded) {
+            return;
+        }
+
+        clientDisconnected = true;
+        if (!controller.signal.aborted) {
+            controller.abort('client-disconnected');
+        }
+    };
+
+    const cleanup = () => {
+        req.off?.('aborted', abort);
+        res.off?.('close', abort);
+        res.off?.('finish', cleanup);
+    };
+
+    req.on?.('aborted', abort);
+    res.on?.('close', abort);
+    res.on?.('finish', cleanup);
+
+    return {
+        signal: controller.signal,
+        cleanup,
+        isDisconnected: () => clientDisconnected || controller.signal.aborted,
+        isWritable: () => !clientDisconnected && !res.writableEnded && !res.destroyed,
+    };
+}
+
 function unwrapGeneratedResponse(response: any): any {
     if (response?.response && typeof response.response === 'object') {
         return response.response;
@@ -707,39 +760,53 @@ function buildPreparedGenerateRequest(
     };
 }
 
-async function executeBlockingGenerateRequest(ai: GoogleGenAI, prepared: PreparedGenerateRequest) {
+async function executeBlockingGenerateRequest(
+    ai: GoogleGenAI,
+    prepared: PreparedGenerateRequest,
+    abortSignal?: AbortSignal,
+) {
+    const requestConfig = withAbortSignal(prepared.requestConfig, abortSignal);
+
     return prepared.useOfficialConversation
         ? await ai.chats
               .create({
                   model: prepared.model,
-                  config: prepared.requestConfig,
+                  config: requestConfig,
                   history: prepared.conversationHistory,
               })
               .sendMessage({
                   message: prepared.parts,
+                  config: requestConfig,
               })
         : await ai.models.generateContent({
               model: prepared.model,
               contents: { parts: prepared.parts },
-              config: prepared.requestConfig,
+              config: requestConfig,
           });
 }
 
-async function executeStreamingGenerateRequest(ai: GoogleGenAI, prepared: PreparedGenerateRequest) {
+async function executeStreamingGenerateRequest(
+    ai: GoogleGenAI,
+    prepared: PreparedGenerateRequest,
+    abortSignal?: AbortSignal,
+) {
+    const requestConfig = withAbortSignal(prepared.requestConfig, abortSignal);
+
     return prepared.useOfficialConversation
         ? await ai.chats
               .create({
                   model: prepared.model,
-                  config: prepared.requestConfig,
+                  config: requestConfig,
                   history: prepared.conversationHistory,
               })
               .sendMessageStream({
                   message: prepared.parts,
+                  config: requestConfig,
               })
         : await ai.models.generateContentStream({
               model: prepared.model,
               contents: { parts: prepared.parts },
-              config: prepared.requestConfig,
+              config: requestConfig,
           });
 }
 
@@ -999,6 +1066,8 @@ async function runLiveProgressProbeCell(
 
 export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }: RegisterGenerateRoutesArgs): void {
     server.use('/api/images/generate', async (req: any, res: any) => {
+        const requestAbortState = createRequestAbortState(req, res);
+
         if (req.method !== 'POST') {
             sendJson(res, 405, { error: 'Method not allowed' });
             return;
@@ -1014,7 +1083,11 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
             }
 
             const prepared = buildPreparedGenerateRequest(validated.model, body, resolvedDir);
-            const response = await executeBlockingGenerateRequest(ai, prepared);
+            const response = await executeBlockingGenerateRequest(ai, prepared, requestAbortState.signal);
+
+            if (requestAbortState.isDisconnected()) {
+                return;
+            }
 
             const blockReason = response.promptFeedback?.blockReason as string | undefined;
             if (blockReason && blockReason !== 'BLOCK_REASON_UNSPECIFIED' && blockReason !== 'NONE') {
@@ -1023,6 +1096,9 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                     blockReason,
                     model: validated.model,
                 });
+                if (!requestAbortState.isWritable()) {
+                    return;
+                }
                 sendJson(res, getGenerationFailureHttpStatus(failure), {
                     error: failure.message,
                     failure,
@@ -1040,6 +1116,9 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                     extracted,
                     groundingDetails,
                 );
+                if (!requestAbortState.isWritable()) {
+                    return;
+                }
                 sendJson(res, 200, payload);
                 return;
             }
@@ -1052,18 +1131,29 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 prepared,
                 extracted,
             );
+            if (!requestAbortState.isWritable()) {
+                return;
+            }
             sendJson(res, failureResponse.status, {
                 error: failureResponse.error,
                 failure: failureResponse.failure,
             });
         } catch (error: any) {
+            if (isAbortLikeError(error) || requestAbortState.isDisconnected()) {
+                return;
+            }
+
             sendClassifiedApiError(res, '/api/images/generate', error, 'Image generation failed', {
                 defaultStatus: 502,
             });
+        } finally {
+            requestAbortState.cleanup();
         }
     });
 
     server.use('/api/images/generate-stream', async (req: any, res: any) => {
+        const requestAbortState = createRequestAbortState(req, res);
+
         if (req.method !== 'POST') {
             sendJson(res, 405, { error: 'Method not allowed' });
             return;
@@ -1098,9 +1188,13 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
             }
 
             const prepared = buildPreparedGenerateRequest(validated.model, body, resolvedDir);
-            const stream = await executeStreamingGenerateRequest(ai, prepared);
+            const stream = await executeStreamingGenerateRequest(ai, prepared, requestAbortState.signal);
             let lastChunk: any = null;
             let lastGroundingChunk: any = null;
+
+            if (!requestAbortState.isWritable()) {
+                return;
+            }
 
             startNdjsonStream(res, 200);
             transportOpened = true;
@@ -1110,6 +1204,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
             });
 
             for await (const chunk of stream) {
+                throwIfAborted(requestAbortState.signal);
                 lastChunk = chunk;
 
                 if (chunk?.candidates?.[0]?.groundingMetadata) {
@@ -1120,6 +1215,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 liveState = applied.state;
 
                 applied.newParts.forEach((part) => {
+                    throwIfAborted(requestAbortState.signal);
                     writeNdjsonEvent<StreamResultPartEvent>(res, {
                         type: 'result-part',
                         sessionId,
@@ -1127,6 +1223,8 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                     });
                 });
             }
+
+            throwIfAborted(requestAbortState.signal);
 
             const extracted = extractStreamCompletionContent(liveState, lastChunk);
             const groundingDetails = extractGroundingDetails(lastGroundingChunk || lastChunk || {});
@@ -1141,13 +1239,18 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                     groundingDetails,
                     summary,
                 );
+                if (!requestAbortState.isWritable()) {
+                    return;
+                }
                 writeNdjsonEvent<StreamCompleteEvent>(res, {
                     type: 'complete',
                     sessionId,
                     response: payload,
                     summary,
                 });
-                res.end();
+                if (requestAbortState.isWritable()) {
+                    res.end();
+                }
                 return;
             }
 
@@ -1170,6 +1273,9 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                           summary,
                       )
                     : undefined;
+            if (!requestAbortState.isWritable()) {
+                return;
+            }
             writeNdjsonEvent<StreamFailureEvent>(res, {
                 type: 'failure',
                 sessionId,
@@ -1178,23 +1284,36 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 response: partialResponse,
                 summary,
             });
-            res.end();
+            if (requestAbortState.isWritable()) {
+                res.end();
+            }
         } catch (error: any) {
+            if (isAbortLikeError(error) || requestAbortState.isDisconnected()) {
+                return;
+            }
+
             if (res.headersSent) {
                 const summary = buildStreamTruthSummary(liveState, false, transportOpened);
+                if (!requestAbortState.isWritable()) {
+                    return;
+                }
                 writeNdjsonEvent<StreamFailureEvent>(res, {
                     type: 'failure',
                     sessionId,
                     error: error?.message || 'Image generation failed',
                     summary,
                 });
-                res.end();
+                if (requestAbortState.isWritable()) {
+                    res.end();
+                }
                 return;
             }
 
             sendClassifiedApiError(res, '/api/images/generate-stream', error, 'Image generation failed', {
                 defaultStatus: 502,
             });
+        } finally {
+            requestAbortState.cleanup();
         }
     });
 

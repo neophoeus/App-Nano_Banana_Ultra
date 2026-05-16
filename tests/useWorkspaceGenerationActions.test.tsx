@@ -65,7 +65,6 @@ describe('useWorkspaceGenerationActions', () => {
             resetSelectedOutputState: vi.fn(),
             performGeneration: vi.fn(),
             onPrepareGenerate: vi.fn(),
-            setIsGenerating: vi.fn(),
             addLog: vi.fn(),
             showNotification: vi.fn(),
             t: (key: string) => key,
@@ -268,5 +267,20 @@ describe('useWorkspaceGenerationActions', () => {
                 sourceLineageAction: 'branch',
             },
         );
+    });
+
+    it('treats cancel as an abort request without clearing the active controller locally', () => {
+        const controller = new AbortController();
+        props.abortControllerRef.current = controller;
+
+        renderHook();
+
+        act(() => {
+            latestHook?.handleCancelGeneration();
+        });
+
+        expect(controller.signal.aborted).toBe(true);
+        expect(props.abortControllerRef.current).toBe(controller);
+        expect(props.addLog).toHaveBeenCalledWith('logCancelled');
     });
 });

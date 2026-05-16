@@ -24,6 +24,8 @@ interface HistoryPanelProps {
     renderHeader?: boolean;
     thumbnailMode?: 'responsive' | 'compact';
     previewTiles?: BatchPreviewTile[];
+    selectedPreviewSlotIndex?: number | null;
+    onPreviewTileSelect?: (tile: BatchPreviewTile) => void;
 }
 
 const HistoryPanel: React.FC<HistoryPanelProps> = ({
@@ -41,6 +43,8 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
     renderHeader = true,
     thumbnailMode = 'responsive',
     previewTiles = [],
+    selectedPreviewSlotIndex = null,
+    onPreviewTileSelect,
 }) => {
     const [page, setPage] = useState(0);
     const [showConfirm, setShowConfirm] = useState(false);
@@ -211,43 +215,42 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                 {sortedPreviewTiles.map((tile) => {
                     const isPending = tile.status === 'pending';
                     const isReady = tile.status === 'ready' && Boolean(tile.previewUrl);
+                    const isSelectedPreview = selectedPreviewSlotIndex === tile.slotIndex;
+                    const previewTileClassName = `relative ${cardSizeClassName} overflow-hidden border border-dashed bg-slate-50/90 animate-[fadeIn_0.3s_ease-out] dark:bg-slate-950/80 ${
+                        isSelectedPreview
+                            ? 'border-amber-500 ring-2 ring-amber-500/30 ring-offset-2 ring-offset-white dark:ring-offset-black'
+                            : 'border-sky-300/80 dark:border-sky-700/70'
+                    }`;
+                    const readyPreviewContent = (
+                        <>
+                            <img
+                                src={tile.previewUrl || ''}
+                                alt={t('stageGeneratedImageAlt')}
+                                className="h-full w-full object-cover bg-gray-100 dark:bg-gray-900"
+                            />
+                            <div className="pointer-events-none absolute inset-0 bg-slate-950/0 transition-colors group-hover:bg-slate-950/12" />
+                            {isSelectedPreview ? <div data-testid={`history-preview-selected-${tile.slotIndex}`} className={selectedMarkerClassName} /> : null}
+                        </>
+                    );
 
-                    return (
-                        <div
+                    return isReady && onPreviewTileSelect ? (
+                        <button
                             key={tile.id}
+                            type="button"
                             data-testid={`history-preview-tile-${tile.slotIndex}`}
-                            className={`relative ${cardSizeClassName} overflow-hidden border border-dashed border-sky-300/80 bg-slate-50/90 animate-[fadeIn_0.3s_ease-out] dark:border-sky-700/70 dark:bg-slate-950/80`}
+                            onClick={() => onPreviewTileSelect(tile)}
+                            className={`${previewTileClassName} group cursor-pointer p-0 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400`}
                         >
+                            {readyPreviewContent}
+
+                            <div className="nbu-overlay-shell absolute left-1 top-1 rounded px-1.5 text-[8px] font-mono text-gray-800 dark:text-white">
+                                #{tile.slotIndex + 1}
+                            </div>
+                        </button>
+                    ) : (
+                        <div key={tile.id} data-testid={`history-preview-tile-${tile.slotIndex}`} className={previewTileClassName}>
                             {isReady ? (
-                                <>
-                                    <img
-                                        src={tile.previewUrl || ''}
-                                        alt={t('stageGeneratedImageAlt')}
-                                        className="h-full w-full object-cover bg-gray-100 dark:bg-gray-900"
-                                    />
-                                    <div className="absolute inset-0 bg-slate-950/34 backdrop-blur-[3px]" />
-                                    <div
-                                        data-testid={`history-preview-locked-${tile.slotIndex}`}
-                                        className="absolute inset-0 flex items-center justify-center"
-                                    >
-                                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/35 bg-slate-950/68 text-white shadow-lg">
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                className="h-4 w-4"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth={1.8}
-                                                    d="M8 11V8a4 4 0 118 0v3m-9 0h10a1 1 0 011 1v7a1 1 0 01-1 1H7a1 1 0 01-1-1v-7a1 1 0 011-1z"
-                                                />
-                                            </svg>
-                                        </span>
-                                    </div>
-                                </>
+                                readyPreviewContent
                             ) : isPending ? (
                                 <div
                                     data-testid={`history-preview-pending-${tile.slotIndex}`}
