@@ -813,6 +813,17 @@ export const en = {
         'Above 1.0 increases variation and surprise, but can reduce consistency and prompt fidelity.',
     composerAdvancedTemperatureGuideLower:
         'Below 1.0 makes results more stable and literal, but usually less exploratory.',
+    composerAdvancedSafetyTitle: 'Safety filters',
+    composerAdvancedSafetyNote:
+        'Model default omits that category from Gemini safetySettings. The current app default keeps all four filters at Block none.',
+    composerAdvancedSafetyAllLabel: 'All categories',
+    composerAdvancedSafetyMixed: 'Mixed',
+    composerAdvancedSafetyThresholdDefault: 'Model',
+    composerAdvancedSafetyThresholdOff: 'Off',
+    composerAdvancedSafetyThresholdBlockNone: 'None',
+    composerAdvancedSafetyThresholdBlockOnlyHigh: 'High',
+    composerAdvancedSafetyThresholdBlockMediumAndAbove: 'Med+',
+    composerAdvancedSafetyThresholdBlockLowAndAbove: 'Low+',
     stageGroundingResultStatus: 'Grounding result',
     stageGroundingResultSummary: '{0} · Requested {1} · Actual {2}',
     stageGeneratedImageAlt: 'Generated image',

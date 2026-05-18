@@ -13,13 +13,14 @@ import {
     buildRandomPromptInstruction,
     buildRandomPromptRequest,
     normalizePromptToolLanguage,
-    PERMISSIVE_SAFETY_SETTINGS,
 } from '../utils/promptHelpers';
+import { buildSafetySettings, DEFAULT_SAFETY_THRESHOLDS, type SafetyThresholds } from '../utils/geminiApiConfig';
 
 type PromptRequestBody = {
     currentPrompt?: string;
     imageDataUrl?: string;
     lang?: string;
+    safetyThresholds?: Partial<SafetyThresholds>;
 };
 
 function parseInlineImageFromDataUrl(imageDataUrl: string): { data: string; mimeType: string } | null {
@@ -49,8 +50,9 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
 
         try {
             const ai = getAIClient();
-            const { currentPrompt = '', lang: requestedLang } = await readJsonBody<PromptRequestBody>(req);
+            const { currentPrompt = '', lang: requestedLang, safetyThresholds } = await readJsonBody<PromptRequestBody>(req);
             const lang = normalizePromptToolLanguage(requestedLang);
+            const resolvedSafetySettings = buildSafetySettings(safetyThresholds ?? DEFAULT_SAFETY_THRESHOLDS);
             logApiRequest(requestContext, {
                 source: 'prompt-tools',
                 lang,
@@ -60,7 +62,7 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 model: 'gemini-3-flash-preview',
                 config: {
                     systemInstruction: buildPromptEnhancerInstruction(lang),
-                    safetySettings: PERMISSIVE_SAFETY_SETTINGS,
+                    ...(resolvedSafetySettings ? { safetySettings: resolvedSafetySettings } : {}),
                     temperature: 0.35,
                 },
                 contents:
@@ -103,8 +105,9 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
 
         try {
             const ai = getAIClient();
-            const { lang: requestedLang } = await readJsonBody<PromptRequestBody>(req);
+            const { lang: requestedLang, safetyThresholds } = await readJsonBody<PromptRequestBody>(req);
             const lang = normalizePromptToolLanguage(requestedLang);
+            const resolvedSafetySettings = buildSafetySettings(safetyThresholds ?? DEFAULT_SAFETY_THRESHOLDS);
             logApiRequest(requestContext, {
                 source: 'prompt-tools',
                 lang,
@@ -113,7 +116,7 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 model: 'gemini-3-flash-preview',
                 config: {
                     systemInstruction: buildRandomPromptInstruction(lang),
-                    safetySettings: PERMISSIVE_SAFETY_SETTINGS,
+                    ...(resolvedSafetySettings ? { safetySettings: resolvedSafetySettings } : {}),
                     temperature: 0.7,
                 },
                 contents: buildRandomPromptRequest(),
@@ -154,9 +157,10 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
 
         try {
             const ai = getAIClient();
-            const { imageDataUrl = '', lang: requestedLang } = await readJsonBody<PromptRequestBody>(req);
+            const { imageDataUrl = '', lang: requestedLang, safetyThresholds } = await readJsonBody<PromptRequestBody>(req);
             const lang = normalizePromptToolLanguage(requestedLang);
             const inlineImage = parseInlineImageFromDataUrl(String(imageDataUrl || ''));
+            const resolvedSafetySettings = buildSafetySettings(safetyThresholds ?? DEFAULT_SAFETY_THRESHOLDS);
             logApiRequest(requestContext, {
                 source: 'prompt-tools',
                 lang,
@@ -184,7 +188,7 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 model: 'gemini-3-flash-preview',
                 config: {
                     systemInstruction: buildImageToPromptInstruction(lang),
-                    safetySettings: PERMISSIVE_SAFETY_SETTINGS,
+                    ...(resolvedSafetySettings ? { safetySettings: resolvedSafetySettings } : {}),
                     temperature: 0.25,
                 },
                 contents: [

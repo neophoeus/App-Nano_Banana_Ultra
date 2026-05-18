@@ -2599,6 +2599,9 @@ test.describe('workspace restore flows', () => {
         await installAbortAwareBatchCancelFetchMock(page, { firstText, abortRejectDelayMs: 1500 });
 
         await openFreshWorkspace(page);
+        const initialVisibleHistoryCardCount = await page
+            .locator('[data-testid^="history-card-"]:visible:not([data-testid$="-image"])')
+            .count();
         const initialHistoryLength = await page.evaluate(() => {
             const raw = localStorage.getItem('nbu_workspaceSnapshot');
             if (!raw) {
@@ -2647,7 +2650,7 @@ test.describe('workspace restore flows', () => {
         await expect(page.getByTestId('workspace-picker-sheet')).toHaveCount(0);
 
         await expect(page.locator('[data-testid^="history-card-"]:visible:not([data-testid$="-image"])')).toHaveCount(
-            1,
+            initialVisibleHistoryCardCount + 1,
         );
         await expect(page.locator('[data-testid^="history-preview-tile-"]:visible')).toHaveCount(0);
         await expect(page.getByTestId('composer-cancel-finalizing-button')).toHaveCount(0);

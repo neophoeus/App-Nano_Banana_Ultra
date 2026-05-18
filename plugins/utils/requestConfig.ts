@@ -2,7 +2,13 @@ import type { AspectRatio, ImageModel, ImageSize } from '../../types';
 import { buildGroundingToolConfig, deriveGroundingMode } from '../../utils/groundingMode';
 import { MODEL_CAPABILITIES } from '../../utils/modelCapabilities';
 import { normalizeTemperature } from '../../utils/temperature';
-import { buildGeminiResponseModalities, PERMISSIVE_SAFETY_SETTINGS, toGeminiThinkingLevel } from './geminiApiConfig';
+import {
+    buildGeminiResponseModalities,
+    buildSafetySettings,
+    DEFAULT_SAFETY_THRESHOLDS,
+    type SafetyThresholds,
+    toGeminiThinkingLevel,
+} from './geminiApiConfig';
 
 type ImageGenerateBodyLike = {
     model?: string;
@@ -14,6 +20,7 @@ type ImageGenerateBodyLike = {
     includeThoughts?: boolean;
     googleSearch?: boolean;
     imageSearch?: boolean;
+    safetyThresholds?: Partial<SafetyThresholds>;
 };
 
 type AppThinkingLevel = NonNullable<ImageGenerateBodyLike['thinkingLevel']>;
@@ -86,8 +93,12 @@ export function buildImageRequestConfig(
         responseModalities: resolvedResponseModalities,
         imageConfig,
         temperature: typeof body.temperature === 'number' ? normalizeTemperature(body.temperature) : undefined,
-        safetySettings: PERMISSIVE_SAFETY_SETTINGS,
     };
+
+    const safetySettings = buildSafetySettings(body.safetyThresholds ?? DEFAULT_SAFETY_THRESHOLDS);
+    if (safetySettings) {
+        requestConfig.safetySettings = safetySettings;
+    }
 
     const capability = MODEL_CAPABILITIES[model as ImageModel];
     const effectiveThinkingLevel: AppThinkingLevel =

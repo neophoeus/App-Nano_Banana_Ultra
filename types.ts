@@ -103,6 +103,24 @@ export type OutputFormat = 'images-only' | 'images-and-text';
 export type ThinkingLevel = 'disabled' | 'minimal' | 'high';
 export type GroundingMode = 'off' | 'google-search' | 'image-search' | 'google-search-plus-image-search';
 export type StickySendIntent = 'independent' | 'memory';
+export const SAFETY_CATEGORY_KEYS = ['harassment', 'hate-speech', 'sexually-explicit', 'dangerous-content'] as const;
+export const SAFETY_THRESHOLD_KEYS = [
+    'default',
+    'off',
+    'block-none',
+    'block-only-high',
+    'block-medium-and-above',
+    'block-low-and-above',
+] as const;
+export type SafetyCategoryKey = (typeof SAFETY_CATEGORY_KEYS)[number];
+export type SafetyThresholdKey = (typeof SAFETY_THRESHOLD_KEYS)[number];
+export type SafetyThresholds = Record<SafetyCategoryKey, SafetyThresholdKey>;
+export const DEFAULT_SAFETY_THRESHOLDS: SafetyThresholds = {
+    harassment: 'block-none',
+    'hate-speech': 'block-none',
+    'sexually-explicit': 'block-none',
+    'dangerous-content': 'block-none',
+};
 export type WorkspaceSettingsDraft = {
     imageModel: ImageModel;
     aspectRatio: AspectRatio;
@@ -112,6 +130,7 @@ export type WorkspaceSettingsDraft = {
     temperature: number;
     thinkingLevel: ThinkingLevel;
     groundingMode: GroundingMode;
+    safetyThresholds: SafetyThresholds;
 };
 export type ExecutionMode = 'single-turn' | 'interactive-batch-variants' | 'chat-continuation' | 'queued-batch-job';
 export type StageAssetRole = 'object' | 'character' | 'stage-source';
@@ -445,6 +464,7 @@ export interface WorkspaceComposerState {
     includeThoughts: boolean;
     googleSearch: boolean;
     imageSearch: boolean;
+    safetyThresholds?: SafetyThresholds;
     stickySendIntent?: StickySendIntent;
     generationMode: string;
     executionMode: ExecutionMode;
@@ -593,6 +613,7 @@ export interface GenerateOptions {
     includeThoughts?: boolean;
     googleSearch?: boolean;
     imageSearch?: boolean;
+    safetyThresholds?: Partial<SafetyThresholds>;
     executionMode?: ExecutionMode;
     conversationContext?: ConversationRequestContext | null;
     liveProgressBatchSessionId?: string;

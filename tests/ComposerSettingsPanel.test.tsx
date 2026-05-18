@@ -4,6 +4,7 @@ import './setupTranslations';
 import ComposerAdvancedSettingsDialog from '../components/ComposerAdvancedSettingsDialog';
 import ComposerSettingsPanel from '../components/ComposerSettingsPanel';
 import { MODEL_CAPABILITIES } from '../constants';
+import { DEFAULT_SAFETY_THRESHOLDS } from '../types';
 import { getTranslation } from '../utils/translations';
 
 const baseProps = {
@@ -58,6 +59,7 @@ const baseAdvancedSettingsDialogProps = {
     outputFormat: 'images-only' as const,
     thinkingLevel: 'high' as const,
     groundingMode: 'off' as const,
+    safetyThresholds: DEFAULT_SAFETY_THRESHOLDS,
     imageModel: 'gemini-3.1-flash-image-preview' as const,
     capability: MODEL_CAPABILITIES['gemini-3.1-flash-image-preview'],
     availableGroundingModes: ['off', 'google-search', 'image-search', 'google-search-plus-image-search'] as const,
@@ -66,6 +68,7 @@ const baseAdvancedSettingsDialogProps = {
     onTemperatureChange: vi.fn(),
     onThinkingLevelChange: vi.fn(),
     onGroundingModeChange: vi.fn(),
+    onSafetyThresholdsChange: vi.fn(),
 };
 
 describe('ComposerSettingsPanel toolbar layout', () => {

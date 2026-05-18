@@ -3,10 +3,12 @@ import type { PickerSheet } from '../components/WorkspacePickerSheet';
 import { IMAGE_MODELS, MODEL_CAPABILITIES } from '../constants';
 import {
     AspectRatio,
+    DEFAULT_SAFETY_THRESHOLDS,
     GroundingMode,
     ImageModel,
     ImageSize,
     OutputFormat,
+    SafetyThresholds,
     ThinkingLevel,
     WorkspaceSettingsDraft,
 } from '../types';
@@ -25,6 +27,7 @@ type UseWorkspaceSettingsSessionArgs = {
     temperature: number;
     thinkingLevel: ThinkingLevel;
     groundingMode: GroundingMode;
+    safetyThresholds: SafetyThresholds;
     closePickerSheet: () => void;
     setActivePickerSheet: Dispatch<SetStateAction<PickerSheet>>;
     setIsAdvancedSettingsOpen: Dispatch<SetStateAction<boolean>>;
@@ -36,6 +39,7 @@ type UseWorkspaceSettingsSessionArgs = {
     setTemperature: Dispatch<SetStateAction<number>>;
     setThinkingLevel: Dispatch<SetStateAction<ThinkingLevel>>;
     setGroundingMode: Dispatch<SetStateAction<GroundingMode>>;
+    setSafetyThresholds: Dispatch<SetStateAction<SafetyThresholds>>;
     showNotification: (message: string, type?: 'info' | 'error') => void;
     t: (key: string) => string;
 };
@@ -50,6 +54,7 @@ export function useWorkspaceSettingsSession({
     temperature,
     thinkingLevel,
     groundingMode,
+    safetyThresholds,
     closePickerSheet,
     setActivePickerSheet,
     setIsAdvancedSettingsOpen,
@@ -61,6 +66,7 @@ export function useWorkspaceSettingsSession({
     setTemperature,
     setThinkingLevel,
     setGroundingMode,
+    setSafetyThresholds,
     showNotification,
     t,
 }: UseWorkspaceSettingsSessionArgs) {
@@ -122,6 +128,10 @@ export function useWorkspaceSettingsSession({
                 temperature: normalizeTemperature(draft.temperature),
                 thinkingLevel: nextThinkingLevel,
                 groundingMode: nextGroundingMode,
+                safetyThresholds: {
+                    ...DEFAULT_SAFETY_THRESHOLDS,
+                    ...(draft.safetyThresholds || {}),
+                },
             };
         },
         [activeEditorLockedAspectRatio],
@@ -138,6 +148,7 @@ export function useWorkspaceSettingsSession({
                 temperature,
                 thinkingLevel,
                 groundingMode,
+                safetyThresholds,
             }),
         [
             normalizeSettingsSessionDraft,
@@ -149,6 +160,7 @@ export function useWorkspaceSettingsSession({
             temperature,
             thinkingLevel,
             groundingMode,
+            safetyThresholds,
         ],
     );
 
@@ -252,6 +264,7 @@ export function useWorkspaceSettingsSession({
         setTemperature(nextDraft.temperature);
         setThinkingLevel(nextDraft.thinkingLevel);
         setGroundingMode(nextDraft.groundingMode);
+        setSafetyThresholds(nextDraft.safetyThresholds);
         setActivePickerSheet(null);
         setIsAdvancedSettingsOpen(false);
         clearSettingsSession();
@@ -267,6 +280,7 @@ export function useWorkspaceSettingsSession({
         setImageSize,
         setIsAdvancedSettingsOpen,
         setOutputFormat,
+        setSafetyThresholds,
         setTemperature,
         setThinkingLevel,
         settingsSessionDraft,

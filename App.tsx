@@ -278,6 +278,8 @@ const App: React.FC = () => {
         setGoogleSearch,
         imageSearch,
         setImageSearch,
+        safetyThresholds,
+        setSafetyThresholds,
         stickySendIntent,
         setStickySendIntent,
         composerState,
@@ -864,6 +866,7 @@ const App: React.FC = () => {
         temperature,
         thinkingLevel,
         groundingMode,
+        safetyThresholds,
         closePickerSheet,
         setActivePickerSheet,
         setIsAdvancedSettingsOpen,
@@ -875,6 +878,7 @@ const App: React.FC = () => {
         setTemperature,
         setThinkingLevel,
         setGroundingMode,
+        setSafetyThresholds,
         showNotification,
         t,
     });
@@ -1035,6 +1039,7 @@ const App: React.FC = () => {
         includeThoughts,
         googleSearch,
         imageSearch,
+        safetyThresholds,
         setBatchProgress,
         setGenerationMode,
         setExecutionMode,
@@ -1062,6 +1067,7 @@ const App: React.FC = () => {
     } = usePromptTools({
         currentLanguage: currentLang,
         prompt,
+        safetyThresholds,
         setPrompt,
         addLog,
         showNotification,
@@ -1072,6 +1078,7 @@ const App: React.FC = () => {
     const { isEnhancingPrompt: isEnhancingEditorPrompt } = usePromptTools({
         currentLanguage: currentLang,
         prompt: editorPrompt,
+        safetyThresholds,
         setPrompt: setEditorPrompt,
         addLog,
         showNotification,
@@ -1780,6 +1787,7 @@ const App: React.FC = () => {
                   outputFormat: settingsSessionView.outputFormat,
                   thinkingLevel: settingsSessionView.thinkingLevel,
                   groundingMode: settingsSessionView.groundingMode,
+                  safetyThresholds: settingsSessionView.safetyThresholds,
                   imageModel: settingsSessionView.imageModel,
                   capability: settingsSessionCapability,
                   availableGroundingModes: settingsSessionAvailableGroundingModes,
@@ -1798,6 +1806,11 @@ const App: React.FC = () => {
                       updateSettingsSessionDraft((previous) => ({
                           ...previous,
                           thinkingLevel: value,
+                      })),
+                  onSafetyThresholdsChange: (value) =>
+                      updateSettingsSessionDraft((previous) => ({
+                          ...previous,
+                          safetyThresholds: value,
                       })),
                   onGroundingModeChange: handleSettingsSessionGroundingModeChange,
                   isOpen: true,

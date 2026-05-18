@@ -4,6 +4,7 @@ import { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePromptTools } from '../hooks/usePromptTools';
+import { DEFAULT_SAFETY_THRESHOLDS } from '../types';
 
 const { enhancePromptWithGeminiMock, generatePromptFromImageMock, generateRandomPromptMock } = vi.hoisted(() => ({
     enhancePromptWithGeminiMock: vi.fn(),
@@ -40,6 +41,7 @@ describe('usePromptTools', () => {
             latestHook = usePromptTools({
                 currentLanguage,
                 prompt,
+                safetyThresholds: DEFAULT_SAFETY_THRESHOLDS,
                 setPrompt: (value) => {
                     prompt = typeof value === 'function' ? value(prompt) : value;
                 },
@@ -121,13 +123,13 @@ describe('usePromptTools', () => {
         await act(async () => {
             await latestHook?.handleSmartRewrite();
         });
-        expect(enhancePromptWithGeminiMock).toHaveBeenCalledWith('hola mundo', 'es');
+        expect(enhancePromptWithGeminiMock).toHaveBeenCalledWith('hola mundo', 'es', DEFAULT_SAFETY_THRESHOLDS);
         expect(prompt).toBe(rewrittenPrompt);
 
         await act(async () => {
             await latestHook?.handleSurpriseMe();
         });
-        expect(generateRandomPromptMock).toHaveBeenCalledWith('es');
+        expect(generateRandomPromptMock).toHaveBeenCalledWith('es', DEFAULT_SAFETY_THRESHOLDS);
         expect(prompt).toBe(randomPrompt);
         expect(logs).toEqual(['Rewrite ok.', 'Random ok.']);
     });
@@ -207,7 +209,11 @@ describe('usePromptTools', () => {
         });
 
         expect(prepareImageAssetFromFileMock).toHaveBeenCalledWith(imageFile, 2048);
-        expect(generatePromptFromImageMock).toHaveBeenCalledWith('data:image/png;base64,AAA', 'es');
+        expect(generatePromptFromImageMock).toHaveBeenCalledWith(
+            'data:image/png;base64,AAA',
+            'es',
+            DEFAULT_SAFETY_THRESHOLDS,
+        );
         expect(prompt).toBe(imagePrompt);
         expect(logs).toEqual(['Image prompt ok.']);
     });

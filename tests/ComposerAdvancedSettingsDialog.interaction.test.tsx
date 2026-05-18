@@ -5,7 +5,7 @@ import { createRoot, Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import ComposerAdvancedSettingsDialog from '../components/ComposerAdvancedSettingsDialog';
 import { MODEL_CAPABILITIES } from '../constants';
-import type { GroundingMode, OutputFormat, ThinkingLevel } from '../types';
+import { DEFAULT_SAFETY_THRESHOLDS, type GroundingMode, type OutputFormat, type ThinkingLevel } from '../types';
 import { formatTemperature, TEMPERATURE_STEP } from '../utils/temperature';
 import { getTranslation } from '../utils/translations';
 
@@ -15,12 +15,17 @@ function AdvancedSettingsHarness() {
     const [temperature, setTemperature] = useState(1);
     const [thinkingLevel, setThinkingLevel] = useState<ThinkingLevel>('disabled');
     const [groundingMode, setGroundingMode] = useState<GroundingMode>('off');
+    const [safetyThresholds, setSafetyThresholds] = useState(DEFAULT_SAFETY_THRESHOLDS);
 
     return (
         <div>
             <div data-testid="committed-output-format">{outputFormat}</div>
             <div data-testid="committed-temperature">{formatTemperature(temperature)}</div>
             <div data-testid="committed-grounding-mode">{groundingMode}</div>
+            <div data-testid="committed-safety-harassment">{safetyThresholds.harassment}</div>
+            <div data-testid="committed-safety-hate-speech">{safetyThresholds['hate-speech']}</div>
+            <div data-testid="committed-safety-sexually-explicit">{safetyThresholds['sexually-explicit']}</div>
+            <div data-testid="committed-safety-dangerous-content">{safetyThresholds['dangerous-content']}</div>
             <button data-testid="reopen-advanced-settings" type="button" onClick={() => setIsOpen(true)}>
                 Reopen advanced settings
             </button>
@@ -29,6 +34,7 @@ function AdvancedSettingsHarness() {
                 outputFormat={outputFormat}
                 thinkingLevel={thinkingLevel}
                 groundingMode={groundingMode}
+                safetyThresholds={safetyThresholds}
                 imageModel="gemini-3-pro-image-preview"
                 capability={MODEL_CAPABILITIES['gemini-3-pro-image-preview']}
                 availableGroundingModes={['off', 'google-search']}
@@ -37,6 +43,7 @@ function AdvancedSettingsHarness() {
                 onTemperatureChange={setTemperature}
                 onThinkingLevelChange={setThinkingLevel}
                 onGroundingModeChange={setGroundingMode}
+                onSafetyThresholdsChange={setSafetyThresholds}
                 isOpen={isOpen}
                 onClose={() => setIsOpen(false)}
             />
@@ -105,6 +112,76 @@ describe('ComposerAdvancedSettingsDialog draft flow', () => {
         expect(container.querySelector('[data-testid="composer-advanced-settings-dialog"]')).toBeNull();
         expect(container.querySelector('[data-testid="committed-output-format"]')?.textContent).toBe('images-and-text');
         expect(container.querySelector('[data-testid="committed-temperature"]')?.textContent).toBe('0.6');
+    });
+
+    it('keeps safety slider edits local until apply is pressed', () => {
+        act(() => {
+            root.render(<AdvancedSettingsHarness />);
+        });
+
+        const toggleButton = container.querySelector('[data-testid="composer-advanced-safety-toggle"]') as HTMLButtonElement;
+        act(() => {
+            toggleButton.click();
+        });
+
+        setInputValue('[data-testid="composer-advanced-safety-slider-harassment"]', '0');
+
+        expect(container.querySelector('[data-testid="committed-safety-harassment"]')?.textContent).toBe('block-none');
+
+        const applyButton = container.querySelector(
+            '[data-testid="composer-advanced-settings-apply"]',
+        ) as HTMLButtonElement;
+        act(() => {
+            applyButton.click();
+        });
+
+        expect(container.querySelector('[data-testid="committed-safety-harassment"]')?.textContent).toBe('default');
+    });
+
+    it('syncs all safety sliders locally while preserving individual overrides', () => {
+        act(() => {
+            root.render(<AdvancedSettingsHarness />);
+        });
+
+        const toggleButton = container.querySelector('[data-testid="composer-advanced-safety-toggle"]') as HTMLButtonElement;
+        act(() => {
+            toggleButton.click();
+        });
+
+        setInputValue('[data-testid="composer-advanced-safety-sync-slider"]', '5');
+
+        expect((container.querySelector('[data-testid="composer-advanced-safety-slider-harassment"]') as HTMLInputElement).value).toBe('5');
+        expect((container.querySelector('[data-testid="composer-advanced-safety-slider-hate-speech"]') as HTMLInputElement).value).toBe('5');
+        expect((container.querySelector('[data-testid="composer-advanced-safety-slider-sexually-explicit"]') as HTMLInputElement).value).toBe('5');
+        expect((container.querySelector('[data-testid="composer-advanced-safety-slider-dangerous-content"]') as HTMLInputElement).value).toBe('5');
+        expect(container.querySelector('[data-testid="committed-safety-harassment"]')?.textContent).toBe('block-none');
+        expect(container.querySelector('[data-testid="committed-safety-hate-speech"]')?.textContent).toBe('block-none');
+        expect(container.querySelector('[data-testid="committed-safety-sexually-explicit"]')?.textContent).toBe('block-none');
+        expect(container.querySelector('[data-testid="committed-safety-dangerous-content"]')?.textContent).toBe('block-none');
+
+        setInputValue('[data-testid="composer-advanced-safety-slider-harassment"]', '0');
+
+        expect(container.querySelector('[data-testid="composer-advanced-safety-sync-value"]')?.textContent).toBe(
+            getTranslation('en', 'composerAdvancedSafetyMixed'),
+        );
+
+        const applyButton = container.querySelector(
+            '[data-testid="composer-advanced-settings-apply"]',
+        ) as HTMLButtonElement;
+        act(() => {
+            applyButton.click();
+        });
+
+        expect(container.querySelector('[data-testid="committed-safety-harassment"]')?.textContent).toBe('default');
+        expect(container.querySelector('[data-testid="committed-safety-hate-speech"]')?.textContent).toBe(
+            'block-low-and-above',
+        );
+        expect(container.querySelector('[data-testid="committed-safety-sexually-explicit"]')?.textContent).toBe(
+            'block-low-and-above',
+        );
+        expect(container.querySelector('[data-testid="committed-safety-dangerous-content"]')?.textContent).toBe(
+            'block-low-and-above',
+        );
     });
 
     it('supports 0.05 temperature increments without rounding 1.05 to 1.1', () => {
@@ -186,6 +263,19 @@ describe('ComposerAdvancedSettingsDialog draft flow', () => {
         expect(container.querySelector('[data-testid="composer-advanced-output-format-card"]')).toBeTruthy();
         expect(container.querySelector('[data-testid="composer-advanced-temperature-card"]')).toBeTruthy();
         expect(container.querySelector('[data-testid="composer-advanced-grounding-card"]')).toBeTruthy();
+        expect(container.querySelector('[data-testid="composer-advanced-safety-sync-slider"]')).toBeNull();
+
+        const secondaryColumn = container.querySelector(
+            '[data-testid="composer-advanced-secondary-column"]',
+        ) as HTMLDivElement;
+        const groundingCard = container.querySelector('[data-testid="composer-advanced-grounding-card"]') as HTMLElement;
+        const safetyCard = container.querySelector('[data-testid="composer-advanced-safety-card"]') as HTMLElement;
+
+        expect(secondaryColumn.contains(groundingCard)).toBe(true);
+        expect(secondaryColumn.contains(safetyCard)).toBe(true);
+        expect(Boolean(groundingCard.compareDocumentPosition(safetyCard) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(
+            true,
+        );
 
         const trigger = container.querySelector(
             '[data-testid="composer-advanced-temperature-guide-hint-trigger"]',

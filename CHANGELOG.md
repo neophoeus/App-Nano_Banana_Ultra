@@ -1,5 +1,21 @@
 # Changelog
 
+## v3.10.0 - 2026-05-18
+
+- Release title: Nano Banana Ultra 3.10.0 - Advanced Safety Controls & Grounding-Adjacent Sync
+- Release summary:
+    - adjustable Gemini safety controls inside Advanced Settings:
+        - Ultra now exposes the four officially adjustable Gemini safety categories directly inside the existing Advanced Settings flow instead of keeping those thresholds hardcoded behind the scenes
+        - harassment, hate speech, sexually explicit, and dangerous content can each be set to model default, off, block none, block only high, block medium and above, or block low and above through a subtle slider-based panel
+
+    - safety panel regrouped under grounding with one-step batch alignment:
+        - the Safety filters card now lives in the right column directly below Grounding mode so the control stays available without becoming a loud primary-surface setting
+        - the expanded panel now includes one sync-all slider for aligning all four safety categories in one move, while still keeping individual per-category overrides available underneath
+
+    - shared safety behavior across generation surfaces:
+        - the same safety threshold state now persists through the workspace settings draft flow and continues to apply consistently across main generation and prompt-tool request paths instead of splitting into separate hidden contracts
+        - saved workspace state and restored sessions keep the selected safety thresholds together with the rest of the composer configuration
+
 ## v3.9.0 - 2026-05-18
 
 - Release title: Nano Banana Ultra 3.9.0 - Diagnostics Terminal & Correlated Local API Tracing

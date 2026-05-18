@@ -4,6 +4,7 @@ import { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
+import { DEFAULT_SAFETY_THRESHOLDS } from '../types';
 import { WORKSPACE_SNAPSHOT_STORAGE_KEY } from '../utils/workspacePersistence';
 import { LANGUAGE_STORAGE_KEY } from '../utils/translations';
 import { THEME_STORAGE_KEY } from '../utils/theme';
@@ -521,6 +522,7 @@ describe('App official conversation flow', () => {
         });
 
         expect(requestBody.lang).toBe('zh_TW');
+        expect(requestBody.safetyThresholds).toEqual(DEFAULT_SAFETY_THRESHOLDS);
     });
 
     it('opens progress and sources from the top header without rendering in-modal support tabs', async () => {

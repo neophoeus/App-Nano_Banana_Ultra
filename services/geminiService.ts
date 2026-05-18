@@ -1,4 +1,12 @@
-import { GenerateOptions, GenerateResponse, ImageReceivedResult, QueuedBatchJobStats, ResultPart } from '../types';
+import {
+    DEFAULT_SAFETY_THRESHOLDS,
+    GenerateOptions,
+    GenerateResponse,
+    ImageReceivedResult,
+    QueuedBatchJobStats,
+    ResultPart,
+    type SafetyThresholds,
+} from '../types';
 import {
     attachGenerationFailure,
     getGenerationFailure,
@@ -54,6 +62,7 @@ type ImageGenerateRequestBody = {
     includeThoughts: GenerateOptions['includeThoughts'];
     googleSearch: GenerateOptions['googleSearch'];
     imageSearch: GenerateOptions['imageSearch'];
+    safetyThresholds: GenerateOptions['safetyThresholds'];
     executionMode: GenerateOptions['executionMode'];
     conversationContext: GenerateOptions['conversationContext'];
 };
@@ -188,6 +197,7 @@ const buildImageGenerateRequestBody = (options: GenerateOptions, finalPrompt: st
     includeThoughts: options.includeThoughts,
     googleSearch: options.googleSearch,
     imageSearch: options.imageSearch,
+    safetyThresholds: options.safetyThresholds,
     executionMode: options.executionMode,
     conversationContext: options.conversationContext,
 });
@@ -1333,9 +1343,13 @@ export const promptForApiKey = async (): Promise<void> => {
 
 // --- Text Utilities (Prompt Engineering) ---
 
-export const enhancePromptWithGemini = async (currentPrompt: string, lang: Language): Promise<string> => {
+export const enhancePromptWithGemini = async (
+    currentPrompt: string,
+    lang: Language,
+    safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
+): Promise<string> => {
     const correlationId = createDebugTerminalCorrelationId('prompt');
-    const requestPayload = { currentPrompt, lang };
+    const requestPayload = { currentPrompt, lang, safetyThresholds };
     const response = await fetchJson<{ text: string }>(
         '/api/prompt/enhance',
         {
@@ -1381,9 +1395,12 @@ export const enhancePromptWithGemini = async (currentPrompt: string, lang: Langu
     return promptText;
 };
 
-export const generateRandomPrompt = async (lang: Language): Promise<string> => {
+export const generateRandomPrompt = async (
+    lang: Language,
+    safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
+): Promise<string> => {
     const correlationId = createDebugTerminalCorrelationId('prompt');
-    const requestPayload = { lang };
+    const requestPayload = { lang, safetyThresholds };
     const response = await fetchJson<{ text: string }>(
         '/api/prompt/random',
         {
@@ -1429,9 +1446,13 @@ export const generateRandomPrompt = async (lang: Language): Promise<string> => {
     return promptText;
 };
 
-export const generatePromptFromImage = async (imageDataUrl: string, lang: Language): Promise<string> => {
+export const generatePromptFromImage = async (
+    imageDataUrl: string,
+    lang: Language,
+    safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
+): Promise<string> => {
     const correlationId = createDebugTerminalCorrelationId('prompt');
-    const requestPayload = { imageDataUrl, lang };
+    const requestPayload = { imageDataUrl, lang, safetyThresholds };
     const response = await fetchJson<{ text: string }>(
         '/api/prompt/image-to-prompt',
         {

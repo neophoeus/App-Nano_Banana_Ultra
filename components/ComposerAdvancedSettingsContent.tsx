@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
     getOutputFormatLabelKey,
     getThinkingLevelLabelKey,
@@ -5,17 +6,45 @@ import {
     OUTPUT_FORMATS,
     THINKING_LEVELS,
 } from '../constants';
-import { GroundingMode, ImageModel, OutputFormat, ThinkingLevel } from '../types';
+import {
+    DEFAULT_SAFETY_THRESHOLDS,
+    GroundingMode,
+    ImageModel,
+    OutputFormat,
+    SAFETY_CATEGORY_KEYS,
+    SAFETY_THRESHOLD_KEYS,
+    type SafetyCategoryKey,
+    type SafetyThresholdKey,
+    type SafetyThresholds,
+    ThinkingLevel,
+} from '../types';
 import { getGroundingModeTranslationKey } from '../utils/groundingMode';
 import { DEFAULT_TEMPERATURE, formatTemperature, normalizeTemperature, TEMPERATURE_STEP } from '../utils/temperature';
 import { getTranslation, Language } from '../utils/translations';
 import InfoTooltip from './InfoTooltip';
+
+const SAFETY_CATEGORY_LABEL_KEYS: Record<SafetyCategoryKey, string> = {
+    harassment: 'generationFailureValueSafetyCategoryHarassment',
+    'hate-speech': 'generationFailureValueSafetyCategoryHateSpeech',
+    'sexually-explicit': 'generationFailureValueSafetyCategorySexuallyExplicit',
+    'dangerous-content': 'generationFailureValueSafetyCategoryDangerousContent',
+};
+
+const SAFETY_THRESHOLD_LABEL_KEYS: Record<SafetyThresholdKey, string> = {
+    default: 'composerAdvancedSafetyThresholdDefault',
+    off: 'composerAdvancedSafetyThresholdOff',
+    'block-none': 'composerAdvancedSafetyThresholdBlockNone',
+    'block-only-high': 'composerAdvancedSafetyThresholdBlockOnlyHigh',
+    'block-medium-and-above': 'composerAdvancedSafetyThresholdBlockMediumAndAbove',
+    'block-low-and-above': 'composerAdvancedSafetyThresholdBlockLowAndAbove',
+};
 
 type ComposerAdvancedSettingsContentProps = {
     currentLanguage: Language;
     outputFormat: OutputFormat;
     thinkingLevel: ThinkingLevel;
     groundingMode: GroundingMode;
+    safetyThresholds: SafetyThresholds;
     imageModel: ImageModel;
     capability: (typeof MODEL_CAPABILITIES)[ImageModel];
     availableGroundingModes: GroundingMode[];
@@ -24,6 +53,7 @@ type ComposerAdvancedSettingsContentProps = {
     onTemperatureChange: (value: number) => void;
     onThinkingLevelChange: (value: ThinkingLevel) => void;
     onGroundingModeChange: (value: GroundingMode) => void;
+    onSafetyThresholdsChange: (value: SafetyThresholds) => void;
 };
 
 export default function ComposerAdvancedSettingsContent({
@@ -31,6 +61,7 @@ export default function ComposerAdvancedSettingsContent({
     outputFormat,
     thinkingLevel,
     groundingMode,
+    safetyThresholds,
     imageModel,
     capability,
     availableGroundingModes,
@@ -39,18 +70,36 @@ export default function ComposerAdvancedSettingsContent({
     onTemperatureChange,
     onThinkingLevelChange,
     onGroundingModeChange,
+    onSafetyThresholdsChange,
 }: ComposerAdvancedSettingsContentProps) {
     const t = (key: string) => getTranslation(currentLanguage, key);
     const supportsThinkingLevelControl = capability.thinkingLevels.some((level) => level !== 'disabled');
     const hasImageSearchGroundingOption = availableGroundingModes.some(
         (mode) => mode === 'image-search' || mode === 'google-search-plus-image-search',
     );
+    const hasSafetyOverrides = SAFETY_CATEGORY_KEYS.some(
+        (categoryKey) => safetyThresholds[categoryKey] !== DEFAULT_SAFETY_THRESHOLDS[categoryKey],
+    );
+    const hasGroundingCard = availableGroundingModes.length > 1;
+    const renderSafetyInPrimaryColumn = !hasGroundingCard;
+    const renderSafetyInSecondaryColumn = hasGroundingCard;
     const hasLeftColumnContent =
-        capability.outputFormats.length > 1 || supportsThinkingLevelControl || capability.supportsTemperature;
-    const hasRightColumnContent = availableGroundingModes.length > 1;
+        capability.outputFormats.length > 1 ||
+        supportsThinkingLevelControl ||
+        capability.supportsTemperature ||
+        renderSafetyInPrimaryColumn;
+    const hasRightColumnContent = hasGroundingCard;
     const showGroundingResolutionWarning =
         imageModel === 'gemini-3.1-flash-image-preview' &&
         (groundingMode === 'image-search' || groundingMode === 'google-search-plus-image-search');
+    const firstSafetyThreshold = safetyThresholds[SAFETY_CATEGORY_KEYS[0]];
+    const allSafetyThresholdsMatch = SAFETY_CATEGORY_KEYS.every(
+        (categoryKey) => safetyThresholds[categoryKey] === firstSafetyThreshold,
+    );
+    const allSafetySliderValue = allSafetyThresholdsMatch
+        ? SAFETY_THRESHOLD_KEYS.indexOf(firstSafetyThreshold)
+        : SAFETY_THRESHOLD_KEYS.indexOf(DEFAULT_SAFETY_THRESHOLDS.harassment);
+    const [isSafetyPanelOpen, setIsSafetyPanelOpen] = useState(hasSafetyOverrides);
     const layoutClassName =
         hasLeftColumnContent && hasRightColumnContent
             ? 'grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]'
@@ -63,6 +112,129 @@ export default function ComposerAdvancedSettingsContent({
             <div>{t('composerAdvancedTemperatureGuideHigher')}</div>
             <div>{t('composerAdvancedTemperatureGuideLower')}</div>
         </div>
+    );
+
+    useEffect(() => {
+        if (hasSafetyOverrides) {
+            setIsSafetyPanelOpen(true);
+        }
+    }, [hasSafetyOverrides]);
+
+    const handleSafetyThresholdChange = (categoryKey: SafetyCategoryKey, thresholdKey: SafetyThresholdKey) => {
+        onSafetyThresholdsChange({
+            ...safetyThresholds,
+            [categoryKey]: thresholdKey,
+        });
+    };
+
+    const handleAllSafetyThresholdsChange = (thresholdKey: SafetyThresholdKey) => {
+        const nextThresholds = { ...safetyThresholds };
+
+        SAFETY_CATEGORY_KEYS.forEach((categoryKey) => {
+            nextThresholds[categoryKey] = thresholdKey;
+        });
+
+        onSafetyThresholdsChange(nextThresholds);
+    };
+
+    const renderSafetyCard = () => (
+        <section
+            data-testid="composer-advanced-safety-card"
+            className={`${cardClassName} border border-slate-200/80 bg-slate-50/70 dark:border-slate-700/80 dark:bg-slate-950/40`}
+        >
+            <button
+                type="button"
+                data-testid="composer-advanced-safety-toggle"
+                aria-expanded={isSafetyPanelOpen}
+                onClick={() => setIsSafetyPanelOpen((previous) => !previous)}
+                className="flex w-full items-center justify-between gap-3 text-left"
+            >
+                <div className="space-y-1">
+                    <div className={cardLabelClassName}>{t('composerAdvancedSafetyTitle')}</div>
+                    <div className="text-xs leading-relaxed text-gray-600 dark:text-gray-300">
+                        {t('composerAdvancedSafetyNote')}
+                    </div>
+                </div>
+                <span className="rounded-full border border-slate-200 bg-white/85 px-2 py-0.5 text-xs font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-200">
+                    {isSafetyPanelOpen ? '-' : '+'}
+                </span>
+            </button>
+
+            {isSafetyPanelOpen && (
+                <div data-testid="composer-advanced-safety-panel" className="space-y-4">
+                    <div className="space-y-2 rounded-2xl border border-slate-200/80 bg-white/75 p-3 dark:border-slate-700/80 dark:bg-slate-900/60">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                {t('composerAdvancedSafetyAllLabel')}
+                            </span>
+                            <span
+                                data-testid="composer-advanced-safety-sync-value"
+                                className="rounded-full border border-slate-200 bg-white/85 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-200"
+                            >
+                                {allSafetyThresholdsMatch
+                                    ? t(SAFETY_THRESHOLD_LABEL_KEYS[firstSafetyThreshold])
+                                    : t('composerAdvancedSafetyMixed')}
+                            </span>
+                        </div>
+                        <input
+                            data-testid="composer-advanced-safety-sync-slider"
+                            type="range"
+                            min="0"
+                            max={String(SAFETY_THRESHOLD_KEYS.length - 1)}
+                            step="1"
+                            value={allSafetySliderValue >= 0 ? allSafetySliderValue : 0}
+                            onChange={(event) => {
+                                const nextThreshold = SAFETY_THRESHOLD_KEYS[Number(event.target.value)] || 'default';
+                                handleAllSafetyThresholdsChange(nextThreshold);
+                            }}
+                            className="w-full"
+                        />
+                    </div>
+
+                    {SAFETY_CATEGORY_KEYS.map((categoryKey) => {
+                        const sliderValue = SAFETY_THRESHOLD_KEYS.indexOf(safetyThresholds[categoryKey]);
+
+                        return (
+                            <div key={categoryKey} className="space-y-2">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                        {t(SAFETY_CATEGORY_LABEL_KEYS[categoryKey])}
+                                    </span>
+                                    <span
+                                        data-testid={`composer-advanced-safety-value-${categoryKey}`}
+                                        className="rounded-full border border-slate-200 bg-white/85 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-200"
+                                    >
+                                        {t(SAFETY_THRESHOLD_LABEL_KEYS[safetyThresholds[categoryKey]])}
+                                    </span>
+                                </div>
+                                <input
+                                    data-testid={`composer-advanced-safety-slider-${categoryKey}`}
+                                    type="range"
+                                    min="0"
+                                    max={String(SAFETY_THRESHOLD_KEYS.length - 1)}
+                                    step="1"
+                                    value={sliderValue >= 0 ? sliderValue : 0}
+                                    onChange={(event) => {
+                                        const nextThreshold =
+                                            SAFETY_THRESHOLD_KEYS[Number(event.target.value)] || 'default';
+                                        handleSafetyThresholdChange(categoryKey, nextThreshold);
+                                    }}
+                                    className="w-full"
+                                />
+                            </div>
+                        );
+                    })}
+
+                    <div className="grid grid-cols-6 gap-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-400 dark:text-gray-500">
+                        {SAFETY_THRESHOLD_KEYS.map((thresholdKey) => (
+                            <span key={thresholdKey} className="text-center">
+                                {t(SAFETY_THRESHOLD_LABEL_KEYS[thresholdKey])}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </section>
     );
 
     return (
@@ -164,12 +336,14 @@ export default function ComposerAdvancedSettingsContent({
                             </div>
                         </section>
                     )}
+
+                    {renderSafetyInPrimaryColumn && renderSafetyCard()}
                 </div>
             )}
 
             {hasRightColumnContent && (
                 <div data-testid="composer-advanced-secondary-column" className="space-y-4">
-                    {availableGroundingModes.length > 1 && (
+                    {hasGroundingCard && (
                         <section data-testid="composer-advanced-grounding-card" className={cardClassName}>
                             <label className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
                                 <div className="flex items-center gap-2">
@@ -210,6 +384,8 @@ export default function ComposerAdvancedSettingsContent({
                             )}
                         </section>
                     )}
+
+                    {renderSafetyInSecondaryColumn && renderSafetyCard()}
                 </div>
             )}
         </div>

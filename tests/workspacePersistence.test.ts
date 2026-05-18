@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { WorkspacePersistenceSnapshot } from '../types';
+import { DEFAULT_SAFETY_THRESHOLDS, WorkspacePersistenceSnapshot } from '../types';
 import { buildConversationRequestContext } from '../utils/conversationState';
 import {
     clearSharedWorkspaceSnapshot,
@@ -186,6 +186,7 @@ describe('workspacePersistence', () => {
         });
 
         expect(restored.composerState.stickySendIntent).toBe('independent');
+        expect(restored.composerState.safetyThresholds).toEqual(DEFAULT_SAFETY_THRESHOLDS);
     });
 
     it('hard-migrates legacy style ids across history, queued jobs, and composer state', () => {
@@ -252,6 +253,26 @@ describe('workspacePersistence', () => {
         });
 
         expect(restored.composerState.stickySendIntent).toBe('memory');
+    });
+
+    it('preserves restored safety thresholds when provided explicitly', () => {
+        const restored = sanitizeWorkspaceSnapshot({
+            ...EMPTY_WORKSPACE_SNAPSHOT,
+            composerState: {
+                ...EMPTY_WORKSPACE_SNAPSHOT.composerState,
+                safetyThresholds: {
+                    ...DEFAULT_SAFETY_THRESHOLDS,
+                    harassment: 'default',
+                    'dangerous-content': 'block-medium-and-above',
+                },
+            },
+        });
+
+        expect(restored.composerState.safetyThresholds).toEqual({
+            ...DEFAULT_SAFETY_THRESHOLDS,
+            harassment: 'default',
+            'dangerous-content': 'block-medium-and-above',
+        });
     });
 
     it('normalizes restored composer temperature to 0.05 increments', () => {

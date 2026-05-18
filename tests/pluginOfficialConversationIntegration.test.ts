@@ -49,7 +49,11 @@ vi.mock('@google/genai/node', () => {
 
     return {
         GoogleGenAI: MockGoogleGenAI,
-        HarmBlockThreshold: { BLOCK_NONE: 'BLOCK_NONE' },
+        HarmBlockThreshold: {
+            OFF: 'OFF',
+            BLOCK_NONE: 'BLOCK_NONE',
+            BLOCK_ONLY_HIGH: 'BLOCK_ONLY_HIGH',
+        },
         HarmCategory: {
             HARM_CATEGORY_HARASSMENT: 'harassment',
             HARM_CATEGORY_HATE_SPEECH: 'hate',
@@ -1135,6 +1139,12 @@ describe('imageSavePlugin official conversation integration', () => {
         const enhanceResponse = await invokeJsonRoute(promptEnhanceHandler!, {
             currentPrompt: 'a lone traveler in the rain',
             lang: 'en',
+            safetyThresholds: {
+                harassment: 'default',
+                'hate-speech': 'block-only-high',
+                'sexually-explicit': 'off',
+                'dangerous-content': 'block-none',
+            },
         });
         const randomResponse = await invokeJsonRoute(promptRandomHandler!, {
             lang: 'en',
@@ -1154,6 +1164,20 @@ describe('imageSavePlugin official conversation integration', () => {
                 model: 'gemini-3-flash-preview',
                 config: expect.objectContaining({
                     systemInstruction: expect.stringContaining('2-4 short prompt-only blocks separated by line breaks'),
+                    safetySettings: [
+                        {
+                            category: 'hate',
+                            threshold: 'BLOCK_ONLY_HIGH',
+                        },
+                        {
+                            category: 'sexual',
+                            threshold: 'OFF',
+                        },
+                        {
+                            category: 'danger',
+                            threshold: 'BLOCK_NONE',
+                        },
+                    ],
                     temperature: 0.35,
                 }),
                 contents: expect.stringContaining('Current prompt: a lone traveler in the rain'),

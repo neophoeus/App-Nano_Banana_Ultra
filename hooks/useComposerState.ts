@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction, useCallback, useMemo, useState } from 'react';
 import {
     AspectRatio,
+    DEFAULT_SAFETY_THRESHOLDS,
     ExecutionMode,
     GenerationSettings,
     GroundingMode,
@@ -8,6 +9,7 @@ import {
     ImageSize,
     ImageStyle,
     OutputFormat,
+    SafetyThresholds,
     StickySendIntent,
     ThinkingLevel,
     ViewerComposerSettingsSnapshot,
@@ -52,6 +54,8 @@ type UseComposerStateReturn = {
     setGoogleSearch: Dispatch<SetStateAction<boolean>>;
     imageSearch: boolean;
     setImageSearch: Dispatch<SetStateAction<boolean>>;
+    safetyThresholds: SafetyThresholds;
+    setSafetyThresholds: Dispatch<SetStateAction<SafetyThresholds>>;
     stickySendIntent: StickySendIntent;
     setStickySendIntent: Dispatch<SetStateAction<StickySendIntent>>;
     composerState: WorkspaceComposerState;
@@ -95,6 +99,10 @@ export function useComposerState({
     const [includeThoughts, setIncludeThoughts] = useState(initialComposerState.includeThoughts);
     const [googleSearch, setGoogleSearch] = useState(initialComposerState.googleSearch);
     const [imageSearch, setImageSearch] = useState(initialComposerState.imageSearch);
+    const [safetyThresholds, setSafetyThresholds] = useState<SafetyThresholds>(() => ({
+        ...DEFAULT_SAFETY_THRESHOLDS,
+        ...(initialComposerState.safetyThresholds || {}),
+    }));
     const [stickySendIntent, setStickySendIntent] = useState<StickySendIntent>(
         initialComposerState.stickySendIntent ?? 'independent',
     );
@@ -117,6 +125,7 @@ export function useComposerState({
             includeThoughts,
             googleSearch,
             imageSearch,
+            safetyThresholds,
             stickySendIntent,
             generationMode,
             executionMode,
@@ -132,6 +141,7 @@ export function useComposerState({
             imageSize,
             imageStyle,
             includeThoughts,
+            safetyThresholds,
             stickySendIntent,
             outputFormat,
             prompt,
@@ -163,6 +173,10 @@ export function useComposerState({
             setIncludeThoughts(nextComposerState.includeThoughts);
             setGoogleSearch(nextComposerState.googleSearch);
             setImageSearch(nextComposerState.imageSearch);
+            setSafetyThresholds({
+                ...DEFAULT_SAFETY_THRESHOLDS,
+                ...(nextComposerState.safetyThresholds || {}),
+            });
             setStickySendIntent(nextComposerState.stickySendIntent ?? 'independent');
             syncPresentationState(nextComposerState);
         },
@@ -276,6 +290,8 @@ export function useComposerState({
         setGoogleSearch,
         imageSearch,
         setImageSearch,
+        safetyThresholds,
+        setSafetyThresholds,
         stickySendIntent,
         setStickySendIntent,
         composerState,
