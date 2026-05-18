@@ -16,7 +16,11 @@ import {
 import { VALID_IMAGE_MODELS, VALID_IMAGE_SIZES } from '../../utils/modelCapabilities';
 import { DEFAULT_TEMPERATURE, normalizeTemperature } from '../../utils/temperature';
 import {
+    type ApiRequestContext,
+    createApiRequestContext,
+    logApiRequest,
     logApiError,
+    logApiResponse,
     readJsonBody,
     sendClassifiedApiError,
     sendJson,
@@ -688,11 +692,12 @@ export function extractStreamCompletionContent(
 function validateInteractiveGenerateRequest(
     routePath: string,
     body: ImageGenerateBody,
+    requestContext?: ApiRequestContext,
 ): { model: string; objectImageInputs: string[]; characterImageInputs: string[] } | ValidationErrorResult {
     const model = String(body.model || 'gemini-3.1-flash-image-preview');
 
     if (!VALID_IMAGE_MODELS.has(model)) {
-        logApiError(routePath, new Error('Unsupported model'), { model });
+        logApiError(routePath, new Error('Unsupported model'), { model }, requestContext);
         return { status: 400, error: `Unsupported model: ${model}` };
     }
 
@@ -700,7 +705,7 @@ function validateInteractiveGenerateRequest(
         logApiError(routePath, new Error('Unsupported image size'), {
             imageSize: body.imageSize,
             model,
-        });
+        }, requestContext);
         return { status: 400, error: `Unsupported image size: ${body.imageSize}` };
     }
 
@@ -710,7 +715,7 @@ function validateInteractiveGenerateRequest(
             model,
             capabilityError,
             body,
-        });
+        }, requestContext);
         return { status: 400, error: capabilityError };
     }
 
@@ -726,7 +731,7 @@ function validateInteractiveGenerateRequest(
     if (model === 'gemini-2.5-flash-image' && totalReferenceImages > 3) {
         logApiError(routePath, new Error('Too many reference images for gemini-2.5-flash-image'), {
             totalReferenceImages,
-        });
+        }, requestContext);
         return {
             status: 400,
             error: 'gemini-2.5-flash-image works best with up to 3 input images according to current docs.',
@@ -908,6 +913,7 @@ async function buildFailureResponse(
     model: string,
     prepared: PreparedGenerateRequest,
     extracted: ExtractedGeneratedContent,
+    requestContext?: ApiRequestContext,
 ): Promise<{
     error: string;
     failure: ReturnType<typeof resolveGenerationFailureInfo>;
@@ -933,7 +939,7 @@ async function buildFailureResponse(
                   ? failure.finishReason || 'Unknown Safety Filter'
                   : 'Unknown Safety Filter';
         const specificKeywords = await identifyBlockKeywords(ai, prompt, reason);
-        logApiError(routePath, new Error('Output blocked by safety filter'), { reason, model });
+        logApiError(routePath, new Error('Output blocked by safety filter'), { reason, model }, requestContext);
         return {
             error: `${failure.message} ${specificKeywords}`.trim(),
             failure,
@@ -952,7 +958,7 @@ async function buildFailureResponse(
         textLength: extracted.text?.length ?? 0,
         thoughtsReturned: Boolean(extracted.thoughts),
         extractionIssue: extracted.extractionIssue || null,
-    });
+    }, requestContext);
 
     return {
         error: failure.message,
@@ -1070,19 +1076,35 @@ async function runLiveProgressProbeCell(
 
 export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }: RegisterGenerateRoutesArgs): void {
     server.use('/api/images/generate', async (req: any, res: any) => {
+        const requestContext = createApiRequestContext(req, '/api/images/generate');
         const requestAbortState = createRequestAbortState(req, res);
 
         if (req.method !== 'POST') {
-            sendJson(res, 405, { error: 'Method not allowed' });
+            sendJson(res, 405, { error: 'Method not allowed' }, { requestContext, summary: 'Method not allowed' });
             return;
         }
 
         try {
             const ai = getAIClient();
             const body = await readJsonBody<ImageGenerateBody>(req);
-            const validated = validateInteractiveGenerateRequest('/api/images/generate', body);
+            logApiRequest(requestContext, {
+                source: 'generation',
+                model: String(body.model || 'gemini-3.1-flash-image-preview'),
+                executionMode: body.executionMode || 'single-turn',
+                outputFormat: body.outputFormat || 'images-only',
+                hasConversationContext: Boolean(body.conversationContext),
+                objectImageCount: Array.isArray(body.objectImageInputs) ? body.objectImageInputs.length : 0,
+                characterImageCount: Array.isArray(body.characterImageInputs) ? body.characterImageInputs.length : 0,
+                hasEditingInput: Boolean(body.editingInput),
+                includeThoughts: Boolean(body.includeThoughts),
+            });
+            const validated = validateInteractiveGenerateRequest('/api/images/generate', body, requestContext);
             if ('status' in validated) {
-                sendJson(res, validated.status, { error: validated.error });
+                sendJson(res, validated.status, { error: validated.error }, {
+                    requestContext,
+                    summary: validated.error,
+                    details: { source: 'generation' },
+                });
                 return;
             }
 
@@ -1099,14 +1121,28 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 logApiError('/api/images/generate', new Error('Prompt rejected by policy'), {
                     blockReason,
                     model: validated.model,
-                });
+                }, requestContext);
                 if (!requestAbortState.isWritable()) {
                     return;
                 }
-                sendJson(res, getGenerationFailureHttpStatus(failure), {
-                    error: failure.message,
-                    failure,
-                });
+                sendJson(
+                    res,
+                    getGenerationFailureHttpStatus(failure),
+                    {
+                        error: failure.message,
+                        failure,
+                    },
+                    {
+                        requestContext,
+                        summary: failure.message,
+                        details: {
+                            source: 'generation',
+                            model: validated.model,
+                            failureCode: failure.code,
+                            blockReason,
+                        },
+                    },
+                );
                 return;
             }
 
@@ -1123,7 +1159,19 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 if (!requestAbortState.isWritable()) {
                     return;
                 }
-                sendJson(res, 200, payload);
+                sendJson(res, 200, payload, {
+                    requestContext,
+                    summary: 'Generated image response',
+                    details: {
+                        source: 'generation',
+                        model: validated.model,
+                        hasImage: Boolean(payload.imageUrl),
+                        textLength: payload.text?.length ?? 0,
+                        hasThoughts: Boolean(payload.thoughts),
+                        resultPartCount: payload.resultParts?.length ?? 0,
+                        hasGrounding: Boolean(payload.grounding),
+                    },
+                });
                 return;
             }
 
@@ -1134,14 +1182,28 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 validated.model,
                 prepared,
                 extracted,
+                requestContext,
             );
             if (!requestAbortState.isWritable()) {
                 return;
             }
-            sendJson(res, failureResponse.status, {
-                error: failureResponse.error,
-                failure: failureResponse.failure,
-            });
+            sendJson(
+                res,
+                failureResponse.status,
+                {
+                    error: failureResponse.error,
+                    failure: failureResponse.failure,
+                },
+                {
+                    requestContext,
+                    summary: failureResponse.error,
+                    details: {
+                        source: 'generation',
+                        model: validated.model,
+                        failureCode: failureResponse.failure.code,
+                    },
+                },
+            );
         } catch (error: any) {
             if (isAbortLikeError(error) || requestAbortState.isDisconnected()) {
                 return;
@@ -1149,6 +1211,10 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
 
             sendClassifiedApiError(res, '/api/images/generate', error, 'Image generation failed', {
                 defaultStatus: 502,
+                requestContext,
+                details: {
+                    source: 'generation',
+                },
             });
         } finally {
             requestAbortState.cleanup();
@@ -1156,10 +1222,11 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
     });
 
     server.use('/api/images/generate-stream', async (req: any, res: any) => {
+        const requestContext = createApiRequestContext(req, '/api/images/generate-stream');
         const requestAbortState = createRequestAbortState(req, res);
 
         if (req.method !== 'POST') {
-            sendJson(res, 405, { error: 'Method not allowed' });
+            sendJson(res, 405, { error: 'Method not allowed' }, { requestContext, summary: 'Method not allowed' });
             return;
         }
 
@@ -1170,9 +1237,24 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
         try {
             const ai = getAIClient();
             const body = await readJsonBody<ImageGenerateBody>(req);
-            const validated = validateInteractiveGenerateRequest('/api/images/generate-stream', body);
+            logApiRequest(requestContext, {
+                source: 'generation',
+                model: String(body.model || 'gemini-3.1-flash-image-preview'),
+                executionMode: body.executionMode || 'single-turn',
+                outputFormat: body.outputFormat || 'images-only',
+                hasConversationContext: Boolean(body.conversationContext),
+                objectImageCount: Array.isArray(body.objectImageInputs) ? body.objectImageInputs.length : 0,
+                characterImageCount: Array.isArray(body.characterImageInputs) ? body.characterImageInputs.length : 0,
+                hasEditingInput: Boolean(body.editingInput),
+                includeThoughts: Boolean(body.includeThoughts),
+            });
+            const validated = validateInteractiveGenerateRequest('/api/images/generate-stream', body, requestContext);
             if ('status' in validated) {
-                sendJson(res, validated.status, { error: validated.error });
+                sendJson(res, validated.status, { error: validated.error }, {
+                    requestContext,
+                    summary: validated.error,
+                    details: { source: 'generation' },
+                });
                 return;
             }
 
@@ -1187,7 +1269,11 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 batchSize: 1,
             });
             if (liveProgressError) {
-                sendJson(res, 400, { error: liveProgressError });
+                sendJson(res, 400, { error: liveProgressError }, {
+                    requestContext,
+                    summary: liveProgressError,
+                    details: { source: 'generation', model: validated.model },
+                });
                 return;
             }
 
@@ -1200,7 +1286,15 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 return;
             }
 
-            startNdjsonStream(res, 200);
+            startNdjsonStream(res, 200, {
+                requestContext,
+                summary: 'Live progress stream opened',
+                details: {
+                    source: 'generation',
+                    model: validated.model,
+                    sessionId,
+                },
+            });
             transportOpened = true;
             writeNdjsonEvent<StreamStartEvent>(res, {
                 type: 'start',
@@ -1246,6 +1340,17 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 if (!requestAbortState.isWritable()) {
                     return;
                 }
+                logApiResponse(requestContext, 200, {
+                    source: 'generation',
+                    phase: 'stream-complete',
+                    sessionId,
+                    model: validated.model,
+                    hasImage: Boolean(payload.imageUrl),
+                    textLength: payload.text?.length ?? 0,
+                    hasThoughts: Boolean(payload.thoughts),
+                    resultPartCount: payload.resultParts?.length ?? 0,
+                    truthfulnessOutcome: summary.truthfulnessOutcome,
+                });
                 writeNdjsonEvent<StreamCompleteEvent>(res, {
                     type: 'complete',
                     sessionId,
@@ -1265,6 +1370,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 validated.model,
                 prepared,
                 extracted,
+                requestContext,
             );
             const partialResponse =
                 extracted.resultParts?.length || extracted.text || extracted.thoughts
@@ -1280,6 +1386,15 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
             if (!requestAbortState.isWritable()) {
                 return;
             }
+            logApiResponse(requestContext, failureResponse.status, {
+                source: 'generation',
+                phase: 'stream-failure',
+                sessionId,
+                model: validated.model,
+                failureCode: failureResponse.failure.code,
+                truthfulnessOutcome: summary.truthfulnessOutcome,
+                hasPartialResponse: Boolean(partialResponse),
+            });
             writeNdjsonEvent<StreamFailureEvent>(res, {
                 type: 'failure',
                 sessionId,
@@ -1298,6 +1413,17 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
 
             if (res.headersSent) {
                 const summary = buildStreamTruthSummary(liveState, false, transportOpened);
+                logApiError(
+                    '/api/images/generate-stream',
+                    error,
+                    {
+                        source: 'generation',
+                        phase: 'stream-active',
+                        sessionId,
+                        truthfulnessOutcome: summary.truthfulnessOutcome,
+                    },
+                    requestContext,
+                );
                 if (!requestAbortState.isWritable()) {
                     return;
                 }
@@ -1315,6 +1441,11 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
 
             sendClassifiedApiError(res, '/api/images/generate-stream', error, 'Image generation failed', {
                 defaultStatus: 502,
+                requestContext,
+                details: {
+                    source: 'generation',
+                    sessionId,
+                },
             });
         } finally {
             requestAbortState.cleanup();

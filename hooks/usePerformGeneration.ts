@@ -23,6 +23,7 @@ import {
     checkApiKey,
     promptForApiKey,
 } from '../services/geminiService';
+import { emitDebugTerminalEvent } from '../utils/debugTerminalEvents';
 import { buildStageErrorState, getGenerationFailure } from '../utils/generationFailure';
 import {
     buildSavedImageLoadUrl,
@@ -441,7 +442,17 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                     }
                 };
 
-                const handleLogCallback = (msg: string) => addLog(msg);
+                const handleLogCallback = (msg: string) => {
+                    addLog(msg);
+                    emitDebugTerminalEvent({
+                        kind: 'log',
+                        label: msg,
+                        summary: msg,
+                        source: 'workflow',
+                        operation: 'Generation workflow',
+                        batchSessionId,
+                    });
+                };
                 const handleResultCallback = (result: GenerationResult) => {
                     if (controller.signal.aborted && isCancelledGenerationResult(result)) {
                         return;

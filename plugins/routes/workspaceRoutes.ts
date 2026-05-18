@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { sanitizeQueuedBatchSpaceSnapshot } from '../../utils/queuedBatchSpacePersistence';
 import { sanitizeWorkspaceSnapshot } from '../../utils/workspacePersistence';
-import { logApiError, readJsonBody, sendJson } from '../utils/apiHelpers';
+import { createApiRequestContext, logApiError, logApiRequest, readJsonBody, sendJson } from '../utils/apiHelpers';
 
 type RegisterWorkspaceRoutesArgs = {
     geminiApiKey?: string;
@@ -164,66 +164,169 @@ export function registerWorkspaceRoutes(server: any, { geminiApiKey, resolvedDir
         };
 
         server.use(route, async (req: any, res: any) => {
+            const requestContext = createApiRequestContext(req, route);
+
             if (req.method === 'GET') {
+                logApiRequest(requestContext, {
+                    source: 'workspace',
+                    snapshotPath,
+                    phase: 'load',
+                });
                 try {
                     const snapshot = loadSnapshotBackup();
                     if (!snapshot) {
-                        sendJson(res, 200, { snapshot: null });
+                        sendJson(res, 200, { snapshot: null }, {
+                            requestContext,
+                            summary: 'No snapshot backup found',
+                            details: {
+                                source: 'workspace',
+                                snapshotPath,
+                                phase: 'load',
+                            },
+                        });
                         return;
                     }
 
-                    sendJson(res, 200, snapshot);
+                    sendJson(res, 200, snapshot, {
+                        requestContext,
+                        summary: 'Snapshot backup loaded',
+                        details: {
+                            source: 'workspace',
+                            snapshotPath,
+                            phase: 'load',
+                        },
+                    });
                 } catch (error: any) {
-                    logApiError(route, error, { method: 'GET' });
+                    logApiError(route, error, { method: 'GET', snapshotPath, phase: 'load' }, requestContext);
                     try {
                         clearSnapshotFiles();
                     } catch {
                         // Best-effort cleanup of a corrupt or half-written backup file.
                     }
-                    sendJson(res, 200, { snapshot: null, recoveredFromError: true });
+                    sendJson(res, 200, { snapshot: null, recoveredFromError: true }, {
+                        requestContext,
+                        summary: 'Recovered from corrupt snapshot backup',
+                        details: {
+                            source: 'workspace',
+                            snapshotPath,
+                            phase: 'load',
+                            recoveredFromError: true,
+                        },
+                    });
                 }
                 return;
             }
 
             if (req.method !== 'POST') {
-                sendJson(res, 405, { error: 'Method not allowed' });
+                sendJson(res, 405, { error: 'Method not allowed' }, { requestContext, summary: 'Method not allowed' });
                 return;
             }
 
             try {
                 const snapshot = await readJsonBody<Record<string, unknown>>(req);
                 const normalizedSnapshot = sanitizeSnapshot(snapshot);
+                logApiRequest(requestContext, {
+                    source: 'workspace',
+                    snapshotPath,
+                    phase: 'save',
+                    hasContent: hasContent(normalizedSnapshot),
+                });
 
                 if (!hasContent(normalizedSnapshot)) {
                     clearSnapshotFiles();
-                    sendJson(res, 200, { success: true, path: snapshotPath, cleared: true });
+                    sendJson(res, 200, { success: true, path: snapshotPath, cleared: true }, {
+                        requestContext,
+                        summary: 'Snapshot backup cleared',
+                        details: {
+                            source: 'workspace',
+                            snapshotPath,
+                            phase: 'save',
+                            cleared: true,
+                        },
+                    });
                     return;
                 }
 
                 writeSnapshotWithRetry(normalizedSnapshot);
-                sendJson(res, 200, { success: true, path: snapshotPath });
-            } catch (error: any) {
-                logApiError(route, error, { method: 'POST' });
-                sendJson(res, 200, {
-                    success: false,
-                    path: snapshotPath,
-                    error: error.message || writeErrorMessage,
+                sendJson(res, 200, { success: true, path: snapshotPath }, {
+                    requestContext,
+                    summary: 'Snapshot backup saved',
+                    details: {
+                        source: 'workspace',
+                        snapshotPath,
+                        phase: 'save',
+                    },
                 });
+            } catch (error: any) {
+                logApiError(route, error, { method: 'POST', snapshotPath, phase: 'save' }, requestContext);
+                sendJson(
+                    res,
+                    200,
+                    {
+                        success: false,
+                        path: snapshotPath,
+                        error: error.message || writeErrorMessage,
+                    },
+                    {
+                        requestContext,
+                        summary: error.message || writeErrorMessage,
+                        details: {
+                            source: 'workspace',
+                            snapshotPath,
+                            phase: 'save',
+                            success: false,
+                        },
+                    },
+                );
             }
         });
     };
 
-    server.use('/api/health', (_req: any, res: any) => {
-        sendJson(res, 200, {
-            ok: true,
-            hasApiKey: Boolean(geminiApiKey || process.env.GEMINI_API_KEY),
+    server.use('/api/health', (req: any, res: any) => {
+        const requestContext = createApiRequestContext(req, '/api/health');
+        logApiRequest(requestContext, {
+            source: 'workspace',
             outputDir: resolvedDir,
-            timestamp: new Date().toISOString(),
         });
+        sendJson(
+            res,
+            200,
+            {
+                ok: true,
+                hasApiKey: Boolean(geminiApiKey || process.env.GEMINI_API_KEY),
+                outputDir: resolvedDir,
+                timestamp: new Date().toISOString(),
+            },
+            {
+                requestContext,
+                summary: 'Health check',
+                details: {
+                    source: 'workspace',
+                    hasApiKey: Boolean(geminiApiKey || process.env.GEMINI_API_KEY),
+                },
+            },
+        );
     });
 
-    server.use('/api/runtime-config', (_req: any, res: any) => {
-        sendJson(res, 200, { hasApiKey: Boolean(geminiApiKey || process.env.GEMINI_API_KEY) });
+    server.use('/api/runtime-config', (req: any, res: any) => {
+        const requestContext = createApiRequestContext(req, '/api/runtime-config');
+        const hasApiKey = Boolean(geminiApiKey || process.env.GEMINI_API_KEY);
+        logApiRequest(requestContext, {
+            source: 'runtime',
+        });
+        sendJson(
+            res,
+            200,
+            { hasApiKey },
+            {
+                requestContext,
+                summary: hasApiKey ? 'API key available' : 'API key missing',
+                details: {
+                    source: 'runtime',
+                    hasApiKey,
+                },
+            },
+        );
     });
 
     registerFileBackedSnapshotRoute({

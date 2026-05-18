@@ -9,6 +9,7 @@ import {
 } from './types';
 import ComposerAdvancedSettingsDialog from './components/ComposerAdvancedSettingsDialog';
 import ComposerSettingsPanel from './components/ComposerSettingsPanel';
+import DebugTerminalPanel, { DebugTerminalToggleIcon } from './components/DebugTerminalPanel';
 import PanelLoadingFallback from './components/PanelLoadingFallback';
 import SurfaceLoadingFallback from './components/SurfaceLoadingFallback';
 import WorkspaceDetailModal from './components/WorkspaceDetailModal';
@@ -89,6 +90,7 @@ import { useWorkspaceShellUtilities } from './hooks/useWorkspaceShellUtilities';
 import { useWorkspaceShellOwnerState } from './hooks/useWorkspaceShellOwnerState';
 import { useWorkspaceSettingsSession } from './hooks/useWorkspaceSettingsSession';
 import { useWorkspaceTransientUiState } from './hooks/useWorkspaceTransientUiState';
+import { useDebugTerminal } from './hooks/useDebugTerminal';
 import { useLegacyWorkspaceSnapshotMigration } from './hooks/useLegacyWorkspaceSnapshotMigration';
 import { resolveCurrentStageSelectionFirstSourceOverride } from './utils/generationSourceOverride';
 import { buildSavedImageLoadUrl, loadImageMetadata } from './utils/imageSaveUtils';
@@ -152,6 +154,7 @@ const App: React.FC = () => {
     const initialComposerState = initialWorkspaceSnapshot.composerState || EMPTY_WORKSPACE_COMPOSER_STATE;
     const [apiKeyReady, setApiKeyReady] = useState(false);
     const [isCancelFinalizing, setIsCancelFinalizing] = useState(false);
+    const [isDebugTerminalOpen, setIsDebugTerminalOpen] = useState(false);
     const isDarkTheme = useDocumentThemeMode();
     const [currentLang, setCurrentLang] = useState<Language>(() => {
         const preferredLanguage = resolvePreferredLanguage();
@@ -192,6 +195,7 @@ const App: React.FC = () => {
     const [conversationState, setConversationState] = useState(
         () => initialWorkspaceSnapshot.conversationState || EMPTY_WORKSPACE_CONVERSATION_STATE,
     );
+    const debugTerminal = useDebugTerminal();
     const {
         isSketchPadOpen,
         setIsSketchPadOpen,
@@ -1803,22 +1807,34 @@ const App: React.FC = () => {
             : null;
     const headerConsole = useMemo(
         () => (
-            <Suspense
-                fallback={
-                    <div data-testid="global-health-summary" className="flex items-center gap-1.5 sm:gap-2">
-                        <div className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-200/80 bg-white/78 px-2 py-1 text-[10px] font-semibold text-slate-600 dark:border-white/10 dark:bg-[#141922]/82 dark:text-slate-200 sm:px-2.5">
-                            <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500"></span>
-                            <span>{t('statusPanelLocalApi')}</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+                <Suspense
+                    fallback={
+                        <div data-testid="global-health-summary" className="flex items-center gap-1.5 sm:gap-2">
+                            <div className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-200/80 bg-white/78 px-2 py-1 text-[10px] font-semibold text-slate-600 dark:border-white/10 dark:bg-[#141922]/82 dark:text-slate-200 sm:px-2.5">
+                                <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500"></span>
+                                <span>{t('statusPanelLocalApi')}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-200/80 bg-white/78 px-2 py-1 text-[10px] font-semibold text-slate-600 dark:border-white/10 dark:bg-[#141922]/82 dark:text-slate-200 sm:px-2.5">
+                                <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500"></span>
+                                <span>{t('statusPanelGeminiKey')}</span>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-200/80 bg-white/78 px-2 py-1 text-[10px] font-semibold text-slate-600 dark:border-white/10 dark:bg-[#141922]/82 dark:text-slate-200 sm:px-2.5">
-                            <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500"></span>
-                            <span>{t('statusPanelGeminiKey')}</span>
-                        </div>
-                    </div>
-                }
-            >
-                <WorkspaceHealthPanel currentLanguage={currentLang} refreshToken={systemStatusRefreshToken} />
-            </Suspense>
+                    }
+                >
+                    <WorkspaceHealthPanel currentLanguage={currentLang} refreshToken={systemStatusRefreshToken} />
+                </Suspense>
+                <button
+                    type="button"
+                    data-testid="debug-terminal-toggle"
+                    onClick={() => setIsDebugTerminalOpen(true)}
+                    className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200/80 bg-white/70 text-slate-500 transition-colors hover:border-cyan-300/80 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 dark:border-white/10 dark:bg-[#141922]/78 dark:text-slate-300 dark:hover:border-cyan-400/50 dark:hover:text-slate-50"
+                    aria-label={t('debugTerminalOpen')}
+                    title={t('debugTerminalOpen')}
+                >
+                    <DebugTerminalToggleIcon />
+                </button>
+            </div>
         ),
         [currentLang, systemStatusRefreshToken, t],
     );
@@ -2679,6 +2695,34 @@ const App: React.FC = () => {
 
             <WorkspaceFloatingLayerContext.Provider value={workspaceFloatingLayerValue}>
                 <WorkspaceTopHeader {...workspaceTopHeaderProps} />
+
+                {isDebugTerminalOpen ? (
+                    <DebugTerminalPanel
+                        events={debugTerminal.events}
+                        filteredEvents={debugTerminal.filteredEvents}
+                        selectedEvent={debugTerminal.selectedEvent}
+                        selectedEventId={debugTerminal.selectedEventId}
+                        filter={debugTerminal.filter}
+                        sourceFilter={debugTerminal.sourceFilter}
+                        routeFilter={debugTerminal.routeFilter}
+                        searchQuery={debugTerminal.searchQuery}
+                        activeCorrelationId={debugTerminal.activeCorrelationId}
+                        autoScroll={debugTerminal.autoScroll}
+                        kindCounts={debugTerminal.kindCounts}
+                        sourceOptions={debugTerminal.sourceOptions}
+                        routeOptions={debugTerminal.routeOptions}
+                        t={t}
+                        onFilterChange={debugTerminal.setFilter}
+                        onSourceFilterChange={debugTerminal.setSourceFilter}
+                        onRouteFilterChange={debugTerminal.setRouteFilter}
+                        onSearchQueryChange={debugTerminal.setSearchQuery}
+                        onActiveCorrelationIdChange={debugTerminal.setActiveCorrelationId}
+                        onSelectEvent={(eventId) => debugTerminal.setSelectedEventId(eventId)}
+                        onAutoScrollChange={debugTerminal.setAutoScroll}
+                        onClear={debugTerminal.clearEvents}
+                        onClose={() => setIsDebugTerminalOpen(false)}
+                    />
+                ) : null}
 
                 <div className="relative z-10 mx-auto flex min-h-screen max-w-[1560px] flex-col px-4 pb-[50px] pt-[100px] lg:px-4 lg:pb-[54px] xl:min-h-0 xl:px-3 xl:pt-[58px]">
                     <main className="mt-0 flex flex-1 flex-col gap-1.5 xl:min-h-0 xl:flex-none">

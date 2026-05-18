@@ -2,7 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import { GoogleGenAI } from '@google/genai/node';
 import type { Plugin } from 'vite';
-import { sendClassifiedApiError, sendJson } from './utils/apiHelpers';
+import {
+    createApiRequestContext,
+    logApiRequest,
+    logApiResponse,
+    sendClassifiedApiError,
+    sendJson,
+} from './utils/apiHelpers';
 import { extractImageDetailsFromDataUrl } from './utils/imageDimensions';
 import { registerBatchRoutes } from './routes/batchRoutes';
 import { registerGenerateRoutes } from './routes/generateRoutes';
@@ -82,8 +88,13 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
             registerMiddlewares(server.middlewares, resolvedDir, options?.geminiApiKey);
 
             server.middlewares.use('/api/save-image', (req, res) => {
+                const requestContext = createApiRequestContext(req, '/api/save-image');
+
                 if (req.method !== 'POST') {
-                    sendJson(res, 405, { success: false, error: 'Method not allowed' });
+                    sendJson(res, 405, { success: false, error: 'Method not allowed' }, {
+                        requestContext,
+                        summary: 'Method not allowed',
+                    });
                     return;
                 }
 
@@ -94,16 +105,30 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
                 req.on('end', () => {
                     try {
                         const { data, filename, metadata, dedupe } = JSON.parse(body);
+                        logApiRequest(requestContext, {
+                            source: 'image-file',
+                            filename: typeof filename === 'string' ? path.basename(filename) : null,
+                            dedupe: dedupe === true,
+                            hasMetadata: Boolean(metadata && typeof metadata === 'object'),
+                        });
 
                         if (!data || !filename) {
-                            sendJson(res, 400, { success: false, error: 'Missing data or filename' });
+                            sendJson(res, 400, { success: false, error: 'Missing data or filename' }, {
+                                requestContext,
+                                summary: 'Missing data or filename',
+                                details: { source: 'image-file' },
+                            });
                             return;
                         }
 
                         // Extract raw base64 from data URL
                         const match = data.match(/^data:image\/([\w+]+);base64,(.+)$/);
                         if (!match) {
-                            sendJson(res, 400, { success: false, error: 'Invalid data URL format' });
+                            sendJson(res, 400, { success: false, error: 'Invalid data URL format' }, {
+                                requestContext,
+                                summary: 'Invalid data URL format',
+                                details: { source: 'image-file', filename: path.basename(filename) },
+                            });
                             return;
                         }
 
@@ -148,11 +173,24 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
                             fs.writeFileSync(jsonPath, JSON.stringify(sidecar, null, 2), 'utf-8');
                         }
 
-                        sendJson(res, 200, { success: true, path: filePath, filename: safeFilename });
+                        sendJson(res, 200, { success: true, path: filePath, filename: safeFilename }, {
+                            requestContext,
+                            summary: safeFilename,
+                            details: {
+                                source: 'image-file',
+                                filename: safeFilename,
+                                size: buffer.length,
+                                hasMetadata: Boolean(metadata && typeof metadata === 'object'),
+                            },
+                        });
                     } catch (err: any) {
                         sendClassifiedApiError(res, '/api/save-image', err, 'Failed to save image', {
                             basePayload: { success: false },
                             defaultStatus: 500,
+                            requestContext,
+                            details: {
+                                source: 'image-file',
+                            },
                         });
                     }
                 });
@@ -160,16 +198,29 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
 
             // F8: Load full image endpoint
             server.middlewares.use('/api/load-image', (req, res) => {
+                const requestContext = createApiRequestContext(req, '/api/load-image');
+
                 if (req.method !== 'GET') {
-                    sendJson(res, 405, { success: false, error: 'Method not allowed' });
+                    sendJson(res, 405, { success: false, error: 'Method not allowed' }, {
+                        requestContext,
+                        summary: 'Method not allowed',
+                    });
                     return;
                 }
 
                 const url = new URL(req.url!, `http://${req.headers.host}`);
                 const filename = url.searchParams.get('filename');
+                logApiRequest(requestContext, {
+                    source: 'image-file',
+                    filename,
+                });
 
                 if (!filename) {
-                    sendJson(res, 400, { success: false, error: 'Missing filename' });
+                    sendJson(res, 400, { success: false, error: 'Missing filename' }, {
+                        requestContext,
+                        summary: 'Missing filename',
+                        details: { source: 'image-file' },
+                    });
                     return;
                 }
 
@@ -179,7 +230,11 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
 
                 // Ensure file exists and is within output dir
                 if (!fs.existsSync(filePath) || !filePath.startsWith(resolvedDir)) {
-                    sendJson(res, 404, { success: false, error: 'File not found' });
+                    sendJson(res, 404, { success: false, error: 'File not found' }, {
+                        requestContext,
+                        summary: 'File not found',
+                        details: { source: 'image-file', filename: safeFilename },
+                    });
                     return;
                 }
 
@@ -192,27 +247,52 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
                     res.writeHead(200, {
                         'Content-Type': mimeType,
                         'Content-Length': fileBuffer.length,
+                        ...(requestContext.requestId ? { 'X-NBU-Debug-Request-ID': requestContext.requestId } : {}),
                     });
                     res.end(fileBuffer);
+                    logApiResponse(requestContext, 200, {
+                        source: 'image-file',
+                        filename: safeFilename,
+                        mimeType,
+                        size: fileBuffer.length,
+                    });
                 } catch (err: any) {
                     sendClassifiedApiError(res, '/api/load-image', err, 'Failed to load image', {
                         basePayload: { success: false },
                         defaultStatus: 500,
+                        requestContext,
+                        details: {
+                            source: 'image-file',
+                            filename: safeFilename,
+                        },
                     });
                 }
             });
 
             server.middlewares.use('/api/load-image-metadata', (req, res) => {
+                const requestContext = createApiRequestContext(req, '/api/load-image-metadata');
+
                 if (req.method !== 'GET') {
-                    sendJson(res, 405, { success: false, error: 'Method not allowed' });
+                    sendJson(res, 405, { success: false, error: 'Method not allowed' }, {
+                        requestContext,
+                        summary: 'Method not allowed',
+                    });
                     return;
                 }
 
                 const url = new URL(req.url!, `http://${req.headers.host}`);
                 const filename = url.searchParams.get('filename');
+                logApiRequest(requestContext, {
+                    source: 'image-file',
+                    filename,
+                });
 
                 if (!filename) {
-                    sendJson(res, 400, { success: false, error: 'Missing filename' });
+                    sendJson(res, 400, { success: false, error: 'Missing filename' }, {
+                        requestContext,
+                        summary: 'Missing filename',
+                        details: { source: 'image-file' },
+                    });
                     return;
                 }
 
@@ -221,18 +301,34 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
                 const sidecarPath = resolveSidecarPath(filePath);
 
                 if (!fs.existsSync(sidecarPath) || !sidecarPath.startsWith(resolvedDir)) {
-                    sendJson(res, 404, { success: false, error: 'Metadata not found' });
+                    sendJson(res, 404, { success: false, error: 'Metadata not found' }, {
+                        requestContext,
+                        summary: 'Metadata not found',
+                        details: { source: 'image-file', filename: safeFilename },
+                    });
                     return;
                 }
 
                 try {
-                    const sidecar = fs.readFileSync(sidecarPath, 'utf-8');
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(sidecar);
+                    const sidecar = JSON.parse(fs.readFileSync(sidecarPath, 'utf-8'));
+                    sendJson(res, 200, sidecar, {
+                        requestContext,
+                        summary: safeFilename,
+                        details: {
+                            source: 'image-file',
+                            filename: safeFilename,
+                            metadataKeys: sidecar && typeof sidecar === 'object' ? Object.keys(sidecar).slice(0, 8) : [],
+                        },
+                    });
                 } catch (err: any) {
                     sendClassifiedApiError(res, '/api/load-image-metadata', err, 'Failed to load image metadata', {
                         basePayload: { success: false },
                         defaultStatus: 500,
+                        requestContext,
+                        details: {
+                            source: 'image-file',
+                            filename: safeFilename,
+                        },
                     });
                 }
             });

@@ -8,6 +8,7 @@ export const WORKSPACE_OVERLAY_Z_INDEX = {
     workspaceDetail: 250,
     pickerSheet: 255,
     advancedSettings: 257,
+    debugTerminal: 258,
     viewer: 260,
     sketchReplaceConfirm: 265,
     historyConfirm: 270,

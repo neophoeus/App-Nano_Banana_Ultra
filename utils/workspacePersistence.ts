@@ -19,6 +19,11 @@ import {
     getNormalizedConversationTurnIds,
     resolveConversationSelectionState,
 } from './conversationState';
+import {
+    DEBUG_TERMINAL_REQUEST_ID_HEADER,
+    createDebugTerminalCorrelationId,
+    emitDebugTerminalEvent,
+} from './debugTerminalEvents';
 import { normalizeGenerationFailureInfo, resolveDisplayGenerationFailureInfo } from './generationFailure';
 import { sanitizeSessionHintsForStorage } from './inlineImageDisplay';
 import { buildLineagePresentation } from './lineage';
@@ -32,6 +37,68 @@ const WORKSPACE_SNAPSHOT_EXPORT_FORMAT = 'nbu-workspace-snapshot';
 const WORKSPACE_SNAPSHOT_EXPORT_VERSION = 1;
 const INLINE_ASSET_URL_PREFIX = 'data:';
 const LOAD_IMAGE_ENDPOINT = '/api/load-image';
+const LOCAL_WORKSPACE_SNAPSHOT_ROUTE = 'local-storage';
+
+const buildWorkspaceSnapshotDebugPayload = (snapshot: WorkspacePersistenceSnapshot) => ({
+    historyCount: snapshot.history.length,
+    stagedAssetCount: snapshot.stagedAssets.length,
+    workflowLogCount: snapshot.workflowLogs.length,
+    queuedJobCount: snapshot.queuedJobs.length,
+    generatedImageCount: snapshot.viewState.generatedImageUrls.length,
+    selectedHistoryId: snapshot.viewState.selectedHistoryId,
+    promptLength: snapshot.composerState.prompt.trim().length,
+    hasActiveResult: Boolean(snapshot.workspaceSession.activeResult),
+    conversationId: snapshot.workspaceSession.conversationId || null,
+});
+
+const buildWorkspaceSnapshotDebugSummary = (snapshot: WorkspacePersistenceSnapshot): string => {
+    const payload = buildWorkspaceSnapshotDebugPayload(snapshot);
+    return `${payload.historyCount} history | ${payload.stagedAssetCount} staged | ${payload.queuedJobCount} queued | ${payload.generatedImageCount} generated`;
+};
+
+const emitWorkspaceSnapshotDebugEvent = ({
+    kind,
+    label,
+    summary,
+    payload,
+    route,
+    endpoint,
+    method,
+    correlationId,
+    status,
+    phase,
+}: {
+    kind: 'request' | 'response' | 'error' | 'retry' | 'log';
+    label: string;
+    summary?: string;
+    payload?: unknown;
+    route: string;
+    endpoint: string;
+    method: 'GET' | 'POST' | 'SET';
+    correlationId: string;
+    status?: number;
+    phase?: string;
+}) => {
+    emitDebugTerminalEvent({
+        kind,
+        label,
+        summary,
+        payload,
+        source: 'workspace',
+        route,
+        endpoint,
+        method,
+        operation: 'Workspace snapshot',
+        correlationId,
+        status,
+        phase,
+    });
+};
+
+const withWorkspaceDebugHeaders = (headers: Record<string, string>, correlationId: string): Record<string, string> => ({
+    ...headers,
+    [DEBUG_TERMINAL_REQUEST_ID_HEADER]: correlationId,
+});
 
 export const EMPTY_WORKSPACE_SESSION: WorkspaceSessionState = {
     activeResult: null,
@@ -1157,10 +1224,11 @@ export const sanitizeWorkspaceSnapshot = (value: unknown): WorkspacePersistenceS
 };
 
 export const loadWorkspaceSnapshot = (): WorkspacePersistenceSnapshot => {
+    const correlationId = createDebugTerminalCorrelationId('workspace');
     const raw = localStorage.getItem(WORKSPACE_SNAPSHOT_STORAGE_KEY);
 
     if (!raw) {
-        return {
+        const emptySnapshot = {
             ...EMPTY_WORKSPACE_SNAPSHOT,
             branchState: {
                 nameOverrides: sanitizeBranchNameOverrides(
@@ -1180,63 +1248,219 @@ export const loadWorkspaceSnapshot = (): WorkspacePersistenceSnapshot => {
                 continuationSourceByBranchOriginId: {},
             },
         };
+
+        emitWorkspaceSnapshotDebugEvent({
+            kind: 'response',
+            label: 'Local workspace snapshot load',
+            summary: 'No local snapshot found',
+            payload: buildWorkspaceSnapshotDebugPayload(emptySnapshot),
+            route: LOCAL_WORKSPACE_SNAPSHOT_ROUTE,
+            endpoint: WORKSPACE_SNAPSHOT_STORAGE_KEY,
+            method: 'GET',
+            correlationId,
+        });
+
+        return emptySnapshot;
     }
 
     try {
         const parsed = JSON.parse(raw);
 
         if (!isRecord(parsed)) {
+            emitWorkspaceSnapshotDebugEvent({
+                kind: 'error',
+                label: 'Local workspace snapshot load failed',
+                summary: 'Persisted workspace snapshot was not an object',
+                route: LOCAL_WORKSPACE_SNAPSHOT_ROUTE,
+                endpoint: WORKSPACE_SNAPSHOT_STORAGE_KEY,
+                method: 'GET',
+                correlationId,
+                payload: { rawLength: raw.length },
+            });
             return EMPTY_WORKSPACE_SNAPSHOT;
         }
 
-        return buildRuntimeWorkspaceSnapshot(parsed);
-    } catch {
+        const snapshot = buildRuntimeWorkspaceSnapshot(parsed);
+        emitWorkspaceSnapshotDebugEvent({
+            kind: 'response',
+            label: 'Local workspace snapshot load',
+            summary: buildWorkspaceSnapshotDebugSummary(snapshot),
+            payload: buildWorkspaceSnapshotDebugPayload(snapshot),
+            route: LOCAL_WORKSPACE_SNAPSHOT_ROUTE,
+            endpoint: WORKSPACE_SNAPSHOT_STORAGE_KEY,
+            method: 'GET',
+            correlationId,
+        });
+        return snapshot;
+    } catch (error) {
+        emitWorkspaceSnapshotDebugEvent({
+            kind: 'error',
+            label: 'Local workspace snapshot parse failed',
+            summary: error instanceof Error ? error.message : 'Unknown parse error',
+            route: LOCAL_WORKSPACE_SNAPSHOT_ROUTE,
+            endpoint: WORKSPACE_SNAPSHOT_STORAGE_KEY,
+            method: 'GET',
+            correlationId,
+            payload: { rawLength: raw.length },
+        });
         return EMPTY_WORKSPACE_SNAPSHOT;
     }
 };
 
 export const saveWorkspaceSnapshot = (snapshot: WorkspacePersistenceSnapshot): void => {
+    const correlationId = createDebugTerminalCorrelationId('workspace');
     const normalized = sanitizeWorkspaceSnapshot(snapshot);
     const localSnapshot = buildPersistableWorkspaceSnapshot(normalized);
     const compactSnapshot = buildPersistableWorkspaceSnapshot(normalized, { aggressive: true });
 
+    emitWorkspaceSnapshotDebugEvent({
+        kind: 'request',
+        label: 'Local workspace snapshot save',
+        summary: buildWorkspaceSnapshotDebugSummary(normalized),
+        payload: buildWorkspaceSnapshotDebugPayload(normalized),
+        route: LOCAL_WORKSPACE_SNAPSHOT_ROUTE,
+        endpoint: WORKSPACE_SNAPSHOT_STORAGE_KEY,
+        method: 'SET',
+        correlationId,
+    });
+
     try {
         localStorage.setItem(WORKSPACE_SNAPSHOT_STORAGE_KEY, JSON.stringify(localSnapshot));
+        emitWorkspaceSnapshotDebugEvent({
+            kind: 'response',
+            label: 'Local workspace snapshot saved',
+            summary: buildWorkspaceSnapshotDebugSummary(normalized),
+            payload: buildWorkspaceSnapshotDebugPayload(normalized),
+            route: LOCAL_WORKSPACE_SNAPSHOT_ROUTE,
+            endpoint: WORKSPACE_SNAPSHOT_STORAGE_KEY,
+            method: 'SET',
+            correlationId,
+        });
         return;
     } catch (error) {
         if (!isStorageQuotaError(error)) {
+            emitWorkspaceSnapshotDebugEvent({
+                kind: 'error',
+                label: 'Local workspace snapshot save failed',
+                summary: error instanceof Error ? error.message : 'Unknown storage error',
+                payload: buildWorkspaceSnapshotDebugPayload(normalized),
+                route: LOCAL_WORKSPACE_SNAPSHOT_ROUTE,
+                endpoint: WORKSPACE_SNAPSHOT_STORAGE_KEY,
+                method: 'SET',
+                correlationId,
+            });
             console.warn('[workspacePersistence] Failed to persist workspace snapshot.', error);
             return;
         }
     }
 
+    emitWorkspaceSnapshotDebugEvent({
+        kind: 'retry',
+        label: 'Local workspace snapshot compact fallback',
+        summary: 'Storage quota exceeded; retrying with compact snapshot',
+        payload: buildWorkspaceSnapshotDebugPayload(normalized),
+        route: LOCAL_WORKSPACE_SNAPSHOT_ROUTE,
+        endpoint: WORKSPACE_SNAPSHOT_STORAGE_KEY,
+        method: 'SET',
+        correlationId,
+        phase: 'compact-fallback',
+    });
+
     try {
         localStorage.setItem(WORKSPACE_SNAPSHOT_STORAGE_KEY, JSON.stringify(compactSnapshot));
+        emitWorkspaceSnapshotDebugEvent({
+            kind: 'response',
+            label: 'Local workspace snapshot saved (compact)',
+            summary: buildWorkspaceSnapshotDebugSummary(normalized),
+            payload: buildWorkspaceSnapshotDebugPayload(normalized),
+            route: LOCAL_WORKSPACE_SNAPSHOT_ROUTE,
+            endpoint: WORKSPACE_SNAPSHOT_STORAGE_KEY,
+            method: 'SET',
+            correlationId,
+            phase: 'compact-fallback',
+        });
     } catch (error) {
+        emitWorkspaceSnapshotDebugEvent({
+            kind: 'error',
+            label: 'Local workspace snapshot compact save failed',
+            summary: error instanceof Error ? error.message : 'Unknown compact storage error',
+            payload: buildWorkspaceSnapshotDebugPayload(normalized),
+            route: LOCAL_WORKSPACE_SNAPSHOT_ROUTE,
+            endpoint: WORKSPACE_SNAPSHOT_STORAGE_KEY,
+            method: 'SET',
+            correlationId,
+            phase: 'compact-fallback',
+        });
         console.warn('[workspacePersistence] Failed to persist compact workspace snapshot.', error);
     }
 };
 
 export const loadSharedWorkspaceSnapshot = async (): Promise<WorkspacePersistenceSnapshot | null> => {
+    const correlationId = createDebugTerminalCorrelationId('workspace');
+
+    emitWorkspaceSnapshotDebugEvent({
+        kind: 'request',
+        label: 'Shared workspace snapshot load',
+        summary: 'Fetching shared workspace snapshot',
+        route: SHARED_WORKSPACE_SNAPSHOT_ENDPOINT,
+        endpoint: SHARED_WORKSPACE_SNAPSHOT_ENDPOINT,
+        method: 'GET',
+        correlationId,
+    });
+
     try {
         const response = await fetch(SHARED_WORKSPACE_SNAPSHOT_ENDPOINT, {
             method: 'GET',
-            headers: {
+            headers: withWorkspaceDebugHeaders({
                 Accept: 'application/json',
-            },
+            }, correlationId),
         });
 
         if (!response.ok) {
+            emitWorkspaceSnapshotDebugEvent({
+                kind: 'response',
+                label: 'Shared workspace snapshot unavailable',
+                summary: `HTTP ${response.status}`,
+                route: SHARED_WORKSPACE_SNAPSHOT_ENDPOINT,
+                endpoint: SHARED_WORKSPACE_SNAPSHOT_ENDPOINT,
+                method: 'GET',
+                correlationId,
+                status: response.status,
+            });
             return null;
         }
 
         const payload = await response.json();
-        if (isRecord(payload) && 'snapshot' in payload) {
-            return payload.snapshot ? buildRuntimeWorkspaceSnapshot(payload.snapshot) : null;
-        }
+        const snapshot =
+            isRecord(payload) && 'snapshot' in payload
+                ? payload.snapshot
+                    ? buildRuntimeWorkspaceSnapshot(payload.snapshot)
+                    : null
+                : buildRuntimeWorkspaceSnapshot(payload);
 
-        return buildRuntimeWorkspaceSnapshot(payload);
-    } catch {
+        emitWorkspaceSnapshotDebugEvent({
+            kind: 'response',
+            label: 'Shared workspace snapshot load',
+            summary: snapshot ? buildWorkspaceSnapshotDebugSummary(snapshot) : 'No shared snapshot payload',
+            payload: snapshot ? buildWorkspaceSnapshotDebugPayload(snapshot) : { snapshot: null },
+            route: SHARED_WORKSPACE_SNAPSHOT_ENDPOINT,
+            endpoint: SHARED_WORKSPACE_SNAPSHOT_ENDPOINT,
+            method: 'GET',
+            correlationId,
+            status: response.status,
+        });
+
+        return snapshot;
+    } catch (error) {
+        emitWorkspaceSnapshotDebugEvent({
+            kind: 'error',
+            label: 'Shared workspace snapshot load failed',
+            summary: error instanceof Error ? error.message : 'Unknown shared snapshot error',
+            route: SHARED_WORKSPACE_SNAPSHOT_ENDPOINT,
+            endpoint: SHARED_WORKSPACE_SNAPSHOT_ENDPOINT,
+            method: 'GET',
+            correlationId,
+        });
         return null;
     }
 };
@@ -1260,19 +1484,84 @@ export const saveSharedWorkspaceSnapshot = async (
     );
 
     if (!hasContent && !options?.allowClearing) {
+        emitWorkspaceSnapshotDebugEvent({
+            kind: 'log',
+            label: 'Shared workspace snapshot save skipped',
+            summary: 'No shared workspace content to persist',
+            payload: buildWorkspaceSnapshotDebugPayload(normalized),
+            route: SHARED_WORKSPACE_SNAPSHOT_ENDPOINT,
+            endpoint: SHARED_WORKSPACE_SNAPSHOT_ENDPOINT,
+            method: 'POST',
+            correlationId: createDebugTerminalCorrelationId('workspace'),
+            phase: 'skip-empty',
+        });
         return;
     }
 
+    const correlationId = createDebugTerminalCorrelationId('workspace');
+
+    emitWorkspaceSnapshotDebugEvent({
+        kind: 'request',
+        label: 'Shared workspace snapshot save',
+        summary: buildWorkspaceSnapshotDebugSummary(normalized),
+        payload: buildWorkspaceSnapshotDebugPayload(normalized),
+        route: SHARED_WORKSPACE_SNAPSHOT_ENDPOINT,
+        endpoint: SHARED_WORKSPACE_SNAPSHOT_ENDPOINT,
+        method: 'POST',
+        correlationId,
+        phase: options?.allowClearing ? 'clear' : undefined,
+    });
+
     try {
-        await fetch(SHARED_WORKSPACE_SNAPSHOT_ENDPOINT, {
+        const response = await fetch(SHARED_WORKSPACE_SNAPSHOT_ENDPOINT, {
             method: 'POST',
-            headers: {
+            headers: withWorkspaceDebugHeaders({
                 'Content-Type': 'application/json',
-            },
+            }, correlationId),
             body: JSON.stringify(persistableSnapshot),
             keepalive: true,
         });
-    } catch {
+
+        if (response.ok) {
+            emitWorkspaceSnapshotDebugEvent({
+                kind: 'response',
+                label: options?.allowClearing ? 'Shared workspace snapshot cleared' : 'Shared workspace snapshot saved',
+                summary: buildWorkspaceSnapshotDebugSummary(normalized),
+                payload: buildWorkspaceSnapshotDebugPayload(normalized),
+                route: SHARED_WORKSPACE_SNAPSHOT_ENDPOINT,
+                endpoint: SHARED_WORKSPACE_SNAPSHOT_ENDPOINT,
+                method: 'POST',
+                correlationId,
+                status: response.status,
+                phase: options?.allowClearing ? 'clear' : undefined,
+            });
+            return;
+        }
+
+        emitWorkspaceSnapshotDebugEvent({
+            kind: 'error',
+            label: 'Shared workspace snapshot save failed',
+            summary: `HTTP ${response.status}`,
+            payload: buildWorkspaceSnapshotDebugPayload(normalized),
+            route: SHARED_WORKSPACE_SNAPSHOT_ENDPOINT,
+            endpoint: SHARED_WORKSPACE_SNAPSHOT_ENDPOINT,
+            method: 'POST',
+            correlationId,
+            status: response.status,
+            phase: options?.allowClearing ? 'clear' : undefined,
+        });
+    } catch (error) {
+        emitWorkspaceSnapshotDebugEvent({
+            kind: 'error',
+            label: 'Shared workspace snapshot save failed',
+            summary: error instanceof Error ? error.message : 'Unknown shared snapshot save error',
+            payload: buildWorkspaceSnapshotDebugPayload(normalized),
+            route: SHARED_WORKSPACE_SNAPSHOT_ENDPOINT,
+            endpoint: SHARED_WORKSPACE_SNAPSHOT_ENDPOINT,
+            method: 'POST',
+            correlationId,
+            phase: options?.allowClearing ? 'clear' : undefined,
+        });
         // Ignore backup persistence failures and keep local snapshot writes non-blocking.
     }
 };

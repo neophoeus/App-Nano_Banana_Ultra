@@ -9,11 +9,53 @@ import {
     isLiveProgressEligibleRequest,
     LiveProgressStreamTruthSummary,
 } from '../utils/liveProgressCapabilities';
+import {
+    DEBUG_TERMINAL_REQUEST_ID_HEADER,
+    createDebugTerminalCorrelationId,
+    emitDebugTerminalEvent,
+    summarizeDebugTerminalPayload,
+    type DebugTerminalSource,
+} from '../utils/debugTerminalEvents';
 import { buildStyleAwareImagePrompt } from '../utils/stylePromptBuilder';
 import { Language } from '../utils/translations';
 
 const jsonHeaders = {
     'Content-Type': 'application/json',
+};
+
+type DebugRequestContext<TResponse = unknown> = {
+    source: DebugTerminalSource;
+    route?: string;
+    endpoint?: string;
+    method?: string;
+    operation: string;
+    phase?: string;
+    correlationId?: string;
+    requestLabel?: string;
+    requestSummary?: string;
+    requestPayload?: unknown;
+    responseLabel?: string;
+    responseSummary?: string | ((payload: TResponse) => string | undefined);
+    responsePayload?: unknown | ((payload: TResponse) => unknown);
+    errorLabel?: string;
+};
+
+type ImageGenerateRequestBody = {
+    prompt: string;
+    model: GenerateOptions['model'];
+    aspectRatio: GenerateOptions['aspectRatio'];
+    imageSize: GenerateOptions['imageSize'] | undefined;
+    editingInput: GenerateOptions['editingInput'];
+    objectImageInputs: GenerateOptions['objectImageInputs'];
+    characterImageInputs: GenerateOptions['characterImageInputs'];
+    outputFormat: GenerateOptions['outputFormat'];
+    temperature: GenerateOptions['temperature'];
+    thinkingLevel: GenerateOptions['thinkingLevel'];
+    includeThoughts: GenerateOptions['includeThoughts'];
+    googleSearch: GenerateOptions['googleSearch'];
+    imageSearch: GenerateOptions['imageSearch'];
+    executionMode: GenerateOptions['executionMode'];
+    conversationContext: GenerateOptions['conversationContext'];
 };
 
 function isAbortLikeError(error: unknown): boolean {
@@ -23,14 +65,215 @@ function isAbortLikeError(error: unknown): boolean {
     );
 }
 
-async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
+const resolveRequestPath = (input: RequestInfo | URL): string => {
+    if (typeof input === 'string') {
+        return input;
+    }
+
+    if (input instanceof URL) {
+        return input.toString();
+    }
+
+    return input.url;
+};
+
+const buildHeaderRecord = (headers?: HeadersInit): Record<string, string> => {
+    if (!headers) {
+        return {};
+    }
+
+    if (headers instanceof Headers) {
+        return Object.fromEntries(headers.entries());
+    }
+
+    if (Array.isArray(headers)) {
+        return Object.fromEntries(headers);
+    }
+
+    return { ...headers };
+};
+
+const withDebugRequestHeaders = (headers: HeadersInit | undefined, correlationId: string): Record<string, string> => ({
+    ...buildHeaderRecord(headers),
+    [DEBUG_TERMINAL_REQUEST_ID_HEADER]: correlationId,
+});
+
+const buildDebugResponseSummary = (response: {
+    imageUrl?: string;
+    text?: string;
+    thoughts?: string;
+    resultParts?: ResultPart[];
+    failure?: GenerateResponse['failure'];
+}): string =>
+    [
+        response.imageUrl ? 'image' : null,
+        response.text ? 'text' : null,
+        response.thoughts ? 'thoughts' : null,
+        response.resultParts?.length ? `${response.resultParts.length} part(s)` : null,
+        response.failure?.code ? `failure:${response.failure.code}` : null,
+    ]
+        .filter(Boolean)
+        .join(' | ') || 'no output content';
+
+const buildTextResponseSummary = (text?: string | null): string => {
+    const trimmed = text?.trim();
+    return trimmed ? `${trimmed.length} chars` : 'empty text';
+};
+
+const buildErrorSummary = (error: unknown): string => {
+    const normalizedError = error instanceof Error ? error : new Error(String(error));
+    const failure = getGenerationFailure(normalizedError);
+
+    return failure ? `${normalizedError.message} (${failure.code})` : normalizedError.message;
+};
+
+const emitServiceDebugEvent = ({
+    kind,
+    label,
+    context,
+    summary,
+    payload,
+    status,
+    durationMs,
+    sessionId,
+    batchSessionId,
+    slotIndex,
+    jobName,
+}: {
+    kind: 'request' | 'response' | 'error' | 'stream' | 'retry' | 'log';
+    label: string;
+    context: DebugRequestContext & { source: DebugTerminalSource; operation: string };
+    summary?: string;
+    payload?: unknown;
+    status?: number;
+    durationMs?: number;
+    sessionId?: string;
+    batchSessionId?: string;
+    slotIndex?: number;
+    jobName?: string;
+}) => {
+    const route = context.route || context.endpoint;
+    emitDebugTerminalEvent({
+        kind,
+        label,
+        source: context.source,
+        route,
+        endpoint: context.endpoint || route,
+        method: context.method || 'GET',
+        operation: context.operation,
+        phase: context.phase,
+        correlationId: context.correlationId,
+        status,
+        durationMs,
+        sessionId,
+        batchSessionId,
+        slotIndex,
+        jobName,
+        summary,
+        payload,
+    });
+};
+
+const buildImageGenerateRequestBody = (options: GenerateOptions, finalPrompt: string): ImageGenerateRequestBody => ({
+    prompt: finalPrompt,
+    model: options.model,
+    aspectRatio: options.aspectRatio,
+    imageSize: options.model === 'gemini-2.5-flash-image' ? undefined : options.imageSize,
+    editingInput: options.editingInput,
+    objectImageInputs: options.objectImageInputs,
+    characterImageInputs: options.characterImageInputs,
+    outputFormat: options.outputFormat,
+    temperature: options.temperature,
+    thinkingLevel: options.thinkingLevel,
+    includeThoughts: options.includeThoughts,
+    googleSearch: options.googleSearch,
+    imageSearch: options.imageSearch,
+    executionMode: options.executionMode,
+    conversationContext: options.conversationContext,
+});
+
+const buildGenerateRequestSummary = (requestBody: ImageGenerateRequestBody, imgIndex: number): string =>
+    `Image #${imgIndex} | ${requestBody.model} | ${requestBody.executionMode || 'single-turn'} | ${requestBody.outputFormat || 'images-only'}`;
+
+const buildStreamPartSummary = (part: ResultPart): string =>
+    part.kind === 'thought-text' || part.kind === 'output-text'
+        ? `${part.kind} #${part.sequence + 1}`
+        : `${part.kind} #${part.sequence + 1} (${part.mimeType})`;
+
+const buildBatchJobSummary = (job: RemoteQueuedBatchJob): string =>
+    [job.state, job.model, job.hasImportablePayload ? 'importable' : null].filter(Boolean).join(' | ');
+
+const buildQueuedBatchImportSummary = (payload: { results: QueuedBatchImportResult[] }): string => {
+    const successCount = payload.results.filter((result) => result.status === 'success').length;
+    const failureCount = payload.results.length - successCount;
+    return `${payload.results.length} result(s) | ${successCount} success | ${failureCount} failure`;
+};
+
+async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit, debugContext?: DebugRequestContext<T>): Promise<T> {
+    const route = debugContext?.route || resolveRequestPath(input);
+    const method = debugContext?.method || init?.method || 'GET';
+    const correlationId = debugContext?.correlationId || createDebugTerminalCorrelationId('req');
+    const startTime = Date.now();
     let response: Response;
 
+    if (debugContext) {
+        emitServiceDebugEvent({
+            kind: 'request',
+            label: debugContext.requestLabel || `${debugContext.operation} request`,
+            context: {
+                ...debugContext,
+                route,
+                endpoint: debugContext.endpoint || route,
+                method,
+                correlationId,
+            },
+            summary: debugContext.requestSummary,
+            payload: debugContext.requestPayload,
+        });
+    }
+
     try {
-        response = await fetch(input, init);
+        response = await fetch(input, {
+            ...init,
+            headers: withDebugRequestHeaders(init?.headers, correlationId),
+        });
     } catch (error) {
         if (isAbortLikeError(error)) {
+            if (debugContext) {
+                emitServiceDebugEvent({
+                    kind: 'log',
+                    label: debugContext.errorLabel || `${debugContext.operation} aborted`,
+                    context: {
+                        ...debugContext,
+                        route,
+                        endpoint: debugContext.endpoint || route,
+                        method,
+                        correlationId,
+                        phase: 'abort',
+                    },
+                    summary: 'Request aborted',
+                    durationMs: Date.now() - startTime,
+                    payload: { reason: 'ABORTED' },
+                });
+            }
             throw new Error('ABORTED');
+        }
+
+        if (debugContext) {
+            emitServiceDebugEvent({
+                kind: 'error',
+                label: debugContext.errorLabel || `${debugContext.operation} failed`,
+                context: {
+                    ...debugContext,
+                    route,
+                    endpoint: debugContext.endpoint || route,
+                    method,
+                    correlationId,
+                },
+                summary: buildErrorSummary(error),
+                durationMs: Date.now() - startTime,
+                payload: { error },
+            });
         }
         throw error;
     }
@@ -49,11 +292,56 @@ async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit): Promi
         requestError.status = response.status;
 
         const failure = normalizeGenerationFailureInfo(payload?.failure);
+        if (debugContext) {
+            emitServiceDebugEvent({
+                kind: 'error',
+                label: debugContext.errorLabel || `${debugContext.operation} failed`,
+                context: {
+                    ...debugContext,
+                    route,
+                    endpoint: debugContext.endpoint || route,
+                    method,
+                    correlationId,
+                },
+                summary: buildErrorSummary(failure ? attachGenerationFailure(new Error(requestError.message), failure) : requestError),
+                status: response.status,
+                durationMs: Date.now() - startTime,
+                payload: {
+                    error: requestError,
+                    failure,
+                    responsePayload: payload,
+                },
+            });
+        }
         if (failure) {
             throw attachGenerationFailure(requestError, failure);
         }
 
         throw requestError;
+    }
+
+    if (debugContext) {
+        emitServiceDebugEvent({
+            kind: 'response',
+            label: debugContext.responseLabel || `${debugContext.operation} response`,
+            context: {
+                ...debugContext,
+                route,
+                endpoint: debugContext.endpoint || route,
+                method,
+                correlationId,
+            },
+            status: response.status,
+            durationMs: Date.now() - startTime,
+            summary:
+                typeof debugContext.responseSummary === 'function'
+                    ? debugContext.responseSummary(payload as T)
+                    : debugContext.responseSummary,
+            payload:
+                typeof debugContext.responsePayload === 'function'
+                    ? debugContext.responsePayload(payload as T)
+                    : debugContext.responsePayload ?? payload,
+        });
     }
 
     return payload as T;
@@ -63,14 +351,72 @@ async function fetchNdjson<T>(
     input: RequestInfo | URL,
     init: RequestInit | undefined,
     onEvent: (event: T) => void,
+    debugContext?: DebugRequestContext,
 ): Promise<void> {
+    const route = debugContext?.route || resolveRequestPath(input);
+    const method = debugContext?.method || init?.method || 'GET';
+    const correlationId = debugContext?.correlationId || createDebugTerminalCorrelationId('stream');
+    const startTime = Date.now();
     let response: Response;
 
+    if (debugContext) {
+        emitServiceDebugEvent({
+            kind: 'request',
+            label: debugContext.requestLabel || `${debugContext.operation} request`,
+            context: {
+                ...debugContext,
+                route,
+                endpoint: debugContext.endpoint || route,
+                method,
+                correlationId,
+            },
+            summary: debugContext.requestSummary,
+            payload: debugContext.requestPayload,
+        });
+    }
+
     try {
-        response = await fetch(input, init);
+        response = await fetch(input, {
+            ...init,
+            headers: withDebugRequestHeaders(init?.headers, correlationId),
+        });
     } catch (error) {
         if (isAbortLikeError(error)) {
+            if (debugContext) {
+                emitServiceDebugEvent({
+                    kind: 'log',
+                    label: debugContext.errorLabel || `${debugContext.operation} aborted`,
+                    context: {
+                        ...debugContext,
+                        route,
+                        endpoint: debugContext.endpoint || route,
+                        method,
+                        correlationId,
+                        phase: 'abort',
+                    },
+                    summary: 'Request aborted',
+                    durationMs: Date.now() - startTime,
+                    payload: { reason: 'ABORTED' },
+                });
+            }
             throw new Error('ABORTED');
+        }
+
+        if (debugContext) {
+            emitServiceDebugEvent({
+                kind: 'error',
+                label: debugContext.errorLabel || `${debugContext.operation} failed`,
+                context: {
+                    ...debugContext,
+                    route,
+                    endpoint: debugContext.endpoint || route,
+                    method,
+                    correlationId,
+                },
+                summary: buildErrorSummary(error),
+                durationMs: Date.now() - startTime,
+                payload: { error },
+            });
         }
         throw error;
     }
@@ -88,6 +434,27 @@ async function fetchNdjson<T>(
         requestError.status = response.status;
 
         const failure = normalizeGenerationFailureInfo(payload?.failure);
+        if (debugContext) {
+            emitServiceDebugEvent({
+                kind: 'error',
+                label: debugContext.errorLabel || `${debugContext.operation} failed`,
+                context: {
+                    ...debugContext,
+                    route,
+                    endpoint: debugContext.endpoint || route,
+                    method,
+                    correlationId,
+                },
+                summary: buildErrorSummary(failure ? attachGenerationFailure(new Error(requestError.message), failure) : requestError),
+                status: response.status,
+                durationMs: Date.now() - startTime,
+                payload: {
+                    error: requestError,
+                    failure,
+                    responsePayload: payload,
+                },
+            });
+        }
         if (failure) {
             throw attachGenerationFailure(requestError, failure);
         }
@@ -103,34 +470,77 @@ async function fetchNdjson<T>(
     const decoder = new TextDecoder();
     let buffer = '';
 
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-            break;
-        }
-
-        buffer += decoder.decode(value, { stream: true });
-
+    try {
         while (true) {
-            const newlineIndex = buffer.indexOf('\n');
-            if (newlineIndex < 0) {
+            const { done, value } = await reader.read();
+            if (done) {
                 break;
             }
 
-            const line = buffer.slice(0, newlineIndex).trim();
-            buffer = buffer.slice(newlineIndex + 1);
+            buffer += decoder.decode(value, { stream: true });
 
-            if (!line) {
-                continue;
+            while (true) {
+                const newlineIndex = buffer.indexOf('\n');
+                if (newlineIndex < 0) {
+                    break;
+                }
+
+                const line = buffer.slice(0, newlineIndex).trim();
+                buffer = buffer.slice(newlineIndex + 1);
+
+                if (!line) {
+                    continue;
+                }
+
+                onEvent(JSON.parse(line) as T);
             }
-
-            onEvent(JSON.parse(line) as T);
         }
-    }
 
-    const trailing = `${buffer}${decoder.decode()}`.trim();
-    if (trailing) {
-        onEvent(JSON.parse(trailing) as T);
+        const trailing = `${buffer}${decoder.decode()}`.trim();
+        if (trailing) {
+            onEvent(JSON.parse(trailing) as T);
+        }
+    } catch (error) {
+        if (isAbortLikeError(error)) {
+            if (debugContext) {
+                emitServiceDebugEvent({
+                    kind: 'log',
+                    label: debugContext.errorLabel || `${debugContext.operation} aborted`,
+                    context: {
+                        ...debugContext,
+                        route,
+                        endpoint: debugContext.endpoint || route,
+                        method,
+                        correlationId,
+                        phase: 'abort',
+                    },
+                    summary: 'Request aborted',
+                    durationMs: Date.now() - startTime,
+                    payload: { reason: 'ABORTED' },
+                });
+            }
+            throw new Error('ABORTED');
+        }
+
+        if (debugContext) {
+            emitServiceDebugEvent({
+                kind: 'error',
+                label: debugContext.errorLabel || `${debugContext.operation} failed`,
+                context: {
+                    ...debugContext,
+                    route,
+                    endpoint: debugContext.endpoint || route,
+                    method,
+                    correlationId,
+                    phase: 'parse',
+                },
+                summary: buildErrorSummary(error),
+                status: response.status,
+                durationMs: Date.now() - startTime,
+                payload: { error },
+            });
+        }
+        throw error;
     }
 }
 
@@ -435,8 +845,10 @@ const executeBlockingImageAttempt = async (
     onLog?: (msg: string) => void,
     abortSignal?: AbortSignal,
 ): Promise<GenerationResult> => {
+    const correlationId = createDebugTerminalCorrelationId('image');
+
     try {
-        const response = await generateSingleImage(options, slotIndex + 1, onLog, abortSignal);
+        const response = await generateSingleImage(options, slotIndex + 1, onLog, abortSignal, correlationId);
         if (!response.imageUrl) {
             throw new Error('Model returned no image data.');
         }
@@ -468,12 +880,23 @@ const executeBlockingImageAttemptWithTransientRetry = async (
     onLog?: (msg: string) => void,
     abortSignal?: AbortSignal,
 ): Promise<GenerationResult> => {
+    const correlationId = createDebugTerminalCorrelationId('image');
+
     try {
         const response = await retryOperation(
-            () => generateSingleImage(options, slotIndex + 1, onLog, abortSignal),
+            () => generateSingleImage(options, slotIndex + 1, onLog, abortSignal, correlationId),
             3,
             1500,
-            { backoffMultiplier: 2, maxDelay: 8000, abortSignal, onLog },
+            {
+                backoffMultiplier: 2,
+                maxDelay: 8000,
+                abortSignal,
+                onLog,
+                correlationId,
+                route: '/api/images/generate',
+                source: 'generation',
+                operation: `Image #${slotIndex + 1}: blocking generation`,
+            },
         );
 
         if (!response.imageUrl) {
@@ -498,7 +921,18 @@ const executeBlockingImageAttemptWithTransientRetry = async (
 // Helper to ensure we get the key
 export const checkApiKey = async (): Promise<boolean> => {
     try {
-        const payload = await fetchJson<{ hasApiKey: boolean }>('/api/runtime-config');
+        const payload = await fetchJson<{ hasApiKey: boolean }>('/api/runtime-config', undefined, {
+            source: 'runtime',
+            route: '/api/runtime-config',
+            method: 'GET',
+            operation: 'Runtime config',
+            requestLabel: 'Runtime config request',
+            requestSummary: 'Check API key availability',
+            responseLabel: 'Runtime config response',
+            responseSummary: (result) => (result.hasApiKey ? 'API key available' : 'API key missing'),
+            responsePayload: (result) => ({ hasApiKey: result.hasApiKey }),
+            errorLabel: 'Runtime config request failed',
+        });
         return payload.hasApiKey;
     } catch {
         return false;
@@ -512,8 +946,12 @@ const generateSingleImageStream = async (
     abortSignal?: AbortSignal,
     onLiveProgressEvent?: (event: GenerationLiveProgressEvent) => void,
     eventContext?: GenerationLiveProgressEventContext,
+    correlationId?: string,
 ): Promise<StreamGenerationResponse> => {
     const finalPrompt = buildStyleAwareImagePrompt(options);
+    const requestBody = buildImageGenerateRequestBody(options, finalPrompt);
+    const resolvedCorrelationId = correlationId || createDebugTerminalCorrelationId('stream');
+    const streamStartTime = Date.now();
     let finalResponse: GenerateResponse | null = null;
     let streamFailure: StreamRouteFailureEvent | null = null;
     let didReceiveStreamEvent = false;
@@ -535,28 +973,29 @@ const generateSingleImageStream = async (
                 method: 'POST',
                 headers: jsonHeaders,
                 signal: abortSignal,
-                body: JSON.stringify({
-                    prompt: finalPrompt,
-                    model: options.model,
-                    aspectRatio: options.aspectRatio,
-                    imageSize: options.model === 'gemini-2.5-flash-image' ? undefined : options.imageSize,
-                    editingInput: options.editingInput,
-                    objectImageInputs: options.objectImageInputs,
-                    characterImageInputs: options.characterImageInputs,
-                    outputFormat: options.outputFormat,
-                    temperature: options.temperature,
-                    thinkingLevel: options.thinkingLevel,
-                    includeThoughts: options.includeThoughts,
-                    googleSearch: options.googleSearch,
-                    imageSearch: options.imageSearch,
-                    executionMode: options.executionMode,
-                    conversationContext: options.conversationContext,
-                }),
+                body: JSON.stringify(requestBody),
             },
             (event) => {
                 didReceiveStreamEvent = true;
 
                 if (event.type === 'start') {
+                    emitServiceDebugEvent({
+                        kind: 'stream',
+                        label: `Image #${imgIndex}: Stream opened`,
+                        context: {
+                            source: 'generation',
+                            operation: 'Image stream',
+                            route: '/api/images/generate-stream',
+                            method: 'POST',
+                            phase: 'start',
+                            correlationId: resolvedCorrelationId,
+                        },
+                        summary: event.sessionId,
+                        sessionId: event.sessionId,
+                        batchSessionId: eventContext?.batchSessionId,
+                        slotIndex: eventContext?.slotIndex,
+                        payload: { event },
+                    });
                     onLiveProgressEvent?.(
                         buildLiveProgressEvent(
                             {
@@ -581,6 +1020,24 @@ const generateSingleImageStream = async (
                         );
                     }
 
+                    emitServiceDebugEvent({
+                        kind: 'stream',
+                        label: `Image #${imgIndex}: Stream part`,
+                        context: {
+                            source: 'generation',
+                            operation: 'Image stream',
+                            route: '/api/images/generate-stream',
+                            method: 'POST',
+                            phase: 'result-part',
+                            correlationId: resolvedCorrelationId,
+                        },
+                        summary: buildStreamPartSummary(event.part),
+                        sessionId: event.sessionId,
+                        batchSessionId: eventContext?.batchSessionId,
+                        slotIndex: eventContext?.slotIndex,
+                        payload: { part: event.part, accumulatedResultParts: streamAccumulator.resultParts.length },
+                    });
+
                     onLiveProgressEvent?.(
                         buildLiveProgressEvent(
                             {
@@ -597,6 +1054,23 @@ const generateSingleImageStream = async (
                 if (event.type === 'complete') {
                     streamAccumulator.summary = event.summary;
                     finalResponse = mergeAccumulatedStreamPartialResponse(event.response, streamAccumulator);
+                    emitServiceDebugEvent({
+                        kind: 'stream',
+                        label: `Image #${imgIndex}: Stream complete`,
+                        context: {
+                            source: 'generation',
+                            operation: 'Image stream',
+                            route: '/api/images/generate-stream',
+                            method: 'POST',
+                            phase: 'complete',
+                            correlationId: resolvedCorrelationId,
+                        },
+                        summary: event.summary.truthfulnessOutcome,
+                        sessionId: event.sessionId,
+                        batchSessionId: eventContext?.batchSessionId,
+                        slotIndex: eventContext?.slotIndex,
+                        payload: { summary: event.summary },
+                    });
                     onLiveProgressEvent?.(
                         buildLiveProgressEvent(
                             {
@@ -615,6 +1089,28 @@ const generateSingleImageStream = async (
                     ...event,
                     response: mergeAccumulatedStreamPartialResponse(event.response, streamAccumulator),
                 };
+                emitServiceDebugEvent({
+                    kind: 'error',
+                    label: `Image #${imgIndex}: Stream failure event`,
+                    context: {
+                        source: 'generation',
+                        operation: 'Image stream',
+                        route: '/api/images/generate-stream',
+                        method: 'POST',
+                        phase: 'failure',
+                        correlationId: resolvedCorrelationId,
+                    },
+                    summary: event.error,
+                    sessionId: event.sessionId,
+                    batchSessionId: eventContext?.batchSessionId,
+                    slotIndex: eventContext?.slotIndex,
+                    payload: {
+                        error: event.error,
+                        failure: event.failure,
+                        response: streamFailure.response,
+                        summary: event.summary,
+                    },
+                });
                 onLiveProgressEvent?.(
                     buildLiveProgressEvent(
                         {
@@ -625,6 +1121,17 @@ const generateSingleImageStream = async (
                         eventContext,
                     ),
                 );
+            },
+            {
+                source: 'generation',
+                route: '/api/images/generate-stream',
+                method: 'POST',
+                operation: 'Image stream',
+                correlationId: resolvedCorrelationId,
+                requestLabel: `Image #${imgIndex}: Stream request`,
+                requestSummary: buildGenerateRequestSummary(requestBody, imgIndex),
+                requestPayload: requestBody,
+                errorLabel: `Image #${imgIndex}: Stream request failed`,
             },
         );
     } catch (error) {
@@ -638,6 +1145,27 @@ const generateSingleImageStream = async (
             streamError.partialResponse,
             streamAccumulator,
         );
+        emitServiceDebugEvent({
+            kind: 'error',
+            label: `Image #${imgIndex}: Stream failed`,
+            context: {
+                source: 'generation',
+                operation: 'Image stream',
+                route: '/api/images/generate-stream',
+                method: 'POST',
+                phase: 'exception',
+                correlationId: resolvedCorrelationId,
+            },
+            summary: buildErrorSummary(streamError),
+            durationMs: Date.now() - streamStartTime,
+            batchSessionId: eventContext?.batchSessionId,
+            slotIndex: eventContext?.slotIndex,
+            payload: {
+                error: streamError,
+                partialResponse: streamError.partialResponse,
+                didReceiveStreamEvent,
+            },
+        });
         throw streamError;
     }
 
@@ -661,10 +1189,44 @@ const generateSingleImageStream = async (
             didReceiveStreamEvent?: boolean;
         };
         requestError.didReceiveStreamEvent = didReceiveStreamEvent;
+        emitServiceDebugEvent({
+            kind: 'error',
+            label: `Image #${imgIndex}: Stream completed without payload`,
+            context: {
+                source: 'generation',
+                operation: 'Image stream',
+                route: '/api/images/generate-stream',
+                method: 'POST',
+                phase: 'final-payload',
+                correlationId: resolvedCorrelationId,
+            },
+            summary: requestError.message,
+            durationMs: Date.now() - streamStartTime,
+            batchSessionId: eventContext?.batchSessionId,
+            slotIndex: eventContext?.slotIndex,
+        });
         throw requestError;
     }
 
     onLog?.(`Image #${imgIndex}: Success.`);
+
+    emitServiceDebugEvent({
+        kind: 'response',
+        label: `Image #${imgIndex}: Stream response`,
+        context: {
+            source: 'generation',
+            operation: 'Image stream',
+            route: '/api/images/generate-stream',
+            method: 'POST',
+            phase: 'final-response',
+            correlationId: resolvedCorrelationId,
+        },
+        durationMs: Date.now() - streamStartTime,
+        summary: buildDebugResponseSummary(finalResponse),
+        batchSessionId: eventContext?.batchSessionId,
+        slotIndex: eventContext?.slotIndex,
+        payload: finalResponse,
+    });
 
     return {
         response: finalResponse,
@@ -686,6 +1248,8 @@ const executeInteractiveStreamSlot = async (
     onLiveProgressEvent?: (event: GenerationLiveProgressEvent) => void,
     eventContext?: GenerationLiveProgressEventContext,
 ): Promise<GenerationResult> => {
+    const correlationId = createDebugTerminalCorrelationId('stream');
+
     try {
         const streamed = await generateSingleImageStream(
             options,
@@ -694,6 +1258,7 @@ const executeInteractiveStreamSlot = async (
             abortSignal,
             onLiveProgressEvent,
             eventContext,
+            correlationId,
         );
 
         if (!streamed.response.imageUrl) {
@@ -769,14 +1334,47 @@ export const promptForApiKey = async (): Promise<void> => {
 // --- Text Utilities (Prompt Engineering) ---
 
 export const enhancePromptWithGemini = async (currentPrompt: string, lang: Language): Promise<string> => {
-    const response = await fetchJson<{ text: string }>('/api/prompt/enhance', {
-        method: 'POST',
-        headers: jsonHeaders,
-        body: JSON.stringify({ currentPrompt, lang }),
-    });
+    const correlationId = createDebugTerminalCorrelationId('prompt');
+    const requestPayload = { currentPrompt, lang };
+    const response = await fetchJson<{ text: string }>(
+        '/api/prompt/enhance',
+        {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify(requestPayload),
+        },
+        {
+            source: 'prompt-tools',
+            route: '/api/prompt/enhance',
+            method: 'POST',
+            operation: 'Prompt enhancer',
+            correlationId,
+            requestLabel: 'Prompt enhancer request',
+            requestSummary: `Prompt enhancer (${lang})`,
+            requestPayload,
+            responseLabel: 'Prompt enhancer response',
+            responseSummary: (result) => buildTextResponseSummary(result.text),
+            responsePayload: (result) => ({ text: result.text }),
+            errorLabel: 'Prompt enhancer failed',
+        },
+    );
 
     const promptText = response.text?.trim();
     if (!promptText) {
+        emitServiceDebugEvent({
+            kind: 'error',
+            label: 'Prompt enhancer returned empty text',
+            context: {
+                source: 'prompt-tools',
+                operation: 'Prompt enhancer',
+                route: '/api/prompt/enhance',
+                method: 'POST',
+                phase: 'validation',
+                correlationId,
+            },
+            summary: 'Prompt enhancement returned empty text.',
+            payload: { response },
+        });
         throw new Error('Prompt enhancement returned empty text.');
     }
 
@@ -784,14 +1382,47 @@ export const enhancePromptWithGemini = async (currentPrompt: string, lang: Langu
 };
 
 export const generateRandomPrompt = async (lang: Language): Promise<string> => {
-    const response = await fetchJson<{ text: string }>('/api/prompt/random', {
-        method: 'POST',
-        headers: jsonHeaders,
-        body: JSON.stringify({ lang }),
-    });
+    const correlationId = createDebugTerminalCorrelationId('prompt');
+    const requestPayload = { lang };
+    const response = await fetchJson<{ text: string }>(
+        '/api/prompt/random',
+        {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify(requestPayload),
+        },
+        {
+            source: 'prompt-tools',
+            route: '/api/prompt/random',
+            method: 'POST',
+            operation: 'Random prompt',
+            correlationId,
+            requestLabel: 'Random prompt request',
+            requestSummary: `Random prompt (${lang})`,
+            requestPayload,
+            responseLabel: 'Random prompt response',
+            responseSummary: (result) => buildTextResponseSummary(result.text),
+            responsePayload: (result) => ({ text: result.text }),
+            errorLabel: 'Random prompt failed',
+        },
+    );
 
     const promptText = response.text?.trim();
     if (!promptText) {
+        emitServiceDebugEvent({
+            kind: 'error',
+            label: 'Random prompt returned empty text',
+            context: {
+                source: 'prompt-tools',
+                operation: 'Random prompt',
+                route: '/api/prompt/random',
+                method: 'POST',
+                phase: 'validation',
+                correlationId,
+            },
+            summary: 'Random prompt generation returned empty text.',
+            payload: { response },
+        });
         throw new Error('Random prompt generation returned empty text.');
     }
 
@@ -799,14 +1430,47 @@ export const generateRandomPrompt = async (lang: Language): Promise<string> => {
 };
 
 export const generatePromptFromImage = async (imageDataUrl: string, lang: Language): Promise<string> => {
-    const response = await fetchJson<{ text: string }>('/api/prompt/image-to-prompt', {
-        method: 'POST',
-        headers: jsonHeaders,
-        body: JSON.stringify({ imageDataUrl, lang }),
-    });
+    const correlationId = createDebugTerminalCorrelationId('prompt');
+    const requestPayload = { imageDataUrl, lang };
+    const response = await fetchJson<{ text: string }>(
+        '/api/prompt/image-to-prompt',
+        {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify(requestPayload),
+        },
+        {
+            source: 'prompt-tools',
+            route: '/api/prompt/image-to-prompt',
+            method: 'POST',
+            operation: 'Image to prompt',
+            correlationId,
+            requestLabel: 'Image-to-prompt request',
+            requestSummary: `Image-to-prompt (${lang})`,
+            requestPayload,
+            responseLabel: 'Image-to-prompt response',
+            responseSummary: (result) => buildTextResponseSummary(result.text),
+            responsePayload: (result) => ({ text: result.text }),
+            errorLabel: 'Image-to-prompt failed',
+        },
+    );
 
     const promptText = response.text?.trim();
     if (!promptText) {
+        emitServiceDebugEvent({
+            kind: 'error',
+            label: 'Image-to-prompt returned empty text',
+            context: {
+                source: 'prompt-tools',
+                operation: 'Image to prompt',
+                route: '/api/prompt/image-to-prompt',
+                method: 'POST',
+                phase: 'validation',
+                correlationId,
+            },
+            summary: 'Image to prompt returned empty text.',
+            payload: { response },
+        });
         throw new Error('Image to prompt returned empty text.');
     }
 
@@ -820,8 +1484,10 @@ const generateSingleImage = async (
     imgIndex: number = 1,
     onLog?: (msg: string) => void,
     abortSignal?: AbortSignal,
+    correlationId?: string,
 ): Promise<GenerateResponse> => {
     const finalPrompt = buildStyleAwareImagePrompt(options);
+    const requestBody = buildImageGenerateRequestBody(options, finalPrompt);
 
     try {
         onLog?.(`Image #${imgIndex}: Sending request...`);
@@ -830,28 +1496,29 @@ const generateSingleImage = async (
             throw new Error('ABORTED');
         }
 
-        const response = await fetchJson<GenerateResponse>('/api/images/generate', {
-            method: 'POST',
-            headers: jsonHeaders,
-            signal: abortSignal,
-            body: JSON.stringify({
-                prompt: finalPrompt,
-                model: options.model,
-                aspectRatio: options.aspectRatio,
-                imageSize: options.model === 'gemini-2.5-flash-image' ? undefined : options.imageSize,
-                editingInput: options.editingInput,
-                objectImageInputs: options.objectImageInputs,
-                characterImageInputs: options.characterImageInputs,
-                outputFormat: options.outputFormat,
-                temperature: options.temperature,
-                thinkingLevel: options.thinkingLevel,
-                includeThoughts: options.includeThoughts,
-                googleSearch: options.googleSearch,
-                imageSearch: options.imageSearch,
-                executionMode: options.executionMode,
-                conversationContext: options.conversationContext,
-            }),
-        });
+        const response = await fetchJson<GenerateResponse>(
+            '/api/images/generate',
+            {
+                method: 'POST',
+                headers: jsonHeaders,
+                signal: abortSignal,
+                body: JSON.stringify(requestBody),
+            },
+            {
+                source: 'generation',
+                route: '/api/images/generate',
+                method: 'POST',
+                operation: 'Image generation',
+                correlationId,
+                requestLabel: `Image #${imgIndex}: Blocking request`,
+                requestSummary: buildGenerateRequestSummary(requestBody, imgIndex),
+                requestPayload: requestBody,
+                responseLabel: `Image #${imgIndex}: Blocking response`,
+                responseSummary: (result) => buildDebugResponseSummary(result),
+                responsePayload: (result) => result,
+                errorLabel: `Image #${imgIndex}: Blocking request failed`,
+            },
+        );
 
         onLog?.(`Image #${imgIndex}: Success.`);
         return response;
@@ -925,49 +1592,88 @@ type SubmitQueuedBatchOptions = GenerateOptions & {
 
 export const submitQueuedBatchJob = async (options: SubmitQueuedBatchOptions): Promise<RemoteQueuedBatchJob> => {
     const finalPrompt = buildStyleAwareImagePrompt(options);
+    const requestPayload = {
+        ...buildImageGenerateRequestBody(options, finalPrompt),
+        executionMode: 'queued-batch-job' as const,
+        requestCount: 1,
+        displayName: options.displayName,
+    };
 
-    const response = await fetchJson<{ job: RemoteQueuedBatchJob }>('/api/batches/create', {
-        method: 'POST',
-        headers: jsonHeaders,
-        body: JSON.stringify({
-            prompt: finalPrompt,
-            model: options.model,
-            aspectRatio: options.aspectRatio,
-            imageSize: options.model === 'gemini-2.5-flash-image' ? undefined : options.imageSize,
-            editingInput: options.editingInput,
-            objectImageInputs: options.objectImageInputs,
-            characterImageInputs: options.characterImageInputs,
-            outputFormat: options.outputFormat,
-            temperature: options.temperature,
-            thinkingLevel: options.thinkingLevel,
-            includeThoughts: options.includeThoughts,
-            googleSearch: options.googleSearch,
-            imageSearch: options.imageSearch,
-            executionMode: 'queued-batch-job',
-            requestCount: 1,
-            displayName: options.displayName,
-        }),
-    });
+    const response = await fetchJson<{ job: RemoteQueuedBatchJob }>(
+        '/api/batches/create',
+        {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify(requestPayload),
+        },
+        {
+            source: 'batch',
+            route: '/api/batches/create',
+            method: 'POST',
+            operation: 'Batch create',
+            requestLabel: 'Batch create request',
+            requestSummary: `${options.model} | ${options.displayName || 'untitled'} | ${options.requestCount} request(s)`,
+            requestPayload,
+            responseLabel: 'Batch create response',
+            responseSummary: (result) => buildBatchJobSummary(result.job),
+            responsePayload: (result) => ({ job: result.job }),
+            errorLabel: 'Batch create failed',
+        },
+    );
 
     return response.job;
 };
 
 export const getQueuedBatchJob = async (name: string): Promise<RemoteQueuedBatchJob> => {
-    const response = await fetchJson<{ job: RemoteQueuedBatchJob }>('/api/batches/get', {
-        method: 'POST',
-        headers: jsonHeaders,
-        body: JSON.stringify({ name }),
-    });
+    const requestPayload = { name };
+    const response = await fetchJson<{ job: RemoteQueuedBatchJob }>(
+        '/api/batches/get',
+        {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify(requestPayload),
+        },
+        {
+            source: 'batch',
+            route: '/api/batches/get',
+            method: 'POST',
+            operation: 'Batch get',
+            requestLabel: 'Batch status request',
+            requestSummary: name,
+            requestPayload,
+            responseLabel: 'Batch status response',
+            responseSummary: (result) => buildBatchJobSummary(result.job),
+            responsePayload: (result) => ({ job: result.job }),
+            errorLabel: 'Batch status request failed',
+        },
+    );
 
     return response.job;
 };
 
 export const cancelQueuedBatchJob = async (name: string): Promise<RemoteQueuedBatchJob> => {
-    const response = await fetchJson<{ job: RemoteQueuedBatchJob }>('/api/batches/cancel', {
-        method: 'POST',
-        headers: jsonHeaders,
-        body: JSON.stringify({ name }),
-    });
+    const requestPayload = { name };
+    const response = await fetchJson<{ job: RemoteQueuedBatchJob }>(
+        '/api/batches/cancel',
+        {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify(requestPayload),
+        },
+        {
+            source: 'batch',
+            route: '/api/batches/cancel',
+            method: 'POST',
+            operation: 'Batch cancel',
+            requestLabel: 'Batch cancel request',
+            requestSummary: name,
+            requestPayload,
+            responseLabel: 'Batch cancel response',
+            responseSummary: (result) => buildBatchJobSummary(result.job),
+            responsePayload: (result) => ({ job: result.job }),
+            errorLabel: 'Batch cancel failed',
+        },
+    );
 
     return response.job;
 };
@@ -975,11 +1681,31 @@ export const cancelQueuedBatchJob = async (name: string): Promise<RemoteQueuedBa
 export const importQueuedBatchJobResults = async (
     name: string,
 ): Promise<{ job: RemoteQueuedBatchJob; results: QueuedBatchImportResult[] }> => {
-    return await fetchJson<{ job: RemoteQueuedBatchJob; results: QueuedBatchImportResult[] }>('/api/batches/import', {
-        method: 'POST',
-        headers: jsonHeaders,
-        body: JSON.stringify({ name }),
-    });
+    const requestPayload = { name };
+    return await fetchJson<{ job: RemoteQueuedBatchJob; results: QueuedBatchImportResult[] }>(
+        '/api/batches/import',
+        {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify(requestPayload),
+        },
+        {
+            source: 'batch',
+            route: '/api/batches/import',
+            method: 'POST',
+            operation: 'Batch import',
+            requestLabel: 'Batch import request',
+            requestSummary: name,
+            requestPayload,
+            responseLabel: 'Batch import response',
+            responseSummary: (result) => buildQueuedBatchImportSummary(result),
+            responsePayload: (result) => ({
+                job: result.job,
+                resultsSummary: summarizeDebugTerminalPayload(result.results),
+            }),
+            errorLabel: 'Batch import failed',
+        },
+    );
 };
 
 // F2: Retry helper with exponential backoff
@@ -988,6 +1714,10 @@ interface RetryOptions {
     maxDelay?: number;
     abortSignal?: AbortSignal;
     onLog?: (msg: string) => void;
+    correlationId?: string;
+    route?: string;
+    source?: DebugTerminalSource;
+    operation?: string;
 }
 const retryOperation = async <T>(
     operation: () => Promise<T>,
@@ -995,7 +1725,16 @@ const retryOperation = async <T>(
     delayMs: number = 1500,
     opts?: RetryOptions,
 ): Promise<T> => {
-    const { backoffMultiplier = 2, maxDelay = 8000, abortSignal, onLog } = opts || {};
+    const {
+        backoffMultiplier = 2,
+        maxDelay = 8000,
+        abortSignal,
+        onLog,
+        correlationId,
+        route,
+        source,
+        operation: operationLabel,
+    } = opts || {};
     try {
         return await operation();
     } catch (error: any) {
@@ -1029,6 +1768,24 @@ const retryOperation = async <T>(
                     if (retryAfterMatch) waitMs = Math.max(waitMs, parseInt(retryAfterMatch[1]) * 1000);
                 }
                 onLog?.(`⏳ Retrying in ${(waitMs / 1000).toFixed(1)}s... (${retries} left)`);
+                emitServiceDebugEvent({
+                    kind: 'retry',
+                    label: 'Retry scheduled',
+                    context: {
+                        source: source || 'generation',
+                        operation: operationLabel || 'Retry operation',
+                        route,
+                        method: 'POST',
+                        phase: 'retry',
+                        correlationId,
+                    },
+                    summary: `${msg || 'Transient failure'} -> ${(waitMs / 1000).toFixed(1)}s delay`,
+                    payload: {
+                        error: error instanceof Error ? error : new Error(String(error)),
+                        retriesRemaining: retries,
+                        waitMs,
+                    },
+                });
                 // F1-FIX: Use abortable delay so cancel takes effect during retry wait
                 await new Promise<void>((resolve, reject) => {
                     const handler = () => {

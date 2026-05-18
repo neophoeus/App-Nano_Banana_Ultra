@@ -1,5 +1,21 @@
 # Changelog
 
+## v3.9.0 - 2026-05-18
+
+- Release title: Nano Banana Ultra 3.9.0 - Diagnostics Terminal & Correlated Local API Tracing
+- Release summary:
+    - hidden diagnostics terminal for workspace debugging:
+        - Ultra now includes a hidden diagnostics terminal overlay opened from the top header, with request/response/error/stream/retry/log event capture in one place instead of leaving debugging scattered across browser tools and console output
+        - the terminal keeps a local persisted event history with filtering by event kind, source, route, search text, and correlation id, and adds focused JSON inspection plus export/clear actions for session-level troubleshooting
+
+    - broader frontend diagnostic instrumentation across real workspace flows:
+        - interactive image generation, prompt tools, retry handling, workspace snapshot persistence, shared queued-batch space persistence, and image file save/load flows now emit structured debug events with redaction-safe summaries instead of exposing raw sensitive payloads
+        - existing workflow log messages are now mirrored into the diagnostics terminal, so generation orchestration state can be read alongside transport-level request and response traces
+
+    - backend request-id correlation across local API routes:
+        - prompt, batch, workspace, image generation, live-progress streaming, and local image file routes now share one `X-NBU-Debug-Request-ID` correlation contract, echo that id on responses where applicable, and emit structured request/response/error logging through the local API helper layer
+        - generate-stream and raw file-response paths now preserve the same correlation through stream open/complete/failure handling and file-backed image reads, making cross-layer tracing possible from the browser terminal all the way through the local backend route owners
+
 ## v3.8.1 - 2026-05-18
 
 - Release title: Nano Banana Ultra 3.8.1 - Live Progress Ordering Drift Hardening

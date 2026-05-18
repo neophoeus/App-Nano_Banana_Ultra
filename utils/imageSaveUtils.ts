@@ -4,6 +4,11 @@
  */
 
 import { ImageSidecarMetadata } from '../types';
+import {
+    DEBUG_TERMINAL_REQUEST_ID_HEADER,
+    createDebugTerminalCorrelationId,
+    emitDebugTerminalEvent,
+} from './debugTerminalEvents';
 import { normalizeImageSidecarMetadata } from './imageSidecarMetadata';
 
 const THUMBNAIL_MAX_DIM = 200; // Max width or height for lightweight preview thumbnails
@@ -38,6 +43,48 @@ type SaveImageToLocalOptions = {
     filename?: string;
     dedupe?: boolean;
 };
+
+const emitImageFileDebugEvent = ({
+    kind,
+    label,
+    summary,
+    payload,
+    route,
+    method,
+    correlationId,
+    status,
+    phase,
+}: {
+    kind: 'request' | 'response' | 'error' | 'log';
+    label: string;
+    summary?: string;
+    payload?: unknown;
+    route: string;
+    method: 'GET' | 'POST';
+    correlationId: string;
+    status?: number;
+    phase?: string;
+}) => {
+    emitDebugTerminalEvent({
+        kind,
+        label,
+        summary,
+        payload,
+        source: 'image-file',
+        route,
+        endpoint: route,
+        method,
+        operation: 'Image file',
+        correlationId,
+        status,
+        phase,
+    });
+};
+
+const withImageFileDebugHeaders = (headers: Record<string, string>, correlationId: string): Record<string, string> => ({
+    ...headers,
+    [DEBUG_TERMINAL_REQUEST_ID_HEADER]: correlationId,
+});
 
 export const buildSavedImageLoadUrl = (savedFilename: string): string =>
     `${LOAD_IMAGE_ENDPOINT}?filename=${encodeURIComponent(savedFilename)}`;
@@ -271,20 +318,66 @@ export async function saveImageToLocal(
         ? sanitizeRequestedFilename(options.filename) ||
           buildFilename(filenameStem || buildGeneratedFilenameStem(prefix), ext)
         : buildFilename(filenameStem || buildGeneratedFilenameStem(prefix), ext);
+    const correlationId = createDebugTerminalCorrelationId('imagefile');
+    const requestPayload = {
+        filename,
+        dedupe: options?.dedupe === true,
+        hasMetadata: Boolean(metadata),
+        metadataKeys: metadata ? Object.keys(metadata).slice(0, 8) : [],
+    };
+
+    emitImageFileDebugEvent({
+        kind: 'request',
+        label: 'Save image request',
+        summary: filename,
+        payload: requestPayload,
+        route: '/api/save-image',
+        method: 'POST',
+        correlationId,
+    });
 
     try {
         const res = await fetch('/api/save-image', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: withImageFileDebugHeaders({ 'Content-Type': 'application/json' }, correlationId),
             body: JSON.stringify({ data: dataUrl, filename, metadata, dedupe: options?.dedupe === true }),
         });
         const result = await res.json();
         if (result.success) {
+            emitImageFileDebugEvent({
+                kind: 'response',
+                label: 'Save image response',
+                summary: result.path || filename,
+                payload: { ...requestPayload, path: result.path || null },
+                route: '/api/save-image',
+                method: 'POST',
+                correlationId,
+                status: res.status,
+            });
             return result.path;
         }
+        emitImageFileDebugEvent({
+            kind: 'error',
+            label: 'Save image failed',
+            summary: result.error || 'Server save failed',
+            payload: { ...requestPayload, error: result.error || null },
+            route: '/api/save-image',
+            method: 'POST',
+            correlationId,
+            status: res.status,
+        });
         console.error('Server save failed:', result.error);
         return null;
     } catch (err) {
+        emitImageFileDebugEvent({
+            kind: 'error',
+            label: 'Save image failed',
+            summary: err instanceof Error ? err.message : 'Unknown image save error',
+            payload: requestPayload,
+            route: '/api/save-image',
+            method: 'POST',
+            correlationId,
+        });
         console.error('Failed to save image to local:', err);
         return null;
     }
@@ -404,17 +497,66 @@ export async function persistHistoryThumbnail(
 }
 
 export async function loadImageMetadata(filename: string): Promise<ImageSidecarMetadata | null> {
+    const correlationId = createDebugTerminalCorrelationId('imagefile');
+    const route = `${LOAD_IMAGE_METADATA_ENDPOINT}?filename=${encodeURIComponent(filename)}`;
+
+    emitImageFileDebugEvent({
+        kind: 'request',
+        label: 'Load image metadata request',
+        summary: filename,
+        payload: { filename },
+        route,
+        method: 'GET',
+        correlationId,
+    });
+
     try {
-        const res = await fetch(`${LOAD_IMAGE_METADATA_ENDPOINT}?filename=${encodeURIComponent(filename)}`);
+        const res = await fetch(route, {
+            headers: withImageFileDebugHeaders({}, correlationId),
+        });
         if (res.status === 404) {
+            emitImageFileDebugEvent({
+                kind: 'response',
+                label: 'Load image metadata response',
+                summary: 'Metadata not found',
+                payload: { filename, found: false },
+                route,
+                method: 'GET',
+                correlationId,
+                status: res.status,
+            });
             return null;
         }
         if (!res.ok) {
             throw new Error(`Server returned ${res.status}`);
         }
 
-        return normalizeImageSidecarMetadata(await res.json());
+        const metadata = normalizeImageSidecarMetadata(await res.json());
+        emitImageFileDebugEvent({
+            kind: 'response',
+            label: 'Load image metadata response',
+            summary: metadata ? 'Metadata loaded' : 'Metadata empty',
+            payload: {
+                filename,
+                found: Boolean(metadata),
+                metadataKeys: metadata ? Object.keys(metadata).slice(0, 8) : [],
+            },
+            route,
+            method: 'GET',
+            correlationId,
+            status: res.status,
+        });
+        return metadata;
     } catch (err) {
+        emitImageFileDebugEvent({
+            kind: 'error',
+            label: 'Load image metadata failed',
+            summary: err instanceof Error ? err.message : 'Unknown metadata load error',
+            payload: { filename },
+            route,
+            method: 'GET',
+            correlationId,
+        });
         console.error('Failed to load image metadata:', err);
         return null;
     }
@@ -424,18 +566,70 @@ export async function loadImageMetadata(filename: string): Promise<ImageSidecarM
  * Returns a base64 data URL.
  */
 export async function loadFullImage(filename: string): Promise<string | null> {
+    const correlationId = createDebugTerminalCorrelationId('imagefile');
+    const route = `${LOAD_IMAGE_ENDPOINT}?filename=${encodeURIComponent(filename)}`;
+
+    emitImageFileDebugEvent({
+        kind: 'request',
+        label: 'Load full image request',
+        summary: filename,
+        payload: { filename },
+        route,
+        method: 'GET',
+        correlationId,
+    });
+
     try {
-        const res = await fetch(`/api/load-image?filename=${encodeURIComponent(filename)}`);
+        const res = await fetch(route, {
+            headers: withImageFileDebugHeaders({}, correlationId),
+        });
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
         const blob = await res.blob();
-        return new Promise((resolve) => {
+        const dataUrl = await new Promise<string | null>((resolve) => {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result as string);
             reader.onerror = () => resolve(null);
             reader.readAsDataURL(blob);
         });
+
+        if (!dataUrl) {
+            emitImageFileDebugEvent({
+                kind: 'error',
+                label: 'Load full image failed',
+                summary: 'Failed to read image blob as data URL',
+                payload: { filename, size: blob.size, mimeType: blob.type || null },
+                route,
+                method: 'GET',
+                correlationId,
+                status: res.status,
+                phase: 'read-blob',
+            });
+            return null;
+        }
+
+        emitImageFileDebugEvent({
+            kind: 'response',
+            label: 'Load full image response',
+            summary: `${filename} (${blob.type || 'unknown'})`,
+            payload: { filename, size: blob.size, mimeType: blob.type || null },
+            route,
+            method: 'GET',
+            correlationId,
+            status: res.status,
+        });
+
+        return dataUrl;
     } catch (err) {
+        emitImageFileDebugEvent({
+            kind: 'error',
+            label: 'Load full image failed',
+            summary: err instanceof Error ? err.message : 'Unknown full image load error',
+            payload: { filename },
+            route,
+            method: 'GET',
+            correlationId,
+        });
         console.error('Failed to load full image:', err);
         return null;
     }

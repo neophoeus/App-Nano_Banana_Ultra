@@ -4,7 +4,13 @@ import path from 'path';
 import { GoogleGenAI } from '@google/genai/node';
 import type { ConversationRequestContext } from '../../types';
 import { VALID_IMAGE_MODELS, VALID_IMAGE_SIZES } from '../../utils/modelCapabilities';
-import { readJsonBody, sendClassifiedApiError, sendJson } from '../utils/apiHelpers';
+import {
+    createApiRequestContext,
+    logApiRequest,
+    readJsonBody,
+    sendClassifiedApiError,
+    sendJson,
+} from '../utils/apiHelpers';
 import { extractBatchImportResults, serializeBatchJob } from '../utils/batchHelpers';
 import { buildGenerateFileParts, normalizeReferenceImages, resolveLocalImageInputFile } from '../utils/imageReferences';
 import { buildImageRequestConfig, validateCapabilityRequest } from '../utils/requestConfig';
@@ -232,8 +238,10 @@ async function downloadBatchResultJsonl(ai: GoogleGenAI, responseFileName: strin
 
 export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: RegisterBatchRoutesArgs): void {
     server.use('/api/batches/create', async (req: any, res: any) => {
+        const requestContext = createApiRequestContext(req, '/api/batches/create');
+
         if (req.method !== 'POST') {
-            sendJson(res, 405, { error: 'Method not allowed' });
+            sendJson(res, 405, { error: 'Method not allowed' }, { requestContext, summary: 'Method not allowed' });
             return;
         }
 
@@ -242,25 +250,53 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
             const body = await readJsonBody<BatchCreateBody>(req);
             const model = String(body.model || 'gemini-3.1-flash-image-preview');
             const displayName = body.displayName || `${model}-queued-${new Date().toISOString()}`;
+            logApiRequest(requestContext, {
+                source: 'batch',
+                model,
+                displayName,
+                requestCount: Number(body.requestCount || 1),
+                hasEditingInput: Boolean(body.editingInput),
+            });
 
             if (!VALID_IMAGE_MODELS.has(model)) {
-                sendJson(res, 400, { error: `Unsupported model: ${model}` });
+                sendJson(res, 400, { error: `Unsupported model: ${model}` }, {
+                    requestContext,
+                    summary: `Unsupported model: ${model}`,
+                    details: { source: 'batch', model },
+                });
                 return;
             }
             if (body.imageSize && !VALID_IMAGE_SIZES.has(body.imageSize)) {
-                sendJson(res, 400, { error: `Unsupported image size: ${body.imageSize}` });
+                sendJson(res, 400, { error: `Unsupported image size: ${body.imageSize}` }, {
+                    requestContext,
+                    summary: `Unsupported image size: ${body.imageSize}`,
+                    details: { source: 'batch', model, imageSize: body.imageSize },
+                });
                 return;
             }
             if (body.conversationContext) {
-                sendJson(res, 400, {
-                    error: 'Queued batch jobs do not support conversation-native continuation context.',
-                });
+                sendJson(
+                    res,
+                    400,
+                    {
+                        error: 'Queued batch jobs do not support conversation-native continuation context.',
+                    },
+                    {
+                        requestContext,
+                        summary: 'Conversation context is unsupported for queued batch jobs',
+                        details: { source: 'batch', model },
+                    },
+                );
                 return;
             }
 
             const capabilityError = validateCapabilityRequest(model, body);
             if (capabilityError) {
-                sendJson(res, 400, { error: capabilityError });
+                sendJson(res, 400, { error: capabilityError }, {
+                    requestContext,
+                    summary: capabilityError,
+                    details: { source: 'batch', model },
+                });
                 return;
             }
 
@@ -268,9 +304,18 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
             const totalReferenceImages =
                 objectImageInputs.length + characterImageInputs.length + (body.editingInput ? 1 : 0);
             if (model === 'gemini-2.5-flash-image' && totalReferenceImages > 3) {
-                sendJson(res, 400, {
-                    error: 'gemini-2.5-flash-image works best with up to 3 input images according to current docs.',
-                });
+                sendJson(
+                    res,
+                    400,
+                    {
+                        error: 'gemini-2.5-flash-image works best with up to 3 input images according to current docs.',
+                    },
+                    {
+                        requestContext,
+                        summary: 'Too many reference images for gemini-2.5-flash-image',
+                        details: { source: 'batch', model, totalReferenceImages },
+                    },
+                );
                 return;
             }
 
@@ -314,86 +359,163 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
                     },
                 });
 
-                sendJson(res, 200, {
-                    job: serializeBatchJob(batchJob),
-                });
+                const job = serializeBatchJob(batchJob);
+                sendJson(
+                    res,
+                    200,
+                    {
+                        job,
+                    },
+                    {
+                        requestContext,
+                        summary: `${job.name} (${job.state})`,
+                        details: {
+                            source: 'batch',
+                            model,
+                            displayName,
+                            jobName: job.name,
+                            state: job.state,
+                        },
+                    },
+                );
             } finally {
                 cleanupTempDir(tempDir);
             }
         } catch (error: any) {
             sendClassifiedApiError(res, '/api/batches/create', error, 'Queued batch job submission failed', {
                 defaultStatus: 502,
+                requestContext,
+                details: {
+                    source: 'batch',
+                },
             });
         }
     });
 
     server.use('/api/batches/get', async (req: any, res: any) => {
+        const requestContext = createApiRequestContext(req, '/api/batches/get');
+
         if (req.method !== 'POST') {
-            sendJson(res, 405, { error: 'Method not allowed' });
+            sendJson(res, 405, { error: 'Method not allowed' }, { requestContext, summary: 'Method not allowed' });
             return;
         }
 
         try {
             const ai = getAIClient();
             const body = await readJsonBody<{ name?: string }>(req);
+            logApiRequest(requestContext, {
+                source: 'batch',
+                jobName: body.name || null,
+            });
             if (!body.name) {
-                sendJson(res, 400, { error: 'Missing batch job name.' });
+                sendJson(res, 400, { error: 'Missing batch job name.' }, {
+                    requestContext,
+                    summary: 'Missing batch job name',
+                    details: { source: 'batch' },
+                });
                 return;
             }
 
             const batchJob = await ai.batches.get({ name: body.name });
-            sendJson(res, 200, { job: serializeBatchJob(batchJob) });
+            const job = serializeBatchJob(batchJob);
+            sendJson(res, 200, { job }, {
+                requestContext,
+                summary: `${job.name} (${job.state})`,
+                details: { source: 'batch', jobName: job.name, state: job.state },
+            });
         } catch (error: any) {
             sendClassifiedApiError(res, '/api/batches/get', error, 'Failed to load batch job status', {
                 defaultStatus: 502,
+                requestContext,
+                details: {
+                    source: 'batch',
+                },
             });
         }
     });
 
     server.use('/api/batches/cancel', async (req: any, res: any) => {
+        const requestContext = createApiRequestContext(req, '/api/batches/cancel');
+
         if (req.method !== 'POST') {
-            sendJson(res, 405, { error: 'Method not allowed' });
+            sendJson(res, 405, { error: 'Method not allowed' }, { requestContext, summary: 'Method not allowed' });
             return;
         }
 
         try {
             const ai = getAIClient();
             const body = await readJsonBody<{ name?: string }>(req);
+            logApiRequest(requestContext, {
+                source: 'batch',
+                jobName: body.name || null,
+            });
             if (!body.name) {
-                sendJson(res, 400, { error: 'Missing batch job name.' });
+                sendJson(res, 400, { error: 'Missing batch job name.' }, {
+                    requestContext,
+                    summary: 'Missing batch job name',
+                    details: { source: 'batch' },
+                });
                 return;
             }
 
             await ai.batches.cancel({ name: body.name });
             const batchJob = await ai.batches.get({ name: body.name });
-            sendJson(res, 200, { job: serializeBatchJob(batchJob) });
+            const job = serializeBatchJob(batchJob);
+            sendJson(res, 200, { job }, {
+                requestContext,
+                summary: `${job.name} (${job.state})`,
+                details: { source: 'batch', jobName: job.name, state: job.state },
+            });
         } catch (error: any) {
             sendClassifiedApiError(res, '/api/batches/cancel', error, 'Failed to cancel batch job', {
                 defaultStatus: 502,
+                requestContext,
+                details: {
+                    source: 'batch',
+                },
             });
         }
     });
 
     server.use('/api/batches/import', async (req: any, res: any) => {
+        const requestContext = createApiRequestContext(req, '/api/batches/import');
+
         if (req.method !== 'POST') {
-            sendJson(res, 405, { error: 'Method not allowed' });
+            sendJson(res, 405, { error: 'Method not allowed' }, { requestContext, summary: 'Method not allowed' });
             return;
         }
 
         try {
             const ai = getAIClient();
             const body = await readJsonBody<{ name?: string }>(req);
+            logApiRequest(requestContext, {
+                source: 'batch',
+                jobName: body.name || null,
+            });
             if (!body.name) {
-                sendJson(res, 400, { error: 'Missing batch job name.' });
+                sendJson(res, 400, { error: 'Missing batch job name.' }, {
+                    requestContext,
+                    summary: 'Missing batch job name',
+                    details: { source: 'batch' },
+                });
                 return;
             }
 
             const batchJob = await ai.batches.get({ name: body.name });
             const serializedJob = serializeBatchJob(batchJob);
             if (serializedJob.state !== 'JOB_STATE_SUCCEEDED') {
-                sendJson(res, 400, {
-                    error: `Batch job is not ready to import. Current state: ${serializedJob.state}.`,
-                });
+                sendJson(
+                    res,
+                    400,
+                    {
+                        error: `Batch job is not ready to import. Current state: ${serializedJob.state}.`,
+                    },
+                    {
+                        requestContext,
+                        summary: `${serializedJob.name} not ready for import`,
+                        details: { source: 'batch', jobName: serializedJob.name, state: serializedJob.state },
+                    },
+                );
                 return;
             }
 
@@ -408,16 +530,33 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
                       )
                     : extractBatchImportResults(batchJob, extractGeneratedContent);
 
-                sendJson(res, 200, {
-                    job: serializedJob,
-                    results,
-                });
+                sendJson(
+                    res,
+                    200,
+                    {
+                        job: serializedJob,
+                        results,
+                    },
+                    {
+                        requestContext,
+                        summary: `${serializedJob.name} imported ${results.length} result(s)`,
+                        details: {
+                            source: 'batch',
+                            jobName: serializedJob.name,
+                            resultCount: results.length,
+                        },
+                    },
+                );
             } finally {
                 cleanupTempDir(tempDir);
             }
         } catch (error: any) {
             sendClassifiedApiError(res, '/api/batches/import', error, 'Failed to import queued batch results', {
                 defaultStatus: 502,
+                requestContext,
+                details: {
+                    source: 'batch',
+                },
             });
         }
     });

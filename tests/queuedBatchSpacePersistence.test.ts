@@ -103,12 +103,16 @@ describe('queuedBatchSpacePersistence', () => {
 
         const result = await loadSharedQueuedBatchSpaceSnapshot();
 
-        expect(fetchMock).toHaveBeenCalledWith(SHARED_QUEUED_BATCH_SPACE_ENDPOINT, {
-            method: 'GET',
-            headers: {
-                Accept: 'application/json',
-            },
-        });
+        expect(fetchMock).toHaveBeenCalledWith(
+            SHARED_QUEUED_BATCH_SPACE_ENDPOINT,
+            expect.objectContaining({
+                method: 'GET',
+                headers: expect.objectContaining({
+                    Accept: 'application/json',
+                    'X-NBU-Debug-Request-ID': expect.any(String),
+                }),
+            }),
+        );
         expect(result).toEqual({
             snapshot: {
                 queuedJobs: [buildQueuedJob()],
