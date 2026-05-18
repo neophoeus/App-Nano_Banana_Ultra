@@ -1,5 +1,13 @@
 # Changelog
 
+## v3.8.1 - 2026-05-18
+
+- Release title: Nano Banana Ultra 3.8.1 - Live Progress Ordering Drift Hardening
+- Release summary:
+    - live-progress ordering drift hardening:
+        - live-progress streaming now continues emitting newly observed thought/result parts when provider chunks partially reorder or replace earlier stream content
+        - stream summaries still mark these cases as `unstable-ordering` so Progress does not overclaim fully stable live progress
+
 ## v3.8.0 - 2026-05-16
 
 - Release title: Nano Banana Ultra 3.8.0 - Lite Workspace Import Conversion & Local Output Recovery

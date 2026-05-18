@@ -214,4 +214,40 @@ describe('extractGeneratedContent', () => {
         expect(extracted.outputImagePartCount).toBe(0);
         expect(extracted.extractionIssue).toBe('no-image-data');
     });
+
+    it('continues emitting unique stream parts after partial-overlap ordering drift', () => {
+        let state = createLiveProgressAccumulatorState();
+        const firstChunk = createResponse([
+            {
+                text: 'First visible thought',
+                thought: true,
+            },
+            {
+                text: 'Second visible thought',
+                thought: true,
+            },
+        ]);
+        const reorderedChunk = createResponse([
+            {
+                text: 'First visible thought',
+                thought: true,
+            },
+            {
+                text: 'Third visible thought after drift',
+                thought: true,
+            },
+        ]);
+
+        state = applyLiveProgressChunkToAccumulator(state, firstChunk).state;
+        const applied = applyLiveProgressChunkToAccumulator(state, reorderedChunk);
+
+        expect(applied.state.orderingStable).toBe(false);
+        expect(applied.newParts).toEqual([
+            {
+                sequence: 2,
+                kind: 'thought-text',
+                text: 'Third visible thought after drift',
+            },
+        ]);
+    });
 });

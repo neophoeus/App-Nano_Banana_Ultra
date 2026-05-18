@@ -232,10 +232,7 @@ function throwIfAborted(abortSignal?: AbortSignal): void {
     }
 }
 
-function withAbortSignal(
-    requestConfig: Record<string, unknown>,
-    abortSignal?: AbortSignal,
-): Record<string, unknown> {
+function withAbortSignal(requestConfig: Record<string, unknown>, abortSignal?: AbortSignal): Record<string, unknown> {
     return abortSignal ? { ...requestConfig, abortSignal } : requestConfig;
 }
 
@@ -605,8 +602,15 @@ export const applyLiveProgressChunkToAccumulator = (
             aggregatedParts: [...state.aggregatedParts, ...appendedParts],
         };
     } else {
+        const existingKeys = new Set(aggregateKeys);
+        const appendedParts = resequenceExtractedParts(
+            extracted.extractedParts.filter((part) => !existingKeys.has(buildResultPartKey(toPublicResultPart(part)))),
+            state.aggregatedParts.length,
+        );
+        newParts = appendedParts.map((part) => toPublicResultPart(part));
         nextState = {
             ...nextState,
+            aggregatedParts: [...state.aggregatedParts, ...appendedParts],
             orderingStable: false,
         };
         return { state: nextState, newParts };
