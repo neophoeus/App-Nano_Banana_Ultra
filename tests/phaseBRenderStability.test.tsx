@@ -40,7 +40,7 @@ const recordRender = (tracker: RenderTracker, props: Record<string, unknown>, pr
 vi.mock('../components/GeneratedImage', async () => {
     const ReactModule = await vi.importActual<typeof import('react')>('react');
     const Component = ReactModule.memo((props: Record<string, unknown>) => {
-        const previousPropsRef = ReactModule.useRef<Record<string, unknown>>();
+        const previousPropsRef = ReactModule.useRef<Record<string, unknown> | undefined>(undefined);
         recordRender(trackers.generatedImage, props, previousPropsRef.current);
         previousPropsRef.current = props;
         return <div data-testid="mock-generated-image" />;
@@ -51,7 +51,7 @@ vi.mock('../components/GeneratedImage', async () => {
 vi.mock('../components/RecentHistoryFilmstrip', async () => {
     const ReactModule = await vi.importActual<typeof import('react')>('react');
     const Component = ReactModule.memo((props: Record<string, unknown>) => {
-        const previousPropsRef = ReactModule.useRef<Record<string, unknown>>();
+        const previousPropsRef = ReactModule.useRef<Record<string, unknown> | undefined>(undefined);
         recordRender(trackers.recentHistoryFilmstrip, props, previousPropsRef.current);
         previousPropsRef.current = props;
         return <div data-testid="mock-recent-history-filmstrip" />;
@@ -62,7 +62,7 @@ vi.mock('../components/RecentHistoryFilmstrip', async () => {
 vi.mock('../components/WorkspaceUnifiedHistoryPanel', async () => {
     const ReactModule = await vi.importActual<typeof import('react')>('react');
     const Component = ReactModule.memo((props: Record<string, unknown>) => {
-        const previousPropsRef = ReactModule.useRef<Record<string, unknown>>();
+        const previousPropsRef = ReactModule.useRef<Record<string, unknown> | undefined>(undefined);
         recordRender(trackers.workspaceUnifiedHistoryPanel, props, previousPropsRef.current);
         previousPropsRef.current = props;
         return <div data-testid="mock-workspace-unified-history-panel" />;
@@ -73,7 +73,7 @@ vi.mock('../components/WorkspaceUnifiedHistoryPanel', async () => {
 vi.mock('../components/ComposerSettingsPanel', async () => {
     const ReactModule = await vi.importActual<typeof import('react')>('react');
     const Component = ReactModule.memo((props: Record<string, unknown>) => {
-        const previousPropsRef = ReactModule.useRef<Record<string, unknown>>();
+        const previousPropsRef = ReactModule.useRef<Record<string, unknown> | undefined>(undefined);
         recordRender(trackers.composerSettingsPanel, props, previousPropsRef.current);
         previousPropsRef.current = props;
         return (
@@ -91,7 +91,7 @@ vi.mock('../components/ComposerSettingsPanel', async () => {
 vi.mock('../components/WorkspaceSideToolPanel', async () => {
     const ReactModule = await vi.importActual<typeof import('react')>('react');
     const Component = ReactModule.memo((props: Record<string, unknown>) => {
-        const previousPropsRef = ReactModule.useRef<Record<string, unknown>>();
+        const previousPropsRef = ReactModule.useRef<Record<string, unknown> | undefined>(undefined);
         recordRender(trackers.workspaceSideToolPanel, props, previousPropsRef.current);
         previousPropsRef.current = props;
         return <div data-testid="mock-workspace-side-tool-panel" />;
@@ -200,12 +200,16 @@ const initialSnapshot = {
     },
 };
 
-const waitFor = async <T,>(callback: () => T, timeout = 4000): Promise<T> => {
+const waitFor = async <T,>(callback: () => T, timeout = 4000): Promise<NonNullable<T>> => {
     const startedAt = Date.now();
 
     while (true) {
         try {
-            return callback();
+            const result = callback();
+            if (!result) {
+                throw new Error('Value is falsy, keeping waiting');
+            }
+            return result as NonNullable<T>;
         } catch (error) {
             if (Date.now() - startedAt >= timeout) {
                 throw error;

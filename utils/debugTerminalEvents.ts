@@ -256,3 +256,14 @@ export const subscribeDebugTerminalEvents = (listener: DebugTerminalListener): (
     listeners.add(listener);
     return () => listeners.delete(listener);
 };
+
+export const clearDebugTerminalEvents = () => {
+    if (typeof window !== 'undefined') {
+        try {
+            window.localStorage.setItem(DEBUG_TERMINAL_STORAGE_KEY, '[]');
+        } catch {
+            // Diagnostic history must never block generation or UI interactions.
+        }
+        window.dispatchEvent(new Event('nbu_clear_debug_terminal'));
+    }
+};

@@ -1,5 +1,13 @@
 # Changelog
 
+## v3.10.1 - 2026-05-21
+
+- Release title: Nano Banana Ultra 3.10.1 - Workspace Reset Terminal Sync Clear
+- Release summary:
+    - workspace reset terminal sync clear:
+        - clearing the workspace now automatically triggers a cleanup of the diagnostics terminal's local event history in localStorage, instead of keeping terminal traces persisted indefinitely
+        - a workspace-clear synchronization event now propagates the clear command across active component trees so the terminal UI updates to empty immediately
+
 ## v3.10.0 - 2026-05-18
 
 - Release title: Nano Banana Ultra 3.10.0 - Advanced Safety Controls & Grounding-Adjacent Sync

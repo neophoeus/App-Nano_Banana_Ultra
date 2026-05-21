@@ -1,5 +1,6 @@
 import { Dispatch, MutableRefObject, SetStateAction, useCallback } from 'react';
 import type { WorkspaceDetailModalState } from './useWorkspaceShellOwnerState';
+import { clearDebugTerminalEvents } from '../utils/debugTerminalEvents';
 
 type UseWorkspaceResetActionsArgs = {
     lastPromotedHistoryIdRef: MutableRefObject<string | null>;
@@ -43,6 +44,7 @@ export function useWorkspaceResetActions({
         clearSettingsSession();
         setSurfaceSharedControlsBottom(null);
         lastPromotedHistoryIdRef.current = null;
+        clearDebugTerminalEvents();
     }, [
         applyEmptyWorkspaceSnapshot,
         clearSettingsSession,

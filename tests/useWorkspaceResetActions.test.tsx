@@ -89,6 +89,8 @@ describe('useWorkspaceResetActions', () => {
 
     it('performs a workspace hard reset and closes transient surfaces when clearing history', () => {
         const context = renderHook();
+        const clearTerminalListener = vi.fn();
+        window.addEventListener('nbu_clear_debug_terminal', clearTerminalListener);
 
         flushSync(() => {
             latestHook!.handleClearGalleryHistory();
@@ -104,5 +106,8 @@ describe('useWorkspaceResetActions', () => {
         expect(context.setSurfaceSharedControlsBottom).toHaveBeenCalledWith(null);
         expect(context.clearAssetRoles).not.toHaveBeenCalled();
         expect(context.lastPromotedHistoryIdRef.current).toBeNull();
+        expect(clearTerminalListener).toHaveBeenCalledTimes(1);
+
+        window.removeEventListener('nbu_clear_debug_terminal', clearTerminalListener);
     });
 });
