@@ -59,15 +59,13 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 promptLength: currentPrompt.trim().length,
             });
             const response = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
+                model: 'gemini-3.5-flash',
                 config: {
                     systemInstruction: buildPromptEnhancerInstruction(lang),
                     ...(resolvedSafetySettings ? { safetySettings: resolvedSafetySettings } : {}),
                     temperature: 0.35,
                 },
-                contents:
-                    `Current prompt: ${currentPrompt || 'A creative image'}\n\n` +
-                    'Rewrite the prompt entirely in the requested UI language while preserving the same concept. Return only the final prompt text. You may use one dense paragraph or a few prompt-only lines separated by line breaks if that improves detail and clarity. No analysis, commentary, headings, or labels.',
+                contents: `Original prompt to rewrite: "${currentPrompt || 'A creative image'}"`,
             });
 
             const text = cleanResponseText(response.text, '');
@@ -113,7 +111,7 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 lang,
             });
             const response = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
+                model: 'gemini-3.5-flash',
                 config: {
                     systemInstruction: buildRandomPromptInstruction(lang),
                     ...(resolvedSafetySettings ? { safetySettings: resolvedSafetySettings } : {}),
@@ -185,7 +183,7 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
             }
 
             const response = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
+                model: 'gemini-3.5-flash',
                 config: {
                     systemInstruction: buildImageToPromptInstruction(lang),
                     ...(resolvedSafetySettings ? { safetySettings: resolvedSafetySettings } : {}),
@@ -194,7 +192,7 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 contents: [
                     { inlineData: inlineImage },
                     {
-                        text: 'Analyze this image carefully and return a structured image-to-prompt brief in the requested UI language. Describe only details that are visible or strongly supported by the image. If something is uncertain, say so instead of guessing. Keep the final section as a polished generation-ready prompt paragraph in the requested language unless you are quoting visible text.',
+                        text: 'Analyze this image carefully and generate a highly detailed, extremely accurate image prompt in the requested language describing it. Output only the prompt itself without any headings, labels, sections, or commentary.',
                     },
                 ],
             });

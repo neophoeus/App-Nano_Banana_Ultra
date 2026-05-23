@@ -19,47 +19,28 @@ const LANGUAGE_INSTRUCTION_NAMES: Record<string, string> = {
 type PromptToolLanguage = keyof typeof LANGUAGE_INSTRUCTION_NAMES;
 
 const SURPRISE_ME_SCAFFOLDS = [
-    `Scaffold family A - cinematic subject tableau:
-[central subject identity and silhouette]
-[precise action or suspended moment]
-[environment, era, and world logic]
-[wardrobe, props, tools, or biological surface details]
-[supporting figures or layered background activity]
-[framing, camera distance, angle, lens feel, and depth behavior]
-[lighting design, shadow character, weather, or atmospheric effects]
-[color script, material texture, and finish quality]
-[a subtle narrative clue]
-[an unexpected twist that sharpens memorability]`,
-    `Scaffold family B - environment-first world tableau:
-[place, scale, architecture, or terrain]
-[main focal structure, vehicle, creature, or phenomenon]
-[foreground anchors and background depth layers]
-[signs of life, ritual, conflict, industry, or abandonment]
-[time of day, climate, and ambient motion]
-[composition path and perspective logic]
-[lighting source behavior and atmospheric depth]
-[palette logic, surface wear, and tactile details]
-[genre blend or cultural design language]
-[a surprising discovery or contradiction]`,
-    `Scaffold family C - graphic or surreal concept piece:
-[iconic focal form or transformed object]
-[hybrid style blend across two or three influences]
-[bold compositional geometry or negative-space strategy]
-[symbolic secondary motifs]
-[lighting, glow, or shadow behavior]
-[color contrast system and material finish]
-[micro details that reward close inspection]
-[emotional tone or conceptual tension]
-[a strange but coherent twist]`,
-    `Scaffold family D - intimate macro or artifact study:
-[small-scale subject, specimen, food, machine, relic, or crafted object]
-[extreme close-up focal zone and texture hierarchy]
-[tool marks, wear, condensation, fibers, particles, or residue]
-[supporting context that hints at a larger story]
-[depth of field behavior and lens character]
-[lighting direction, reflections, translucency, or subsurface effects]
-[color temperature relationships and surface finish]
-[a surprising transformation, contamination, or impossible material property]`,
+    // 策略 1: 完全開放式
+    `Generate a completely random and creative image prompt.
+Be unpredictable — surprise the user with something unexpected.
+Return ONLY the image prompt, nothing else.`,
+
+    // 策略 2: 半結構化模板
+    `Fill in this image prompt template creatively and unexpectedly:
+
+A [mood/style] scene of [subject] in [setting],
+with [lighting] lighting, [color palette] color palette,
+rendered in [art style] style.
+
+Be creative. Avoid common/safe choices. Return ONLY the completed prompt.`,
+
+    // 策略 3: 「反常識」驚喜策略
+    `Create a surprising image prompt by combining TWO things that don't normally go together.
+Make it visually interesting and specific.
+Examples of the unexpected pairing concept (DO NOT copy these):
+- a samurai in a laundromat
+- a lighthouse made of books
+
+Return ONLY the final image prompt, no explanation.`
 ];
 
 export function normalizePromptToolLanguage(lang?: string): PromptToolLanguage {
@@ -93,10 +74,11 @@ CRITICAL RULES:
 ${buildCommonDirectPromptRules(languageName)}
 9. Preserve the user's core concept, subject, intent, and action.
 10. If the original prompt includes English or mixed-language fragments, rewrite them naturally in ${languageName} unless they are fixed proper nouns.
-11. Make the upgrades concrete: strengthen subject detail, styling, pose, composition, setting, lighting, color, camera feel, material texture, atmosphere, and finish quality.
-12. If segmentation helps, separate major visual layers across a few prompt-only blocks without using headings or labels.
-13. Do NOT invent a different concept or drift away from the original request.
-14. Avoid empty filler, weak generic adjectives, or placeholder wording.`;
+11. Make the upgrades concrete: strengthen subject detail, styling, pose, composition, setting, lighting, color, material texture, atmosphere, and finish quality.
+12. STYLE SENSITIVITY: Detect if the input style or selected art style is non-photorealistic (e.g., Anime, 2D illustration, flat vector art, line drawings, watercolor, pixel art, flat design). If so, you MUST preserve and enhance the visual characteristics of that specific style (e.g., line weight, flat color shapes, paper texture, vector shading) instead of adding photographic terms (such as camera lenses, 35mm lens, 4k resolution, cinematic realistic lighting, realistic fur/skin texture) that clash with the style.
+13. If segmentation helps, separate major visual layers across a few prompt-only blocks without using headings or labels.
+14. Do NOT invent a different concept or drift away from the original request.
+15. Avoid empty filler, weak generic adjectives, or placeholder wording.`;
 }
 
 export function buildRandomPromptInstruction(lang: string): string {
@@ -109,32 +91,24 @@ ${buildCommonDirectPromptRules(languageName)}
 10. Do NOT echo scaffold labels, bracketed placeholders, variable names, or section titles in the final answer.
 11. Make the concept surprising, high-variance, and not a recycled stock theme.
 12. Build one internally coherent concept from start to finish.
-13. Weave subject, environment, composition, lighting, color, materials, mood, style, and cinematic or illustrative finish into one cohesive prompt body.
-14. If segmentation helps, split the prompt into a few prompt-only blocks so separate visual layers stay dense and clear without becoming sectioned commentary.
-15. Avoid empty filler, weak generic adjectives, or placeholder wording.`;
+13. STYLE SENSITIVITY: If you decide to generate or fill in a non-photorealistic art style (e.g., Anime, 2D illustration, flat vector art, line drawings, watercolor, pixel art), you MUST use visual terms specific to that art medium (e.g., cell shading, bold outlines, soft washes, vibrant flat tones) and AVOID camera or photographic jargon (such as depth of field, 35mm lens, realistic texture, cinematic lighting) which breaks the medium's consistency.
+14. Weave subject, environment, composition, lighting, color, materials, mood, style, and cinematic or illustrative finish into one cohesive prompt body.
+15. If segmentation helps, split the prompt into a few prompt-only blocks so separate visual layers stay dense and clear without becoming sectioned commentary.
+16. Avoid empty filler, weak generic adjectives, or placeholder wording.`;
 }
 
 export function buildImageToPromptInstruction(lang: string): string {
     const languageName = getPromptToolLanguageName(lang);
     return `You are an expert image prompt engineer.
-Task: Analyze the uploaded image with forensic care and convert it into a detailed, structured image-to-prompt brief in ${languageName} that stays faithful to visible evidence.
+Task: Analyze the uploaded image with forensic care and convert it into a highly detailed, extremely accurate, and generation-ready image prompt in ${languageName}.
 CRITICAL RULES:
-1. Output every section heading, body sentence, and final prompt in ${languageName}.
-2. Do NOT drift into English or mixed language unless the requested language is English.
-3. Only preserve non-${languageName} text when it is literally visible in the image or is an established proper noun that must stay unchanged.
-4. Output a plain-text multi-section brief in this exact order: Scene Overview, Subjects and Composition, Visual Details, Lighting and Color, Mood and Style, Final Prompt.
-5. Use naturally translated section headings and body text in ${languageName}.
-6. Each section must contain concrete visual evidence from the image, not generic filler.
-7. Preserve what is actually visible instead of inventing unrelated elements.
-8. If a requested detail is uncertain or only weakly supported, say it is unclear, subtle, likely, or not significant rather than presenting it as certain.
-9. If text in the image is unreadable, describe it as illegible rather than guessing.
-10. In Scene Overview, establish the environment, overall scale, genre or era cues, and any visible creative twist that reframes the scene.
-11. In Subjects and Composition, identify the main subject first, then secondary subjects or supporting figures if present; describe visual hierarchy, composition structure, and the visible camera angle or lens feel.
-12. In Visual Details, describe secondary elements, materials, textures, micro-details, visible depth-of-field behavior, and any hidden details that are truly present on closer inspection. If no significant hidden details are visible, say so rather than inventing them.
-13. In Lighting and Color, describe light source behavior, shadow character, atmospheric depth, palette logic, color temperature, and dominant or accent colors.
-14. In Mood and Style, describe the emotional tone, style fusion, and rendering finish. Mood should capture feeling or narrative charge, while rendering finish should capture the observable medium, polish, or surface treatment.
-15. In Final Prompt, write one polished generation-ready prompt paragraph that synthesizes the observations without repeating the section labels.
-16. Do NOT use markdown code fences, JSON, bullet lists, quotes, or conversational filler.`;
+1. Output ONLY the final image-generation prompt text in ${languageName}.
+2. Do NOT use any section headers, labels, bullets, lists, markdown, JSON, or conversational filler.
+3. Every descriptive phrase, style cue, and details must be written in ${languageName}. Do NOT drift into English or mix languages unless the requested language is English.
+4. Only preserve non-${languageName} text when it is literally visible in the image or is an established proper noun that must stay unchanged.
+5. Describe only details that are literally visible or strongly supported by the image. Avoid guesswork, speculation, or hallucinated elements.
+6. Capture all critical visual aspects: subject identity, precise action, poses, expressions, clothing, environment/background details, lighting quality (source, color, shadows), color palette, composition angle, and overall mood and style.
+7. Ensure the output flows naturally as one or two dense descriptive paragraphs. Every sentence must be ready to be sent directly to an image generation model.`;
 }
 
 export function buildRandomPromptRequest(): string {
@@ -150,7 +124,7 @@ Turn the scaffold into one fluent, production-ready image prompt. Keep it surpri
 export async function identifyBlockKeywords(ai: GoogleGenAI, prompt: string, category: string): Promise<string> {
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3.5-flash',
             config: {
                 systemInstruction: `You are a content safety analyzer.
 Task: Analyze the input text which triggered a "${category}" safety filter.

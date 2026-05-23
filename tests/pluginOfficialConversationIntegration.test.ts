@@ -1161,7 +1161,7 @@ describe('imageSavePlugin official conversation integration', () => {
         expect(generateContentMock).toHaveBeenNthCalledWith(
             1,
             expect.objectContaining({
-                model: 'gemini-3-flash-preview',
+                model: 'gemini-3.5-flash',
                 config: expect.objectContaining({
                     systemInstruction: expect.stringContaining('2-4 short prompt-only blocks separated by line breaks'),
                     safetySettings: [
@@ -1180,32 +1180,32 @@ describe('imageSavePlugin official conversation integration', () => {
                     ],
                     temperature: 0.35,
                 }),
-                contents: expect.stringContaining('Current prompt: a lone traveler in the rain'),
+                contents: expect.stringContaining('Original prompt to rewrite: "a lone traveler in the rain"'),
             }),
         );
         const randomCall = generateContentMock.mock.calls[1]?.[0];
 
         expect(randomCall).toEqual(
             expect.objectContaining({
-                model: 'gemini-3-flash-preview',
+                model: 'gemini-3.5-flash',
                 config: expect.objectContaining({
                     systemInstruction: expect.stringContaining(
                         'Treat the scaffold as structure only and invent every subject, environment, prop, mood, style blend, and twist yourself.',
                     ),
                     temperature: 0.7,
                 }),
-                contents: expect.stringContaining('Scaffold family A - cinematic subject tableau:'),
+                contents: expect.stringContaining('Generate a completely random and creative image prompt.'),
             }),
         );
         expect(String(randomCall?.contents || '')).not.toContain('Theme:');
-        expect(String(randomCall?.contents || '')).toContain('invent every bracketed value yourself');
+        expect(String(randomCall?.contents || '')).toContain('surprise the user with something unexpected');
 
         randomSpy.mockRestore();
     });
 
     it('registers the image-to-prompt route, forwards inline image content, and asks Gemini for the restored structured brief format', async () => {
         generateContentMock.mockResolvedValueOnce({
-            text: '場景概述\n一張全身棚拍人像立於鮮明純紅背景前，場景極簡、乾淨且高度聚焦主體，淺色地面與紅色背景牆在畫面中形成清楚的交界與平順過渡。整體 setup 帶有專業攝影棚與時尚視覺導向，空間元素被壓到最低，只保留足以支撐主體存在感的舞台式背景。\n\n主體與構圖\n單一女性主體站在垂直畫面的中央區域，採全身入鏡的正面構圖，雙腿大幅分開站穩，形成明確且有張力的下盤支撐。雙臂向下延伸並在身前交叉於手腕位置，雙手握拳，姿態對稱而俐落。頭部略微傾斜，視線直接朝向鏡頭，讓人物與觀看者之間建立正面、強勢的視覺連結。\n\n視覺細節\n人物深色頭髮整齊收攏至耳後，五官乾淨清楚，表情克制而自信。上身穿著白色鈕扣襯衫，領口略開，袖子捲至手肘附近，布料保持俐落挺度並在手臂與軀幹處出現自然摺線。頸部懸掛細藍色識別帶，下身是黑色短裙，搭配貼膚透膚絲襪與黑色尖頭高跟鞋；若識別證文字存在，也應保持保守處理，僅在清楚可辨時才描述。\n\n光線與色彩\n背景紅色高度飽和，並可能帶有由上方較深、中央較亮的細微亮度漸層。人物受光明亮而均勻，接近專業棚燈的正面主光配置，讓白襯衫、黑短裙與紅背景形成鮮明 color blocking。淺色地面承接主體腳下的柔和陰影，整體對比乾淨俐落，輪廓邊緣清楚。\n\n氛圍與風格\n畫面氛圍帶有現代、強勢、帶節奏感的時尚棚拍語氣，兼具表演感與 editorial fashion 視覺。美術方向極簡、當代、色塊鮮明，依靠姿態、剪影與高對比色彩建立張力。\n\n建議提示詞\nA full-body studio fashion portrait of a poised young East Asian woman standing in a strong wide-legged stance against a saturated solid red backdrop, centered in a vertical frame with her arms extended downward and crossed at the wrists, fists clenched, head slightly tilted, and direct eye contact. Crisp white button-down shirt with rolled sleeves, blue lanyard, short black mini skirt, sheer skin-toned hosiery, and black pointed high heels, clean silhouette, structured fabric folds, bright even studio lighting, soft shadow on a pale floor, subtle red backdrop gradient, bold red-white-black color blocking, minimalist editorial staging, modern assertive energy, polished contemporary fashion photography.',
+            text: 'A full-body studio fashion portrait of a poised young East Asian woman standing in a strong wide-legged stance against a saturated solid red backdrop, centered in a vertical frame. Crisp white button-down shirt with rolled sleeves, short black mini skirt, sheer skin-toned hosiery, and black pointed high heels, clean silhouette, structured fabric folds, bright even studio lighting, bold red-white-black color blocking, minimalist editorial staging, modern assertive energy, polished contemporary fashion photography.',
         });
 
         const { imageSavePlugin } = await import('../plugins/imageSavePlugin');
@@ -1232,32 +1232,28 @@ describe('imageSavePlugin official conversation integration', () => {
         });
 
         expect(response.status).toBe(200);
-        expect(response.body.text).toContain('場景概述');
-        expect(response.body.text).toContain('主體與構圖');
-        expect(response.body.text).toContain('建議提示詞');
-        expect(response.body.text).toContain('\n');
+        expect(response.body.text).toContain('studio fashion portrait');
+        expect(response.body.text).toContain('red backdrop');
+        expect(response.body.text).toContain('pointed high heels');
         expect(response.body.text).toContain('color blocking');
         const imageToPromptCall = generateContentMock.mock.calls[0]?.[0];
 
         expect(imageToPromptCall).toEqual(
             expect.objectContaining({
-                model: 'gemini-3-flash-preview',
+                model: 'gemini-3.5-flash',
                 config: expect.objectContaining({
                     systemInstruction: expect.stringContaining(
-                        'Output a plain-text multi-section brief in this exact order: Scene Overview, Subjects and Composition, Visual Details, Lighting and Color, Mood and Style, Final Prompt.',
+                        'convert it into a highly detailed, extremely accurate, and generation-ready image prompt',
                     ),
                     temperature: 0.25,
                 }),
             }),
         );
         expect(String(imageToPromptCall?.config?.systemInstruction || '')).toContain(
-            'In Scene Overview, establish the environment, overall scale, genre or era cues, and any visible creative twist that reframes the scene.',
+            'Output ONLY the final image-generation prompt text in Traditional Chinese.',
         );
         expect(String(imageToPromptCall?.config?.systemInstruction || '')).toContain(
-            'visible depth-of-field behavior, and any hidden details that are truly present on closer inspection.',
-        );
-        expect(String(imageToPromptCall?.config?.systemInstruction || '')).toContain(
-            'style fusion, and rendering finish.',
+            'Do NOT use any section headers, labels, bullets, lists, markdown, JSON, or conversational filler.',
         );
         expect(imageToPromptCall?.contents?.[0]).toEqual(
             expect.objectContaining({
@@ -1270,7 +1266,7 @@ describe('imageSavePlugin official conversation integration', () => {
         expect(imageToPromptCall?.contents?.[1]).toEqual(
             expect.objectContaining({
                 text: expect.stringContaining(
-                    'Analyze this image carefully and return a structured image-to-prompt brief in the requested UI language.',
+                    'Analyze this image carefully and generate a highly detailed, extremely accurate image prompt in the requested language describing it.',
                 ),
             }),
         );

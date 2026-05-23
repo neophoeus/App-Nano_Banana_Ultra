@@ -52,37 +52,12 @@ describe('buildImageToPromptInstruction', () => {
         const instruction = buildImageToPromptInstruction('zh_TW');
 
         expect(instruction).toContain('Traditional Chinese');
-        expect(instruction).toContain('Output every section heading, body sentence, and final prompt in Traditional Chinese.');
-        expect(instruction).toContain('Do NOT drift into English or mixed language unless the requested language is English.');
-        expect(instruction).toContain(
-            'Output a plain-text multi-section brief in this exact order: Scene Overview, Subjects and Composition, Visual Details, Lighting and Color, Mood and Style, Final Prompt.',
-        );
-        expect(instruction).toContain('Use naturally translated section headings and body text in Traditional Chinese.');
-        expect(instruction).toContain('Each section must contain concrete visual evidence from the image');
-        expect(instruction).toContain(
-            'If a requested detail is uncertain or only weakly supported, say it is unclear, subtle, likely, or not significant rather than presenting it as certain.',
-        );
-        expect(instruction).toContain('If text in the image is unreadable, describe it as illegible rather than guessing.');
-        expect(instruction).toContain(
-            'In Scene Overview, establish the environment, overall scale, genre or era cues, and any visible creative twist that reframes the scene.',
-        );
-        expect(instruction).toContain(
-            'In Subjects and Composition, identify the main subject first, then secondary subjects or supporting figures if present; describe visual hierarchy, composition structure, and the visible camera angle or lens feel.',
-        );
-        expect(instruction).toContain(
-            'In Visual Details, describe secondary elements, materials, textures, micro-details, visible depth-of-field behavior, and any hidden details that are truly present on closer inspection.',
-        );
-        expect(instruction).toContain(
-            'In Lighting and Color, describe light source behavior, shadow character, atmospheric depth, palette logic, color temperature, and dominant or accent colors.',
-        );
-        expect(instruction).toContain(
-            'In Mood and Style, describe the emotional tone, style fusion, and rendering finish.',
-        );
-        expect(instruction).toContain('one polished generation-ready prompt paragraph');
-        expect(instruction).toContain('Do NOT use markdown code fences, JSON, bullet lists, quotes, or conversational filler.');
-        expect(instruction).not.toContain('Output only final image-generation prompt text');
-        expect(instruction).not.toContain('Use exactly these section headings');
-        expect(instruction).not.toContain('without mentioning uncertainty');
+        expect(instruction).toContain('Output ONLY the final image-generation prompt text in Traditional Chinese.');
+        expect(instruction).toContain('Do NOT use any section headers, labels, bullets, lists, markdown, JSON, or conversational filler.');
+        expect(instruction).toContain('Do NOT drift into English or mix languages unless the requested language is English.');
+        expect(instruction).toContain('Describe only details that are literally visible or strongly supported by the image. Avoid guesswork, speculation, or hallucinated elements.');
+        expect(instruction).toContain('Capture all critical visual aspects: subject identity, precise action, poses, expressions, clothing, environment/background details, lighting quality (source, color, shadows), color palette, composition angle, and overall mood and style.');
+        expect(instruction).toContain('Ensure the output flows naturally as one or two dense descriptive paragraphs.');
         expect(instruction).not.toContain('{...};');
     });
 });
@@ -102,10 +77,10 @@ describe('buildRandomPromptRequest', () => {
         const request = buildRandomPromptRequest();
 
         expect(request).toContain('Use this scaffold family as invisible structure only and invent every bracketed value yourself.');
-        expect(request).toContain('Scaffold family A - cinematic subject tableau:');
-        expect(request).toContain('[central subject identity and silhouette]');
-        expect(request).toContain('Do not output headings, bullets, brackets, placeholder names, or commentary.');
-        expect(request).not.toContain('Theme:');
+        expect(request).toContain('Generate a completely random and creative image prompt.');
+        expect(request).toContain('Be unpredictable — surprise the user with something unexpected.');
+        expect(request).toContain('Return ONLY the image prompt, nothing else.');
+        expect(request).not.toContain('Scaffold family A - cinematic subject');
 
         randomSpy.mockRestore();
     });

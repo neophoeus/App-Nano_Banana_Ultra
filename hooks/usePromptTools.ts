@@ -88,6 +88,7 @@ export function usePromptTools({
             addLog(t('logRandomOk'));
         } catch (e) {
             console.error(e);
+            showNotification(t('logRandomFailed'), 'error');
             addLog(t('logRandomFailed'));
         } finally {
             setIsEnhancingPrompt(false);

@@ -1,5 +1,21 @@
 # Changelog
 
+## v3.10.2 - 2026-05-23
+
+- Release title: Nano Banana Ultra 3.10.2 - Gemini 3.5 Flash Model Upgrade
+- Release summary:
+    - Gemini model upgraded to 3.5 Flash:
+        - upgraded prompt enhancement, random generation, and image-to-prompt routes from the old preview model `gemini-3-flash-preview` to the official `gemini-3.5-flash` model
+        - upgraded safety content analysis tool (`identifyBlockKeywords`) to use the official `gemini-3.5-flash` model
+        - updated integration test suites and assertions to verify payload structures against the updated `gemini-3.5-flash` model
+
+    - Prompt tools logic enhancements:
+        - added missing error toast notification (`showNotification`) inside the `handleSurpriseMe` catch block in the prompt tools hook to align error feedback with other tools
+        - de-structured the image-to-prompt output: updated `buildImageToPromptInstruction` and route contents to request a highly detailed, extremely accurate pure prompt instead of a structured multi-section brief, eliminating headings that polluted the image generator
+        - redesigned the random prompt scaffolds into a 3-tier hybrid strategy: completely open-ended random generation, a semi-structured template framework, and an "anti-common-sense" pairing strategy to maximize surprise and variance
+        - simplified outbound route content payloads for prompt enhancement and image-to-prompt to remove rules redundancy and prevent system instruction clashes (saving token usage and avoiding hallucination)
+        - added style sensitivity rules inside prompt enhancer and random generator system instructions to preserve and enhance non-photorealistic art styles (such as Anime, vector art, watercolor, flat design) instead of injecting realistic photo camera tags (4k lens, cinematic lighting, realistic texture)
+
 ## v3.10.1 - 2026-05-21
 
 - Release title: Nano Banana Ultra 3.10.1 - Workspace Reset Terminal Sync Clear
