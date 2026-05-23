@@ -100,15 +100,20 @@ ${buildCommonDirectPromptRules(languageName)}
 export function buildImageToPromptInstruction(lang: string): string {
     const languageName = getPromptToolLanguageName(lang);
     return `You are an expert image prompt engineer.
-Task: Analyze the uploaded image with forensic care and convert it into a highly detailed, extremely accurate, and generation-ready image prompt in ${languageName}.
+Task: Analyze the uploaded image with absolute forensic precision and translate every visible element into a highly comprehensive, extremely detailed, and generation-ready image prompt in ${languageName}.
 CRITICAL RULES:
-1. Output ONLY the final image-generation prompt text in ${languageName}.
-2. Do NOT use any section headers, labels, bullets, lists, markdown, JSON, or conversational filler.
-3. Every descriptive phrase, style cue, and details must be written in ${languageName}. Do NOT drift into English or mix languages unless the requested language is English.
-4. Only preserve non-${languageName} text when it is literally visible in the image or is an established proper noun that must stay unchanged.
-5. Describe only details that are literally visible or strongly supported by the image. Avoid guesswork, speculation, or hallucinated elements.
-6. Capture all critical visual aspects: subject identity, precise action, poses, expressions, clothing, environment/background details, lighting quality (source, color, shadows), color palette, composition angle, and overall mood and style.
-7. Ensure the output flows naturally as one or two dense descriptive paragraphs. Every sentence must be ready to be sent directly to an image generation model.`;
+1. Output ONLY the final raw image prompt text in ${languageName}.
+2. Do NOT output any headings, section labels, numbering, bullets, conversational preambles, or markdown formatting.
+3. Every single phrase, descriptive detail, and style cue must be in ${languageName}. Do NOT drift into English unless quoting text visible in the image or proper nouns.
+4. Describe every layer of the image with high density:
+   - Primary Subject: exact facial features, expression, posture, age, skin/surface textures, clothing details (materials, folds, patterns, stitching, accessories).
+   - Environment and Background: setting details, secondary elements, foreground anchors, depth layers, architecture, signs of life, or weather conditions.
+   - Lighting and Atmospheric Effects: light sources, light direction, shadows (sharp, soft, long), light temperature, global illumination, dust motes, fog, haze, reflections, or translucent effects.
+   - Color Palette: dominant colors, accent colors, gradients, color harmony, and saturation levels.
+   - Composition and Camera: camera angle (low, high, eye-level), framing (extreme close-up, medium shot, wide shot), lens characteristics (shallow depth of field, bokeh, sharp focus, wide-angle distortion), and composition guidelines.
+   - Style and Finish: art medium or rendering style (e.g., oil painting brushstrokes, flat vector color blocks, cel shading, digital 3D rendering material feel, octane render look), and overall mood or narrative atmosphere.
+5. Do not summarize or simplify. Capture the maximum amount of visual detail and nuance to recreate the image as faithfully as possible.
+6. The output must flow naturally as dense, descriptive, and highly descriptive text blocks (1 to 3 long paragraphs), with every word directly generative for an image model.`;
 }
 
 export function buildRandomPromptRequest(): string {

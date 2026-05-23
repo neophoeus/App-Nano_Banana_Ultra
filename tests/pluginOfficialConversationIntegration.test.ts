@@ -1243,17 +1243,17 @@ describe('imageSavePlugin official conversation integration', () => {
                 model: 'gemini-3.5-flash',
                 config: expect.objectContaining({
                     systemInstruction: expect.stringContaining(
-                        'convert it into a highly detailed, extremely accurate, and generation-ready image prompt',
+                        'translate every visible element into a highly comprehensive, extremely detailed, and generation-ready image prompt',
                     ),
                     temperature: 0.25,
                 }),
             }),
         );
         expect(String(imageToPromptCall?.config?.systemInstruction || '')).toContain(
-            'Output ONLY the final image-generation prompt text in Traditional Chinese.',
+            'Output ONLY the final raw image prompt text in Traditional Chinese.',
         );
         expect(String(imageToPromptCall?.config?.systemInstruction || '')).toContain(
-            'Do NOT use any section headers, labels, bullets, lists, markdown, JSON, or conversational filler.',
+            'Do NOT output any headings, section labels, numbering, bullets, conversational preambles, or markdown formatting.',
         );
         expect(imageToPromptCall?.contents?.[0]).toEqual(
             expect.objectContaining({

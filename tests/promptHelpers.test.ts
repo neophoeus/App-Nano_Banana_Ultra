@@ -52,12 +52,12 @@ describe('buildImageToPromptInstruction', () => {
         const instruction = buildImageToPromptInstruction('zh_TW');
 
         expect(instruction).toContain('Traditional Chinese');
-        expect(instruction).toContain('Output ONLY the final image-generation prompt text in Traditional Chinese.');
-        expect(instruction).toContain('Do NOT use any section headers, labels, bullets, lists, markdown, JSON, or conversational filler.');
-        expect(instruction).toContain('Do NOT drift into English or mix languages unless the requested language is English.');
-        expect(instruction).toContain('Describe only details that are literally visible or strongly supported by the image. Avoid guesswork, speculation, or hallucinated elements.');
-        expect(instruction).toContain('Capture all critical visual aspects: subject identity, precise action, poses, expressions, clothing, environment/background details, lighting quality (source, color, shadows), color palette, composition angle, and overall mood and style.');
-        expect(instruction).toContain('Ensure the output flows naturally as one or two dense descriptive paragraphs.');
+        expect(instruction).toContain('Output ONLY the final raw image prompt text in Traditional Chinese.');
+        expect(instruction).toContain('Do NOT output any headings, section labels, numbering, bullets, conversational preambles, or markdown formatting.');
+        expect(instruction).toContain('Every single phrase, descriptive detail, and style cue must be in Traditional Chinese.');
+        expect(instruction).toContain('Describe every layer of the image with high density:');
+        expect(instruction).toContain('Primary Subject: exact facial features, expression, posture, age, skin/surface textures, clothing details');
+        expect(instruction).toContain('The output must flow naturally as dense, descriptive, and highly descriptive text blocks (1 to 3 long paragraphs)');
         expect(instruction).not.toContain('{...};');
     });
 });
