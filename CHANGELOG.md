@@ -1,5 +1,13 @@
 # Changelog
 
+## v3.10.3 - 2026-05-25
+
+- Release title: Nano Banana Ultra 3.10.3 - Image to Prompt Forensic Precision & First Switch Language Fix
+- Release summary:
+    - Enhanced the "Image to Prompt" feature detail resolution by incorporating a strict Visual Forensic Protocol in the system instructions to explicitly extract subject expressions, fabric/surface textures, multi-layer background elements, precise color hues, camera focus, and rendering properties.
+    - Micro-adjusted the generation temperature to 0.3, enhanced the user prompt for forensic-level details, and updated the integration test suites.
+    - Fixed a language switch bug where the "Image to Prompt" (Image-to-Prompt) tool would still generate English prompts on the first language switch. Wrapped `onImageToPrompt` with an arrow function to ensure it dynamically resolves to the latest handler reference instead of capturing a stale reference.
+
 ## v3.10.2 - 2026-05-23
 
 - Release title: Nano Banana Ultra 3.10.2 - Gemini 3.5 Flash Model Upgrade

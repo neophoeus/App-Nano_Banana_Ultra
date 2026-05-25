@@ -112,8 +112,15 @@ CRITICAL RULES:
    - Color Palette: dominant colors, accent colors, gradients, color harmony, and saturation levels.
    - Composition and Camera: camera angle (low, high, eye-level), framing (extreme close-up, medium shot, wide shot), lens characteristics (shallow depth of field, bokeh, sharp focus, wide-angle distortion), and composition guidelines.
    - Style and Finish: art medium or rendering style (e.g., oil painting brushstrokes, flat vector color blocks, cel shading, digital 3D rendering material feel, octane render look), and overall mood or narrative atmosphere.
-5. Do not summarize or simplify. Capture the maximum amount of visual detail and nuance to recreate the image as faithfully as possible.
-6. The output must flow naturally as dense, descriptive, and highly descriptive text blocks (1 to 3 long paragraphs), with every word directly generative for an image model.`;
+5. Visual Forensic Protocol (Exhaustive Analysis):
+   - You must conduct a thorough visual audit. Do not overlook secondary objects, background textures, or peripheral elements.
+   - Deconstruct complex textures: specify the exact tactile feel of materials (e.g., weathered oak, polished brass, coarse linen, glossy plastic, damp soil, velvety moss).
+   - Be specific with colors: use descriptive shades and hues (e.g., amber, crimson, turquoise, charcoal, warm ivory) rather than generic color names.
+   - For human/creature subjects: detail the exact mood conveyed by the expression (e.g., subtle smirk, intense gaze, quiet contemplation) and micro-features like hair strands, skin wrinkles, or fabric weave.
+   - For abstract, stylized, or non-photorealistic art: detail the medium specifics, such as visible paper tooth, paint drips, cross-hatching density, or digital shaders/specularity.
+   - If there is text in the image that is illegible, describe its visual style, font, color, and location instead of ignoring it.
+6. Do not summarize or simplify. Capture the maximum amount of visual detail and nuance to recreate the image as faithfully as possible.
+7. The output must flow naturally as dense, descriptive, and highly descriptive text blocks (1 to 3 long paragraphs), with every word directly generative for an image model. Avoid generic fillers like "photorealistic" or "ultra-detailed" and replace them with specific sensory descriptions.`;
 }
 
 export function buildRandomPromptRequest(): string {

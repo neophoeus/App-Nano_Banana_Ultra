@@ -392,26 +392,22 @@ const App: React.FC = () => {
             const requestId = languageChangeRequestRef.current + 1;
             languageChangeRequestRef.current = requestId;
 
+            // 立即同步更新語言狀態，確保重寫與圖轉提示詞工具能立即以最新語言發送 API 請求
+            setCurrentLang(nextLanguage);
+
             if (isLanguageLoaded(nextLanguage)) {
-                setCurrentLang(nextLanguage);
                 return;
             }
 
-            void ensureLanguageLoaded(nextLanguage)
-                .then(() => {
-                    if (languageChangeRequestRef.current !== requestId) {
-                        return;
-                    }
+            void ensureLanguageLoaded(nextLanguage).catch((error) => {
+                if (languageChangeRequestRef.current === requestId) {
+                    // 若加載翻譯失敗，回滾到原本的語言狀態
+                    setCurrentLang(currentLang);
+                    persistLanguagePreference(currentLang);
+                }
 
-                    setCurrentLang(nextLanguage);
-                })
-                .catch((error) => {
-                    if (languageChangeRequestRef.current === requestId) {
-                        persistLanguagePreference(currentLang);
-                    }
-
-                    console.error(`Failed to load translations for ${nextLanguage}.`, error);
-                });
+                console.error(`Failed to load translations for ${nextLanguage}.`, error);
+            });
         },
         [currentLang],
     );

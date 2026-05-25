@@ -1245,7 +1245,7 @@ describe('imageSavePlugin official conversation integration', () => {
                     systemInstruction: expect.stringContaining(
                         'translate every visible element into a highly comprehensive, extremely detailed, and generation-ready image prompt',
                     ),
-                    temperature: 0.25,
+                    temperature: 0.3,
                 }),
             }),
         );
