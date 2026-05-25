@@ -16,6 +16,7 @@ type UseWorkspaceAppLifecycleArgs = {
     historyCount: number;
     generatedImageCount: number;
     orderedReferenceAssets: StageAsset[];
+    hasDraftPrompt: boolean;
     aspectRatio: AspectRatio;
     setApiKeyReady: Dispatch<SetStateAction<boolean>>;
     setCurrentLang: Dispatch<SetStateAction<Language>>;
@@ -30,6 +31,7 @@ export function useWorkspaceAppLifecycle({
     historyCount,
     generatedImageCount,
     orderedReferenceAssets,
+    hasDraftPrompt,
     aspectRatio,
     setApiKeyReady,
     setCurrentLang,
@@ -40,12 +42,21 @@ export function useWorkspaceAppLifecycle({
     t,
 }: UseWorkspaceAppLifecycleArgs) {
     const hasDataRef = useRef(false);
+    const beforeUnloadMessageRef = useRef('');
     const leadingReferenceKeyRef = useRef<string | null>(null);
     const currentAspectRatioRef = useRef<AspectRatio>(aspectRatio);
 
     useEffect(() => {
-        hasDataRef.current = historyCount > 0 || generatedImageCount > 0;
-    }, [generatedImageCount, historyCount]);
+        hasDataRef.current =
+            historyCount > 0 ||
+            generatedImageCount > 0 ||
+            orderedReferenceAssets.length > 0 ||
+            hasDraftPrompt;
+    }, [generatedImageCount, hasDraftPrompt, historyCount, orderedReferenceAssets.length]);
+
+    useEffect(() => {
+        beforeUnloadMessageRef.current = t('windowCloseWarningMsg');
+    }, [t]);
 
     useEffect(() => {
         currentAspectRatioRef.current = aspectRatio;
@@ -94,9 +105,10 @@ export function useWorkspaceAppLifecycle({
 
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
             if (hasDataRef.current) {
+                const warningMessage = beforeUnloadMessageRef.current;
                 e.preventDefault();
-                e.returnValue = '';
-                return '';
+                e.returnValue = warningMessage;
+                return warningMessage;
             }
 
             return undefined;

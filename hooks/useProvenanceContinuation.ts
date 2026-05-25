@@ -134,11 +134,24 @@ export function useProvenanceContinuation({
     );
 
     useEffect(() => {
-        if (isGenerating || generatedImageCount === 0 || history.length === 0) {
+        if (isGenerating || history.length === 0) {
             return;
         }
 
-        const latestSuccessful = history.find((item) => item.status === 'success');
+        const latestSuccessful = history.reduce<GeneratedImage | null>(
+            (latestItem, item) => {
+                if (item.status !== 'success') {
+                    return latestItem;
+                }
+
+                if (!latestItem || item.createdAt >= latestItem.createdAt) {
+                    return item;
+                }
+
+                return latestItem;
+            },
+            null,
+        );
         if (!latestSuccessful) {
             return;
         }
@@ -207,7 +220,7 @@ export function useProvenanceContinuation({
             mode: mergedArtifacts.grounding ? (shouldInheritProvenance ? 'inherited' : 'live') : null,
             sourceHistoryId: pendingProvenanceContext?.sourceHistoryId ?? mergedArtifacts.historyId ?? null,
             sessionSourceHistoryId: shouldPromoteContinuationSource
-                ? (pendingProvenanceContext?.sourceHistoryId ?? mergedArtifacts.historyId ?? null)
+                ? latestSuccessful.id
                 : null,
             sourceLineageAction: shouldPromoteContinuationSource ? 'continue' : null,
             conversationId: latestSuccessful.conversationId,

@@ -275,8 +275,7 @@ describe('official conversation request path', () => {
         expect(requestBody.prompt).toBe(
             buildStyleAwareImagePrompt({
                 prompt: 'Create a calm bookstore reading nook',
-                aspectRatio: '1:1',
-                imageSize: '1K',
+                size: '1K',
                 style: 'Digital Illustration',
                 model: 'gemini-3.1-flash-image-preview',
                 outputFormat: 'images-only',
@@ -286,7 +285,7 @@ describe('official conversation request path', () => {
                 googleSearch: false,
                 imageSearch: false,
                 executionMode: 'single-turn',
-            }),
+            } as any),
         );
     });
 

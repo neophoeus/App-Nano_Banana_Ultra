@@ -49,13 +49,11 @@ function HookHarness({ currentLanguage, stickySendIntent, getStageOriginLabel, g
         temperature: 1,
         isAdvancedSettingsOpen: false,
         generateLabel: 'Generate',
-        queuedJobs: [],
         isQueueBatchDisabled: true,
         queueBatchDisabledReason: 'Queued edits are disabled.',
         queueBatchModeSummary: 'Queue summary',
         queueBatchGenerateModeSummary: 'Queue generate summary',
         queueBatchConversationNotice: null,
-        getImportedQueuedResultCount: () => 0,
         promptTextareaRef,
         setPrompt: vi.fn(),
         setStickySendIntent: vi.fn() as any,
@@ -75,7 +73,7 @@ function HookHarness({ currentLanguage, stickySendIntent, getStageOriginLabel, g
         t,
         getStageOriginLabel,
         getLineageActionLabel,
-    });
+    } as any);
 
     return (
         <>

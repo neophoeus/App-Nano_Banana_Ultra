@@ -186,9 +186,7 @@ describe('useHistoryPresentationHelpers', () => {
             mode: 'Remix',
         });
 
-        let summaryStripProps: ReturnType<
-            ReturnType<typeof useHistoryPresentationHelpers>['buildSelectedItemSummaryStripProps']
-        > | null = null;
+        let summaryStripProps: any = null;
 
         const TestView = () => {
             const { buildSelectedItemSummaryStripProps } = useHistoryPresentationHelpers({
@@ -236,7 +234,7 @@ describe('useHistoryPresentationHelpers', () => {
 
         renderToStaticMarkup(<TestView />);
 
-        expect(summaryStripProps?.chips.map((chip) => chip.key)).toEqual([
+        expect(summaryStripProps?.chips.map((chip: any) => chip.key)).toEqual([
             'failed',
             'stage-source',
             'continuation-source',
@@ -249,8 +247,8 @@ describe('useHistoryPresentationHelpers', () => {
             'mode',
             'created-at',
         ]);
-        expect(summaryStripProps?.chips.find((chip) => chip.key === 'model')?.label).toBe('Banana 2');
-        expect(summaryStripProps?.chips.find((chip) => chip.key === 'queued-batch-position')?.label).toBe('#2/2');
+        expect(summaryStripProps?.chips.find((chip: any) => chip.key === 'model')?.label).toBe('Banana 2');
+        expect(summaryStripProps?.chips.find((chip: any) => chip.key === 'queued-batch-position')?.label).toBe('#2/2');
     });
 
     it('builds the selected-item summary strip state matrix for standard, stage, continuation, and aligned source turns', () => {

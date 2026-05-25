@@ -29,14 +29,14 @@ function PromptSheetHarness({ initialPrompt = 'Committed prompt' }: { initialPro
                 closePickerSheet={() => setActivePickerSheet(null)}
                 currentLanguage="en"
                 t={t}
-                imageStyle="none"
+                imageStyle="None"
                 setImageStyle={vi.fn()}
                 imageModel="gemini-3.1-flash-image-preview"
                 setImageModel={vi.fn()}
                 capability={MODEL_CAPABILITIES['gemini-3.1-flash-image-preview']}
                 aspectRatio="1:1"
                 setAspectRatio={vi.fn()}
-                imageSize="1024x1024"
+                imageSize="1K"
                 setImageSize={vi.fn()}
                 batchSize={1}
                 setBatchSize={vi.fn()}

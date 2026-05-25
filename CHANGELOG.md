@@ -1,5 +1,14 @@
 # Changelog
 
+## v3.10.4 - 2026-05-25
+
+- Release title: Nano Banana Ultra 3.10.4 - Lite Feature Synchronization, App.tsx Code Fixes & Comprehensive Test Resolutions
+- Release summary:
+    - Synchronized key optimizations from the Lite version to ensure robustness. This includes a robust history continuation logic using `history.reduce` based on `createdAt` (independent of array order), and an extended window unload warning to guard draft prompt status and ungenerated reference assets.
+    - Wrapped stage generation callbacks with stable hooks in `App.tsx` to prevent downstream `WorkspaceStageViewer` re-renders and optimize UI performance.
+    - Fixed 5 critical TypeScript compiler warnings and errors in `App.tsx`, resolving `ResultPart` type narrowing (distinguishing `ResultTextPart` and `ResultImagePart`), `searchEntryPointRenderedContent` argument conversions, `ImageEditor` error bindings (`error?.summary`), and `setGroundingMode` signature mismatch.
+    - Fully resolved all TypeScript compile errors and runtime test failures inside the `tests/` directory (including `useGroundingProvenanceView`, `useLegacyWorkspaceSnapshotMigration`, `debugTerminalEvents`, `LazyHistoryImage`, `SketchPad`, `officialConversationRequest`, `queuedBatchRequest`, `useComposerSettingsPanelProps`, `useWorkspaceOverlayAuxiliaryProps`, `QueuedBatchJobsPanel`, and `GroundingProvenancePanel`), achieving a 100% test pass rate with 882/882 tests passing successfully.
+
 ## v3.10.3 - 2026-05-25
 
 - Release title: Nano Banana Ultra 3.10.3 - Image to Prompt Forensic Precision & First Switch Language Fix

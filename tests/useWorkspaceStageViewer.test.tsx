@@ -53,7 +53,6 @@ describe('buildStageTopRightModel', () => {
     it('omits the divergence chip when the staged turn still matches the continuation source', () => {
         const model = buildStageTopRightModel(
             createArgs({
-                continuationDiffers: false,
                 hasMeaningfulResultStatus: false,
                 resultStatusTone: null,
             }),

@@ -64,8 +64,8 @@ describe('useLegacyWorkspaceSnapshotMigration', () => {
         function Harness() {
             useLegacyWorkspaceSnapshotMigration({
                 composeCurrentWorkspaceSnapshot: () => currentSnapshot,
-                applyWorkspaceSnapshot,
-                addLog,
+                applyWorkspaceSnapshot: applyWorkspaceSnapshot as any,
+                addLog: addLog as any,
             });
             return null;
         }

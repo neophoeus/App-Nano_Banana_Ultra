@@ -18,7 +18,7 @@ const renderEditor = ({
     onPromptChange?: ReturnType<typeof vi.fn>;
     leftDockTopOffset?: number | null;
     root: Root;
-} = {}) => {
+}) => {
     act(() => {
         root.render(
             <ImageEditor
@@ -30,7 +30,7 @@ const renderEditor = ({
                 initialSize="1K"
                 initialBatchSize={1}
                 prompt={prompt}
-                onPromptChange={onPromptChange}
+                onPromptChange={onPromptChange as any}
                 objectImages={['object-b']}
                 onObjectImagesChange={vi.fn()}
                 characterImages={['character-b']}

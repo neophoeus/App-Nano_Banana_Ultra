@@ -20,7 +20,6 @@ describe('GeneratedImage', () => {
                     aspectRatio: '1:1',
                     size: '4K',
                     style: 'None',
-                    model: 'gemini-3.1-flash-image-preview',
                     batchSize: 1,
                 }}
                 generationMode="Text to Image"
@@ -28,7 +27,7 @@ describe('GeneratedImage', () => {
                 onGenerate={() => {}}
                 stageTopRight={{
                     contextChips: [
-                        { key: 'stage-source', label: 'Stage source', tone: 'source' },
+                        { key: 'current-source', label: 'Stage source', tone: 'source' },
                         { key: 'branch', label: 'Main', tone: 'branch' },
                         { key: 'continuation-differs', label: 'Continuation differs', tone: 'divergence' },
                         { key: 'result-status', label: 'Grounded result', tone: 'warning' },
@@ -82,7 +81,7 @@ describe('GeneratedImage', () => {
         const visibleText = getVisibleText(markup);
 
         expect(markup).toContain('stage-top-right-cluster');
-        expect(markup).toContain('stage-top-right-chip-stage-source');
+        expect(markup).toContain('stage-top-right-chip-current-source');
         expect(markup).toContain('stage-top-right-chip-branch');
         expect(markup).toContain('stage-top-right-chip-continuation-differs');
         expect(markup).toContain('stage-top-right-chip-result-status');
@@ -94,7 +93,7 @@ describe('GeneratedImage', () => {
         expect(markup).toContain('stage-top-right-overflow-action-add-character-reference');
         expect(markup).toContain('stage-top-right-overflow-action-branch-from-here');
         expect(markup).toContain('stage-top-right-overflow-action-clear');
-        expect(getTestIdIndex(markup, 'stage-top-right-chip-stage-source')).toBeLessThan(
+        expect(getTestIdIndex(markup, 'stage-top-right-chip-current-source')).toBeLessThan(
             getTestIdIndex(markup, 'stage-top-right-chip-branch'),
         );
         expect(getTestIdIndex(markup, 'stage-top-right-chip-branch')).toBeLessThan(
@@ -140,7 +139,6 @@ describe('GeneratedImage', () => {
                     aspectRatio: '1:1',
                     size: '1K',
                     style: 'None',
-                    model: 'gemini-3.1-flash-image-preview',
                     batchSize: 1,
                 }}
                 generationMode="Text to Image"
@@ -215,7 +213,7 @@ describe('GeneratedImage', () => {
                 onGenerate={() => {}}
                 stageTopRight={{
                     contextChips: [
-                        { key: 'stage-source', label: 'Stage source', tone: 'source' },
+                        { key: 'current-source', label: 'Stage source', tone: 'source' },
                         { key: 'origin', label: 'Upload', tone: 'warning' },
                         { key: 'branch', label: 'Main', tone: 'branch' },
                         { key: 'continuation-differs', label: 'Continuation differs', tone: 'divergence' },
@@ -250,7 +248,7 @@ describe('GeneratedImage', () => {
                 onGenerate={() => {}}
                 currentLanguage="en"
                 stageTopRight={{
-                    contextChips: [{ key: 'stage-source', label: 'Stage source', tone: 'source' }],
+                    contextChips: [{ key: 'current-source', label: 'Stage source', tone: 'source' }],
                     visibleActions: [
                         {
                             key: 'continue-from-here',
@@ -305,7 +303,6 @@ describe('GeneratedImage', () => {
                     aspectRatio: '1:1',
                     size: '1K',
                     style: 'None',
-                    model: 'gemini-3.1-flash-image-preview',
                     batchSize: 1,
                 }}
                 generationMode="Text to Image"
@@ -313,7 +310,7 @@ describe('GeneratedImage', () => {
                 onGenerate={() => {}}
                 stageTopRight={{
                     contextChips: [
-                        { key: 'stage-source', label: 'Stage source', tone: 'source' },
+                        { key: 'current-source', label: 'Stage source', tone: 'source' },
                         { key: 'branch', label: 'Main', tone: 'branch' },
                     ],
                     overflowContextChips: [],
@@ -324,7 +321,7 @@ describe('GeneratedImage', () => {
         );
 
         expect(markup).toContain('stage-top-right-context-row');
-        expect(markup).toContain('stage-top-right-chip-stage-source');
+        expect(markup).toContain('stage-top-right-chip-current-source');
         expect(markup).toContain('stage-top-right-chip-branch');
         expect(markup).toContain('stage-top-right-action-generating');
         expect(markup).not.toContain('stage-top-right-overflow');
@@ -351,7 +348,6 @@ describe('GeneratedImage', () => {
                     aspectRatio: '1:1',
                     size: '1K',
                     style: 'None',
-                    model: 'gemini-3.1-flash-image-preview',
                     batchSize: 1,
                 }}
                 generationMode="Text to Image"
@@ -359,7 +355,7 @@ describe('GeneratedImage', () => {
                 onGenerate={() => {}}
                 stageTopRight={{
                     contextChips: [
-                        { key: 'stage-source', label: 'Stage source', tone: 'source' },
+                        { key: 'current-source', label: 'Stage source', tone: 'source' },
                         { key: 'branch', label: 'Main', tone: 'branch' },
                         { key: 'continuation-differs', label: 'Continuation differs', tone: 'divergence' },
                     ],
@@ -397,7 +393,7 @@ describe('GeneratedImage', () => {
             />,
         );
 
-        expect(markup).toContain('stage-top-right-chip-stage-source');
+        expect(markup).toContain('stage-top-right-chip-current-source');
         expect(markup).toContain('stage-top-right-chip-branch');
         expect(markup).toContain('stage-top-right-chip-continuation-differs');
         expect(markup).not.toContain('data-testid="stage-top-right-chip-result-status"');
@@ -419,7 +415,6 @@ describe('GeneratedImage', () => {
                     aspectRatio: '3:4',
                     size: '1K',
                     style: 'None',
-                    model: 'gemini-3.1-flash-image-preview',
                     batchSize: 1,
                 }}
                 generationMode="Text to Image"

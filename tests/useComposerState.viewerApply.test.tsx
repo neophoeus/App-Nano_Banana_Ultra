@@ -33,9 +33,9 @@ describe('useComposerState viewer apply', () => {
                 },
                 generationMode: 'Text to Image',
                 executionMode: 'single-turn',
-                setGenerationMode,
-                setExecutionMode,
-                setDisplaySettings,
+                setGenerationMode: setGenerationMode as any,
+                setExecutionMode: setExecutionMode as any,
+                setDisplaySettings: setDisplaySettings as any,
             });
 
             return null;

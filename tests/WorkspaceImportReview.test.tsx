@@ -45,9 +45,11 @@ describe('WorkspaceImportReview', () => {
                         autoBranchLabel: 'Main',
                         rootId: 'root-1',
                         turnCount: 1,
-                        updatedAt: '2026-03-17T10:00:00.000Z',
+                        createdAt: 1710400000000,
+                        updatedAt: 1710400000000,
                         originTurn: latestTurn,
                         latestTurn,
+                        turns: [latestTurn],
                     },
                 ]}
                 importedLatestTurn={latestTurn}

@@ -38,7 +38,7 @@ type UseWorkspaceSettingsSessionArgs = {
     setOutputFormat: Dispatch<SetStateAction<OutputFormat>>;
     setTemperature: Dispatch<SetStateAction<number>>;
     setThinkingLevel: Dispatch<SetStateAction<ThinkingLevel>>;
-    setGroundingMode: Dispatch<SetStateAction<GroundingMode>>;
+    setGroundingMode: (mode: GroundingMode) => void;
     setSafetyThresholds: Dispatch<SetStateAction<SafetyThresholds>>;
     showNotification: (message: string, type?: 'info' | 'error') => void;
     t: (key: string) => string;

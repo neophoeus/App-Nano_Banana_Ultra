@@ -73,12 +73,12 @@ describe('debugTerminalEvents', () => {
     });
 
     it('emits sanitized events with correlation metadata to subscribers', () => {
-        let receivedEvent: ReturnType<typeof emitDebugTerminalEvent> | null = null;
+        let receivedEvent: any = null;
         const unsubscribe = subscribeDebugTerminalEvents((event) => {
             receivedEvent = event;
         });
 
-        const emittedEvent = emitDebugTerminalEvent({
+        const emittedEvent: any = emitDebugTerminalEvent({
             kind: 'request',
             label: 'Request prepared',
             source: 'generation',

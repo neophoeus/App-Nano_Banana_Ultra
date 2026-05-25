@@ -144,7 +144,7 @@ describe('useQueuedBatchWorkflow', () => {
                         parentHistoryId: 'parent-turn-1',
                         rootHistoryId: 'root-turn-1',
                         sourceHistoryId: 'source-turn-1',
-                        lineageAction: 'continue',
+                        lineageAction: 'continue' as const,
                         lineageDepth: 1,
                     })),
                 addLog: overrides.addLog ?? ((message) => logs.push(message)),
@@ -292,7 +292,7 @@ describe('useQueuedBatchWorkflow', () => {
             parentHistoryId: sourceOverride?.sourceHistoryId || 'parent-turn-1',
             rootHistoryId: sourceOverride?.sourceHistoryId || 'root-turn-1',
             sourceHistoryId: sourceOverride?.sourceHistoryId || 'source-turn-1',
-            lineageAction: sourceOverride?.sourceLineageAction === 'branch' ? 'branch' : 'continue',
+            lineageAction: (sourceOverride?.sourceLineageAction === 'branch' ? 'branch' : 'continue') as any,
             lineageDepth: 2,
         }));
         const sourceOverride = {
@@ -430,7 +430,7 @@ describe('useQueuedBatchWorkflow', () => {
             parentHistoryId: 'parent-turn-1',
             rootHistoryId: 'root-turn-1',
             sourceHistoryId: 'source-turn-1',
-            lineageAction: 'continue',
+            lineageAction: 'continue' as const,
             lineageDepth: 1,
         }));
 
@@ -538,11 +538,11 @@ describe('useQueuedBatchWorkflow', () => {
             parentHistoryId: sourceOverride?.sourceHistoryId || null,
             rootHistoryId: sourceOverride?.sourceHistoryId || null,
             sourceHistoryId: sourceOverride?.sourceHistoryId || null,
-            lineageAction: sourceOverride?.sourceHistoryId
+            lineageAction: (sourceOverride?.sourceHistoryId
                 ? sourceOverride.sourceLineageAction === 'branch'
                     ? 'branch'
                     : 'continue'
-                : 'root',
+                : 'root') as any,
             lineageDepth: sourceOverride?.sourceHistoryId ? 1 : 0,
         }));
 

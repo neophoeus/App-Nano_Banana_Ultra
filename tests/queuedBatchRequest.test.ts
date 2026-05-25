@@ -91,8 +91,7 @@ describe('submitQueuedBatchJob', () => {
         expect(requestBody.prompt).toBe(
             buildStyleAwareImagePrompt({
                 prompt: 'Create a queued image batch',
-                aspectRatio: '1:1',
-                imageSize: '1K',
+                size: '1K',
                 style: 'Digital Illustration',
                 model: 'gemini-3.1-flash-image-preview',
                 outputFormat: 'images-only',
@@ -101,7 +100,7 @@ describe('submitQueuedBatchJob', () => {
                 includeThoughts: false,
                 googleSearch: false,
                 imageSearch: false,
-            }),
+            } as any),
         );
     });
 

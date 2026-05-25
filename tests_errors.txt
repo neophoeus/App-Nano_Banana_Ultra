@@ -1,0 +1,366 @@
+﻿components/GeneratedImage.tsx(226,191): error TS7053: Element implicitly has an 'any' type because expression of type '"primary" | "secondary" | "destructive"' can't be used to index type 'Record<"primary" | "secondary" | "passive", string>'.
+  Property 'destructive' does not exist on type 'Record<"primary" | "secondary" | "passive", string>'.
+components/GroundingProvenancePanel.tsx(130,58): error TS2339: Property 'replace' does not exist on type 'string | number'.
+  Property 'replace' does not exist on type 'number'.
+components/SketchPad.tsx(589,37): error TS2367: This comparison appears to be unintentional because the types '"use"' and '"change_ratio"' have no overlap.
+components/SketchPad.tsx(598,37): error TS2367: This comparison appears to be unintentional because the types '"use"' and '"change_ratio"' have no overlap.
+components/SketchPad.tsx(612,193): error TS2367: This comparison appears to be unintentional because the types '"use"' and '"change_ratio"' have no overlap.
+components/SketchPad.tsx(618,41): error TS2367: This comparison appears to be unintentional because the types '"use"' and '"change_ratio"' have no overlap.
+components/WorkspaceImportReview.tsx(289,54): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+components/WorkspaceImportReview.tsx(364,69): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+components/WorkspaceImportReview.tsx(485,55): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+components/WorkspaceImportReview.tsx(513,45): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+components/WorkspaceModalFrame.tsx(63,25): error TS2345: Argument of type 'RefObject<HTMLDivElement | null>' is not assignable to parameter of type 'RefObject<HTMLElement>'.
+  Type 'HTMLDivElement | null' is not assignable to type 'HTMLElement'.
+    Type 'null' is not assignable to type 'HTMLElement'.
+components/WorkspaceProgressDetailPanel.tsx(46,32): error TS2339: Property 'text' does not exist on type 'never'.
+components/WorkspaceProgressDetailPanel.tsx(47,38): error TS2339: Property 'text' does not exist on type 'never'.
+components/WorkspaceProgressDetailPanel.tsx(111,52): error TS2339: Property 'imageUrl' does not exist on type 'ResultPart'.
+  Property 'imageUrl' does not exist on type 'ResultTextPart'.
+components/WorkspaceProgressDetailPanel.tsx(112,52): error TS2339: Property 'mimeType' does not exist on type 'ResultPart'.
+  Property 'mimeType' does not exist on type 'ResultTextPart'.
+components/WorkspaceProgressDetailPanel.tsx(113,57): error TS2339: Property 'savedFilename' does not exist on type 'ResultPart'.
+  Property 'savedFilename' does not exist on type 'ResultTextPart'.
+components/WorkspaceProgressDetailPanel.tsx(123,35): error TS2339: Property 'imageUrl' does not exist on type 'ResultPart'.
+  Property 'imageUrl' does not exist on type 'ResultTextPart'.
+components/WorkspaceViewerOverlay.tsx(64,25): error TS2345: Argument of type 'RefObject<HTMLDivElement | null>' is not assignable to parameter of type 'RefObject<HTMLElement>'.
+  Type 'HTMLDivElement | null' is not assignable to type 'HTMLElement'.
+    Type 'null' is not assignable to type 'HTMLElement'.
+hooks/useHistoryPresentationHelpers.tsx(266,31): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+hooks/useHistoryPresentationHelpers.tsx(434,25): error TS2304: Cannot find name 'BranchSummary'.
+hooks/useHistoryPresentationHelpers.tsx(544,21): error TS2322: Type '"memory"' is not assignable to type 'SelectedItemSummaryStripChipKey'.
+hooks/useHistoryPresentationHelpers.tsx(552,21): error TS2322: Type '"thread"' is not assignable to type 'SelectedItemSummaryStripChipKey'.
+hooks/useHistorySourceOrchestration.ts(283,38): error TS2339: Property 'id' does not exist on type 'never'.
+hooks/useHistorySourceOrchestration.ts(349,21): error TS2322: Type '"root" | "continue" | "branch" | "editor-follow-up" | "reopen"' is not assignable to type 'ContinuationLineageAction'.
+  Type '"root"' is not assignable to type 'ContinuationLineageAction'.
+hooks/usePerformGeneration.ts(122,55): error TS2339: Property 'imageUrl' does not exist on type 'ResultPart'.
+  Property 'imageUrl' does not exist on type 'ResultTextPart'.
+hooks/usePerformGeneration.ts(125,71): error TS2339: Property 'imageUrl' does not exist on type 'ResultPart'.
+  Property 'imageUrl' does not exist on type 'ResultTextPart'.
+hooks/usePerformGeneration.ts(126,79): error TS2339: Property 'savedFilename' does not exist on type 'ResultPart'.
+  Property 'savedFilename' does not exist on type 'ResultTextPart'.
+hooks/usePerformGeneration.ts(131,22): error TS2339: Property 'imageUrl' does not exist on type 'ResultPart'.
+  Property 'imageUrl' does not exist on type 'ResultTextPart'.
+hooks/usePerformGeneration.ts(332,21): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(386,62): error TS2339: Property 'replace' does not exist on type 'string | number'.
+  Property 'replace' does not exist on type 'number'.
+hooks/useQueuedBatchWorkflow.ts(431,79): error TS2345: Argument of type 'string' is not assignable to parameter of type 'ImageStyle'.
+hooks/useQueuedBatchWorkflow.ts(445,13): error TS2322: Type 'string' is not assignable to type 'ImageStyle'.
+hooks/useQueuedBatchWorkflow.ts(506,13): error TS2322: Type 'string' is not assignable to type 'ImageStyle'.
+hooks/useQueuedBatchWorkflow.ts(787,63): error TS2345: Argument of type 'RemoteQueuedBatchJob' is not assignable to parameter of type 'RemoteQueuedJob'.
+  Types of property 'model' are incompatible.
+    Type 'string' is not assignable to type 'ImageModel'.
+hooks/useQueuedBatchWorkflow.ts(788,28): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(797,28): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(803,21): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(813,21): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(972,50): error TS2345: Argument of type 'RemoteQueuedBatchJob' is not assignable to parameter of type 'RemoteQueuedJob'.
+  Types of property 'model' are incompatible.
+    Type 'string' is not assignable to type 'ImageModel'.
+hooks/useQueuedBatchWorkflow.ts(982,28): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(988,46): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(998,46): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(1008,29): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(1018,42): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(1024,42): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(1027,29): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(1050,28): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(1087,24): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(1103,50): error TS2345: Argument of type 'RemoteQueuedBatchJob' is not assignable to parameter of type 'RemoteQueuedJob'.
+  Types of property 'model' are incompatible.
+    Type 'string' is not assignable to type 'ImageModel'.
+hooks/useQueuedBatchWorkflow.ts(1106,24): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(1110,24): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(1145,23): error TS2322: Type '{ id: `${string}-${string}-${string}-${string}-${string}`; url: string; savedFilename: string | undefined; thumbnailSavedFilename: string | undefined; thumbnailInline: boolean | undefined; prompt: string; ... 22 more ...; lineageDepth: number; }[]' is not assignable to type 'GeneratedImage[]'.
+  Type '{ id: `${string}-${string}-${string}-${string}-${string}`; url: string; savedFilename: string | undefined; thumbnailSavedFilename: string | undefined; thumbnailInline: boolean | undefined; prompt: string; ... 22 more ...; lineageDepth: number; }' is not assignable to type 'GeneratedImage'.
+    Types of property 'sessionHints' are incompatible.
+      Type 'Record<string, unknown> | null' is not assignable to type 'Record<string, unknown> | undefined'.
+        Type 'null' is not assignable to type 'Record<string, unknown> | undefined'.
+hooks/useQueuedBatchWorkflow.ts(1238,54): error TS2345: Argument of type 'RemoteQueuedBatchJob' is not assignable to parameter of type 'RemoteQueuedJob'.
+  Types of property 'model' are incompatible.
+    Type 'string' is not assignable to type 'ImageModel'.
+hooks/useQueuedBatchWorkflow.ts(1268,50): error TS2345: Argument of type 'RemoteQueuedBatchJob' is not assignable to parameter of type 'RemoteQueuedJob'.
+  Types of property 'model' are incompatible.
+    Type 'string' is not assignable to type 'ImageModel'.
+hooks/useQueuedBatchWorkflow.ts(1280,24): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(1282,38): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(1288,28): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(1328,20): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(1329,30): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(1398,16): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(1399,26): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(1409,16): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useQueuedBatchWorkflow.ts(1410,26): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+hooks/useWorkspaceEditorActions.ts(55,14): error TS2304: Cannot find name 'GeneratedImage'.
+hooks/useWorkspaceProgressThoughts.ts(55,32): error TS2339: Property 'text' does not exist on type 'never'.
+hooks/useWorkspaceProgressThoughts.ts(56,38): error TS2339: Property 'text' does not exist on type 'never'.
+hooks/useWorkspaceProgressThoughts.ts(151,81): error TS2345: Argument of type '() => ({ id: string; shortId: string; prompt: string | null; thoughts: any; resultParts: ResultPart[]; createdAtMs: number; createdAtLabel: string; slotIndex: number; slotLabel: string; isLive: true; } | null)[]' is not assignable to parameter of type '() => WorkspaceProgressThoughtEntry[]'.
+  Type '({ id: string; shortId: string; prompt: string | null; thoughts: any; resultParts: ResultPart[]; createdAtMs: number; createdAtLabel: string; slotIndex: number; slotLabel: string; isLive: true; } | null)[]' is not assignable to type 'WorkspaceProgressThoughtEntry[]'.
+    Type '{ id: string; shortId: string; prompt: string | null; thoughts: any; resultParts: ResultPart[]; createdAtMs: number; createdAtLabel: string; slotIndex: number; slotLabel: string; isLive: true; } | null' is not assignable to type 'WorkspaceProgressThoughtEntry'.
+      Type 'null' is not assignable to type 'WorkspaceProgressThoughtEntry'.
+hooks/useWorkspaceProgressThoughts.ts(178,39): error TS2677: A type predicate's type must be assignable to its parameter's type.
+  Type 'WorkspaceProgressThoughtEntry' is not assignable to type '{ id: string; shortId: string; prompt: string | null; thoughts: any; resultParts: ResultPart[]; createdAtMs: number; createdAtLabel: string; slotIndex: number; slotLabel: string; isLive: true; }'.
+    Types of property 'resultParts' are incompatible.
+      Type 'ResultPart[] | undefined' is not assignable to type 'ResultPart[]'.
+        Type 'undefined' is not assignable to type 'ResultPart[]'.
+hooks/useWorkspaceSnapshotActions.ts(159,13): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+hooks/useWorkspaceStageViewer.ts(449,17): error TS2353: Object literal may only specify known properties, and 'prompt' does not exist in type 'GeneratedImageProps'.
+hooks/useWorkspaceTransientUiState.ts(99,9): error TS2740: Type '{ prompt: string; objectImages: string[]; characterImages: string[]; ratio: AspectRatio; size: ImageSize; batchSize: number; }' is missing the following properties from type 'EditorContextSnapshot': model, style, outputFormat, temperature, and 4 more.
+hooks/useWorkspaceViewerProvenanceState.ts(147,63): error TS2304: Cannot find name 'OutputFormat'.
+hooks/useWorkspaceViewerProvenanceState.ts(151,64): error TS2304: Cannot find name 'ThinkingLevel'.
+playwright.config.ts(11,9): error TS2339: Property 'defineConfig' does not exist on type 'TestType<PlaywrightTestArgs & PlaywrightTestOptions, PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+playwright.config.ts(11,23): error TS2339: Property 'devices' does not exist on type 'TestType<PlaywrightTestArgs & PlaywrightTestOptions, PlaywrightWorkerArgs & PlaywrightWorkerOptions>'.
+plugins/routes/batchRoutes.ts(261,41): error TS2345: Argument of type 'string' is not assignable to parameter of type 'ImageModel'.
+plugins/routes/batchRoutes.ts(269,58): error TS2345: Argument of type 'string' is not assignable to parameter of type 'ImageSize'.
+plugins/routes/generateRoutes.ts(162,38): error TS2304: Cannot find name 'deriveGroundingMode'.
+plugins/routes/generateRoutes.ts(362,30): error TS2339: Property 'imageUrl' does not exist on type 'ExtractedResponsePart'.
+  Property 'imageUrl' does not exist on type 'ExtractedTextResultPart'.
+plugins/routes/generateRoutes.ts(363,30): error TS2339: Property 'mimeType' does not exist on type 'ExtractedResponsePart'.
+  Property 'mimeType' does not exist on type 'ExtractedTextResultPart'.
+plugins/routes/generateRoutes.ts(369,32): error TS2339: Property 'mimeType' does not exist on type 'ResultPart'.
+  Property 'mimeType' does not exist on type 'ResultTextPart'.
+plugins/routes/generateRoutes.ts(369,49): error TS2339: Property 'imageUrl' does not exist on type 'ResultPart'.
+  Property 'imageUrl' does not exist on type 'ResultTextPart'.
+plugins/routes/generateRoutes.ts(699,33): error TS2345: Argument of type 'string' is not assignable to parameter of type 'ImageModel'.
+plugins/routes/generateRoutes.ts(704,50): error TS2345: Argument of type 'string' is not assignable to parameter of type 'ImageSize'.
+plugins/routes/generateRoutes.ts(787,19): error TS2322: Type 'unknown[]' is not assignable to type 'PartListUnion'.
+  Type 'unknown[]' is not assignable to type 'PartUnion[]'.
+    Type 'unknown' is not assignable to type 'PartUnion'.
+plugins/routes/generateRoutes.ts(792,15): error TS2322: Type '{ parts: unknown[]; }' is not assignable to type 'ContentListUnion'.
+  Types of property 'parts' are incompatible.
+    Type 'unknown[]' is not assignable to type 'Part[]'.
+      Type 'unknown' is not assignable to type 'Part'.
+plugins/routes/generateRoutes.ts(812,19): error TS2322: Type 'unknown[]' is not assignable to type 'PartListUnion'.
+  Type 'unknown[]' is not assignable to type 'PartUnion[]'.
+    Type 'unknown' is not assignable to type 'PartUnion'.
+plugins/routes/generateRoutes.ts(817,15): error TS2322: Type '{ parts: unknown[]; }' is not assignable to type 'ContentListUnion'.
+  Types of property 'parts' are incompatible.
+    Type 'unknown[]' is not assignable to type 'Part[]'.
+      Type 'unknown' is not assignable to type 'Part'.
+plugins/routes/generateRoutes.ts(855,13): error TS2353: Object literal may only specify known properties, and 'webQueries' does not exist in type '{ enabled: boolean; imageSearch?: boolean | undefined; sources?: { title: string; url: string; }[] | undefined; }'.
+plugins/routes/generateRoutes.ts(1299,30): error TS2558: Expected 0 type arguments, but got 1.
+plugins/routes/generateRoutes.ts(1317,38): error TS2558: Expected 0 type arguments, but got 1.
+plugins/routes/generateRoutes.ts(1354,34): error TS2558: Expected 0 type arguments, but got 1.
+plugins/routes/generateRoutes.ts(1398,30): error TS2558: Expected 0 type arguments, but got 1.
+plugins/routes/generateRoutes.ts(1430,34): error TS2558: Expected 0 type arguments, but got 1.
+plugins/utils/batchHelpers.ts(288,5): error TS2322: Type '(BatchImportResultPayload | { index: number; status: string; sessionHints: { requestKey: string | undefined; entryErrorPresent: boolean; entryErrorMessage: string | undefined; rawLineType: string; }; error: string; } | { ...; })[]' is not assignable to type 'BatchImportResultPayload[]'.
+  Type 'BatchImportResultPayload | { index: number; status: string; sessionHints: { requestKey: string | undefined; entryErrorPresent: boolean; entryErrorMessage: string | undefined; rawLineType: string; }; error: string; } | { ...; }' is not assignable to type 'BatchImportResultPayload'.
+    Type '{ index: number; status: string; sessionHints: { requestKey: string | undefined; entryErrorPresent: boolean; entryErrorMessage: string | undefined; rawLineType: string; }; error: string; }' is not assignable to type 'BatchImportResultPayload'.
+      Types of property 'status' are incompatible.
+        Type 'string' is not assignable to type '"failed" | "success"'.
+services/geminiService.ts(211,55): error TS2339: Property 'mimeType' does not exist on type 'ResultPart'.
+  Property 'mimeType' does not exist on type 'ResultTextPart'.
+services/geminiService.ts(233,13): error TS2322: Type '{ route: string; endpoint: string; method: string; correlationId: string; source: DebugTerminalSource; operation: string; phase?: string; requestLabel?: string; requestSummary?: string; requestPayload?: unknown; responseLabel?: string; responseSummary?: string | ... 1 more ... | undefined; responsePayload?: unknown ...' is not assignable to type 'DebugRequestContext<unknown> & { source: DebugTerminalSource; operation: string; }'.
+  Type '{ route: string; endpoint: string; method: string; correlationId: string; source: DebugTerminalSource; operation: string; phase?: string; requestLabel?: string; requestSummary?: string; requestPayload?: unknown; responseLabel?: string; responseSummary?: string | ... 1 more ... | undefined; responsePayload?: unknown ...' is not assignable to type 'DebugRequestContext<unknown>'.
+    Types of property 'responseSummary' are incompatible.
+      Type 'string | ((payload: T) => string | undefined) | undefined' is not assignable to type 'string | ((payload: unknown) => string | undefined) | undefined'.
+        Type '(payload: T) => string | undefined' is not assignable to type 'string | ((payload: unknown) => string | undefined) | undefined'.
+          Type '(payload: T) => string | undefined' is not assignable to type '(payload: unknown) => string | undefined'.
+            Types of parameters 'payload' and 'payload' are incompatible.
+              Type 'unknown' is not assignable to type 'T'.
+                'T' could be instantiated with an arbitrary type which could be unrelated to 'unknown'.
+services/geminiService.ts(256,21): error TS2322: Type '{ route: string; endpoint: string; method: string; correlationId: string; phase: string; source: DebugTerminalSource; operation: string; requestLabel?: string; requestSummary?: string; requestPayload?: unknown; responseLabel?: string; responseSummary?: string | ... 1 more ... | undefined; responsePayload?: unknown |...' is not assignable to type 'DebugRequestContext<unknown> & { source: DebugTerminalSource; operation: string; }'.
+  Type '{ route: string; endpoint: string; method: string; correlationId: string; phase: string; source: DebugTerminalSource; operation: string; requestLabel?: string; requestSummary?: string; requestPayload?: unknown; responseLabel?: string; responseSummary?: string | ... 1 more ... | undefined; responsePayload?: unknown |...' is not assignable to type 'DebugRequestContext<unknown>'.
+    Types of property 'responseSummary' are incompatible.
+      Type 'string | ((payload: T) => string | undefined) | undefined' is not assignable to type 'string | ((payload: unknown) => string | undefined) | undefined'.
+        Type '(payload: T) => string | undefined' is not assignable to type 'string | ((payload: unknown) => string | undefined) | undefined'.
+          Type '(payload: T) => string | undefined' is not assignable to type '(payload: unknown) => string | undefined'.
+            Types of parameters 'payload' and 'payload' are incompatible.
+              Type 'unknown' is not assignable to type 'T'.
+                'T' could be instantiated with an arbitrary type which could be unrelated to 'unknown'.
+services/geminiService.ts(276,17): error TS2322: Type '{ route: string; endpoint: string; method: string; correlationId: string; source: DebugTerminalSource; operation: string; phase?: string; requestLabel?: string; requestSummary?: string; requestPayload?: unknown; responseLabel?: string; responseSummary?: string | ... 1 more ... | undefined; responsePayload?: unknown ...' is not assignable to type 'DebugRequestContext<unknown> & { source: DebugTerminalSource; operation: string; }'.
+  Type '{ route: string; endpoint: string; method: string; correlationId: string; source: DebugTerminalSource; operation: string; phase?: string; requestLabel?: string; requestSummary?: string; requestPayload?: unknown; responseLabel?: string; responseSummary?: string | ... 1 more ... | undefined; responsePayload?: unknown ...' is not assignable to type 'DebugRequestContext<unknown>'.
+    Types of property 'responseSummary' are incompatible.
+      Type 'string | ((payload: T) => string | undefined) | undefined' is not assignable to type 'string | ((payload: unknown) => string | undefined) | undefined'.
+        Type '(payload: T) => string | undefined' is not assignable to type 'string | ((payload: unknown) => string | undefined) | undefined'.
+          Type '(payload: T) => string | undefined' is not assignable to type '(payload: unknown) => string | undefined'.
+            Types of parameters 'payload' and 'payload' are incompatible.
+              Type 'unknown' is not assignable to type 'T'.
+                'T' could be instantiated with an arbitrary type which could be unrelated to 'unknown'.
+services/geminiService.ts(309,17): error TS2322: Type '{ route: string; endpoint: string; method: string; correlationId: string; source: DebugTerminalSource; operation: string; phase?: string; requestLabel?: string; requestSummary?: string; requestPayload?: unknown; responseLabel?: string; responseSummary?: string | ... 1 more ... | undefined; responsePayload?: unknown ...' is not assignable to type 'DebugRequestContext<unknown> & { source: DebugTerminalSource; operation: string; }'.
+  Type '{ route: string; endpoint: string; method: string; correlationId: string; source: DebugTerminalSource; operation: string; phase?: string; requestLabel?: string; requestSummary?: string; requestPayload?: unknown; responseLabel?: string; responseSummary?: string | ... 1 more ... | undefined; responsePayload?: unknown ...' is not assignable to type 'DebugRequestContext<unknown>'.
+    Types of property 'responseSummary' are incompatible.
+      Type 'string | ((payload: T) => string | undefined) | undefined' is not assignable to type 'string | ((payload: unknown) => string | undefined) | undefined'.
+        Type '(payload: T) => string | undefined' is not assignable to type 'string | ((payload: unknown) => string | undefined) | undefined'.
+          Type '(payload: T) => string | undefined' is not assignable to type '(payload: unknown) => string | undefined'.
+            Types of parameters 'payload' and 'payload' are incompatible.
+              Type 'unknown' is not assignable to type 'T'.
+                'T' could be instantiated with an arbitrary type which could be unrelated to 'unknown'.
+services/geminiService.ts(337,13): error TS2322: Type '{ route: string; endpoint: string; method: string; correlationId: string; source: DebugTerminalSource; operation: string; phase?: string; requestLabel?: string; requestSummary?: string; requestPayload?: unknown; responseLabel?: string; responseSummary?: string | ... 1 more ... | undefined; responsePayload?: unknown ...' is not assignable to type 'DebugRequestContext<unknown> & { source: DebugTerminalSource; operation: string; }'.
+  Type '{ route: string; endpoint: string; method: string; correlationId: string; source: DebugTerminalSource; operation: string; phase?: string; requestLabel?: string; requestSummary?: string; requestPayload?: unknown; responseLabel?: string; responseSummary?: string | ... 1 more ... | undefined; responsePayload?: unknown ...' is not assignable to type 'DebugRequestContext<unknown>'.
+    Types of property 'responseSummary' are incompatible.
+      Type 'string | ((payload: T) => string | undefined) | undefined' is not assignable to type 'string | ((payload: unknown) => string | undefined) | undefined'.
+        Type '(payload: T) => string | undefined' is not assignable to type 'string | ((payload: unknown) => string | undefined) | undefined'.
+          Type '(payload: T) => string | undefined' is not assignable to type '(payload: unknown) => string | undefined'.
+            Types of parameters 'payload' and 'payload' are incompatible.
+              Type 'unknown' is not assignable to type 'T'.
+                'T' could be instantiated with an arbitrary type which could be unrelated to 'unknown'.
+services/geminiService.ts(640,49): error TS2339: Property 'mimeType' does not exist on type 'ResultPart'.
+  Property 'mimeType' does not exist on type 'ResultTextPart'.
+services/geminiService.ts(640,66): error TS2339: Property 'imageUrl' does not exist on type 'ResultPart'.
+  Property 'imageUrl' does not exist on type 'ResultTextPart'.
+services/geminiService.ts(943,31): error TS7006: Parameter 'result' implicitly has an 'any' type.
+services/geminiService.ts(1183,54): error TS2339: Property 'error' does not exist on type 'never'.
+services/geminiService.ts(1188,54): error TS2339: Property 'response' does not exist on type 'never'.
+services/geminiService.ts(1190,27): error TS2339: Property 'failure' does not exist on type 'never'.
+services/geminiService.ts(1191,71): error TS2339: Property 'failure' does not exist on type 'never'.
+services/geminiService.ts(1371,31): error TS7006: Parameter 'result' implicitly has an 'any' type.
+services/geminiService.ts(1422,31): error TS7006: Parameter 'result' implicitly has an 'any' type.
+services/geminiService.ts(1474,31): error TS7006: Parameter 'result' implicitly has an 'any' type.
+services/geminiService.ts(1539,35): error TS7006: Parameter 'result' implicitly has an 'any' type.
+services/geminiService.ts(1640,31): error TS7006: Parameter 'result' implicitly has an 'any' type.
+services/geminiService.ts(1667,31): error TS7006: Parameter 'result' implicitly has an 'any' type.
+services/geminiService.ts(1694,31): error TS7006: Parameter 'result' implicitly has an 'any' type.
+services/geminiService.ts(1723,31): error TS7006: Parameter 'result' implicitly has an 'any' type.
+tests/debugTerminalEvents.test.ts(97,31): error TS2339: Property 'id' does not exist on type 'never'.
+tests/debugTerminalEvents.test.ts(98,31): error TS2339: Property 'requestId' does not exist on type 'never'.
+tests/debugTerminalEvents.test.ts(99,31): error TS2339: Property 'correlationId' does not exist on type 'never'.
+tests/debugTerminalEvents.test.ts(100,31): error TS2339: Property 'route' does not exist on type 'never'.
+tests/debugTerminalEvents.test.ts(101,31): error TS2339: Property 'payload' does not exist on type 'never'.
+tests/ImageEditor.reset.test.tsx(9,23): error TS2741: Property 'root' is missing in type '{}' but required in type '{ currentLanguage?: "en" | "zh_TW" | undefined; prompt?: string | undefined; onPromptChange?: Mock<Procedure | Constructable> | undefined; leftDockTopOffset?: number | ... 1 more ... | undefined; root: Root; }'.
+tests/ImageEditor.reset.test.tsx(33,17): error TS2322: Type 'Mock<Procedure | Constructable>' is not assignable to type 'Dispatch<SetStateAction<string>>'.
+  Type 'MockInstance<Procedure | Constructable> & (new (...args: any[]) => any) & {}' is not assignable to type 'Dispatch<SetStateAction<string>>'.
+    Type 'MockInstance<Procedure | Constructable> & (new (...args: any[]) => any) & {}' provides no match for the signature '(value: SetStateAction<string>): void'.
+tests/LazyHistoryImage.test.tsx(61,9): error TS2322: Type '{ new (callback: IntersectionObserverCallback, options?: IntersectionObserverInit | undefined): IntersectionObserver; prototype: IntersectionObserver; }' is not assignable to type '{ new (callback: IntersectionObserverCallback, options?: IntersectionObserverInit | undefined): IntersectionObserver; prototype: IntersectionObserver; } & typeof MockIntersectionObserver'.
+  Property 'instances' is missing in type '{ new (callback: IntersectionObserverCallback, options?: IntersectionObserverInit | undefined): IntersectionObserver; prototype: IntersectionObserver; }' but required in type 'typeof MockIntersectionObserver'.
+tests/LazyHistoryImage.test.tsx(68,16): error TS2790: The operand of a 'delete' operator must be optional.
+tests/officialConversationRequest.test.ts(278,17): error TS2353: Object literal may only specify known properties, and 'aspectRatio' does not exist in type 'StylePromptBuilderOptions'.
+tests/pluginOfficialConversationIntegration.test.ts(838,21): error TS2304: Cannot find name 'WorkspacePersistenceSnapshot'.
+tests/pluginOfficialConversationIntegration.test.ts(846,21): error TS2304: Cannot find name 'WorkspacePersistenceSnapshot'.
+tests/pluginOfficialConversationIntegration.test.ts(878,18): error TS2304: Cannot find name 'WorkspacePersistenceSnapshot'.
+tests/pluginOfficialConversationIntegration.test.ts(928,21): error TS2304: Cannot find name 'WorkspacePersistenceSnapshot'.
+tests/pluginOfficialConversationIntegration.test.ts(936,21): error TS2304: Cannot find name 'WorkspacePersistenceSnapshot'.
+tests/pluginOfficialConversationIntegration.test.ts(1001,18): error TS2304: Cannot find name 'WorkspacePersistenceSnapshot'.
+tests/pluginOfficialConversationIntegration.test.ts(1004,18): error TS2304: Cannot find name 'WorkspacePersistenceSnapshot'.
+tests/QueuedBatchJobsPanel.test.tsx(432,21): error TS2739: Type '{ localId: string; name: string; displayName: string; state: "JOB_STATE_SUCCEEDED"; model: "gemini-3.1-flash-image-preview"; prompt: string; generationMode: string; aspectRatio: "1:1"; imageSize: "1K"; ... 17 more ...; error: null; }' is missing the following properties from type 'QueuedBatchJob': submissionGroupId, submissionItemIndex, submissionItemCount
+tests/QueuedBatchJobsPanel.test.tsx(492,21): error TS2739: Type '{ localId: string; name: string; displayName: string; state: "JOB_STATE_SUCCEEDED"; model: "gemini-3.1-flash-image-preview"; prompt: string; generationMode: string; aspectRatio: "1:1"; imageSize: "1K"; ... 17 more ...; error: string; }' is missing the following properties from type 'QueuedBatchJob': submissionGroupId, submissionItemIndex, submissionItemCount
+tests/QueuedBatchJobsPanel.test.tsx(554,21): error TS2739: Type '{ localId: string; name: string; displayName: string; state: "JOB_STATE_SUCCEEDED"; model: "gemini-3.1-flash-image-preview"; prompt: string; generationMode: string; aspectRatio: "1:1"; imageSize: "1K"; ... 18 more ...; error: string; }' is missing the following properties from type 'QueuedBatchJob': submissionGroupId, submissionItemIndex, submissionItemCount
+tests/QueuedBatchJobsPanel.test.tsx(630,21): error TS2739: Type '{ localId: string; name: string; displayName: string; state: "JOB_STATE_PENDING"; model: "gemini-3.1-flash-image-preview"; prompt: string; generationMode: string; aspectRatio: "1:1"; imageSize: "1K"; ... 15 more ...; error: null; }' is missing the following properties from type 'QueuedBatchJob': submissionGroupId, submissionItemIndex, submissionItemCount
+tests/QueuedBatchJobsPanel.test.tsx(890,21): error TS2739: Type '{ localId: string; name: string; displayName: string; state: "JOB_STATE_PENDING"; model: "gemini-3.1-flash-image-preview"; prompt: string; generationMode: string; aspectRatio: "1:1"; imageSize: "1K"; ... 15 more ...; error: null; }' is missing the following properties from type 'QueuedBatchJob': submissionGroupId, submissionItemIndex, submissionItemCount
+tests/queuedBatchRequest.test.ts(94,17): error TS2353: Object literal may only specify known properties, and 'aspectRatio' does not exist in type 'StylePromptBuilderOptions'.
+tests/SketchPad.test.tsx(48,47): error TS7031: Binding element 'message' implicitly has an 'any' type.
+tests/useComposerSettingsPanelProps.test.tsx(52,9): error TS2353: Object literal may only specify known properties, and 'queuedJobs' does not exist in type 'UseComposerSettingsPanelPropsArgs'.
+tests/useComposerState.viewerApply.test.tsx(36,17): error TS2322: Type 'Mock<Procedure | Constructable>' is not assignable to type 'Dispatch<SetStateAction<string>>'.
+  Type 'MockInstance<Procedure | Constructable> & (new (...args: any[]) => any) & {}' is not assignable to type 'Dispatch<SetStateAction<string>>'.
+    Type 'MockInstance<Procedure | Constructable> & (new (...args: any[]) => any) & {}' provides no match for the signature '(value: SetStateAction<string>): void'.
+tests/useComposerState.viewerApply.test.tsx(37,17): error TS2322: Type 'Mock<Procedure | Constructable>' is not assignable to type 'Dispatch<SetStateAction<ExecutionMode>>'.
+  Type 'MockInstance<Procedure | Constructable> & (new (...args: any[]) => any) & {}' is not assignable to type 'Dispatch<SetStateAction<ExecutionMode>>'.
+    Type 'MockInstance<Procedure | Constructable> & (new (...args: any[]) => any) & {}' provides no match for the signature '(value: SetStateAction<ExecutionMode>): void'.
+tests/useComposerState.viewerApply.test.tsx(38,17): error TS2322: Type 'Mock<Procedure | Constructable>' is not assignable to type 'Dispatch<SetStateAction<GenerationSettings>>'.
+  Type 'MockInstance<Procedure | Constructable> & (new (...args: any[]) => any) & {}' is not assignable to type 'Dispatch<SetStateAction<GenerationSettings>>'.
+    Type 'MockInstance<Procedure | Constructable> & (new (...args: any[]) => any) & {}' provides no match for the signature '(value: SetStateAction<GenerationSettings>): void'.
+tests/useGroundingProvenanceView.test.tsx(61,53): error TS2345: Argument of type '{ selectedResultText: null; selectedThoughts: null; selectedGrounding: any; selectedMetadata: Record<string, unknown> | null; selectedSessionHints: Record<string, unknown> | null; ... 10 more ...; t: (key: string) => string; }' is not assignable to parameter of type 'UseGroundingProvenanceViewArgs'.
+  Property 'selectedResultParts' is missing in type '{ selectedResultText: null; selectedThoughts: null; selectedGrounding: any; selectedMetadata: Record<string, unknown> | null; selectedSessionHints: Record<string, unknown> | null; ... 10 more ...; t: (key: string) => string; }' but required in type 'UseGroundingProvenanceViewArgs'.
+tests/useHistoryPresentationHelpers.test.tsx(239,35): error TS2339: Property 'chips' does not exist on type 'never'.
+tests/useHistoryPresentationHelpers.test.tsx(239,46): error TS7006: Parameter 'chip' implicitly has an 'any' type.
+tests/useHistoryPresentationHelpers.test.tsx(252,35): error TS2339: Property 'chips' does not exist on type 'never'.
+tests/useHistoryPresentationHelpers.test.tsx(252,47): error TS7006: Parameter 'chip' implicitly has an 'any' type.
+tests/useHistoryPresentationHelpers.test.tsx(253,35): error TS2339: Property 'chips' does not exist on type 'never'.
+tests/useHistoryPresentationHelpers.test.tsx(253,47): error TS7006: Parameter 'chip' implicitly has an 'any' type.
+tests/useLegacyWorkspaceSnapshotMigration.test.tsx(67,17): error TS2322: Type 'Mock<Procedure | Constructable>' is not assignable to type '(incomingSnapshot: unknown, options?: { announceRestoreToast?: boolean | undefined; } | undefined) => void'.
+  Type 'MockInstance<Procedure | Constructable> & (new (...args: any[]) => any) & {}' is not assignable to type '(incomingSnapshot: unknown, options?: { announceRestoreToast?: boolean | undefined; } | undefined) => void'.
+    Type 'MockInstance<Procedure | Constructable> & (new (...args: any[]) => any) & {}' provides no match for the signature '(incomingSnapshot: unknown, options?: { announceRestoreToast?: boolean | undefined; } | undefined): void'.
+tests/useLegacyWorkspaceSnapshotMigration.test.tsx(68,17): error TS2322: Type 'Mock<Procedure | Constructable>' is not assignable to type '(message: string) => void'.
+  Type 'MockInstance<Procedure | Constructable> & (new (...args: any[]) => any) & {}' is not assignable to type '(message: string) => void'.
+    Type 'MockInstance<Procedure | Constructable> & (new (...args: any[]) => any) & {}' provides no match for the signature '(message: string): void'.
+tests/usePerformGeneration.test.tsx(118,47): error TS2345: Argument of type '{ t: (key: string) => string; apiKeyReady: true; setApiKeyReady: Mock<Procedure>; handleApiKeyConnect: Mock<Procedure>; setIsGenerating: (value: boolean) => void; ... 30 more ...; onLiveProgressReset: () => void; }' is not assignable to parameter of type 'UsePerformGenerationProps'.
+  Property 'safetyThresholds' is missing in type '{ t: (key: string) => string; apiKeyReady: true; setApiKeyReady: Mock<Procedure>; handleApiKeyConnect: Mock<Procedure>; setIsGenerating: (value: boolean) => void; ... 30 more ...; onLiveProgressReset: () => void; }' but required in type 'UsePerformGenerationProps'.
+tests/usePerformGeneration.test.tsx(251,43): error TS2322: Type '{ sessionId: string; tile: Record<string, unknown>; } | { sessionId: string; tile: BatchPreviewTile; }' is not assignable to type '{ sessionId: string; tile: Record<string, unknown>; }'.
+  Type '{ sessionId: string; tile: BatchPreviewTile; }' is not assignable to type '{ sessionId: string; tile: Record<string, unknown>; }'.
+    Types of property 'tile' are incompatible.
+      Type 'BatchPreviewTile' is not assignable to type 'Record<string, unknown>'.
+        Index signature for type 'string' is missing in type 'BatchPreviewTile'.
+tests/usePerformGeneration.test.tsx(251,79): error TS2322: Type 'BatchPreviewTile | Record<string, unknown>' is not assignable to type 'Record<string, unknown>'.
+  Type 'BatchPreviewTile' is not assignable to type 'Record<string, unknown>'.
+    Index signature for type 'string' is missing in type 'BatchPreviewTile'.
+tests/usePerformGeneration.test.tsx(289,9): error TS2322: Type 'string' is not assignable to type 'StageErrorState'.
+tests/useQueuedBatchSpacePersistence.test.tsx(33,86): error TS2739: Type '{ localId: string; name: string; displayName: string; state: QueuedBatchJobState; model: ImageModel; prompt: string; generationMode: string; aspectRatio: AspectRatio; ... 25 more ...; lineageDepth: number; }' is missing the following properties from type 'QueuedBatchJob': submissionGroupId, submissionItemIndex, submissionItemCount
+tests/useQueuedBatchWorkflow.test.tsx(316,13): error TS2322: Type 'Mock<({ sourceOverride }: any) => { parentHistoryId: any; rootHistoryId: any; sourceHistoryId: any; lineageAction: string; lineageDepth: number; }>' is not assignable to type '((params: { mode: string; editingInput?: string | undefined; sourceOverride?: GenerationSourceOverride | null | undefined; }) => GenerationLineageContext) | undefined'.
+  Type 'Mock<({ sourceOverride }: any) => { parentHistoryId: any; rootHistoryId: any; sourceHistoryId: any; lineageAction: string; lineageDepth: number; }>' is not assignable to type '(params: { mode: string; editingInput?: string | undefined; sourceOverride?: GenerationSourceOverride | null | undefined; }) => GenerationLineageContext'.
+    Call signature return types '{ parentHistoryId: any; rootHistoryId: any; sourceHistoryId: any; lineageAction: string; lineageDepth: number; }' and 'GenerationLineageContext' are incompatible.
+      The types of 'lineageAction' are incompatible between these types.
+        Type 'string' is not assignable to type 'TurnLineageAction'.
+tests/useQueuedBatchWorkflow.test.tsx(458,13): error TS2322: Type 'Mock<() => { parentHistoryId: string; rootHistoryId: string; sourceHistoryId: string; lineageAction: string; lineageDepth: number; }>' is not assignable to type '((params: { mode: string; editingInput?: string | undefined; sourceOverride?: GenerationSourceOverride | null | undefined; }) => GenerationLineageContext) | undefined'.
+  Type 'Mock<() => { parentHistoryId: string; rootHistoryId: string; sourceHistoryId: string; lineageAction: string; lineageDepth: number; }>' is not assignable to type '(params: { mode: string; editingInput?: string | undefined; sourceOverride?: GenerationSourceOverride | null | undefined; }) => GenerationLineageContext'.
+    Call signature return types '{ parentHistoryId: string; rootHistoryId: string; sourceHistoryId: string; lineageAction: string; lineageDepth: number; }' and 'GenerationLineageContext' are incompatible.
+      The types of 'lineageAction' are incompatible between these types.
+        Type 'string' is not assignable to type 'TurnLineageAction'.
+tests/useQueuedBatchWorkflow.test.tsx(572,13): error TS2322: Type 'Mock<({ sourceOverride }: any) => { parentHistoryId: any; rootHistoryId: any; sourceHistoryId: any; lineageAction: string; lineageDepth: number; }>' is not assignable to type '((params: { mode: string; editingInput?: string | undefined; sourceOverride?: GenerationSourceOverride | null | undefined; }) => GenerationLineageContext) | undefined'.
+  Type 'Mock<({ sourceOverride }: any) => { parentHistoryId: any; rootHistoryId: any; sourceHistoryId: any; lineageAction: string; lineageDepth: number; }>' is not assignable to type '(params: { mode: string; editingInput?: string | undefined; sourceOverride?: GenerationSourceOverride | null | undefined; }) => GenerationLineageContext'.
+    Call signature return types '{ parentHistoryId: any; rootHistoryId: any; sourceHistoryId: any; lineageAction: string; lineageDepth: number; }' and 'GenerationLineageContext' are incompatible.
+      The types of 'lineageAction' are incompatible between these types.
+        Type 'string' is not assignable to type 'TurnLineageAction'.
+tests/useWorkspaceAppLifecycle.test.tsx(105,17): error TS2322: Type 'Dispatch<SetStateAction<Language>> | Dispatch<SetStateAction<"en">>' is not assignable to type 'Dispatch<SetStateAction<Language>>'.
+  Type 'Dispatch<SetStateAction<"en">>' is not assignable to type 'Dispatch<SetStateAction<Language>>'.
+    Type 'SetStateAction<Language>' is not assignable to type 'SetStateAction<"en">'.
+      Type '"zh_TW"' is not assignable to type 'SetStateAction<"en">'.
+tests/useWorkspaceEditorActions.test.tsx(133,13): error TS2322: Type 'Dispatch<SetStateAction<"1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "2:3" | "3:2" | "21:9">>' is not assignable to type 'Dispatch<SetStateAction<AspectRatio>>'.
+  Type 'SetStateAction<AspectRatio>' is not assignable to type 'SetStateAction<"1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "2:3" | "3:2" | "21:9">'.
+    Type '"4:5"' is not assignable to type 'SetStateAction<"1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "2:3" | "3:2" | "21:9">'.
+tests/useWorkspaceEditorActions.test.tsx(134,13): error TS2322: Type 'Dispatch<SetStateAction<"1K" | "2K" | "4K">>' is not assignable to type 'Dispatch<SetStateAction<ImageSize>>'.
+  Type 'SetStateAction<ImageSize>' is not assignable to type 'SetStateAction<"1K" | "2K" | "4K">'.
+    Type '"512"' is not assignable to type 'SetStateAction<"1K" | "2K" | "4K">'.
+tests/useWorkspaceEditorActions.test.tsx(140,13): error TS2322: Type 'Dispatch<SetStateAction<"1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "2:3" | "3:2" | "21:9" | null>>' is not assignable to type 'Dispatch<SetStateAction<AspectRatio | null>>'.
+  Type 'SetStateAction<AspectRatio | null>' is not assignable to type 'SetStateAction<"1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "2:3" | "3:2" | "21:9" | null>'.
+    Type '"4:5"' is not assignable to type 'SetStateAction<"1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "2:3" | "3:2" | "21:9" | null>'.
+tests/useWorkspaceEditorActions.test.tsx(363,45): error TS2352: Conversion of type '{ target: { files: File[]; }; }' to type 'ChangeEvent<HTMLInputElement, Element>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ target: { files: File[]; }; }' is missing the following properties from type 'ChangeEvent<HTMLInputElement, Element>': nativeEvent, currentTarget, bubbles, cancelable, and 10 more.
+tests/useWorkspaceLineageSelectors.test.tsx(64,24): error TS2339: Property 'selectedItemModel' does not exist on type 'never'.
+tests/useWorkspaceLineageSelectors.test.tsx(65,24): error TS2339: Property 'selectedItemModel' does not exist on type 'never'.
+tests/useWorkspaceLineageSelectors.test.tsx(66,24): error TS2339: Property 'currentStageSourceHistoryId' does not exist on type 'never'.
+tests/useWorkspaceLineageSelectors.test.tsx(67,24): error TS2339: Property 'currentStageSourceTurn' does not exist on type 'never'.
+tests/useWorkspaceLineageSelectors.test.tsx(119,24): error TS2339: Property 'activeBranchSummary' does not exist on type 'never'.
+tests/useWorkspaceLineageSelectors.test.tsx(120,24): error TS2339: Property 'selectedItemModel' does not exist on type 'never'.
+tests/useWorkspaceLineageSelectors.test.tsx(121,24): error TS2339: Property 'currentStageBranchSummary' does not exist on type 'never'.
+tests/useWorkspaceOverlayAuxiliaryProps.test.ts(22,17): error TS2353: Object literal may only specify known properties, and 'label' does not exist in type 'ModelCapability'.
+tests/useWorkspaceOverlayAuxiliaryProps.test.ts(103,17): error TS2353: Object literal may only specify known properties, and 'incomingConversationId' does not exist in type 'WorkspaceImportReviewState'.
+tests/useWorkspaceStageViewer.test.tsx(56,17): error TS2353: Object literal may only specify known properties, and 'continuationDiffers' does not exist in type 'Partial<BuildStageTopRightModelArgs>'.
+tests/WorkspaceImportReview.test.tsx(48,25): error TS2322: Type 'string' is not assignable to type 'number'.
+tests/WorkspacePickerSheet.promptDraft.test.tsx(32,17): error TS2820: Type '"none"' is not assignable to type 'ImageStyle'. Did you mean '"None"'?
+tests/WorkspacePickerSheet.promptDraft.test.tsx(39,17): error TS2322: Type '"1024x1024"' is not assignable to type 'ImageSize'.
+tests/WorkspacePickerSheet.test.tsx(21,17): error TS2820: Type '"none"' is not assignable to type 'ImageStyle'. Did you mean '"None"'?
+tests/WorkspacePickerSheet.test.tsx(28,17): error TS2322: Type '"1024x1024"' is not assignable to type 'ImageSize'.
+tests/WorkspacePickerSheet.test.tsx(66,21): error TS2820: Type '"none"' is not assignable to type 'ImageStyle'. Did you mean '"None"'?
+tests/WorkspacePickerSheet.test.tsx(136,17): error TS2820: Type '"none"' is not assignable to type 'ImageStyle'. Did you mean '"None"'?
+tests/WorkspacePickerSheet.test.tsx(143,17): error TS2322: Type '"1024x1024"' is not assignable to type 'ImageSize'.
+tests/WorkspacePickerSheet.test.tsx(182,17): error TS2820: Type '"none"' is not assignable to type 'ImageStyle'. Did you mean '"None"'?
+tests/WorkspacePickerSheet.test.tsx(189,17): error TS2322: Type '"1024x1024"' is not assignable to type 'ImageSize'.
+tests/WorkspacePickerSheet.test.tsx(217,17): error TS2820: Type '"none"' is not assignable to type 'ImageStyle'. Did you mean '"None"'?
+tests/WorkspacePickerSheet.test.tsx(224,17): error TS2322: Type '"1024x1024"' is not assignable to type 'ImageSize'.
+tests/WorkspacePickerSheet.test.tsx(262,17): error TS2820: Type '"none"' is not assignable to type 'ImageStyle'. Did you mean '"None"'?
+tests/workspaceSnapshotState.test.ts(59,21): error TS2322: Type '"queued"' is not assignable to type 'QueuedBatchJobState'.
+tests/workspaceSnapshotState.test.ts(97,17): error TS2740: Type '{ localId: string; name: string; displayName: string; state: "JOB_STATE_PENDING"; model: "gemini-3.1-flash-image-preview"; prompt: string; aspectRatio: "1:1"; imageSize: "2K"; style: "None"; ... 11 more ...; error: null; }' is missing the following properties from type 'QueuedBatchJob': submissionGroupId, submissionItemIndex, submissionItemCount, startedAt, and 2 more.
+utils/generationSourceOverride.ts(43,30): error TS2339: Property 'id' does not exist on type 'never'.
+utils/translations.ts(35,9): error TS2352: Conversion of type '{ en: { readonly appTitle: "Nano Banana Ultra"; readonly clearAll: "Clear All"; readonly toolPen: "Pen"; readonly toolEraser: "Eraser"; readonly toolUndo: "Undo"; readonly toolRedo: "Redo"; ... 913 more ...; readonly groundingPanelNoLinkedBundlesForSelection: "No linked support bundles match the current citation sel...' to type 'Record<Language, TranslationDictionary>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ en: { readonly appTitle: "Nano Banana Ultra"; readonly clearAll: "Clear All"; readonly toolPen: "Pen"; readonly toolEraser: "Eraser"; readonly toolUndo: "Undo"; readonly toolRedo: "Redo"; ... 913 more ...; readonly groundingPanelNoLinkedBundlesForSelection: "No linked support bundles match the current citation sel...' is missing the following properties from type 'Record<Language, TranslationDictionary>': zh_TW, zh_CN, ja, ko, and 4 more.
+utils/workspaceImportAssets.ts(230,71): error TS18048: 'parsed.assets' is possibly 'undefined'.
+utils/workspaceImportAssets.ts(230,71): error TS2345: Argument of type 'Record<string, unknown> | undefined' is not assignable to parameter of type 'Record<string, unknown>'.
+  Type 'undefined' is not assignable to type 'Record<string, unknown>'.
+utils/workspacePersistence.ts(1153,31): error TS18046: 'value.safetyThresholds' is of type 'unknown'.

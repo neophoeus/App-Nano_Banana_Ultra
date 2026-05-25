@@ -60,6 +60,7 @@ describe('useGroundingProvenanceView', () => {
         function TestComponent() {
             latestHook = useGroundingProvenanceView({
                 selectedResultText: null,
+                selectedResultParts: null,
                 selectedThoughts: null,
                 selectedGrounding,
                 selectedMetadata,

@@ -116,6 +116,12 @@ describe('usePerformGeneration', () => {
     const renderHook = (overrides: HookOverrides = {}) => {
         function Harness() {
             latestHook = usePerformGeneration({
+                safetyThresholds: {
+                    harassment: 'block-medium-and-above',
+                    'hate-speech': 'block-medium-and-above',
+                    'sexually-explicit': 'block-medium-and-above',
+                    'dangerous-content': 'block-medium-and-above',
+                },
                 t: (key) => {
                     const translations: Record<string, string> = {
                         errorNoPrompt: 'Prompt required.',
@@ -248,7 +254,7 @@ describe('usePerformGeneration', () => {
                     return conversationContextFactory?.(params) || null;
                 },
                 onBatchPreviewTileUpdate: ({ sessionId, tile }) => {
-                    latestPreviewTiles = [...latestPreviewTiles, { sessionId, tile }];
+                    latestPreviewTiles = [...latestPreviewTiles, { sessionId, tile: tile as any }];
                 },
                 onBatchPreviewComplete: ({ sessionId, historyItems }) => {
                     latestPreviewCompletePayload = { sessionId, historyItems };
@@ -286,7 +292,7 @@ describe('usePerformGeneration', () => {
         latestDisplaySettings = null;
         latestGenerationMode = '';
         latestExecutionMode = '';
-        latestError = 'stale-error';
+        latestError = { summary: 'stale-error', detail: null, failure: null };
         latestIsGenerating = false;
         latestIsEditing = true;
         latestEditingImageSource = 'data:image/png;base64,EDIT';

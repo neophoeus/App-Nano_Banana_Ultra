@@ -88,7 +88,7 @@ describe('useWorkspaceAppLifecycle', () => {
 
     const renderHook = (overrides: Partial<Parameters<typeof useWorkspaceAppLifecycle>[0]> = {}) => {
         const setApiKeyReady = createStateSetter<boolean>();
-        const setCurrentLang = createStateSetter<'en'>();
+        const setCurrentLang = createStateSetter<any>();
         const setInitialPreferencesReady = createStateSetter<boolean>();
         const setAspectRatio = createStateSetter<AspectRatio>();
         const addLog = vi.fn();
@@ -99,6 +99,7 @@ describe('useWorkspaceAppLifecycle', () => {
                 historyCount: 0,
                 generatedImageCount: 0,
                 orderedReferenceAssets: [],
+                hasDraftPrompt: false,
                 aspectRatio: '1:1',
                 setApiKeyReady,
                 setCurrentLang,

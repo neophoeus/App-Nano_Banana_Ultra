@@ -58,15 +58,13 @@ describe('LazyHistoryImage', () => {
         document.body.appendChild(container);
         root = createRoot(container);
         MockIntersectionObserver.instances = [];
-        (window as typeof window & { IntersectionObserver: typeof MockIntersectionObserver }).IntersectionObserver =
-            MockIntersectionObserver as unknown as typeof IntersectionObserver;
+        (window as any).IntersectionObserver = MockIntersectionObserver;
     });
 
     afterEach(() => {
         root.unmount();
         container.remove();
-        delete (window as typeof window & { IntersectionObserver?: typeof MockIntersectionObserver })
-            .IntersectionObserver;
+        (window as any).IntersectionObserver = undefined;
     });
 
     it('mounts image media only when intersecting and releases it when the card leaves the viewport', () => {

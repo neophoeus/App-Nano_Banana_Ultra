@@ -40,6 +40,8 @@ const buildQueuedJob = (overrides: Partial<QueuedBatchJob> = {}): QueuedBatchJob
     error: overrides.error ?? null,
     sourceHistoryId: overrides.sourceHistoryId ?? null,
     lineageAction: overrides.lineageAction,
+    importDiagnostic: overrides.importDiagnostic,
+    importIssues: overrides.importIssues,
 });
 
 describe('QueuedBatchJobsPanel', () => {
@@ -429,7 +431,7 @@ describe('QueuedBatchJobsPanel', () => {
                 currentLanguage="en"
                 queueBatchConversationNotice={null}
                 queuedJobs={[
-                    {
+                    buildQueuedJob({
                         localId: 'job-no-payload',
                         name: 'batches/job-no-payload',
                         displayName: 'No payload queue job',
@@ -457,7 +459,7 @@ describe('QueuedBatchJobsPanel', () => {
                         hasImportablePayload: false,
                         importDiagnostic: 'no-payload',
                         error: null,
-                    },
+                    }),
                 ]}
                 getLineageActionLabel={(action) => action || 'root'}
                 getImportedQueuedResultCount={() => 0}
@@ -489,7 +491,7 @@ describe('QueuedBatchJobsPanel', () => {
                 currentLanguage="en"
                 queueBatchConversationNotice={null}
                 queuedJobs={[
-                    {
+                    buildQueuedJob({
                         localId: 'job-specific-error',
                         name: 'batches/job-specific-error',
                         displayName: 'Specific extraction error batch',
@@ -517,7 +519,7 @@ describe('QueuedBatchJobsPanel', () => {
                         hasImportablePayload: true,
                         importDiagnostic: 'extraction-failure',
                         error: 'Prompt was rejected by policy (block reason: PROHIBITED_CONTENT).',
-                    },
+                    }),
                 ]}
                 getLineageActionLabel={(action) => action || 'root'}
                 getImportedQueuedResultCount={() => 0}
@@ -551,7 +553,7 @@ describe('QueuedBatchJobsPanel', () => {
                 currentLanguage="en"
                 queueBatchConversationNotice={null}
                 queuedJobs={[
-                    {
+                    buildQueuedJob({
                         localId: 'job-multi-issue',
                         name: 'batches/job-multi-issue',
                         displayName: 'Multi issue batch',
@@ -589,7 +591,7 @@ describe('QueuedBatchJobsPanel', () => {
                             },
                         ],
                         error: 'Model returned no image data (finish reason: STOP). (+1 more)',
-                    },
+                    }),
                 ]}
                 getLineageActionLabel={(action) => action || 'root'}
                 getImportedQueuedResultCount={() => 0}
@@ -627,7 +629,7 @@ describe('QueuedBatchJobsPanel', () => {
                 surface="embedded"
                 queueBatchConversationNotice="Queued batch jobs keep source lineage, but they do not send official multi-turn conversation history."
                 queuedJobs={[
-                    {
+                    buildQueuedJob({
                         localId: 'job-embedded',
                         name: 'batches/job-embedded',
                         displayName: 'Embedded batch',
@@ -653,7 +655,7 @@ describe('QueuedBatchJobsPanel', () => {
                         completedAt: null,
                         lastPolledAt: null,
                         error: null,
-                    },
+                    }),
                 ]}
                 getLineageActionLabel={(action) => action || 'root'}
                 getImportedQueuedResultCount={() => 0}
@@ -887,7 +889,7 @@ describe('QueuedBatchJobsPanel', () => {
                 currentLanguage="ja"
                 queueBatchConversationNotice={null}
                 queuedJobs={[
-                    {
+                    buildQueuedJob({
                         localId: 'job-editor-edit',
                         name: 'batches/job-editor-edit',
                         displayName: 'Editor queue job',
@@ -913,7 +915,7 @@ describe('QueuedBatchJobsPanel', () => {
                         completedAt: null,
                         lastPolledAt: null,
                         error: null,
-                    },
+                    }),
                 ]}
                 getLineageActionLabel={() => 'root'}
                 getImportedQueuedResultCount={() => 0}

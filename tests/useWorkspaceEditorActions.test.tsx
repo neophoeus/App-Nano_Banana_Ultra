@@ -130,8 +130,8 @@ describe('useWorkspaceEditorActions', () => {
             setEditingImageSource: createStateSetter<string | null>(),
             setEditorContextSnapshot: createStateSetter<EditorContextSnapshot | null>(),
             setEditorPrompt: createStateSetter<string>(),
-            setAspectRatio: createStateSetter<'1:1' | '16:9' | '9:16' | '4:3' | '3:4' | '3:2' | '2:3' | '21:9'>(),
-            setImageSize: createStateSetter<'1K' | '2K' | '4K'>(),
+            setAspectRatio: createStateSetter<'1:1' | '16:9' | '9:16' | '4:3' | '3:4' | '3:2' | '2:3' | '21:9'>() as any,
+            setImageSize: createStateSetter<'1K' | '2K' | '4K'>() as any,
             setActivePickerSheet: createStateSetter<PickerSheet>(),
             setError: createStateSetter<StageErrorState | null>(),
             setIsSketchPadOpen: createStateSetter<boolean>(),
@@ -139,7 +139,7 @@ describe('useWorkspaceEditorActions', () => {
             setEditorMode: createStateSetter<'inpaint' | 'outpaint'>(),
             setEditorRetouchLockedRatio: createStateSetter<
                 '1:1' | '16:9' | '9:16' | '4:3' | '3:4' | '3:2' | '2:3' | '21:9' | null
-            >(),
+            >() as any,
             restoreEditorComposerState: vi.fn(),
             getActiveImageUrl: vi.fn(() => ''),
             addWorkspaceAsset: vi.fn(),
@@ -364,7 +364,7 @@ describe('useWorkspaceEditorActions', () => {
                 target: {
                     files: [new File(['upload'], 'upload.png', { type: 'image/png' })],
                 },
-            } as React.ChangeEvent<HTMLInputElement>);
+            } as unknown as React.ChangeEvent<HTMLInputElement>);
             await Promise.resolve();
         });
 

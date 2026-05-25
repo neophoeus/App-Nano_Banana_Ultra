@@ -37,7 +37,7 @@ describe('useWorkspaceLineageSelectors', () => {
         });
         const history = [failedTurn, successfulTurn];
         const getHistoryTurnById = (historyId?: string | null) => history.find((item) => item.id === historyId) || null;
-        let result: ReturnType<typeof useWorkspaceLineageSelectors> | null = null;
+        let result: any = null;
 
         const TestView = () => {
             result = useWorkspaceLineageSelectors({
@@ -92,7 +92,7 @@ describe('useWorkspaceLineageSelectors', () => {
         });
         const history = [branchTurn, mainTurn, rootTurn];
         const getHistoryTurnById = (historyId?: string | null) => history.find((item) => item.id === historyId) || null;
-        let result: ReturnType<typeof useWorkspaceLineageSelectors> | null = null;
+        let result: any = null;
 
         const TestView = () => {
             result = useWorkspaceLineageSelectors({

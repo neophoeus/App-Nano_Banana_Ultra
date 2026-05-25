@@ -45,7 +45,7 @@ describe('SketchPad', () => {
         expect(zoomSlider).toBeTruthy();
         expect(zoomSlider?.value).toBe('1');
         expect(
-            consoleErrorSpy.mock.calls.some(([message]) =>
+            consoleErrorSpy.mock.calls.some(([message]: any[]) =>
                 String(message).includes('A component is changing a controlled input to be uncontrolled'),
             ),
         ).toBe(false);

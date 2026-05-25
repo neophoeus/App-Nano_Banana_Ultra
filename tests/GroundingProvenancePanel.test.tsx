@@ -52,6 +52,8 @@ describe('GroundingProvenancePanel', () => {
                 groundingStateMessage="Grounding was not requested for this result."
                 groundingSupportMessage="No grounding support bundles were returned for this result."
                 groundingQueries={[]}
+                totalSourceCount={0}
+                totalSupportBundleCount={0}
             />,
         );
 
@@ -130,6 +132,8 @@ describe('GroundingProvenancePanel', () => {
                 groundingStateMessage="No grounding sources were returned."
                 groundingSupportMessage="No grounding support bundles were returned."
                 groundingQueries={[]}
+                totalSourceCount={0}
+                totalSupportBundleCount={0}
             />,
         );
 
@@ -217,6 +221,8 @@ describe('GroundingProvenancePanel', () => {
                 groundingStateMessage="Grounding was not requested for this result."
                 groundingSupportMessage="No grounding support bundles were returned for this result."
                 groundingQueries={[]}
+                totalSourceCount={0}
+                totalSupportBundleCount={0}
             />,
         );
 
@@ -322,6 +328,8 @@ describe('GroundingProvenancePanel', () => {
                 groundingStateMessage="Grounding sources returned."
                 groundingSupportMessage="No grounding support bundles were returned."
                 groundingQueries={[]}
+                totalSourceCount={0}
+                totalSupportBundleCount={0}
             />,
         );
 
@@ -422,6 +430,8 @@ describe('GroundingProvenancePanel', () => {
                 groundingStateMessage="Grounding sources returned."
                 groundingSupportMessage="Grounding support bundles returned."
                 groundingQueries={[]}
+                totalSourceCount={2}
+                totalSupportBundleCount={1}
             />,
         );
 
@@ -513,6 +523,8 @@ describe('GroundingProvenancePanel', () => {
                 groundingStateMessage="Grounding sources returned."
                 groundingSupportMessage="Grounding support bundles returned."
                 groundingQueries={[]}
+                totalSourceCount={0}
+                totalSupportBundleCount={0}
             />,
         );
 
@@ -587,6 +599,8 @@ describe('GroundingProvenancePanel', () => {
                 groundingStateMessage="Grounding sources returned."
                 groundingSupportMessage="Grounding support bundles returned."
                 groundingQueries={[]}
+                totalSourceCount={0}
+                totalSupportBundleCount={0}
             />,
         );
 
@@ -661,6 +675,8 @@ describe('GroundingProvenancePanel', () => {
                 groundingStateMessage="Grounding sources returned."
                 groundingSupportMessage="Grounding support bundles returned."
                 groundingQueries={[]}
+                totalSourceCount={0}
+                totalSupportBundleCount={0}
             />,
         );
 
@@ -748,6 +764,8 @@ describe('GroundingProvenancePanel', () => {
                 groundingStateMessage="有來源"
                 groundingSupportMessage="無 bundle"
                 groundingQueries={[]}
+                totalSourceCount={0}
+                totalSupportBundleCount={0}
             />,
         );
 
