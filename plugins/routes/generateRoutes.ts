@@ -1,5 +1,6 @@
 import { GoogleGenAI } from '@google/genai/node';
-import type { ConversationRequestContext, ResultPart } from '../../types';
+import type { ConversationRequestContext, ResultPart, GroundingMetadata, ImageModel, ImageSize, ResultImagePart } from '../../types';
+import { deriveGroundingMode } from '../../utils/groundingMode';
 import {
     getGenerationFailureHttpStatus,
     isSafetyBlockedFinishReason,
@@ -58,11 +59,7 @@ type GeneratedResponsePayload = {
     thoughts?: string;
     resultParts?: ResultPart[];
     metadata?: Record<string, unknown>;
-    grounding?: {
-        enabled: boolean;
-        imageSearch?: boolean;
-        sources?: Array<{ title: string; url: string }>;
-    };
+    grounding?: GroundingMetadata;
     sessionHints?: Record<string, unknown>;
     conversation?: {
         used: boolean;
@@ -162,7 +159,7 @@ type PreparedGenerateRequest = {
     groundingMode: ReturnType<typeof deriveGroundingMode>;
     effectiveThinkingLevel: string;
     shouldIncludeThoughts: boolean;
-    parts: unknown[];
+    parts: any[];
     conversationHistory: ReturnType<typeof buildConversationHistory>;
     useOfficialConversation: boolean;
 };
@@ -349,24 +346,29 @@ function normalizeGeneratedResponseCandidate(candidate: any): NormalizedGenerate
 const isThoughtResultPart = (part: ResultPart | ExtractedResponsePart) =>
     part.kind === 'thought-text' || part.kind === 'thought-image';
 
-const toPublicResultPart = (part: ExtractedResponsePart): ResultPart =>
-    part.kind === 'thought-text' || part.kind === 'output-text'
-        ? {
-              sequence: part.sequence,
-              kind: part.kind,
-              text: part.text,
-          }
-        : {
-              sequence: part.sequence,
-              kind: part.kind,
-              imageUrl: part.imageUrl,
-              mimeType: part.mimeType,
-          };
+const toPublicResultPart = (part: ExtractedResponsePart): ResultPart => {
+    if (part.kind === 'thought-image' || part.kind === 'output-image') {
+        return {
+            sequence: part.sequence,
+            kind: part.kind,
+            imageUrl: part.imageUrl,
+            mimeType: part.mimeType,
+        };
+    }
+    return {
+        sequence: part.sequence,
+        kind: part.kind,
+        text: (part as ExtractedTextResultPart).text,
+    };
+};
 
-const buildResultPartKey = (part: ResultPart) =>
-    part.kind === 'thought-text' || part.kind === 'output-text'
-        ? `${part.kind}:${part.text}`
-        : `${part.kind}:${part.mimeType}:${part.imageUrl}`;
+const buildResultPartKey = (part: ResultPart) => {
+    if (part.kind === 'thought-text' || part.kind === 'output-text') {
+        return `${part.kind}:${part.text}`;
+    }
+    const imagePart = part as ResultImagePart;
+    return `${imagePart.kind}:${imagePart.mimeType}:${imagePart.imageUrl}`;
+};
 
 const countSharedPrefix = (left: string[], right: string[]) => {
     let index = 0;
@@ -696,12 +698,12 @@ function validateInteractiveGenerateRequest(
 ): { model: string; objectImageInputs: string[]; characterImageInputs: string[] } | ValidationErrorResult {
     const model = String(body.model || 'gemini-3.1-flash-image-preview');
 
-    if (!VALID_IMAGE_MODELS.has(model)) {
+    if (!VALID_IMAGE_MODELS.has(model as ImageModel)) {
         logApiError(routePath, new Error('Unsupported model'), { model }, requestContext);
         return { status: 400, error: `Unsupported model: ${model}` };
     }
 
-    if (body.imageSize && !VALID_IMAGE_SIZES.has(body.imageSize)) {
+    if (body.imageSize && !VALID_IMAGE_SIZES.has(body.imageSize as ImageSize)) {
         logApiError(routePath, new Error('Unsupported image size'), {
             imageSize: body.imageSize,
             model,

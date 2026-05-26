@@ -25,20 +25,20 @@ export const resolveSelectionFirstLineageAction = ({
     const branchOriginId = branchOriginIdByTurnId[sourceHistoryId] || sourceHistoryId;
     let latestBranchTurn: GeneratedImage | null = null;
 
-    history.forEach((item) => {
+    for (const item of history) {
         if (item.status !== 'success') {
-            return;
+            continue;
         }
 
         const itemBranchOriginId = branchOriginIdByTurnId[item.id] || item.id;
         if (itemBranchOriginId !== branchOriginId) {
-            return;
+            continue;
         }
 
         if (!latestBranchTurn || item.createdAt > latestBranchTurn.createdAt) {
             latestBranchTurn = item;
         }
-    });
+    }
 
     return latestBranchTurn?.id === sourceHistoryId ? 'continue' : 'branch';
 };

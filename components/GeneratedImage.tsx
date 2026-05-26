@@ -92,7 +92,7 @@ const stageTopRightOverflowChipClassNameByTone: Record<StageTopRightChipTone, st
 };
 
 const stageTopRightVisibleActionClassNameByEmphasis: Record<
-    Exclude<StageTopRightActionEmphasis, 'destructive'>,
+    StageTopRightActionEmphasis,
     string
 > = {
     primary:
@@ -101,6 +101,8 @@ const stageTopRightVisibleActionClassNameByEmphasis: Record<
         'border-gray-300 bg-gray-200 text-gray-800 hover:border-gray-400 hover:bg-gray-300 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:hover:border-gray-400 dark:hover:bg-gray-500',
     passive:
         'cursor-default border-gray-300 bg-gray-200 text-gray-700 dark:border-gray-500 dark:bg-gray-600 dark:text-white',
+    destructive:
+        'border-rose-300 bg-rose-200 text-rose-800 hover:border-rose-400 hover:bg-rose-300 dark:border-rose-500 dark:bg-rose-600 dark:text-white dark:hover:border-rose-400 dark:hover:bg-rose-500',
 };
 
 const stageTopRightOverflowTriggerClassName =

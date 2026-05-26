@@ -2,7 +2,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { GoogleGenAI } from '@google/genai/node';
-import type { ConversationRequestContext } from '../../types';
+import type { ConversationRequestContext, ImageModel, ImageSize } from '../../types';
 import { VALID_IMAGE_MODELS, VALID_IMAGE_SIZES } from '../../utils/modelCapabilities';
 import {
     createApiRequestContext,
@@ -258,7 +258,7 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
                 hasEditingInput: Boolean(body.editingInput),
             });
 
-            if (!VALID_IMAGE_MODELS.has(model)) {
+            if (!VALID_IMAGE_MODELS.has(model as ImageModel)) {
                 sendJson(res, 400, { error: `Unsupported model: ${model}` }, {
                     requestContext,
                     summary: `Unsupported model: ${model}`,
@@ -266,7 +266,7 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
                 });
                 return;
             }
-            if (body.imageSize && !VALID_IMAGE_SIZES.has(body.imageSize)) {
+            if (body.imageSize && !VALID_IMAGE_SIZES.has(body.imageSize as ImageSize)) {
                 sendJson(res, 400, { error: `Unsupported image size: ${body.imageSize}` }, {
                     requestContext,
                     summary: `Unsupported image size: ${body.imageSize}`,

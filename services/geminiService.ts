@@ -5,6 +5,7 @@ import {
     ImageReceivedResult,
     QueuedBatchJobStats,
     ResultPart,
+    ResultImagePart,
     type SafetyThresholds,
 } from '../types';
 import {
@@ -151,7 +152,7 @@ const emitServiceDebugEvent = ({
 }: {
     kind: 'request' | 'response' | 'error' | 'stream' | 'retry' | 'log';
     label: string;
-    context: DebugRequestContext & { source: DebugTerminalSource; operation: string };
+    context: DebugRequestContext<any> & { source: DebugTerminalSource; operation: string };
     summary?: string;
     payload?: unknown;
     status?: number;
@@ -208,7 +209,7 @@ const buildGenerateRequestSummary = (requestBody: ImageGenerateRequestBody, imgI
 const buildStreamPartSummary = (part: ResultPart): string =>
     part.kind === 'thought-text' || part.kind === 'output-text'
         ? `${part.kind} #${part.sequence + 1}`
-        : `${part.kind} #${part.sequence + 1} (${part.mimeType})`;
+        : `${part.kind} #${part.sequence + 1} (${(part as ResultImagePart).mimeType})`;
 
 const buildBatchJobSummary = (job: RemoteQueuedBatchJob): string =>
     [job.state, job.model, job.hasImportablePayload ? 'importable' : null].filter(Boolean).join(' | ');
@@ -637,7 +638,7 @@ type InitialBatchAttemptOutcome = {
 const buildResultPartIdentityKey = (part: ResultPart) =>
     part.kind === 'thought-text' || part.kind === 'output-text'
         ? `${part.kind}:${part.sequence}:${part.text}`
-        : `${part.kind}:${part.sequence}:${part.mimeType}:${part.imageUrl}`;
+        : `${part.kind}:${part.sequence}:${(part as ResultImagePart).mimeType}:${(part as ResultImagePart).imageUrl}`;
 
 const mergeResultPartCollections = (
     baseParts: ResultPart[] | undefined,
@@ -939,8 +940,8 @@ export const checkApiKey = async (): Promise<boolean> => {
             requestLabel: 'Runtime config request',
             requestSummary: 'Check API key availability',
             responseLabel: 'Runtime config response',
-            responseSummary: (result) => (result.hasApiKey ? 'API key available' : 'API key missing'),
-            responsePayload: (result) => ({ hasApiKey: result.hasApiKey }),
+            responseSummary: (result: { hasApiKey: boolean }) => (result.hasApiKey ? 'API key available' : 'API key missing'),
+            responsePayload: (result: { hasApiKey: boolean }) => ({ hasApiKey: result.hasApiKey }),
             errorLabel: 'Runtime config request failed',
         });
         return payload.hasApiKey;
@@ -1179,16 +1180,17 @@ const generateSingleImageStream = async (
         throw streamError;
     }
 
-    if (streamFailure) {
-        const requestError = new Error(streamFailure.error) as Error & {
+    const failurePayload = streamFailure as StreamRouteFailureEvent | null;
+    if (failurePayload) {
+        const requestError = new Error(failurePayload.error) as Error & {
             didReceiveStreamEvent?: boolean;
             partialResponse?: GenerateResponse;
         };
         requestError.didReceiveStreamEvent = didReceiveStreamEvent;
-        requestError.partialResponse = streamFailure.response;
+        requestError.partialResponse = failurePayload.response;
 
-        if (streamFailure.failure) {
-            throw attachGenerationFailure(requestError, streamFailure.failure);
+        if (failurePayload.failure) {
+            throw attachGenerationFailure(requestError, failurePayload.failure);
         }
 
         throw requestError;
@@ -1367,8 +1369,8 @@ export const enhancePromptWithGemini = async (
             requestSummary: `Prompt enhancer (${lang})`,
             requestPayload,
             responseLabel: 'Prompt enhancer response',
-            responseSummary: (result) => buildTextResponseSummary(result.text),
-            responsePayload: (result) => ({ text: result.text }),
+            responseSummary: (result: { text: string }) => buildTextResponseSummary(result.text),
+            responsePayload: (result: { text: string }) => ({ text: result.text }),
             errorLabel: 'Prompt enhancer failed',
         },
     );
@@ -1418,8 +1420,8 @@ export const generateRandomPrompt = async (
             requestSummary: `Random prompt (${lang})`,
             requestPayload,
             responseLabel: 'Random prompt response',
-            responseSummary: (result) => buildTextResponseSummary(result.text),
-            responsePayload: (result) => ({ text: result.text }),
+            responseSummary: (result: { text: string }) => buildTextResponseSummary(result.text),
+            responsePayload: (result: { text: string }) => ({ text: result.text }),
             errorLabel: 'Random prompt failed',
         },
     );
@@ -1470,8 +1472,8 @@ export const generatePromptFromImage = async (
             requestSummary: `Image-to-prompt (${lang})`,
             requestPayload,
             responseLabel: 'Image-to-prompt response',
-            responseSummary: (result) => buildTextResponseSummary(result.text),
-            responsePayload: (result) => ({ text: result.text }),
+            responseSummary: (result: { text: string }) => buildTextResponseSummary(result.text),
+            responsePayload: (result: { text: string }) => ({ text: result.text }),
             errorLabel: 'Image-to-prompt failed',
         },
     );
@@ -1535,8 +1537,8 @@ const generateSingleImage = async (
                 requestSummary: buildGenerateRequestSummary(requestBody, imgIndex),
                 requestPayload: requestBody,
                 responseLabel: `Image #${imgIndex}: Blocking response`,
-                responseSummary: (result) => buildDebugResponseSummary(result),
-                responsePayload: (result) => result,
+                responseSummary: (result: GenerateResponse) => buildDebugResponseSummary(result),
+                responsePayload: (result: GenerateResponse) => result,
                 errorLabel: `Image #${imgIndex}: Blocking request failed`,
             },
         );
@@ -1636,8 +1638,8 @@ export const submitQueuedBatchJob = async (options: SubmitQueuedBatchOptions): P
             requestSummary: `${options.model} | ${options.displayName || 'untitled'} | ${options.requestCount} request(s)`,
             requestPayload,
             responseLabel: 'Batch create response',
-            responseSummary: (result) => buildBatchJobSummary(result.job),
-            responsePayload: (result) => ({ job: result.job }),
+            responseSummary: (result: { job: RemoteQueuedBatchJob }) => buildBatchJobSummary(result.job),
+            responsePayload: (result: { job: RemoteQueuedBatchJob }) => ({ job: result.job }),
             errorLabel: 'Batch create failed',
         },
     );
@@ -1663,8 +1665,8 @@ export const getQueuedBatchJob = async (name: string): Promise<RemoteQueuedBatch
             requestSummary: name,
             requestPayload,
             responseLabel: 'Batch status response',
-            responseSummary: (result) => buildBatchJobSummary(result.job),
-            responsePayload: (result) => ({ job: result.job }),
+            responseSummary: (result: { job: RemoteQueuedBatchJob }) => buildBatchJobSummary(result.job),
+            responsePayload: (result: { job: RemoteQueuedBatchJob }) => ({ job: result.job }),
             errorLabel: 'Batch status request failed',
         },
     );
@@ -1690,8 +1692,8 @@ export const cancelQueuedBatchJob = async (name: string): Promise<RemoteQueuedBa
             requestSummary: name,
             requestPayload,
             responseLabel: 'Batch cancel response',
-            responseSummary: (result) => buildBatchJobSummary(result.job),
-            responsePayload: (result) => ({ job: result.job }),
+            responseSummary: (result: { job: RemoteQueuedBatchJob }) => buildBatchJobSummary(result.job),
+            responsePayload: (result: { job: RemoteQueuedBatchJob }) => ({ job: result.job }),
             errorLabel: 'Batch cancel failed',
         },
     );
@@ -1719,8 +1721,8 @@ export const importQueuedBatchJobResults = async (
             requestSummary: name,
             requestPayload,
             responseLabel: 'Batch import response',
-            responseSummary: (result) => buildQueuedBatchImportSummary(result),
-            responsePayload: (result) => ({
+            responseSummary: (result: { job: RemoteQueuedBatchJob; results: QueuedBatchImportResult[] }) => buildQueuedBatchImportSummary(result),
+            responsePayload: (result: { job: RemoteQueuedBatchJob; results: QueuedBatchImportResult[] }) => ({
                 job: result.job,
                 resultsSummary: summarizeDebugTerminalPayload(result.results),
             }),

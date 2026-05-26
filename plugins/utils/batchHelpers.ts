@@ -310,7 +310,7 @@ function extractBatchImportResultsFromJsonlContent(
 
                 return {
                     index,
-                    status: 'failed',
+                    status: 'failed' as const,
                     sessionHints: {
                         requestKey,
                         entryErrorPresent: Boolean(entryErrorMessage),
@@ -323,7 +323,7 @@ function extractBatchImportResultsFromJsonlContent(
                 const message = error?.message || 'Failed to parse batch result line.';
                 return {
                     index: lineIndex,
-                    status: 'failed',
+                    status: 'failed' as const,
                     sessionHints: {
                         entryErrorPresent: true,
                         entryErrorMessage: message,
@@ -364,7 +364,7 @@ export function extractBatchImportResults(
 
         return {
             index,
-            status: 'failed',
+            status: 'failed' as const,
             sessionHints: {
                 entryErrorPresent: Boolean(entryErrorMessage),
                 entryErrorMessage,

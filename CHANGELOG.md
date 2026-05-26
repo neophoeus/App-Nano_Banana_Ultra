@@ -1,5 +1,14 @@
 # Changelog
 
+## v3.10.6 - 2026-05-26
+
+- Release title: Nano Banana Ultra 3.10.6 - Comprehensive TypeScript Type Error Fixes Across Frontend & Backend Plugins
+- Release summary:
+    - Resolved all remaining compilation errors and warnings to achieve 100% successful type-check (`tsc --noEmit`).
+    - Frontend UI & Hooks: Refactored union types, narrowed conditional assignments, corrected component prop types, and updated type definitions in `types.ts`, components (`GeneratedImage.tsx`, `GroundingProvenancePanel.tsx`, `SketchPad.tsx`, `WorkspaceProgressDetailPanel.tsx`, etc.), and hooks.
+    - Backend Plugins: Fixed type assertions for image models/sizes in `batchRoutes.ts` and `generateRoutes.ts`, typed response structures utilizing `GroundingMetadata`, resolved stream events in `writeNdjsonEvent`, and prevented closure-bound type narrowing regressions in `batchHelpers.ts`.
+    - Testing Environment: Fixed named exports imports (`defineConfig`, `devices`) from `@playwright/test` in `playwright.config.ts`.
+
 ## v3.10.5 - 2026-05-26
 
 - Release title: Nano Banana Ultra 3.10.5 - Fullscreen Image Viewer Overflow Fix

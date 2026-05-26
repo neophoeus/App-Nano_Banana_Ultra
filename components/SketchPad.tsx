@@ -67,7 +67,7 @@ const SketchPad: React.FC<SketchPadProps> = ({ onSave, onClose, currentLanguage 
 
     // --- UI State ---
     const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
-    const [confirmAction, setConfirmAction] = useState<'close' | 'use' | 'use_blank' | null>(null);
+    const [confirmAction, setConfirmAction] = useState<'close' | 'use' | 'use_blank' | 'change_ratio' | null>(null);
 
     const t = (key: string) => getTranslation(currentLanguage as Language, key);
     const paths = historyState.present;

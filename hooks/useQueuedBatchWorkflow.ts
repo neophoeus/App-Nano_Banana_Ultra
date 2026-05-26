@@ -10,6 +10,7 @@ import {
     GeneratedImage,
     GenerationLineageContext,
     ImageModel,
+    ImageStyle,
     QueuedBatchJob,
     QueuedBatchJobImportDiagnostic,
     QueuedBatchJobImportIssue,
@@ -244,7 +245,7 @@ type UseQueuedBatchWorkflowArgs = {
     setApiKeyReady: Dispatch<SetStateAction<boolean>>;
     handleApiKeyConnect: () => Promise<boolean>;
     prompt: string;
-    imageStyle: string;
+    imageStyle: ImageStyle;
     imageModel: ImageModel;
     batchSize: number;
     aspectRatio: QueuedBatchJob['aspectRatio'];
@@ -382,8 +383,8 @@ export function useQueuedBatchWorkflow({
     t,
 }: UseQueuedBatchWorkflowArgs): UseQueuedBatchWorkflowReturn {
     const formatMessage = useCallback(
-        (key: string, ...values: Array<string | number>) =>
-            values.reduce((message, value, index) => message.replace(`{${index}}`, String(value)), t(key)),
+        (key: string, ...values: Array<string | number>): string =>
+            values.reduce<string>((message, value, index) => message.replace(`{${index}}`, String(value)), t(key)),
         [t],
     );
 
@@ -784,7 +785,7 @@ export function useQueuedBatchWorkflow({
                         displayName: queuedDraft.displayName,
                     });
 
-                    upsertQueuedJob(mapRemoteQueuedJobToLocal(remoteJob, seed));
+                    upsertQueuedJob(mapRemoteQueuedJobToLocal(remoteJob as any, seed));
                     addLog(formatMessage('queuedBatchSubmittedLog', remoteJob.name));
                     submittedCount += 1;
                 } catch (error: any) {
@@ -969,7 +970,7 @@ export function useQueuedBatchWorkflow({
                 const remoteJob = await getQueuedBatchJob(job.name);
                 const updatedAt = Date.now();
                 const nextJob = {
-                    ...mapRemoteQueuedJobToLocal(remoteJob, job),
+                    ...mapRemoteQueuedJobToLocal(remoteJob as any, job),
                     lastPolledAt: updatedAt,
                 };
                 const stateChanged = nextJob.state !== job.state;
@@ -1100,7 +1101,7 @@ export function useQueuedBatchWorkflow({
             try {
                 const remoteJob = await cancelQueuedBatchJob(job.name);
                 upsertQueuedJob({
-                    ...mapRemoteQueuedJobToLocal(remoteJob, job),
+                    ...mapRemoteQueuedJobToLocal(remoteJob as any, job),
                     lastPolledAt: Date.now(),
                 });
                 addLog(formatMessage('queuedBatchCancelledLog', job.name));
@@ -1214,7 +1215,7 @@ export function useQueuedBatchWorkflow({
                             thoughts: result.thoughts,
                             metadata: sidecarMetadata,
                             grounding: result.grounding,
-                            sessionHints: sanitizeSessionHintsForStorage(result.sessionHints || null) || null,
+                            sessionHints: sanitizeSessionHintsForStorage(result.sessionHints || null) || undefined,
                             conversationId: null,
                             conversationBranchOriginId: null,
                             conversationSourceHistoryId: null,
@@ -1235,7 +1236,7 @@ export function useQueuedBatchWorkflow({
                     const importFailureMessage = importFailureSummary || remoteJob.error || null;
 
                     upsertQueuedJob({
-                        ...mapRemoteQueuedJobToLocal(remoteJob, resolvedJobSeed),
+                        ...mapRemoteQueuedJobToLocal(remoteJob as any, resolvedJobSeed),
                         lastPolledAt: Date.now(),
                         importDiagnostic,
                         importIssues: importIssues.length > 0 ? importIssues : null,
@@ -1265,7 +1266,7 @@ export function useQueuedBatchWorkflow({
 
                 setHistory((previous) => [...importedHistoryItems, ...previous]);
                 upsertQueuedJob({
-                    ...mapRemoteQueuedJobToLocal(remoteJob, resolvedJobSeed),
+                    ...mapRemoteQueuedJobToLocal(remoteJob as any, resolvedJobSeed),
                     lastPolledAt: Date.now(),
                     importDiagnostic: null,
                     importIssues: null,
@@ -1277,15 +1278,15 @@ export function useQueuedBatchWorkflow({
                         `Queued batch import skipped ${failedResults.length} non-importable results for ${job.name}: ${importFailureSummary || 'No detailed batch result errors were returned.'}`,
                     );
                 }
-                addLog(formatMessage('queuedBatchImportedLog', importedHistoryItems.length, job.name));
+                addLog(formatMessage('queuedBatchImportedLog', String(importedHistoryItems.length), job.name));
                 if (!options?.silent) {
-                    showNotification(formatMessage('queuedBatchImportedNotice', importedHistoryItems.length), 'info');
+                    showNotification(formatMessage('queuedBatchImportedNotice', String(importedHistoryItems.length)), 'info');
                 }
                 return importedHistoryItems.length;
             } catch (error: any) {
                 const message = error?.message || 'Failed to import queued batch results.';
                 if (!options?.silent) {
-                    addLog(formatMessage('queuedBatchImportFailedLog', job.name, message));
+                    addLog(formatMessage('queuedBatchImportFailedLog', job.name, String(message)));
                     showNotification(message, 'error');
                 }
                 return 0;
@@ -1325,8 +1326,8 @@ export function useQueuedBatchWorkflow({
         }
 
         if (importedResultCount > 0) {
-            addLog(formatMessage('queuedBatchImportAllLog', importedResultCount, readyJobs.length));
-            showNotification(formatMessage('queuedBatchImportAllNotice', importedResultCount), 'info');
+            addLog(formatMessage('queuedBatchImportAllLog', String(importedResultCount), String(readyJobs.length)));
+            showNotification(formatMessage('queuedBatchImportAllNotice', String(importedResultCount)), 'info');
             return;
         }
 
@@ -1395,8 +1396,8 @@ export function useQueuedBatchWorkflow({
         }
 
         removeQueuedJobs(clearableJobs.map((job) => job.localId));
-        addLog(formatMessage('queuedBatchClearIssuesLog', clearableJobs.length));
-        showNotification(formatMessage('queuedBatchClearIssuesNotice', clearableJobs.length), 'info');
+        addLog(formatMessage('queuedBatchClearIssuesLog', String(clearableJobs.length)));
+        showNotification(formatMessage('queuedBatchClearIssuesNotice', String(clearableJobs.length)), 'info');
     }, [addLog, formatMessage, queuedJobs, removeQueuedJobs, showNotification]);
 
     const handleClearImportedQueuedJobs = useCallback(() => {
@@ -1406,8 +1407,8 @@ export function useQueuedBatchWorkflow({
         }
 
         removeQueuedJobs(importedJobs.map((job) => job.localId));
-        addLog(formatMessage('queuedBatchClearImportedLog', importedJobs.length));
-        showNotification(formatMessage('queuedBatchClearImportedNotice', importedJobs.length), 'info');
+        addLog(formatMessage('queuedBatchClearImportedLog', String(importedJobs.length)));
+        showNotification(formatMessage('queuedBatchClearImportedNotice', String(importedJobs.length)), 'info');
     }, [
         addLog,
         formatMessage,

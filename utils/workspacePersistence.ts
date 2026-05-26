@@ -1148,9 +1148,10 @@ const sanitizeWorkspaceComposerState = (value: unknown): WorkspaceComposerState 
     }
 
     const normalizedSafetyThresholds = { ...DEFAULT_SAFETY_THRESHOLDS };
-    if (isRecord(value.safetyThresholds)) {
+    const safetyThresholds = value.safetyThresholds;
+    if (isRecord(safetyThresholds)) {
         SAFETY_CATEGORY_KEYS.forEach((categoryKey) => {
-            const threshold = value.safetyThresholds[categoryKey];
+            const threshold = safetyThresholds[categoryKey];
             if (isSafetyThresholdKey(threshold)) {
                 normalizedSafetyThresholds[categoryKey] = threshold;
             }

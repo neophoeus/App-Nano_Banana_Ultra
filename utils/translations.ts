@@ -1,4 +1,4 @@
-﻿import { en } from './translations/en';
+import { en } from './translations/en';
 
 export type Language = 'en' | 'zh_TW' | 'zh_CN' | 'ja' | 'ko' | 'es' | 'fr' | 'de' | 'ru';
 
@@ -26,14 +26,13 @@ const isSupportedLanguage = (value: string): value is Language =>
 const loadedLanguages = new Set<Language>(['en']);
 const languageLoadPromises = new Map<NonEnglishLanguage, Promise<TranslationDictionary>>();
 
-const createTranslationRecord = () =>
-    SUPPORTED_LANGUAGES.reduce(
-        (record, language) => {
-            record[language.value] = en;
-            return record;
-        },
-        { en } as Record<Language, TranslationDictionary>,
-    );
+const createTranslationRecord = (): Record<Language, TranslationDictionary> => {
+    const record = {} as Partial<Record<Language, TranslationDictionary>>;
+    SUPPORTED_LANGUAGES.forEach((language) => {
+        record[language.value] = en;
+    });
+    return record as Record<Language, TranslationDictionary>;
+};
 
 export const translations: Record<Language, TranslationDictionary> = createTranslationRecord();
 

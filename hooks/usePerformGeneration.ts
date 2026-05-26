@@ -14,6 +14,7 @@ import {
     GeneratedImage as GeneratedImageType,
     OutputFormat,
     ResultPart,
+    ResultImagePart,
     SafetyThresholds,
     ThinkingLevel,
 } from '../types';
@@ -119,21 +120,23 @@ async function persistResultParts(
                 return part;
             }
 
-            if (options.primaryOutputImageUrl && part.imageUrl === options.primaryOutputImageUrl) {
+            const imagePart = part as ResultImagePart;
+
+            if (options.primaryOutputImageUrl && imagePart.imageUrl === options.primaryOutputImageUrl) {
                 return {
-                    ...part,
-                    imageUrl: options.primaryOutputDisplayUrl || part.imageUrl,
-                    savedFilename: options.primaryOutputSavedFilename || part.savedFilename,
+                    ...imagePart,
+                    imageUrl: options.primaryOutputDisplayUrl || imagePart.imageUrl,
+                    savedFilename: options.primaryOutputSavedFilename || imagePart.savedFilename,
                 };
             }
 
             const savedPath = await saveImageToLocal(
-                part.imageUrl,
+                imagePart.imageUrl,
                 `${options.prefix}-thought`,
                 {
-                    kind: part.kind,
+                    kind: imagePart.kind,
                     slotIndex: options.slotIndex,
-                    sequence: part.sequence,
+                    sequence: imagePart.sequence,
                 },
                 buildSavedResultPartFilenameStem({
                     model: options.model,
@@ -141,18 +144,18 @@ async function persistResultParts(
                     slotIndex: options.slotIndex,
                     createdAt: options.requestCreatedAt,
                     requestId: options.requestId,
-                    sequence: part.sequence,
+                    sequence: imagePart.sequence,
                     sourceSavedFilename: options.sourceSavedFilename,
                 }),
             );
             const savedFilename = extractSavedFilename(savedPath);
 
             if (!savedFilename) {
-                return part;
+                return imagePart;
             }
 
             return {
-                ...part,
+                ...imagePart,
                 imageUrl: buildSavedImageLoadUrl(savedFilename),
                 savedFilename,
             };
@@ -329,7 +332,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
             const currentImageSize = customSize || targetSize;
             const conversationContext =
                 getConversationRequestContext?.({
-                    mode: explicitMode,
+                    mode: explicitMode ?? '',
                     editingInput,
                     batchSize: currentBatchSize,
                     sourceOverride,

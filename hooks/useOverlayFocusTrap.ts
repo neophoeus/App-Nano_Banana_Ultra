@@ -37,7 +37,7 @@ function focusElement(element: HTMLElement) {
 }
 
 export function useOverlayFocusTrap(
-    containerRef: RefObject<HTMLElement>,
+    containerRef: RefObject<HTMLElement | null>,
     { isEnabled, initialFocusRef, restoreFocus = true }: UseOverlayFocusTrapOptions,
 ) {
     useEffect(() => {

@@ -15,6 +15,7 @@ import {
     AspectRatio,
     ContinuationLineageAction,
     EditorMode,
+    GeneratedImage,
     ImageModel,
     ImageSize,
     ImageStyle,

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { WorkspaceProgressThoughtEntry } from '../components/WorkspaceProgressDetailPanel';
-import { GeneratedImage as GeneratedImageType, ResultPart, WorkspaceSessionState } from '../types';
+import { GeneratedImage as GeneratedImageType, ResultPart, ResultTextPart, WorkspaceSessionState } from '../types';
 
 type ActiveLiveProgressSlotLike = {
     slotIndex: number;
@@ -50,7 +50,7 @@ const getThoughtResultParts = (parts?: ResultPart[] | null): ResultPart[] =>
 const buildThoughtSummaryFromParts = (parts: ResultPart[], fallbackLabel: string) => {
     const latestThoughtTextPart = [...parts]
         .reverse()
-        .find((part): part is Extract<ResultPart, { kind: 'thought-text' }> => part.kind === 'thought-text');
+        .find((part): part is ResultTextPart => part.kind === 'thought-text');
 
     if (latestThoughtTextPart?.text.trim()) {
         return latestThoughtTextPart.text.trim();
@@ -175,7 +175,7 @@ export function useWorkspaceProgressThoughts({
                     isLive: true,
                 } satisfies WorkspaceProgressThoughtEntry;
             })
-            .filter((entry): entry is WorkspaceProgressThoughtEntry => Boolean(entry));
+            .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
     }, [activeLiveProgressSession, isGenerating, prompt, t]);
     const liveProgressThoughtsText = useMemo(
         () => liveProgressThoughtEntries[0]?.thoughts || '',

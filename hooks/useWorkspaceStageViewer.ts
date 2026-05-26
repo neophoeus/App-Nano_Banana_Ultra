@@ -446,7 +446,6 @@ export function useWorkspaceStageViewer({
             ({
                 imageUrls: generatedImageUrls,
                 isLoading: showStageGeneratingState,
-                prompt,
                 error,
                 aspectRatio: settings.aspectRatio,
                 imageSize: settings.imageSize,

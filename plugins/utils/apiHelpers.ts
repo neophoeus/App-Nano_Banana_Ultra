@@ -144,7 +144,7 @@ export function startNdjsonStream(
     }
 }
 
-export function writeNdjsonEvent(res: any, payload: unknown): void {
+export function writeNdjsonEvent<T = unknown>(res: any, payload: T): void {
     res.write(`${JSON.stringify(payload)}\n`);
 }
 

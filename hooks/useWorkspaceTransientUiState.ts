@@ -75,7 +75,7 @@ export function useWorkspaceTransientUiState({
         setEditorCharacterImages([]);
     }, [editorContextSnapshot, isEditing]);
 
-    const editorInitialState = useMemo(
+    const editorInitialState = useMemo<EditorContextSnapshot>(
         () => ({
             prompt: editorContextSnapshot?.prompt ?? '',
             objectImages: editorContextSnapshot ? [] : objectImages,
@@ -83,6 +83,19 @@ export function useWorkspaceTransientUiState({
             ratio: editorContextSnapshot?.editorInitialRatio || editorContextSnapshot?.ratio || aspectRatio,
             size: editorContextSnapshot?.editorInitialSize || editorContextSnapshot?.size || imageSize,
             batchSize: editorContextSnapshot?.batchSize || batchSize,
+            model: editorContextSnapshot?.model || 'gemini-2.5-flash-image',
+            style: editorContextSnapshot?.style || 'None',
+            outputFormat: editorContextSnapshot?.outputFormat || 'images-only',
+            temperature: editorContextSnapshot?.temperature || 1.0,
+            thinkingLevel: editorContextSnapshot?.thinkingLevel || 'minimal',
+            includeThoughts: editorContextSnapshot?.includeThoughts || false,
+            googleSearch: editorContextSnapshot?.googleSearch || false,
+            imageSearch: editorContextSnapshot?.imageSearch || false,
+            editorInitialRatio: editorContextSnapshot?.editorInitialRatio,
+            editorInitialSize: editorContextSnapshot?.editorInitialSize,
+            editorPreparedSource: editorContextSnapshot?.editorPreparedSource,
+            sourceHistoryId: editorContextSnapshot?.sourceHistoryId,
+            sourceLineageAction: editorContextSnapshot?.sourceLineageAction,
         }),
         [aspectRatio, batchSize, characterImages, editorContextSnapshot, imageSize, objectImages],
     );

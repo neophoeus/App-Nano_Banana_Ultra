@@ -5,7 +5,7 @@ import {
     SelectedItemSummaryStripChip,
     SelectedItemSummaryStripProps,
     TurnLineageAction,
-} from '../types';
+} from '../types';import { BranchSummary } from '../utils/lineage';
 
 type HistoryActionButtonVariant = 'primary' | 'secondary' | 'compactPrimary' | 'compactSecondary';
 
@@ -261,11 +261,11 @@ export function useHistoryPresentationHelpers({
                               stopPropagation,
                           })
                         : null}
-                    {renameTarget
+                    {renameTarget && resolvedRenameLabel
                         ? renderHistoryActionButton({
                               label: resolvedRenameLabel,
                               testId: testIds?.rename,
-                              onClick: () => handleRenameBranch(renameTarget),
+                              onClick: () => handleRenameBranch(renameTarget!),
                               stopPropagation,
                           })
                         : null}

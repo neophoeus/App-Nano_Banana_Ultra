@@ -57,7 +57,7 @@ const WorkspaceImportReview: React.FC<WorkspaceImportReviewProps> = ({
     const assetSummary =
         review.assetSummary && review.assetSummary.totalEmbeddedAssets > 0 ? review.assetSummary : null;
 
-    const formatDateTime = (value: string) => new Date(value).toLocaleString(locale);
+    const formatDateTime = (value: string | number) => new Date(value).toLocaleString(locale);
     const renderPromptPreview = (value?: string | null, limit = 120) => {
         if (!value) {
             return t('workspaceImportReviewNoPromptSaved');

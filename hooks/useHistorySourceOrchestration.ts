@@ -265,20 +265,20 @@ export function useHistorySourceOrchestration({
             const branchOriginId = branchOriginIdByTurnId[item.id] || item.id;
             let latestBranchTurn: GeneratedImageType | null = null;
 
-            history.forEach((historyItem) => {
+            for (const historyItem of history) {
                 if (historyItem.status !== 'success') {
-                    return;
+                    continue;
                 }
 
                 const historyItemBranchOriginId = branchOriginIdByTurnId[historyItem.id] || historyItem.id;
                 if (historyItemBranchOriginId !== branchOriginId) {
-                    return;
+                    continue;
                 }
 
                 if (!latestBranchTurn || historyItem.createdAt >= latestBranchTurn.createdAt) {
                     latestBranchTurn = historyItem;
                 }
-            });
+            }
 
             return latestBranchTurn?.id === item.id ? 'continue' : 'branch';
         },
@@ -346,7 +346,7 @@ export function useHistorySourceOrchestration({
             if (shouldDeferLineageCommit) {
                 pendingViewerSelectionRef.current = {
                     historyId: item.id,
-                    lineageAction,
+                    lineageAction: lineageAction as ContinuationLineageAction,
                 };
             } else {
                 pendingViewerSelectionRef.current = null;

@@ -227,7 +227,9 @@ export const prepareImportedWorkspaceSnapshotDocument = async (
         return snapshot ? { snapshot, assetSummary: null } : null;
     }
 
-    const { filenameMap, summary } = await persistEmbeddedSavedImages(parsed.assets.savedImages);
+    const { filenameMap, summary } = await persistEmbeddedSavedImages(
+        (parsed.assets?.savedImages || {}) as Record<string, unknown>,
+    );
     const normalizedDocument = {
         ...parsed,
         snapshot: rewriteWorkspaceSnapshotFilenames(parsed.snapshot, filenameMap),

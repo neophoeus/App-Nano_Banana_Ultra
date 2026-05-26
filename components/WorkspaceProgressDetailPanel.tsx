@@ -1,5 +1,5 @@
 import React from 'react';
-import { QueuedBatchJob, ResultPart } from '../types';
+import { QueuedBatchJob, ResultPart, ResultTextPart } from '../types';
 import { getTranslation, Language } from '../utils/translations';
 import {
     isQueuedBatchJobActive,
@@ -41,7 +41,7 @@ const getEntryThoughtSnapshot = (entry: WorkspaceProgressThoughtEntry, fallbackL
     const thoughtParts = getEntryThoughtParts(entry);
     const latestThoughtTextPart = [...thoughtParts]
         .reverse()
-        .find((part): part is Extract<ResultPart, { kind: 'thought-text' }> => part.kind === 'thought-text');
+        .find((part): part is ResultTextPart => part.kind === 'thought-text');
 
     if (latestThoughtTextPart?.text.trim()) {
         return latestThoughtTextPart.text.trim();
@@ -83,50 +83,55 @@ const renderThoughtEntryContent = (
     const thoughtParts = getEntryThoughtParts(entry);
 
     if (thoughtParts.length > 0) {
-        return thoughtParts.map((part) =>
-            part.kind === 'thought-text' ? (
-                <div
-                    key={`${entry.id}-${part.sequence}`}
-                    data-testid={`workspace-progress-detail-part-text-${entry.shortId}-${part.sequence}`}
-                    className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-800 dark:text-slate-100"
-                >
-                    {part.text}
-                </div>
-            ) : (
-                <figure
-                    key={`${entry.id}-${part.sequence}`}
-                    data-testid={`workspace-progress-detail-part-image-${entry.shortId}-${part.sequence}`}
-                    className="relative overflow-hidden rounded-[20px] border border-amber-200/80 bg-slate-950/70 p-2 dark:border-amber-500/20"
-                >
-                    {onDownloadThoughtImage ? (
-                        <button
-                            type="button"
-                            data-testid={`workspace-progress-detail-part-image-download-${entry.shortId}-${part.sequence}`}
-                            onClick={() =>
-                                onDownloadThoughtImage({
-                                    entryId: entry.id,
-                                    shortId: entry.shortId,
-                                    slotIndex: entry.slotIndex,
-                                    sequence: part.sequence,
-                                    imageUrl: part.imageUrl,
-                                    mimeType: part.mimeType,
-                                    savedFilename: part.savedFilename,
-                                })
-                            }
-                            className="absolute right-4 top-4 z-10 rounded-full border border-white/20 bg-slate-950/80 px-3 py-1 text-[11px] font-semibold text-white transition-colors hover:border-amber-300/60 hover:text-amber-100"
-                            aria-label={t('thoughtImageDownload')}
-                        >
-                            {t('thoughtImageDownload')}
-                        </button>
-                    ) : null}
-                    <img
-                        src={part.imageUrl}
-                        alt={t('workspaceViewerThoughts')}
-                        className="max-h-72 w-full rounded-[14px] object-contain"
-                    />
-                </figure>
-            ),
-        );
+        return thoughtParts.map((part) => {
+            if (part.kind === 'thought-text') {
+                return (
+                    <div
+                        key={`${entry.id}-${part.sequence}`}
+                        data-testid={`workspace-progress-detail-part-text-${entry.shortId}-${part.sequence}`}
+                        className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-800 dark:text-slate-100"
+                    >
+                        {part.text}
+                    </div>
+                );
+            } else if (part.kind === 'thought-image') {
+                return (
+                    <figure
+                        key={`${entry.id}-${part.sequence}`}
+                        data-testid={`workspace-progress-detail-part-image-${entry.shortId}-${part.sequence}`}
+                        className="relative overflow-hidden rounded-[20px] border border-amber-200/80 bg-slate-950/70 p-2 dark:border-amber-500/20"
+                    >
+                        {onDownloadThoughtImage ? (
+                            <button
+                                type="button"
+                                data-testid={`workspace-progress-detail-part-image-download-${entry.shortId}-${part.sequence}`}
+                                onClick={() =>
+                                    onDownloadThoughtImage({
+                                        entryId: entry.id,
+                                        shortId: entry.shortId,
+                                        slotIndex: entry.slotIndex,
+                                        sequence: part.sequence,
+                                        imageUrl: part.imageUrl,
+                                        mimeType: part.mimeType,
+                                        savedFilename: part.savedFilename,
+                                    })
+                                }
+                                className="absolute right-4 top-4 z-10 rounded-full border border-white/20 bg-slate-950/80 px-3 py-1 text-[11px] font-semibold text-white transition-colors hover:border-amber-300/60 hover:text-amber-100"
+                                aria-label={t('thoughtImageDownload')}
+                            >
+                                {t('thoughtImageDownload')}
+                            </button>
+                        ) : null}
+                        <img
+                            src={part.imageUrl}
+                            alt={t('workspaceViewerThoughts')}
+                            className="max-h-72 w-full rounded-[14px] object-contain"
+                        />
+                    </figure>
+                );
+            }
+            return null;
+        });
     }
 
     return (

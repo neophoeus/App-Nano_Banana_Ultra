@@ -571,7 +571,9 @@ export type SelectedItemSummaryStripChipKey =
     | 'queued-batch-position'
     | 'execution-mode'
     | 'mode'
-    | 'created-at';
+    | 'created-at'
+    | 'memory'
+    | 'thread';
 
 export type SelectedItemSummaryStripChipGroup = 'status' | 'core' | 'tail';
 

@@ -127,7 +127,7 @@ function GroundingProvenancePanel({
 }: GroundingProvenancePanelProps) {
     const t = (key: string) => getTranslation(currentLanguage, key);
     const formatMessage = (key: string, ...values: Array<string | number>) =>
-        values.reduce((message, value, index) => message.replace(`{${index}}`, String(value)), t(key));
+        values.reduce<string>((message, value, index) => message.replace(`{${index}}`, String(value)), t(key));
     const getTranslatedModeLabel = (mode?: string | null) => {
         if (!mode) {
             return t('historyModeImage');

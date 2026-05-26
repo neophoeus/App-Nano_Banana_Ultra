@@ -1,5 +1,5 @@
 // @ts-ignore -- Playwright lives in dev-environment/ rather than the root product manifest.
-import playwrightTest from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 import {
     PLAYWRIGHT_APP_ROOT,
     PLAYWRIGHT_GLOBAL_SETUP_PATH,
@@ -7,8 +7,6 @@ import {
     PLAYWRIGHT_TEST_RESULTS_DIR,
     resolvePlaywrightE2ePath,
 } from './e2e/utils/playwrightPaths';
-
-const { defineConfig, devices } = playwrightTest;
 const DEV_SERVER_URL = 'http://127.0.0.1:22301';
 
 export default defineConfig({
