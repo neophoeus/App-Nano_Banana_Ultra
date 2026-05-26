@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.10.5 - 2026-05-26
+
+- Release title: Nano Banana Ultra 3.10.5 - Fullscreen Image Viewer Overflow Fix
+- Release summary:
+    - Fixed a potential fullscreen image overflow in `WorkspaceViewerOverlay.tsx` by adding `h-full w-full` styling constraints to the image container `div` to ensure layout robustness.
+
 ## v3.10.4 - 2026-05-25
 
 - Release title: Nano Banana Ultra 3.10.4 - Lite Feature Synchronization, App.tsx Code Fixes & Comprehensive Test Resolutions
