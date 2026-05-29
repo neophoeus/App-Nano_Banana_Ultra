@@ -136,7 +136,7 @@ export const EMPTY_WORKSPACE_COMPOSER_STATE: WorkspaceComposerState = {
     aspectRatio: '1:1',
     imageSize: '2K',
     imageStyle: 'None',
-    imageModel: 'gemini-3.1-flash-image-preview',
+    imageModel: 'gemini-3.1-flash-image',
     batchSize: 1,
     outputFormat: 'images-only',
     temperature: DEFAULT_TEMPERATURE,
@@ -193,8 +193,8 @@ const ASPECT_RATIO_VALUES = new Set<GeneratedImage['aspectRatio']>([
 ]);
 const IMAGE_SIZE_VALUES = new Set<GeneratedImage['size']>(['512', '1K', '2K', '4K']);
 const IMAGE_MODEL_VALUES = new Set<GeneratedImage['model']>([
-    'gemini-3.1-flash-image-preview',
-    'gemini-3-pro-image-preview',
+    'gemini-3.1-flash-image',
+    'gemini-3-pro-image',
     'gemini-2.5-flash-image',
 ]);
 const OUTPUT_FORMAT_VALUES = new Set<WorkspaceComposerState['outputFormat']>(['images-only', 'images-and-text']);

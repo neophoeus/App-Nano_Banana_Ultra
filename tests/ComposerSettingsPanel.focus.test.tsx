@@ -27,7 +27,7 @@ const baseProps = {
     thinkingLevel: 'high' as const,
     groundingMode: 'off' as const,
     currentStageAsset: null,
-    capability: MODEL_CAPABILITIES['gemini-3.1-flash-image-preview'],
+    capability: MODEL_CAPABILITIES['gemini-3.1-flash-image'],
     availableGroundingModes: ['off', 'google-search', 'image-search', 'google-search-plus-image-search'] as ('off' | 'google-search' | 'image-search' | 'google-search-plus-image-search')[],
     temperature: 1,
     isAdvancedSettingsOpen: true,

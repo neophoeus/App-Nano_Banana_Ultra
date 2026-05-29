@@ -49,7 +49,7 @@ const renderEditor = ({
                 currentLanguage={currentLanguage}
                 error={null}
                 onErrorClear={vi.fn()}
-                imageModel="gemini-3.1-flash-image-preview"
+                imageModel="gemini-3.1-flash-image"
                 leftDockTopOffset={leftDockTopOffset}
             />,
         );
@@ -119,7 +119,7 @@ describe('ImageEditor quantity reset behavior', () => {
                     currentLanguage="en"
                     error={null}
                     onErrorClear={vi.fn()}
-                    imageModel="gemini-3.1-flash-image-preview"
+                    imageModel="gemini-3.1-flash-image"
                     leftDockTopOffset={96}
                 />,
             );

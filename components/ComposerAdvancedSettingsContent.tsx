@@ -90,7 +90,7 @@ export default function ComposerAdvancedSettingsContent({
         renderSafetyInPrimaryColumn;
     const hasRightColumnContent = hasGroundingCard;
     const showGroundingResolutionWarning =
-        imageModel === 'gemini-3.1-flash-image-preview' &&
+        imageModel === 'gemini-3.1-flash-image' &&
         (groundingMode === 'image-search' || groundingMode === 'google-search-plus-image-search');
     const firstSafetyThreshold = safetyThresholds[SAFETY_CATEGORY_KEYS[0]];
     const allSafetyThresholdsMatch = SAFETY_CATEGORY_KEYS.every(

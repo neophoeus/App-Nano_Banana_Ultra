@@ -29,7 +29,7 @@ const buildTurn = (overrides: Partial<GeneratedImage> = {}): GeneratedImage => (
     aspectRatio: '1:1',
     size: '1K',
     style: 'None',
-    model: 'gemini-3.1-flash-image-preview',
+    model: 'gemini-3.1-flash-image',
     createdAt: 1,
     status: 'success',
     ...overrides,
@@ -450,7 +450,7 @@ describe('useHistorySourceOrchestration', () => {
         expect(loadFullImageMock).toHaveBeenCalledWith('legacy-turn.png');
         expect(persistHistoryThumbnailMock).toHaveBeenCalledWith(
             'data:image/png;base64,FULL',
-            'gemini-3.1-flash-image-preview-history',
+            'gemini-3.1-flash-image-history',
             'legacy-turn.png',
         );
         expect(setHistory).toHaveBeenCalledTimes(1);

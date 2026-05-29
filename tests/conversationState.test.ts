@@ -16,7 +16,7 @@ const rootTurn: GeneratedImage = {
     aspectRatio: '1:1',
     size: '1K',
     style: 'None',
-    model: 'gemini-3.1-flash-image-preview',
+    model: 'gemini-3.1-flash-image',
     createdAt: 10,
 };
 
@@ -28,7 +28,7 @@ const followUpTurn: GeneratedImage = {
     aspectRatio: '1:1',
     size: '1K',
     style: 'None',
-    model: 'gemini-3.1-flash-image-preview',
+    model: 'gemini-3.1-flash-image',
     createdAt: 11,
     sourceHistoryId: 'root-turn',
     conversationSourceHistoryId: 'root-turn',

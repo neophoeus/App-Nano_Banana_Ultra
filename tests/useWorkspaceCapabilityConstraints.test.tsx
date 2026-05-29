@@ -25,7 +25,7 @@ describe('useWorkspaceCapabilityConstraints', () => {
 
         function Harness() {
             useWorkspaceCapabilityConstraints({
-                capability: MODEL_CAPABILITIES['gemini-3-pro-image-preview'],
+                capability: MODEL_CAPABILITIES['gemini-3-pro-image'],
                 imageSize: '1K',
                 aspectRatio: '1:8',
                 lockedAspectRatio,
@@ -99,7 +99,7 @@ describe('useWorkspaceCapabilityConstraints', () => {
         expect(setAspectRatio).not.toHaveBeenCalled();
     });
 
-    it('still auto-enables thoughts on gemini-3-pro-image-preview when they are turned off', () => {
+    it('still auto-enables thoughts on gemini-3-pro-image when they are turned off', () => {
         const { setIncludeThoughts } = renderHook({
             aspectRatio: '1:1',
             outputFormat: 'images-and-text',

@@ -80,7 +80,7 @@ export const buildWorkspaceComposerStateFromHistoryItem = (item: GeneratedImage)
         temperature: typeof item.metadata?.temperature === 'number' ? item.metadata.temperature : 1,
         thinkingLevel:
             (item.metadata?.thinkingLevel as ThinkingLevel) ||
-            (model === 'gemini-3.1-flash-image-preview' ? 'minimal' : 'disabled'),
+            (model === 'gemini-3.1-flash-image' ? 'minimal' : 'disabled'),
         includeThoughts: Boolean(item.metadata?.includeThoughts),
         googleSearch:
             requestedGoogleSearch ??

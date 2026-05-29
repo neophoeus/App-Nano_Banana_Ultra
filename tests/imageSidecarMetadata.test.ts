@@ -4,7 +4,7 @@ import { buildImageSidecarMetadata, normalizeImageSidecarMetadata } from '../uti
 
 const baseMetadataArgs = {
     prompt: 'Test prompt',
-    model: 'gemini-3.1-flash-image-preview' as const,
+    model: 'gemini-3.1-flash-image' as const,
     aspectRatio: '1:1' as const,
     requestedImageSize: '2K' as const,
     outputFormat: 'images-only' as const,

@@ -5,20 +5,20 @@ import { buildImageRequestConfig, validateCapabilityRequest } from '../plugins/u
 
 describe('validateCapabilityRequest', () => {
     it('rejects image sizes the selected model does not support', () => {
-        expect(validateCapabilityRequest('gemini-3-pro-image-preview', { imageSize: '512' })).toBe(
-            'gemini-3-pro-image-preview does not support image size 512.',
+        expect(validateCapabilityRequest('gemini-3-pro-image', { imageSize: '512' })).toBe(
+            'gemini-3-pro-image does not support image size 512.',
         );
     });
 
     it('rejects aspect ratios the selected model does not support', () => {
-        expect(validateCapabilityRequest('gemini-3-pro-image-preview', { aspectRatio: '1:8' })).toBe(
-            'gemini-3-pro-image-preview does not support aspect ratio 1:8.',
+        expect(validateCapabilityRequest('gemini-3-pro-image', { aspectRatio: '1:8' })).toBe(
+            'gemini-3-pro-image does not support aspect ratio 1:8.',
         );
     });
 
     it('allows model-specific size and ratio combinations that are documented as supported', () => {
         expect(
-            validateCapabilityRequest('gemini-3.1-flash-image-preview', {
+            validateCapabilityRequest('gemini-3.1-flash-image', {
                 imageSize: '512',
                 aspectRatio: '1:8',
             }),
@@ -36,8 +36,8 @@ describe('validateCapabilityRequest', () => {
 });
 
 describe('buildImageRequestConfig', () => {
-    it('keeps gemini-3-pro-image-preview on an images-and-text baseline without schema transport', () => {
-        const result = buildImageRequestConfig('gemini-3-pro-image-preview', {
+    it('keeps gemini-3-pro-image on an images-and-text baseline without schema transport', () => {
+        const result = buildImageRequestConfig('gemini-3-pro-image', {
             outputFormat: 'images-and-text',
             temperature: 1,
         });
@@ -48,8 +48,8 @@ describe('buildImageRequestConfig', () => {
         expect(result.requestConfig.thinkingConfig).toBeUndefined();
     });
 
-    it('builds a thoughts-only control contract on gemini-3-pro-image-preview without schema transport', () => {
-        const result = buildImageRequestConfig('gemini-3-pro-image-preview', {
+    it('builds a thoughts-only control contract on gemini-3-pro-image without schema transport', () => {
+        const result = buildImageRequestConfig('gemini-3-pro-image', {
             outputFormat: 'images-and-text',
             includeThoughts: true,
             temperature: 1,
@@ -79,7 +79,7 @@ describe('buildImageRequestConfig', () => {
     });
 
     it('normalizes temperature to the nearest 0.05 increment before serializing the request', () => {
-        const result = buildImageRequestConfig('gemini-3.1-flash-image-preview', {
+        const result = buildImageRequestConfig('gemini-3.1-flash-image', {
             outputFormat: 'images-only',
             temperature: 1.03,
         });
@@ -88,7 +88,7 @@ describe('buildImageRequestConfig', () => {
     });
 
     it('preserves permissive safety defaults when no overrides are provided', () => {
-        const result = buildImageRequestConfig('gemini-3.1-flash-image-preview', {
+        const result = buildImageRequestConfig('gemini-3.1-flash-image', {
             outputFormat: 'images-only',
         });
 
@@ -113,7 +113,7 @@ describe('buildImageRequestConfig', () => {
     });
 
     it('maps product safety threshold keys to Gemini SDK safety settings', () => {
-        const result = buildImageRequestConfig('gemini-3.1-flash-image-preview', {
+        const result = buildImageRequestConfig('gemini-3.1-flash-image', {
             outputFormat: 'images-only',
             safetyThresholds: {
                 harassment: 'default',
@@ -140,7 +140,7 @@ describe('buildImageRequestConfig', () => {
     });
 
     it('omits safety settings when every category uses model default behavior', () => {
-        const result = buildImageRequestConfig('gemini-3.1-flash-image-preview', {
+        const result = buildImageRequestConfig('gemini-3.1-flash-image', {
             outputFormat: 'images-only',
             safetyThresholds: {
                 harassment: 'default',
@@ -154,7 +154,7 @@ describe('buildImageRequestConfig', () => {
     });
 
     it('maps app thinking levels to Gemini SDK enums without changing images-only modality behavior', () => {
-        const result = buildImageRequestConfig('gemini-3.1-flash-image-preview', {
+        const result = buildImageRequestConfig('gemini-3.1-flash-image', {
             outputFormat: 'images-only',
             thinkingLevel: 'minimal',
             includeThoughts: true,
@@ -169,7 +169,7 @@ describe('buildImageRequestConfig', () => {
     });
 
     it('omits disabled thinkingLevel from the outbound thinkingConfig', () => {
-        const result = buildImageRequestConfig('gemini-3-pro-image-preview', {
+        const result = buildImageRequestConfig('gemini-3-pro-image', {
             outputFormat: 'images-only',
             includeThoughts: true,
         });

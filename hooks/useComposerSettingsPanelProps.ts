@@ -137,10 +137,10 @@ export function useComposerSettingsPanelProps({
 }: UseComposerSettingsPanelPropsArgs): ComposerSettingsPanelProps {
     const getModelLabel = useCallback(
         (model: ImageModel) => {
-            if (model === 'gemini-3.1-flash-image-preview') {
+            if (model === 'gemini-3.1-flash-image') {
                 return t('modelGemini31Flash');
             }
-            if (model === 'gemini-3-pro-image-preview') {
+            if (model === 'gemini-3-pro-image') {
                 return t('modelGemini3Pro');
             }
             return t('modelGemini25Flash');

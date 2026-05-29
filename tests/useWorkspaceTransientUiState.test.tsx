@@ -90,7 +90,7 @@ describe('useWorkspaceTransientUiState', () => {
                 ratio: '1:1',
                 size: '1K',
                 batchSize: 1,
-                model: 'gemini-3.1-flash-image-preview',
+                model: 'gemini-3.1-flash-image',
                 style: 'None',
                 outputFormat: 'images-only',
                 temperature: 1,

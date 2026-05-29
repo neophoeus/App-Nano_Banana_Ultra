@@ -749,7 +749,7 @@ const shouldUseLiveProgressStream = (options: GenerateOptions, batchSize: number
         executionMode: options.executionMode || 'single-turn',
         outputFormat: options.outputFormat || 'images-only',
         thinkingLevel:
-            options.thinkingLevel || (options.model === 'gemini-3.1-flash-image-preview' ? 'minimal' : 'disabled'),
+            options.thinkingLevel || (options.model === 'gemini-3.1-flash-image' ? 'minimal' : 'disabled'),
         includeThoughts: Boolean(options.includeThoughts),
         batchSize,
     });
@@ -761,7 +761,7 @@ const shouldUseLiveProgressFanOut = (options: GenerateOptions, batchSize: number
         executionMode: options.executionMode,
         outputFormat: options.outputFormat || 'images-only',
         thinkingLevel:
-            options.thinkingLevel || (options.model === 'gemini-3.1-flash-image-preview' ? 'minimal' : 'disabled'),
+            options.thinkingLevel || (options.model === 'gemini-3.1-flash-image' ? 'minimal' : 'disabled'),
         includeThoughts: Boolean(options.includeThoughts),
         batchSize,
     });

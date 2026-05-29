@@ -12,8 +12,8 @@ describe('live progress capabilities', () => {
 
         expect(includedCells).toHaveLength(12);
         expect(includedCells.every((cell) => cell.expectedEligible)).toBe(true);
-        expect(includedCells.filter((cell) => cell.model === 'gemini-3.1-flash-image-preview')).toHaveLength(8);
-        expect(includedCells.filter((cell) => cell.model === 'gemini-3-pro-image-preview')).toHaveLength(4);
+        expect(includedCells.filter((cell) => cell.model === 'gemini-3.1-flash-image')).toHaveLength(8);
+        expect(includedCells.filter((cell) => cell.model === 'gemini-3-pro-image')).toHaveLength(4);
         expect(includedCells.some((cell) => cell.model === 'gemini-2.5-flash-image')).toBe(false);
     });
 
@@ -29,7 +29,7 @@ describe('live progress capabilities', () => {
     it('rejects ineligible runtime requests before the app attempts live streaming', () => {
         expect(
             describeLiveProgressIneligibility({
-                model: 'gemini-3.1-flash-image-preview',
+                model: 'gemini-3.1-flash-image',
                 executionMode: 'interactive-batch-variants',
                 outputFormat: 'images-only',
                 thinkingLevel: 'minimal',
@@ -40,7 +40,7 @@ describe('live progress capabilities', () => {
 
         expect(
             describeLiveProgressIneligibility({
-                model: 'gemini-3-pro-image-preview',
+                model: 'gemini-3-pro-image',
                 executionMode: 'single-turn',
                 outputFormat: 'images-only',
                 thinkingLevel: 'disabled',
@@ -51,7 +51,7 @@ describe('live progress capabilities', () => {
 
         expect(
             describeLiveProgressFanOutIneligibility({
-                model: 'gemini-3.1-flash-image-preview',
+                model: 'gemini-3.1-flash-image',
                 executionMode: 'interactive-batch-variants',
                 outputFormat: 'images-only',
                 thinkingLevel: 'minimal',
@@ -62,7 +62,7 @@ describe('live progress capabilities', () => {
 
         expect(
             describeLiveProgressFanOutIneligibility({
-                model: 'gemini-3.1-flash-image-preview',
+                model: 'gemini-3.1-flash-image',
                 executionMode: 'chat-continuation',
                 outputFormat: 'images-only',
                 thinkingLevel: 'minimal',

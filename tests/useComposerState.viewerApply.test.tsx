@@ -25,7 +25,7 @@ describe('useComposerState viewer apply', () => {
                     prompt: 'Keep this prompt',
                     aspectRatio: '1:1',
                     imageSize: '2K',
-                    imageModel: 'gemini-3.1-flash-image-preview',
+                    imageModel: 'gemini-3.1-flash-image',
                     outputFormat: 'images-and-text',
                     thinkingLevel: 'high',
                     googleSearch: true,
@@ -69,7 +69,7 @@ describe('useComposerState viewer apply', () => {
             aspectRatio: '1:8',
             imageSize: '512',
             imageStyle: 'Anime',
-            imageModel: 'gemini-3-pro-image-preview',
+            imageModel: 'gemini-3-pro-image',
             batchSize: 3.4,
             outputFormat: 'images-only',
             temperature: 4,
@@ -83,7 +83,7 @@ describe('useComposerState viewer apply', () => {
         });
 
         expect(latestHook!.composerState.prompt).toBe('Keep this prompt');
-        expect(latestHook!.composerState.imageModel).toBe('gemini-3-pro-image-preview');
+        expect(latestHook!.composerState.imageModel).toBe('gemini-3-pro-image');
         expect(latestHook!.composerState.aspectRatio).toBe('1:1');
         expect(latestHook!.composerState.imageSize).toBe('1K');
         expect(latestHook!.composerState.batchSize).toBe(3);
@@ -101,7 +101,7 @@ describe('useComposerState viewer apply', () => {
                 aspectRatio: '1:1',
                 size: '1K',
                 style: 'Anime',
-                model: 'gemini-3-pro-image-preview',
+                model: 'gemini-3-pro-image',
                 batchSize: 3,
                 outputFormat: 'images-only',
                 temperature: 2,

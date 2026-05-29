@@ -34,7 +34,7 @@ describe('SketchPad', () => {
                     onSave={vi.fn()}
                     onClose={vi.fn()}
                     currentLanguage="en"
-                    imageModel="gemini-3.1-flash-image-preview"
+                    imageModel="gemini-3.1-flash-image"
                     currentRatio="1:1"
                 />,
             );

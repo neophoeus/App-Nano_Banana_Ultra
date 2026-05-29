@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.10.7 - 2026-05-29
+
+- **Model Name Migration**: Updated Google Gen AI image generation model names to their official standard names (`gemini-3.1-flash-image` and `gemini-3-pro-image`) in types, UI components, capabilities definition, request configs, test cases, and translations, in alignment with official Google Gen AI specifications.
+
 ## v3.10.6 - 2026-05-26
 
 - Release title: Nano Banana Ultra 3.10.6 - Comprehensive TypeScript Type Error Fixes Across Frontend & Backend Plugins

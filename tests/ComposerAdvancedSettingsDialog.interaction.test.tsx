@@ -35,8 +35,8 @@ function AdvancedSettingsHarness() {
                 thinkingLevel={thinkingLevel}
                 groundingMode={groundingMode}
                 safetyThresholds={safetyThresholds}
-                imageModel="gemini-3-pro-image-preview"
-                capability={MODEL_CAPABILITIES['gemini-3-pro-image-preview']}
+                imageModel="gemini-3-pro-image"
+                capability={MODEL_CAPABILITIES['gemini-3-pro-image']}
                 availableGroundingModes={['off', 'google-search']}
                 temperature={temperature}
                 onOutputFormatChange={setOutputFormat}

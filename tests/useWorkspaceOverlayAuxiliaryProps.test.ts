@@ -17,7 +17,7 @@ describe('useWorkspaceOverlayAuxiliaryProps builders', () => {
             settingsVariant: 'full',
             totalReferenceCount: 3,
             hasSurfacePrompt: true,
-            imageModel: 'gemini-3.1-flash-image-preview',
+            imageModel: 'gemini-3.1-flash-image',
             capability: {
                 maxReferences: 10,
                 maxObjects: 5,
@@ -64,7 +64,7 @@ describe('useWorkspaceOverlayAuxiliaryProps builders', () => {
                 settingsVariant: 'full',
                 totalReferenceCount: 0,
                 hasSurfacePrompt: false,
-                imageModel: 'gemini-3.1-flash-image-preview',
+                imageModel: 'gemini-3.1-flash-image',
                 capability: props!.capability,
                 availableGroundingModes: ['off'],
                 aspectRatio: '1:1',

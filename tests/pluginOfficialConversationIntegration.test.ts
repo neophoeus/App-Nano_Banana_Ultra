@@ -266,7 +266,7 @@ describe('imageSavePlugin official conversation integration', () => {
         batchCreateMock.mockResolvedValue({
             name: 'batches/test-job',
             displayName: 'Queued test job',
-            model: 'gemini-3.1-flash-image-preview',
+            model: 'gemini-3.1-flash-image',
             state: 'JOB_STATE_PENDING',
             createTime: '2025-01-01T00:00:00.000Z',
             updateTime: '2025-01-01T00:00:00.000Z',
@@ -274,7 +274,7 @@ describe('imageSavePlugin official conversation integration', () => {
         batchGetMock.mockResolvedValue({
             name: 'batches/test-job',
             displayName: 'Queued test job',
-            model: 'gemini-3.1-flash-image-preview',
+            model: 'gemini-3.1-flash-image',
             state: 'JOB_STATE_SUCCEEDED',
             createTime: '2025-01-01T00:00:00.000Z',
             updateTime: '2025-01-01T00:05:00.000Z',
@@ -317,7 +317,7 @@ describe('imageSavePlugin official conversation integration', () => {
 
         const response = await invokeJsonRoute(generateHandler!, {
             prompt: 'Continue the restored official conversation',
-            model: 'gemini-3.1-flash-image-preview',
+            model: 'gemini-3.1-flash-image',
             aspectRatio: '1:1',
             imageSize: '1K',
             outputFormat: 'images-only',
@@ -354,7 +354,7 @@ describe('imageSavePlugin official conversation integration', () => {
         expect(chatCreateMock).toHaveBeenCalledTimes(1);
         expect(chatCreateMock).toHaveBeenCalledWith(
             expect.objectContaining({
-                model: 'gemini-3.1-flash-image-preview',
+                model: 'gemini-3.1-flash-image',
                 history: [
                     {
                         role: 'user',
@@ -427,7 +427,7 @@ describe('imageSavePlugin official conversation integration', () => {
 
         const createResponse = await invokeJsonRoute(createHandler!, {
             prompt: 'Create a queued panorama',
-            model: 'gemini-3.1-flash-image-preview',
+            model: 'gemini-3.1-flash-image',
             aspectRatio: '16:9',
             imageSize: '1K',
             style: 'None',
@@ -444,7 +444,7 @@ describe('imageSavePlugin official conversation integration', () => {
         expect(batchCreateMock).toHaveBeenCalledTimes(1);
         expect(batchCreateMock).toHaveBeenCalledWith(
             expect.objectContaining({
-                model: 'gemini-3.1-flash-image-preview',
+                model: 'gemini-3.1-flash-image',
                 src: expect.stringMatching(/^files\//),
             }),
         );
@@ -532,7 +532,7 @@ describe('imageSavePlugin official conversation integration', () => {
 
         const response = await invokeJsonRoute(createHandler!, {
             prompt: 'Queue a staged follow-up edit',
-            model: 'gemini-3.1-flash-image-preview',
+            model: 'gemini-3.1-flash-image',
             aspectRatio: '1:1',
             imageSize: '1K',
             editingInput: '/api/load-image?filename=queued-source.png',
@@ -597,7 +597,7 @@ describe('imageSavePlugin official conversation integration', () => {
                     aspectRatio: '1:1',
                     size: '2K',
                     style: 'None',
-                    model: 'gemini-3.1-flash-image-preview',
+                    model: 'gemini-3.1-flash-image',
                     createdAt: 123,
                 },
             ],
@@ -633,7 +633,7 @@ describe('imageSavePlugin official conversation integration', () => {
                 aspectRatio: '1:1',
                 imageSize: '2K',
                 imageStyle: 'None',
-                imageModel: 'gemini-3.1-flash-image-preview',
+                imageModel: 'gemini-3.1-flash-image',
                 batchSize: 1,
                 outputFormat: 'images-only',
                 temperature: 1,
@@ -690,7 +690,7 @@ describe('imageSavePlugin official conversation integration', () => {
                 aspectRatio: '1:1',
                 imageSize: '2K',
                 imageStyle: 'None',
-                imageModel: 'gemini-3.1-flash-image-preview',
+                imageModel: 'gemini-3.1-flash-image',
                 batchSize: 1,
                 outputFormat: 'images-only',
                 temperature: 1,
@@ -741,7 +741,7 @@ describe('imageSavePlugin official conversation integration', () => {
                     submissionItemIndex: 0,
                     submissionItemCount: 1,
                     state: 'JOB_STATE_RUNNING',
-                    model: 'gemini-3.1-flash-image-preview',
+                    model: 'gemini-3.1-flash-image',
                     prompt: 'Persist this batch job',
                     generationMode: 'Text to Image',
                     aspectRatio: '1:1',
@@ -828,7 +828,7 @@ describe('imageSavePlugin official conversation integration', () => {
                     aspectRatio: '1:1',
                     size: '2K',
                     style: 'None',
-                    model: 'gemini-3.1-flash-image-preview',
+                    model: 'gemini-3.1-flash-image',
                     createdAt: 20,
                 },
             ],
@@ -918,7 +918,7 @@ describe('imageSavePlugin official conversation integration', () => {
                     aspectRatio: '1:1',
                     size: '2K',
                     style: 'None',
-                    model: 'gemini-3.1-flash-image-preview',
+                    model: 'gemini-3.1-flash-image',
                     createdAt: 20,
                 },
             ],
@@ -1321,7 +1321,7 @@ describe('imageSavePlugin official conversation integration', () => {
 
         const response = await invokeJsonRoute(createHandler!, {
             prompt: 'Queue a staged follow-up edit',
-            model: 'gemini-3.1-flash-image-preview',
+            model: 'gemini-3.1-flash-image',
             aspectRatio: '1:1',
             imageSize: '1K',
             editingInput: 'data:image/png;base64,EDITAAA',
@@ -1424,7 +1424,7 @@ describe('imageSavePlugin official conversation integration', () => {
 
         const response = await invokeJsonRoute(generateHandler!, {
             prompt: 'Generate a grounded 4K test image',
-            model: 'gemini-3.1-flash-image-preview',
+            model: 'gemini-3.1-flash-image',
             aspectRatio: '1:1',
             imageSize: '4K',
             outputFormat: 'images-only',

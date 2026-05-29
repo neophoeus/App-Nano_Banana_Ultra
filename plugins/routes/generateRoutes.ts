@@ -696,7 +696,7 @@ function validateInteractiveGenerateRequest(
     body: ImageGenerateBody,
     requestContext?: ApiRequestContext,
 ): { model: string; objectImageInputs: string[]; characterImageInputs: string[] } | ValidationErrorResult {
-    const model = String(body.model || 'gemini-3.1-flash-image-preview');
+    const model = String(body.model || 'gemini-3.1-flash-image');
 
     if (!VALID_IMAGE_MODELS.has(model as ImageModel)) {
         logApiError(routePath, new Error('Unsupported model'), { model }, requestContext);
@@ -1091,7 +1091,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
             const body = await readJsonBody<ImageGenerateBody>(req);
             logApiRequest(requestContext, {
                 source: 'generation',
-                model: String(body.model || 'gemini-3.1-flash-image-preview'),
+                model: String(body.model || 'gemini-3.1-flash-image'),
                 executionMode: body.executionMode || 'single-turn',
                 outputFormat: body.outputFormat || 'images-only',
                 hasConversationContext: Boolean(body.conversationContext),
@@ -1241,7 +1241,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
             const body = await readJsonBody<ImageGenerateBody>(req);
             logApiRequest(requestContext, {
                 source: 'generation',
-                model: String(body.model || 'gemini-3.1-flash-image-preview'),
+                model: String(body.model || 'gemini-3.1-flash-image'),
                 executionMode: body.executionMode || 'single-turn',
                 outputFormat: body.outputFormat || 'images-only',
                 hasConversationContext: Boolean(body.conversationContext),
@@ -1266,7 +1266,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 outputFormat: body.outputFormat || 'images-only',
                 thinkingLevel:
                     body.thinkingLevel ||
-                    (validated.model === 'gemini-3.1-flash-image-preview' ? 'minimal' : 'disabled'),
+                    (validated.model === 'gemini-3.1-flash-image' ? 'minimal' : 'disabled'),
                 includeThoughts: Boolean(body.includeThoughts),
                 batchSize: 1,
             });

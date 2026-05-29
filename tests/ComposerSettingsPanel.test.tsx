@@ -60,8 +60,8 @@ const baseAdvancedSettingsDialogProps = {
     thinkingLevel: 'high' as const,
     groundingMode: 'off' as const,
     safetyThresholds: DEFAULT_SAFETY_THRESHOLDS,
-    imageModel: 'gemini-3.1-flash-image-preview' as const,
-    capability: MODEL_CAPABILITIES['gemini-3.1-flash-image-preview'],
+    imageModel: 'gemini-3.1-flash-image' as const,
+    capability: MODEL_CAPABILITIES['gemini-3.1-flash-image'],
     availableGroundingModes: ['off', 'google-search', 'image-search', 'google-search-plus-image-search'] as ('off' | 'google-search' | 'image-search' | 'google-search-plus-image-search')[],
     temperature: 1,
     onOutputFormatChange: vi.fn(),
@@ -77,7 +77,7 @@ describe('ComposerSettingsPanel toolbar layout', () => {
             <ComposerSettingsPanel
                 {...baseProps}
                 groundingMode="off"
-                capability={MODEL_CAPABILITIES['gemini-3.1-flash-image-preview']}
+                capability={MODEL_CAPABILITIES['gemini-3.1-flash-image']}
             />,
         );
 
@@ -144,7 +144,7 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).toContain('Style');
         expect(markup).toContain('None');
         expect(markup).toContain(
-            `Model: ${getTranslation('en', 'modelGemini31Flash').replace(' (gemini-3.1-flash-image-preview)', '')}`,
+            `Model: ${getTranslation('en', 'modelGemini31Flash').replace(' (gemini-3.1-flash-image)', '')}`,
         );
         expect(markup).toContain('Aspect Ratio: 1:1');
         expect(markup).toContain('Output Size: 2K');
@@ -240,8 +240,8 @@ describe('ComposerAdvancedSettingsDialog grounding warning', () => {
                 isOpen={true}
                 onClose={vi.fn()}
                 groundingMode="google-search-plus-image-search"
-                imageModel="gemini-3.1-flash-image-preview"
-                capability={MODEL_CAPABILITIES['gemini-3.1-flash-image-preview']}
+                imageModel="gemini-3.1-flash-image"
+                capability={MODEL_CAPABILITIES['gemini-3.1-flash-image']}
             />,
         );
 
@@ -268,8 +268,8 @@ describe('ComposerAdvancedSettingsDialog grounding warning', () => {
                 isOpen={true}
                 onClose={vi.fn()}
                 groundingMode="google-search"
-                imageModel="gemini-3-pro-image-preview"
-                capability={MODEL_CAPABILITIES['gemini-3-pro-image-preview']}
+                imageModel="gemini-3-pro-image"
+                capability={MODEL_CAPABILITIES['gemini-3-pro-image']}
                 availableGroundingModes={['off', 'google-search']}
             />,
         );
@@ -293,8 +293,8 @@ describe('ComposerAdvancedSettingsDialog grounding warning', () => {
                 isOpen={true}
                 onClose={vi.fn()}
                 groundingMode="google-search"
-                imageModel="gemini-3-pro-image-preview"
-                capability={MODEL_CAPABILITIES['gemini-3-pro-image-preview']}
+                imageModel="gemini-3-pro-image"
+                capability={MODEL_CAPABILITIES['gemini-3-pro-image']}
                 availableGroundingModes={['off', 'google-search']}
             />,
         );
@@ -312,8 +312,8 @@ describe('ComposerAdvancedSettingsDialog grounding warning', () => {
                 onClose={vi.fn()}
                 currentLanguage="ja"
                 groundingMode="google-search"
-                imageModel="gemini-3-pro-image-preview"
-                capability={MODEL_CAPABILITIES['gemini-3-pro-image-preview']}
+                imageModel="gemini-3-pro-image"
+                capability={MODEL_CAPABILITIES['gemini-3-pro-image']}
                 availableGroundingModes={['off', 'google-search']}
             />,
         );

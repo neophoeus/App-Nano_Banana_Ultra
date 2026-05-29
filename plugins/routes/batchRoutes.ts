@@ -248,7 +248,7 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
         try {
             const ai = getAIClient();
             const body = await readJsonBody<BatchCreateBody>(req);
-            const model = String(body.model || 'gemini-3.1-flash-image-preview');
+            const model = String(body.model || 'gemini-3.1-flash-image');
             const displayName = body.displayName || `${model}-queued-${new Date().toISOString()}`;
             logApiRequest(requestContext, {
                 source: 'batch',

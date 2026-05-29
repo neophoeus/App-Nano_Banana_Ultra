@@ -9,31 +9,31 @@ import {
 
 describe('capability truth', () => {
     it('allows image-plus-text output across all image generation models', () => {
-        expect(MODEL_CAPABILITIES['gemini-3.1-flash-image-preview'].outputFormats).toContain('images-and-text');
-        expect(MODEL_CAPABILITIES['gemini-3-pro-image-preview'].outputFormats).toContain('images-and-text');
+        expect(MODEL_CAPABILITIES['gemini-3.1-flash-image'].outputFormats).toContain('images-and-text');
+        expect(MODEL_CAPABILITIES['gemini-3-pro-image'].outputFormats).toContain('images-and-text');
         expect(MODEL_CAPABILITIES['gemini-2.5-flash-image'].outputFormats).toContain('images-and-text');
     });
 
-    it('marks gemini-3-pro-image-preview as supporting standard Google Search grounding', () => {
-        expect(MODEL_CAPABILITIES['gemini-3-pro-image-preview'].supportsGoogleSearch).toBe(true);
-        expect(MODEL_CAPABILITIES['gemini-3-pro-image-preview'].supportsImageSearch).toBe(false);
+    it('marks gemini-3-pro-image as supporting standard Google Search grounding', () => {
+        expect(MODEL_CAPABILITIES['gemini-3-pro-image'].supportsGoogleSearch).toBe(true);
+        expect(MODEL_CAPABILITIES['gemini-3-pro-image'].supportsImageSearch).toBe(false);
     });
 
     it('treats Gemini 3 image models as thought-summary capable and keeps 2.5 flash image disabled', () => {
-        expect(MODEL_CAPABILITIES['gemini-3.1-flash-image-preview'].supportsIncludeThoughts).toBe(true);
-        expect(MODEL_CAPABILITIES['gemini-3-pro-image-preview'].supportsIncludeThoughts).toBe(true);
+        expect(MODEL_CAPABILITIES['gemini-3.1-flash-image'].supportsIncludeThoughts).toBe(true);
+        expect(MODEL_CAPABILITIES['gemini-3-pro-image'].supportsIncludeThoughts).toBe(true);
         expect(MODEL_CAPABILITIES['gemini-2.5-flash-image'].supportsIncludeThoughts).toBe(false);
     });
 
-    it('only exposes configurable thinking levels on gemini-3.1-flash-image-preview', () => {
-        expect(MODEL_CAPABILITIES['gemini-3.1-flash-image-preview'].thinkingLevels).toEqual(['minimal', 'high']);
-        expect(MODEL_CAPABILITIES['gemini-3-pro-image-preview'].thinkingLevels).toEqual(['disabled']);
+    it('only exposes configurable thinking levels on gemini-3.1-flash-image', () => {
+        expect(MODEL_CAPABILITIES['gemini-3.1-flash-image'].thinkingLevels).toEqual(['minimal', 'high']);
+        expect(MODEL_CAPABILITIES['gemini-3-pro-image'].thinkingLevels).toEqual(['disabled']);
         expect(MODEL_CAPABILITIES['gemini-2.5-flash-image'].thinkingLevels).toEqual(['disabled']);
     });
 
     it('does not expose a structured-output capability flag on current image generation paths', () => {
-        expect('supportsStructuredOutputs' in MODEL_CAPABILITIES['gemini-3.1-flash-image-preview']).toBe(false);
-        expect('supportsStructuredOutputs' in MODEL_CAPABILITIES['gemini-3-pro-image-preview']).toBe(false);
+        expect('supportsStructuredOutputs' in MODEL_CAPABILITIES['gemini-3.1-flash-image']).toBe(false);
+        expect('supportsStructuredOutputs' in MODEL_CAPABILITIES['gemini-3-pro-image']).toBe(false);
         expect('supportsStructuredOutputs' in MODEL_CAPABILITIES['gemini-2.5-flash-image']).toBe(false);
     });
 
@@ -59,13 +59,13 @@ describe('capability truth', () => {
             googleSearch: true,
             imageSearch: true,
         });
-        expect(getAvailableGroundingModes(MODEL_CAPABILITIES['gemini-3.1-flash-image-preview'])).toEqual([
+        expect(getAvailableGroundingModes(MODEL_CAPABILITIES['gemini-3.1-flash-image'])).toEqual([
             'off',
             'google-search',
             'image-search',
             'google-search-plus-image-search',
         ]);
-        expect(getAvailableGroundingModes(MODEL_CAPABILITIES['gemini-3-pro-image-preview'])).toEqual([
+        expect(getAvailableGroundingModes(MODEL_CAPABILITIES['gemini-3-pro-image'])).toEqual([
             'off',
             'google-search',
         ]);

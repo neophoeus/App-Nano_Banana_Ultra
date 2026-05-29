@@ -21,7 +21,7 @@ const summaryProps: SelectedItemSummaryStripProps = {
             aspectRatio: '16:9',
             size: '2K',
             style: 'None',
-            model: 'gemini-3.1-flash-image-preview',
+            model: 'gemini-3.1-flash-image',
             createdAt: 1,
             status: 'failed',
             lineageAction: 'branch',

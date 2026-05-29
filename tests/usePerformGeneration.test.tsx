@@ -367,7 +367,7 @@ describe('usePerformGeneration', () => {
                 '1:1',
                 '2K',
                 'None',
-                'gemini-3.1-flash-image-preview',
+                'gemini-3.1-flash-image',
                 'data:image/png;base64,EDIT',
             );
         });
@@ -375,17 +375,17 @@ describe('usePerformGeneration', () => {
         expect(generateImageWithGeminiMock).toHaveBeenCalledTimes(1);
         expect(saveImageToLocalMock).toHaveBeenCalledWith(
             'data:image/png;base64,AAA',
-            'gemini-3.1-flash-image-preview-edit',
+            'gemini-3.1-flash-image-edit',
             expect.objectContaining({
                 prompt: 'A minimal yellow banana icon on a clean white card',
                 size: '2K',
                 mode: 'Inpainting',
             }),
-            expect.stringMatching(/^gemini-3\.1-flash-image-preview_\d{8}-\d{6}_01-[a-z0-9]{8}_editor-retouch$/),
+            expect.stringMatching(/^gemini-3\.1-flash-image_\d{8}-\d{6}_01-[a-z0-9]{8}_editor-retouch$/),
         );
         expect(persistHistoryThumbnailMock).toHaveBeenCalledWith(
             'data:image/png;base64,AAA',
-            'gemini-3.1-flash-image-preview-edit',
+            'gemini-3.1-flash-image-edit',
             'generated.png',
         );
         expect(latestGeneratedImageUrls).toEqual([]);
@@ -498,7 +498,7 @@ describe('usePerformGeneration', () => {
                 '1:1',
                 '2K',
                 'None',
-                'gemini-3.1-flash-image-preview',
+                'gemini-3.1-flash-image',
             );
         });
 
@@ -552,7 +552,7 @@ describe('usePerformGeneration', () => {
                 '1:1',
                 '1K',
                 'Digital Illustration',
-                'gemini-3.1-flash-image-preview',
+                'gemini-3.1-flash-image',
             );
         });
 
@@ -615,7 +615,7 @@ describe('usePerformGeneration', () => {
                 '1:1',
                 '1K',
                 'None',
-                'gemini-3.1-flash-image-preview',
+                'gemini-3.1-flash-image',
                 'data:image/png;base64,EDIT',
                 1,
                 undefined,
@@ -717,7 +717,7 @@ describe('usePerformGeneration', () => {
                 '1:1',
                 '1K',
                 'None',
-                'gemini-3.1-flash-image-preview',
+                'gemini-3.1-flash-image',
             );
         });
 
@@ -785,7 +785,7 @@ describe('usePerformGeneration', () => {
                 '1:1',
                 '1K',
                 'None',
-                'gemini-3.1-flash-image-preview',
+                'gemini-3.1-flash-image',
             );
         });
 
@@ -817,7 +817,7 @@ describe('usePerformGeneration', () => {
                 '1:1',
                 '1K',
                 'None',
-                'gemini-3.1-flash-image-preview',
+                'gemini-3.1-flash-image',
             );
         });
 
@@ -875,19 +875,19 @@ describe('usePerformGeneration', () => {
                 '1:1',
                 '1K',
                 'None',
-                'gemini-3.1-flash-image-preview',
+                'gemini-3.1-flash-image',
             );
         });
 
         expect(saveImageToLocalMock).toHaveBeenCalledWith(
             'data:image/png;base64,THOUGHT',
-            'gemini-3.1-flash-image-preview-gen-thought',
+            'gemini-3.1-flash-image-gen-thought',
             expect.objectContaining({
                 kind: 'thought-image',
                 slotIndex: 0,
                 sequence: 0,
             }),
-            expect.stringMatching(/^gemini-3\.1-flash-image-preview_\d{8}-\d{6}_01-[a-z0-9]{8}_txt2img-part-00$/),
+            expect.stringMatching(/^gemini-3\.1-flash-image_\d{8}-\d{6}_01-[a-z0-9]{8}_txt2img-part-00$/),
         );
         expect(latestHistory).toHaveLength(1);
         expect(latestHistory[0]).toEqual(
@@ -938,7 +938,7 @@ describe('usePerformGeneration', () => {
                 '1:1',
                 '1K',
                 'None',
-                'gemini-3.1-flash-image-preview',
+                'gemini-3.1-flash-image',
                 undefined,
                 2,
             );
@@ -1008,7 +1008,7 @@ describe('usePerformGeneration', () => {
                 '1:1',
                 '1K',
                 'None',
-                'gemini-3.1-flash-image-preview',
+                'gemini-3.1-flash-image',
                 undefined,
                 2,
             );
@@ -1049,7 +1049,7 @@ describe('usePerformGeneration', () => {
                 '1:1',
                 '1K',
                 'None',
-                'gemini-3.1-flash-image-preview',
+                'gemini-3.1-flash-image',
             );
         });
 
@@ -1113,7 +1113,7 @@ describe('usePerformGeneration', () => {
                 '1:1',
                 '4K',
                 'None',
-                'gemini-3.1-flash-image-preview',
+                'gemini-3.1-flash-image',
                 undefined,
                 2,
             );
@@ -1172,7 +1172,7 @@ describe('usePerformGeneration', () => {
                 '1:1',
                 '1K',
                 'None',
-                'gemini-3.1-flash-image-preview',
+                'gemini-3.1-flash-image',
                 undefined,
                 2,
             );

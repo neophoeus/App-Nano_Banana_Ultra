@@ -14,8 +14,8 @@ export interface ModelCapability {
 }
 
 export const IMAGE_MODELS: ImageModel[] = [
-    'gemini-3.1-flash-image-preview',
-    'gemini-3-pro-image-preview',
+    'gemini-3.1-flash-image',
+    'gemini-3-pro-image',
     'gemini-2.5-flash-image',
 ];
 
@@ -24,7 +24,7 @@ export const VALID_IMAGE_MODELS = new Set<ImageModel>(IMAGE_MODELS);
 export const VALID_IMAGE_SIZES = new Set<ImageSize>(['512', '1K', '2K', '4K']);
 
 export const MODEL_CAPABILITIES: Record<ImageModel, ModelCapability> = {
-    'gemini-3.1-flash-image-preview': {
+    'gemini-3.1-flash-image': {
         supportedSizes: ['512', '1K', '2K', '4K'],
         supportedRatios: [
             '1:1',
@@ -51,7 +51,7 @@ export const MODEL_CAPABILITIES: Record<ImageModel, ModelCapability> = {
         supportsGoogleSearch: true,
         supportsImageSearch: true,
     },
-    'gemini-3-pro-image-preview': {
+    'gemini-3-pro-image': {
         supportedSizes: ['1K', '2K', '4K'],
         supportedRatios: ['1:1', '16:9', '9:16', '4:3', '3:4', '2:3', '3:2', '21:9', '4:5', '5:4'],
         maxObjects: 6,

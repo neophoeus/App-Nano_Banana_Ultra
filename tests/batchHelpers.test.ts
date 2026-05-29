@@ -7,7 +7,7 @@ describe('serializeBatchJob', () => {
             name: 'batches/test-job',
             displayName: 'Queued image batch',
             state: 'JOB_STATE_RUNNING',
-            model: 'gemini-3.1-flash-image-preview',
+            model: 'gemini-3.1-flash-image',
             batchStats: {
                 requestCount: '4',
                 successfulRequestCount: '1',
@@ -33,13 +33,13 @@ describe('serializeBatchJob', () => {
             name: 'batches/test-job-prefixed-model',
             displayName: 'Queued image batch',
             state: 'JOB_STATE_RUNNING',
-            model: 'models/gemini-3.1-flash-image-preview',
+            model: 'models/gemini-3.1-flash-image',
             dest: {
                 inlinedResponses: [],
             },
         });
 
-        expect(serialized.model).toBe('gemini-3.1-flash-image-preview');
+        expect(serialized.model).toBe('gemini-3.1-flash-image');
     });
 
     it('marks jobs with inline responses as having importable payload candidates', () => {
@@ -47,7 +47,7 @@ describe('serializeBatchJob', () => {
             name: 'batches/test-job-inline',
             displayName: 'Queued inline batch',
             state: 'JOB_STATE_SUCCEEDED',
-            model: 'gemini-3.1-flash-image-preview',
+            model: 'gemini-3.1-flash-image',
             dest: {
                 inlinedResponses: [{ response: { candidates: [] } }],
             },
@@ -62,7 +62,7 @@ describe('serializeBatchJob', () => {
             name: 'batches/test-job-inline-count-only',
             displayName: 'Queued inline batch count only',
             state: 'JOB_STATE_SUCCEEDED',
-            model: 'gemini-3.1-flash-image-preview',
+            model: 'gemini-3.1-flash-image',
             dest: {
                 inlinedResponses: [{ response: {} }, { response: {} }],
             },
@@ -78,7 +78,7 @@ describe('serializeBatchJob', () => {
             name: 'batches/test-job-file',
             displayName: 'Queued file batch',
             state: 'JOB_STATE_SUCCEEDED',
-            model: 'gemini-3.1-flash-image-preview',
+            model: 'gemini-3.1-flash-image',
             dest: {
                 fileName: 'files/batch-results',
             },

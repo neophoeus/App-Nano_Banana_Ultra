@@ -141,8 +141,8 @@ export function useGroundingProvenanceView({
         effectiveSessionHints?.actualImageDimensions,
     );
     const requestedSizeModel =
-        effectiveMetadata?.model === 'gemini-3.1-flash-image-preview' ||
-        effectiveMetadata?.model === 'gemini-3-pro-image-preview' ||
+        effectiveMetadata?.model === 'gemini-3.1-flash-image' ||
+        effectiveMetadata?.model === 'gemini-3-pro-image' ||
         effectiveMetadata?.model === 'gemini-2.5-flash-image'
             ? effectiveMetadata.model
             : viewSettings.model;

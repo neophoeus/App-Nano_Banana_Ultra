@@ -20,9 +20,9 @@ describe('WorkspacePickerSheet', () => {
                 t={t}
                 imageStyle="None"
                 setImageStyle={vi.fn()}
-                imageModel="gemini-3.1-flash-image-preview"
+                imageModel="gemini-3.1-flash-image"
                 setImageModel={vi.fn()}
-                capability={MODEL_CAPABILITIES['gemini-3.1-flash-image-preview']}
+                capability={MODEL_CAPABILITIES['gemini-3.1-flash-image']}
                 aspectRatio="1:1"
                 setAspectRatio={vi.fn()}
                 imageSize="1K"
@@ -65,9 +65,9 @@ describe('WorkspacePickerSheet', () => {
                     t={t}
                     imageStyle="None"
                     setImageStyle={vi.fn()}
-                    imageModel="gemini-3.1-flash-image-preview"
+                    imageModel="gemini-3.1-flash-image"
                     setImageModel={vi.fn()}
-                    capability={MODEL_CAPABILITIES['gemini-3.1-flash-image-preview']}
+                    capability={MODEL_CAPABILITIES['gemini-3.1-flash-image']}
                     aspectRatio="1:1"
                     setAspectRatio={vi.fn()}
                     imageSize="1K"
@@ -93,7 +93,7 @@ describe('WorkspacePickerSheet', () => {
         expect(fullMarkup).toContain('workspace-generation-settings-model-pane');
         expect(fullMarkup).toContain('workspace-generation-settings-controls-pane');
         expect(fullMarkup).toContain('Nano Banana 2');
-        expect(fullMarkup).toContain('gemini-3.1-flash-image-preview');
+        expect(fullMarkup).toContain('gemini-3.1-flash-image');
         expect(fullMarkup).not.toContain(t('modelGemini31Flash'));
         expect(fullMarkup).toContain(t('workspacePickerModelSupportImageSearch'));
         expect(fullMarkup).toContain(t('resolution'));
@@ -135,9 +135,9 @@ describe('WorkspacePickerSheet', () => {
                 t={t}
                 imageStyle="None"
                 setImageStyle={vi.fn()}
-                imageModel="gemini-3.1-flash-image-preview"
+                imageModel="gemini-3.1-flash-image"
                 setImageModel={vi.fn()}
-                capability={MODEL_CAPABILITIES['gemini-3.1-flash-image-preview']}
+                capability={MODEL_CAPABILITIES['gemini-3.1-flash-image']}
                 aspectRatio="1:1"
                 setAspectRatio={vi.fn()}
                 imageSize="1K"
@@ -181,9 +181,9 @@ describe('WorkspacePickerSheet', () => {
                 t={t}
                 imageStyle="None"
                 setImageStyle={vi.fn()}
-                imageModel="gemini-3.1-flash-image-preview"
+                imageModel="gemini-3.1-flash-image"
                 setImageModel={vi.fn()}
-                capability={MODEL_CAPABILITIES['gemini-3.1-flash-image-preview']}
+                capability={MODEL_CAPABILITIES['gemini-3.1-flash-image']}
                 aspectRatio="1:1"
                 setAspectRatio={vi.fn()}
                 imageSize="1K"
@@ -216,9 +216,9 @@ describe('WorkspacePickerSheet', () => {
                 t={t}
                 imageStyle="None"
                 setImageStyle={vi.fn()}
-                imageModel="gemini-3.1-flash-image-preview"
+                imageModel="gemini-3.1-flash-image"
                 setImageModel={vi.fn()}
-                capability={MODEL_CAPABILITIES['gemini-3.1-flash-image-preview']}
+                capability={MODEL_CAPABILITIES['gemini-3.1-flash-image']}
                 aspectRatio="1:1"
                 setAspectRatio={vi.fn()}
                 imageSize="1K"
@@ -261,9 +261,9 @@ describe('WorkspacePickerSheet', () => {
                 t={t}
                 imageStyle="None"
                 setImageStyle={vi.fn()}
-                imageModel="gemini-3.1-flash-image-preview"
+                imageModel="gemini-3.1-flash-image"
                 setImageModel={vi.fn()}
-                capability={MODEL_CAPABILITIES['gemini-3.1-flash-image-preview']}
+                capability={MODEL_CAPABILITIES['gemini-3.1-flash-image']}
                 aspectRatio="1:8"
                 setAspectRatio={vi.fn()}
                 imageSize="1K"
@@ -283,8 +283,8 @@ describe('WorkspacePickerSheet', () => {
             />,
         );
 
-        expect(markup).toContain('gemini-3.1-flash-image-preview');
-        expect(markup).not.toContain('gemini-3-pro-image-preview');
+        expect(markup).toContain('gemini-3.1-flash-image');
+        expect(markup).not.toContain('gemini-3-pro-image');
         expect(markup).not.toContain('gemini-2.5-flash-image');
         expect(markup).toContain('pointer-events-none');
     });

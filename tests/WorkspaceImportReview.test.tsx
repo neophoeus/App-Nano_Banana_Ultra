@@ -10,7 +10,7 @@ const buildTurn = (overrides: Partial<GeneratedImage> = {}): GeneratedImage => (
     aspectRatio: '1:1',
     size: '1K',
     style: 'None',
-    model: 'gemini-3.1-flash-image-preview',
+    model: 'gemini-3.1-flash-image',
     createdAt: '2026-03-17T10:00:00.000Z' as unknown as number,
     status: 'success',
     executionMode: 'single-turn',

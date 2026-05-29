@@ -102,7 +102,7 @@ export function buildImageRequestConfig(
 
     const capability = MODEL_CAPABILITIES[model as ImageModel];
     const effectiveThinkingLevel: AppThinkingLevel =
-        body.thinkingLevel || (model === 'gemini-3.1-flash-image-preview' ? 'minimal' : 'disabled');
+        body.thinkingLevel || (model === 'gemini-3.1-flash-image' ? 'minimal' : 'disabled');
     const shouldIncludeThoughts = Boolean(body.includeThoughts) && capability.supportsIncludeThoughts;
     const geminiThinkingLevel = toGeminiThinkingLevel(effectiveThinkingLevel);
     if (geminiThinkingLevel || shouldIncludeThoughts) {

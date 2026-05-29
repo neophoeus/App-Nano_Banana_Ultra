@@ -16,7 +16,7 @@ const buildHistoryTurn = (overrides: Partial<GeneratedImage> = {}): GeneratedIma
     aspectRatio: '16:9',
     size: '1K',
     style: 'Anime',
-    model: 'gemini-3.1-flash-image-preview',
+    model: 'gemini-3.1-flash-image',
     createdAt: 1,
     ...overrides,
 });
@@ -60,7 +60,7 @@ describe('workspaceSnapshotState', () => {
                     submissionItemIndex: 0,
                     submissionItemCount: 1,
                     state: 'JOB_STATE_PENDING',
-                    model: 'gemini-3.1-flash-image-preview',
+                    model: 'gemini-3.1-flash-image',
                     prompt: 'Recovered queued batch',
                     aspectRatio: '1:1',
                     imageSize: '2K',
@@ -109,7 +109,7 @@ describe('workspaceSnapshotState', () => {
                     submissionItemIndex: 0,
                     submissionItemCount: 1,
                     state: 'JOB_STATE_PENDING',
-                    model: 'gemini-3.1-flash-image-preview',
+                    model: 'gemini-3.1-flash-image',
                     prompt: 'Queued batch prompt',
                     aspectRatio: '1:1',
                     imageSize: '2K',
@@ -143,7 +143,7 @@ describe('workspaceSnapshotState', () => {
             aspectRatio: '4:5',
             imageSize: '4K',
             imageStyle: 'Film Noir',
-            imageModel: 'gemini-3-pro-image-preview',
+            imageModel: 'gemini-3-pro-image',
             batchSize: 3,
             outputFormat: 'images-and-text',
             temperature: 0.6,
@@ -158,7 +158,7 @@ describe('workspaceSnapshotState', () => {
             aspectRatio: '4:5',
             size: '4K',
             style: 'Film Noir',
-            model: 'gemini-3-pro-image-preview',
+            model: 'gemini-3-pro-image',
             batchSize: 3,
             outputFormat: 'images-and-text',
             temperature: 0.6,
@@ -186,7 +186,7 @@ describe('workspaceSnapshotState', () => {
             aspectRatio: '16:9',
             imageSize: '1K',
             imageStyle: 'Anime',
-            imageModel: 'gemini-3.1-flash-image-preview',
+            imageModel: 'gemini-3.1-flash-image',
             outputFormat: 'images-only',
             temperature: 1,
             thinkingLevel: 'minimal',
@@ -197,7 +197,7 @@ describe('workspaceSnapshotState', () => {
         });
 
         const proTurn = buildHistoryTurn({
-            model: 'gemini-3-pro-image-preview',
+            model: 'gemini-3-pro-image',
             metadata: {
                 outputFormat: 'images-and-text',
                 temperature: 0.2,
@@ -207,7 +207,7 @@ describe('workspaceSnapshotState', () => {
         });
 
         expect(buildWorkspaceComposerStateFromHistoryItem(proTurn)).toMatchObject({
-            imageModel: 'gemini-3-pro-image-preview',
+            imageModel: 'gemini-3-pro-image',
             outputFormat: 'images-and-text',
             temperature: 0.2,
             thinkingLevel: 'high',

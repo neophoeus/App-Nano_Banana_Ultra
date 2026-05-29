@@ -15,7 +15,7 @@ const getSummaryItemMarkup = (markup: string, itemId: string) =>
 describe('SurfaceSharedControls', () => {
     it('renders a vertical shared-controls stack with per-button summaries and no style entry', () => {
         const modelLabel = getTranslation('en', 'modelGemini31Flash');
-        const capability = MODEL_CAPABILITIES['gemini-3.1-flash-image-preview'];
+        const capability = MODEL_CAPABILITIES['gemini-3.1-flash-image'];
         const markup = renderToStaticMarkup(
             <SurfaceSharedControls
                 currentLanguage="en"
@@ -67,7 +67,7 @@ describe('SurfaceSharedControls', () => {
         expect(markup).toContain('Settings');
         expect(markup).toContain('Prompt');
         expect(modelSummaryMarkup).toContain('Nano Banana 2');
-        expect(modelSummaryMarkup).not.toContain('gemini-3.1-flash-image-preview');
+        expect(modelSummaryMarkup).not.toContain('gemini-3.1-flash-image');
         expect(markup).not.toContain('aria-expanded');
         expect(markup).not.toContain('sm:col-span-2');
         expect(markup).not.toContain('mt-1 text-xs text-gray-500 dark:text-gray-400');
@@ -99,7 +99,7 @@ describe('SurfaceSharedControls', () => {
 
     it('shows advanced-setting chips only inside the advanced-settings button when supported and not off', () => {
         const modelLabel = getTranslation('en', 'modelGemini3Pro');
-        const capability = MODEL_CAPABILITIES['gemini-3-pro-image-preview'];
+        const capability = MODEL_CAPABILITIES['gemini-3-pro-image'];
         const markup = renderToStaticMarkup(
             <SurfaceSharedControls
                 currentLanguage="en"

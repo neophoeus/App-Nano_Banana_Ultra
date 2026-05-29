@@ -54,14 +54,14 @@ Nano Banana Ultra currently supports three Gemini image-model paths. The UI expo
 
 ### Nano Banana 2
 
-- model id: `gemini-3.1-flash-image-preview`
+- model id: `gemini-3.1-flash-image`
 - default mainline model in the current product flow
 - broadest capability surface across ratio, size, grounding, and thinking controls
 - best fit for flexible generation, iteration, and reference-aware workspace use
 
 ### Nano Banana Pro
 
-- model id: `gemini-3-pro-image-preview`
+- model id: `gemini-3-pro-image`
 - quality-focused alternative for higher-end image work
 - tuned for higher-quality results and more deliberate controlled workflows
 - best fit when output quality matters more than having the broadest capability matrix
@@ -108,9 +108,9 @@ Nano Banana Ultra currently supports three Gemini image-model paths. The UI expo
 
 ## Version Overview
 
-### Latest Release: 3.10.6
+### Latest Release: 3.10.7
 
-Latest release: 3.10.6. See [CHANGELOG.md](CHANGELOG.md) for release details.
+Latest release: 3.10.7. Updated Gemini image model names to their official standard names (`gemini-3.1-flash-image` and `gemini-3-pro-image`) in alignment with official Google Gen AI specifications. See [CHANGELOG.md](CHANGELOG.md) for release details.
 
 ### 3.5.x
 
@@ -227,14 +227,14 @@ Nano Banana Ultra 目前支援三條 Gemini 影像模型路徑。介面會依模
 
 ### Nano Banana 2
 
-- 模型 id：`gemini-3.1-flash-image-preview`
+- 模型 id：`gemini-3.1-flash-image`
 - 目前產品主流程的預設模型
 - 具備最完整的比例、尺寸、grounding 與 thinking 控制面
 - 適合高彈性、多輪延伸、以及參考圖驅動的工作流
 
 ### Nano Banana Pro
 
-- 模型 id：`gemini-3-pro-image-preview`
+- 模型 id：`gemini-3-pro-image`
 - 偏向高品質輸出的進階路徑
 - 適合高品質輸出與較講究控制感的工作流
 - 適合把成品品質放在能力面廣度之前的使用者
@@ -281,9 +281,9 @@ Nano Banana Ultra 目前支援三條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：3.10.6
+### 最新版本：3.10.7
 
-最新版本：3.10.6。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
+最新版本：3.10.7。將 Gemini 圖片生成模型名稱更新為正式版學名（`gemini-3.1-flash-image` 與 `gemini-3-pro-image`），符合官方 Google Gen AI 規範。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 3.5.x
 

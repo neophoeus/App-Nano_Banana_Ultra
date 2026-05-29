@@ -35,7 +35,7 @@ const buildSharedSnapshot = (prompt: string): WorkspacePersistenceSnapshot =>
                 aspectRatio: '1:1',
                 size: '2K',
                 style: 'None',
-                model: 'gemini-3.1-flash-image-preview',
+                model: 'gemini-3.1-flash-image',
                 createdAt: 10,
                 status: 'success',
             },

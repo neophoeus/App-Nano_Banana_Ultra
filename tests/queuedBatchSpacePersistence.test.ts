@@ -20,7 +20,7 @@ const buildQueuedJob = (overrides: Partial<QueuedBatchJob> = {}): QueuedBatchJob
     submissionItemIndex: overrides.submissionItemIndex ?? 0,
     submissionItemCount: overrides.submissionItemCount ?? 1,
     state: 'JOB_STATE_PENDING',
-    model: 'gemini-3.1-flash-image-preview',
+    model: 'gemini-3.1-flash-image',
     prompt: 'Queued job prompt',
     generationMode: 'Text to Image',
     aspectRatio: '1:1',
