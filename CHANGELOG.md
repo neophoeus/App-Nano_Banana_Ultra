@@ -1,8 +1,19 @@
 # Changelog
 
+## v3.10.8 - 2026-05-29
+
+- Release title: Nano Banana Ultra 3.10.8 - Legacy Model Normalization, Compatibility Protection & Extended Test Coverage
+- Release summary:
+    - Resolved a critical React runtime error (`supportsGoogleSearch` undefined crash) when loading old workspace snapshots containing deprecated preview image models.
+    - Added a robust `normalizeSavedImageModel` persistence sanitizer helper to automatically migrate legacy model names to current official ones.
+    - Augmented the `MODEL_CAPABILITIES` dictionary with legacy property aliases mapping deprecated strings to current valid capability objects as a dual-layer safeguard.
+    - Extended unit test coverage in `workspacePersistence.test.ts` and `promptHelpers.test.ts` to verify legacy model validation, style sensitivity, and forensic visual protocol instructions.
+
 ## v3.10.7 - 2026-05-29
 
-- **Model Name Migration**: Updated Google Gen AI image generation model names to their official standard names (`gemini-3.1-flash-image` and `gemini-3-pro-image`) in types, UI components, capabilities definition, request configs, test cases, and translations, in alignment with official Google Gen AI specifications.
+- Release title: Nano Banana Ultra 3.10.7 - Official Google Gen AI Model Name Migration
+- Release summary:
+    - Updated Google Gen AI image generation model names to their official standard names (`gemini-3.1-flash-image` and `gemini-3-pro-image`) across types, UI components, capabilities definition, request configs, test cases, and translations, in alignment with official Google Gen AI specifications.
 
 ## v3.10.6 - 2026-05-26
 

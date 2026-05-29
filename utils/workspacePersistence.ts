@@ -4,6 +4,7 @@ import {
     BranchConversationRecord,
     DEFAULT_SAFETY_THRESHOLDS,
     GeneratedImage,
+    ImageModel,
     QueuedBatchJob,
     QueuedBatchJobImportIssue,
     ResultPart,
@@ -236,6 +237,30 @@ const isImageSize = (value: unknown): value is GeneratedImage['size'] =>
     typeof value === 'string' && IMAGE_SIZE_VALUES.has(value as GeneratedImage['size']);
 const isImageModel = (value: unknown): value is GeneratedImage['model'] =>
     typeof value === 'string' && IMAGE_MODEL_VALUES.has(value as GeneratedImage['model']);
+
+// 過期 preview 模型與當前正式模型的一對一映射關係表，用以處理 Session 舊狀態遷移
+const LEGACY_MODEL_MIGRATION_MAP: Record<string, ImageModel> = {
+    'gemini-3.1-flash-image-preview': 'gemini-3.1-flash-image',
+    'gemini-3-pro-image-preview': 'gemini-3-pro-image',
+};
+
+// 將已存檔或快照中讀取的舊模型名稱轉移正規化為有效的正式模型名稱
+const normalizeSavedImageModel = (value: unknown): ImageModel => {
+    if (typeof value !== 'string') {
+        return EMPTY_WORKSPACE_COMPOSER_STATE.imageModel;
+    }
+    // 檢查是否屬於已知的舊 preview 模型，若有則進行對應轉移
+    if (value in LEGACY_MODEL_MIGRATION_MAP) {
+        return LEGACY_MODEL_MIGRATION_MAP[value];
+    }
+    // 驗證是否屬於當前有效的正式模型
+    if (IMAGE_MODEL_VALUES.has(value as ImageModel)) {
+        return value as ImageModel;
+    }
+    // 其餘未知模型則優雅回退至預設的 Composer 模型
+    return EMPTY_WORKSPACE_COMPOSER_STATE.imageModel;
+};
+
 const isOutputFormat = (value: unknown): value is WorkspaceComposerState['outputFormat'] =>
     typeof value === 'string' && OUTPUT_FORMAT_VALUES.has(value as WorkspaceComposerState['outputFormat']);
 const isThinkingLevel = (value: unknown): value is WorkspaceComposerState['thinkingLevel'] =>
@@ -720,7 +745,7 @@ const sanitizeHistory = (value: unknown): GeneratedImage[] => {
             aspectRatio: isAspectRatio(item.aspectRatio) ? item.aspectRatio : EMPTY_WORKSPACE_COMPOSER_STATE.aspectRatio,
             size: isImageSize(item.size) ? item.size : EMPTY_WORKSPACE_COMPOSER_STATE.imageSize,
             style: normalizeImageStyle(item.style),
-            model: isImageModel(item.model) ? item.model : EMPTY_WORKSPACE_COMPOSER_STATE.imageModel,
+            model: normalizeSavedImageModel(item.model),
             createdAt: normalizeFiniteNumber(item.createdAt) ?? 0,
             ...(savedFilename !== undefined ? { savedFilename } : {}),
             ...(thumbnailSavedFilename !== undefined ? { thumbnailSavedFilename } : {}),
@@ -1162,6 +1187,7 @@ const sanitizeWorkspaceComposerState = (value: unknown): WorkspaceComposerState 
         ...EMPTY_WORKSPACE_COMPOSER_STATE,
         ...value,
         prompt: typeof value.prompt === 'string' ? value.prompt : EMPTY_WORKSPACE_COMPOSER_STATE.prompt,
+        imageModel: normalizeSavedImageModel(value.imageModel),
         imageStyle: normalizeImageStyle(value.imageStyle),
         batchSize:
             typeof value.batchSize === 'number' && Number.isFinite(value.batchSize)

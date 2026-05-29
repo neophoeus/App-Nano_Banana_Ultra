@@ -1,6 +1,7 @@
 /** @vitest-environment jsdom */
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { MODEL_CAPABILITIES } from '../utils/modelCapabilities';
 import { DEFAULT_SAFETY_THRESHOLDS, WorkspacePersistenceSnapshot } from '../types';
 import { buildConversationRequestContext } from '../utils/conversationState';
 import {
@@ -1191,4 +1192,45 @@ describe('workspacePersistence', () => {
         expect(restored.viewState.generatedImageUrls).toEqual([]);
         expect(restored.viewState.selectedHistoryId).toBeNull();
     });
+
+    // 驗證過期 preview 模型名稱在 sanitize 流程中是否能正確正規化成當前新模型
+    it('normalizes legacy preview model names during workspace sanitization', () => {
+        const restored = sanitizeWorkspaceSnapshot({
+            ...EMPTY_WORKSPACE_SNAPSHOT,
+            composerState: {
+                ...EMPTY_WORKSPACE_SNAPSHOT.composerState,
+                imageModel: 'gemini-3.1-flash-image-preview',
+            },
+            history: [
+                {
+                    id: 'legacy-model-turn',
+                    url: 'https://example.com/legacy.png',
+                    prompt: 'Legacy prompt',
+                    aspectRatio: '1:1',
+                    size: '2K',
+                    style: 'None',
+                    model: 'gemini-3-pro-image-preview',
+                    createdAt: 10,
+                },
+            ],
+        } as any);
+
+        // 確保 composerState 中的 imageModel 欄位已被正規化
+        expect(restored.composerState.imageModel).toBe('gemini-3.1-flash-image');
+        // 確保 history 中的 model 欄位已被正規化
+        expect(restored.history[0].model).toBe('gemini-3-pro-image');
+    });
+
+    // 驗證 MODEL_CAPABILITIES 字典是否包含後向相容的 preview 別名以防 dereference crash
+    it('retains backward compatibility aliases in MODEL_CAPABILITIES dictionary', () => {
+        // 導入模型能力的靜態設定
+        const flashCapability = MODEL_CAPABILITIES['gemini-3.1-flash-image'];
+        const proCapability = MODEL_CAPABILITIES['gemini-3-pro-image'];
+
+        // 確保可以用舊的 preview 鍵值獲取正確的能力設定，防止 runtime 存取時發生 undefined 錯誤
+        expect((MODEL_CAPABILITIES as any)['gemini-3.1-flash-image-preview']).toBe(flashCapability);
+        expect((MODEL_CAPABILITIES as any)['gemini-3-pro-image-preview']).toBe(proCapability);
+        expect((MODEL_CAPABILITIES as any)['gemini-3.1-flash-image-preview']?.supportsGoogleSearch).toBe(true);
+    });
 });
+

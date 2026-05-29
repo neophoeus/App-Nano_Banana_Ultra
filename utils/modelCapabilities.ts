@@ -76,3 +76,8 @@ export const MODEL_CAPABILITIES: Record<ImageModel, ModelCapability> = {
         supportsImageSearch: false,
     },
 };
+
+// Legacy model aliases for backwards compatibility with deprecated preview strings
+(MODEL_CAPABILITIES as any)['gemini-3.1-flash-image-preview'] = MODEL_CAPABILITIES['gemini-3.1-flash-image'];
+(MODEL_CAPABILITIES as any)['gemini-3-pro-image-preview'] = MODEL_CAPABILITIES['gemini-3-pro-image'];
+

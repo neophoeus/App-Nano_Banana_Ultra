@@ -26,6 +26,9 @@ describe('buildPromptEnhancerInstruction', () => {
             'Do NOT add analysis, commentary, explanations, headings, labels, numbering, bullet lists, markdown, JSON, or quotes.',
         );
         expect(instruction).not.toContain('{...};');
+
+        // 確保 Prompt Enhancer 中包含風格敏感度（STYLE SENSITIVITY）的指示，防範非光柵寫實風格被隨意加上寫實關鍵字
+        expect(instruction).toContain('STYLE SENSITIVITY: Detect if the input style or selected art style is non-photorealistic');
     });
 });
 
@@ -44,6 +47,9 @@ describe('buildRandomPromptInstruction', () => {
             'Do NOT add analysis, commentary, explanations, headings, labels, numbering, bullet lists, markdown, JSON, or quotes.',
         );
         expect(instruction).not.toContain('{...};');
+
+        // 確保 Random Prompt 中包含風格敏感度（STYLE SENSITIVITY）的指示，促使模型使用媒介特定的藝術字詞
+        expect(instruction).toContain('STYLE SENSITIVITY: If you decide to generate or fill in a non-photorealistic art style');
     });
 });
 
@@ -59,8 +65,13 @@ describe('buildImageToPromptInstruction', () => {
         expect(instruction).toContain('Primary Subject: exact facial features, expression, posture, age, skin/surface textures, clothing details');
         expect(instruction).toContain('The output must flow naturally as dense, descriptive, and highly descriptive text blocks (1 to 3 long paragraphs)');
         expect(instruction).not.toContain('{...};');
+
+        // 確保 Image-to-Prompt 中包含法醫視覺分析協定（Visual Forensic Protocol）的深度描述指示
+        expect(instruction).toContain('Visual Forensic Protocol (Exhaustive Analysis)');
+        expect(instruction).toContain('Deconstruct complex textures: specify the exact tactile feel of materials');
     });
 });
+
 
 describe('normalizePromptToolLanguage', () => {
     it('falls back to English for invalid language codes', () => {
