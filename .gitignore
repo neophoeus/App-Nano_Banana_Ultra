@@ -12,6 +12,7 @@ node_modules/
 dist/
 dist-ssr/
 output/
+output-test/
 test-results/
 playwright-report/
 coverage/

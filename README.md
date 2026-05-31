@@ -108,9 +108,9 @@ Nano Banana Ultra currently supports three Gemini image-model paths. The UI expo
 
 ## Version Overview
 
-### Latest Release: 3.10.8
+### Latest Release: 3.10.9
 
-Latest release: 3.10.8. Resolved React runtime error when restoring legacy snapshots by adding normalized saved image model sanitization helpers and backward-compatible model capability dictionary alias keys. See [CHANGELOG.md](CHANGELOG.md) for release details.
+Latest release: 3.10.9. Isolated E2E test output state by introducing a dedicated `output-test/` directory, and simplified the test pipeline by removing fragile backup and restore logic. See [CHANGELOG.md](CHANGELOG.md) for release details.
 
 ### 3.5.x
 
@@ -281,9 +281,9 @@ Nano Banana Ultra 目前支援三條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：3.10.8
+### 最新版本：3.10.9
 
-最新版本：3.10.8。修復了載入包含過期 preview 模型名稱之舊 Workspace Snapshots 時的 React runtime 崩潰問題。透過新增模型名稱正規化 sanitization 輔助機制與 capabilities 字典後向相容別名，達成穩定載入舊 Session 的防護效果。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
+最新版本：3.10.9。透過引進獨立的 `output-test/` 目錄，將 E2E 測試與日常開發的輸出進行物理隔離，並移除了脆弱的狀態備份還原邏輯。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 3.5.x
 

@@ -140,8 +140,8 @@ const liteEmbeddedImportFilenames = [
 ] as const;
 
 const writePlaywrightDownloadSmokeFixture = (savedFilename: string, metadata: Record<string, unknown>) => {
-    const outputDir = resolvePlaywrightAppPath('output');
-    const imagePath = resolvePlaywrightAppPath('output', savedFilename);
+    const outputDir = resolvePlaywrightAppPath('output-test');
+    const imagePath = resolvePlaywrightAppPath('output-test', savedFilename);
     const metadataPath = imagePath.replace(/\.[^.]+$/, '.json');
 
     mkdirSync(outputDir, { recursive: true });
@@ -162,8 +162,8 @@ const cleanupPlaywrightDownloadSmokeFixture = (...filePaths: string[]) => {
 const cleanupImportedWorkspaceOutputFiles = (...filenames: readonly string[]) => {
     cleanupPlaywrightDownloadSmokeFixture(
         ...filenames.flatMap((filename) => [
-            resolvePlaywrightAppPath('output', filename),
-            resolvePlaywrightAppPath('output', filename.replace(/\.[^.]+$/, '.json')),
+            resolvePlaywrightAppPath('output-test', filename),
+            resolvePlaywrightAppPath('output-test', filename.replace(/\.[^.]+$/, '.json')),
         ]),
     );
 };
@@ -2573,8 +2573,8 @@ test.describe('workspace restore flows', () => {
         expect(savedFilename).toMatch(/^gemini-3\.1-flash-image_\d{8}-\d{6}_01-[a-z0-9]{8}_txt2img\.png$/);
         expect(thumbnailSavedFilename).toBe(`${String(savedFilename).replace(/\.[^.]+$/, '')}-thumbnail.jpg`);
 
-        const savedImagePath = resolvePlaywrightAppPath('output', String(savedFilename));
-        const thumbnailPath = resolvePlaywrightAppPath('output', String(thumbnailSavedFilename));
+        const savedImagePath = resolvePlaywrightAppPath('output-test', String(savedFilename));
+        const thumbnailPath = resolvePlaywrightAppPath('output-test', String(thumbnailSavedFilename));
         const sidecarPath = savedImagePath.replace(/\.[^.]+$/, '.json');
 
         expect(existsSync(savedImagePath)).toBe(true);
@@ -4181,8 +4181,8 @@ test.describe('workspace restore flows', () => {
                 });
 
             for (const filename of liteEmbeddedImportFilenames) {
-                expect(existsSync(resolvePlaywrightAppPath('output', filename))).toBe(true);
-                expect(existsSync(resolvePlaywrightAppPath('output', filename.replace(/\.[^.]+$/, '.json')))).toBe(
+                expect(existsSync(resolvePlaywrightAppPath('output-test', filename))).toBe(true);
+                expect(existsSync(resolvePlaywrightAppPath('output-test', filename.replace(/\.[^.]+$/, '.json')))).toBe(
                     true,
                 );
             }

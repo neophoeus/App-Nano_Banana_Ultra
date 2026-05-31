@@ -6,13 +6,15 @@ import { imageSavePlugin } from './plugins/imageSavePlugin';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     const devPort = Number.parseInt(env.APP_DEV_PORT || '22287', 10);
+    const isTest = mode === 'test';
+    const outputDir = isTest ? path.resolve(__dirname, 'output-test') : path.resolve(__dirname, 'output');
 
     return {
         server: {
             port: Number.isNaN(devPort) ? 22287 : devPort,
             host: '0.0.0.0',
         },
-        plugins: [react(), imageSavePlugin({ geminiApiKey: env.GEMINI_API_KEY })],
+        plugins: [react(), imageSavePlugin({ geminiApiKey: env.GEMINI_API_KEY, outputDir })],
         resolve: {
             alias: {
                 '@': path.resolve(__dirname, '.'),

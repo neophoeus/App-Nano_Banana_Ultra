@@ -1,5 +1,14 @@
 # Changelog
 
+## v3.10.9 - 2026-05-31
+
+- Release title: Nano Banana Ultra 3.10.9 - E2E Test Output Isolation & Fragile Backup Mechanism Cleanup
+- Release summary:
+    - Isolated E2E testing output state by introducing a dedicated `output-test/` directory to prevent E2E runs from polluting the developer's manual workspace.
+    - Simplified the testing lifecycle by removing fragile backup and restore setup/teardown logic (`outputStateIsolation.ts`, `globalSetup.ts`, and `globalTeardown.ts`), ensuring workspace recovery works reliably even if tests are aborted.
+    - Updated E2E test specs to verify output assets in the correct isolated test folder.
+    - Resolved TypeScript compilation errors in `playwright.config.ts` regarding named exports of `defineConfig` for CommonJS/ESM module compatibility.
+
 ## v3.10.8 - 2026-05-29
 
 - Release title: Nano Banana Ultra 3.10.8 - Legacy Model Normalization, Compatibility Protection & Extended Test Coverage
