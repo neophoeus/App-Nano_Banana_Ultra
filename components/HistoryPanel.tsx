@@ -224,7 +224,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                     const readyPreviewContent = (
                         <>
                             <img
-                                src={tile.previewUrl || ''}
+                                src={tile.previewUrl || undefined}
                                 alt={t('stageGeneratedImageAlt')}
                                 className="h-full w-full object-cover bg-gray-100 dark:bg-gray-900"
                             />

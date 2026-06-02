@@ -1617,16 +1617,12 @@ export const clearSharedWorkspaceSnapshot = async (): Promise<void> => {
 };
 
 export const exportWorkspaceSnapshotDocument = (snapshot: WorkspacePersistenceSnapshot): string =>
-    JSON.stringify(
-        {
-            format: WORKSPACE_SNAPSHOT_EXPORT_FORMAT,
-            version: WORKSPACE_SNAPSHOT_EXPORT_VERSION,
-            exportedAt: new Date().toISOString(),
-            snapshot: buildPersistableWorkspaceSnapshot(snapshot),
-        },
-        null,
-        2,
-    );
+    JSON.stringify({
+        format: WORKSPACE_SNAPSHOT_EXPORT_FORMAT,
+        version: WORKSPACE_SNAPSHOT_EXPORT_VERSION,
+        exportedAt: new Date().toISOString(),
+        snapshot: buildPersistableWorkspaceSnapshot(snapshot),
+    });
 
 export const parseWorkspaceSnapshotDocument = (raw: string): WorkspacePersistenceSnapshot | null => {
     try {

@@ -1407,7 +1407,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                 className="relative shadow-2xl"
                                 style={{ width: originalDims.w, height: originalDims.h }}
                             >
-                                <img src={initialImageUrl} className="w-full h-full block" alt="Source" />
+                                <img src={initialImageUrl || undefined} className="w-full h-full block" alt="Source" />
                                 <canvas
                                     ref={overlayCanvasRef}
                                     width={originalDims.w}
@@ -1430,7 +1430,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                     }}
                                 >
                                     <img
-                                        src={initialImageUrl}
+                                        src={initialImageUrl || undefined}
                                         className="w-full h-full object-cover shadow-xl"
                                         alt="Source"
                                     />

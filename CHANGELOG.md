@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.10.10 - 2026-06-02
+
+- Release title: Nano Banana Ultra 3.10.10 - Compact Snapshot Serialization & Empty Image Src Warning Fix
+- Release summary:
+    - Ported critical stability and warning fixes from the Lite version to the Full version.
+    - Switched workspace snapshot JSON serialization inside `workspacePersistence.ts` to compact format by removing `null, 2` formatting parameter, preventing browser V8 engine Out-Of-Memory/Invalid string length crashes when serializing large base64 image datasets.
+    - Resolved empty-string `src=""` console warnings and duplicate page request behaviors on standard HTML `<img>` elements by using `undefined` fallbacks:
+        - Updated `GeneratedImage.tsx` (`src={activeImage || undefined}`)
+        - Updated `HistoryPanel.tsx` (`src={tile.previewUrl || undefined}`)
+        - Updated `ImageEditor.tsx` (`src={initialImageUrl || undefined}`)
+        - Updated `ImageUploader.tsx` (`src={displayImage || undefined}`)
+
 ## v3.10.9 - 2026-05-31
 
 - Release title: Nano Banana Ultra 3.10.9 - E2E Test Output Isolation & Fragile Backup Mechanism Cleanup

@@ -163,6 +163,7 @@ describe('workspacePersistence', () => {
         expect(parsed?.composerState.stickySendIntent).toBe('independent');
         expect(parsed?.history).toHaveLength(1);
         expect(parsed?.workflowLogs).toEqual(baseSnapshot.workflowLogs);
+        expect(serialized).not.toContain('\n');
     });
 
     it('defaults legacy snapshots without sticky send intent to independent', () => {

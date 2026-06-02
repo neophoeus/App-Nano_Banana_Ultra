@@ -110,7 +110,7 @@ const ImageUploaderGridItem = React.memo(function ImageUploaderGridItem({
                 />
             ) : (
                 <img
-                    src={displayImage}
+                    src={displayImage || undefined}
                     alt={imageAlt}
                     className={imageClassName}
                     loading="lazy"
