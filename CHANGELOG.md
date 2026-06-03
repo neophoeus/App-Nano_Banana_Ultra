@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.10.11 - 2026-06-03
+
+- Release title: Nano Banana Ultra 3.10.11 - LazyHistoryImage Src Warning Fix
+- Release summary:
+    - Resolved React console warnings and redundant duplicate page requests by passing `undefined` to `img` tags' `src` attributes when URLs are empty or initializing in `LazyHistoryImage.tsx` (`src={imageUrl || undefined}`).
+
 ## v3.10.10 - 2026-06-02
 
 - Release title: Nano Banana Ultra 3.10.10 - Compact Snapshot Serialization & Empty Image Src Warning Fix

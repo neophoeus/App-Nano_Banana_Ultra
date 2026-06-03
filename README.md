@@ -108,9 +108,9 @@ Nano Banana Ultra currently supports three Gemini image-model paths. The UI expo
 
 ## Version Overview
 
-### Latest Release: 3.10.10
+### Latest Release: 3.10.11
 
-Latest release: 3.10.10. Switched to compact workspace snapshot JSON serialization to prevent Out-Of-Memory crashes on large base64 image datasets, and fixed empty-string img src attribute warnings. See [CHANGELOG.md](CHANGELOG.md) for release details.
+Latest release: 3.10.11. Resolved remaining React console warnings and redundant duplicate page requests by passing undefined to img tags' src attributes in LazyHistoryImage.tsx. See [CHANGELOG.md](CHANGELOG.md) for release details.
 
 ### 3.5.x
 
@@ -281,9 +281,9 @@ Nano Banana Ultra 目前支援三條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：3.10.10
+### 最新版本：3.10.11
 
-最新版本：3.10.10。將工作區快照導出的 JSON 序列化更改為緊湊格式，以防止大型 base64 影像數據引起記憶體崩潰，並修正了空字串 img src 屬性的 React 警告。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
+最新版本：3.10.11。修正了 `LazyHistoryImage.tsx` 中圖片元件在空網址或初始化時，因傳入空字串 src 而觸發的 React 警告與重複請求問題，將 fallback 改為 undefined。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 3.5.x
 
