@@ -1763,11 +1763,13 @@ const retryOperation = async <T>(
     } catch (error: any) {
         // Never retry these deterministic errors
         const msg = error.message || '';
+        // 429 and RESOURCE_EXHAUSTED represent transient rate limits/quotas that can be retried.
+        const isDeterministicQuota = msg.includes('quota') && !msg.includes('429') && !msg.includes('RESOURCE_EXHAUSTED');
         if (
             msg.includes('PROMPT_BLOCKED') ||
             msg.includes('SAFETY_BLOCK') ||
             msg.includes('policy') ||
-            msg.includes('quota') ||
+            isDeterministicQuota ||
             msg === 'ABORTED'
         ) {
             throw error;
@@ -1782,13 +1784,23 @@ const retryOperation = async <T>(
                 msg.includes('500') ||
                 msg.includes('503') ||
                 msg.includes('429') ||
+                msg.includes('RESOURCE_EXHAUSTED') ||
                 msg.includes('fetch')
             ) {
-                // Parse Retry-After header for 429 (rate limit)
+                // Parse Retry-After header or "retry in X.Xs" for 429/RESOURCE_EXHAUSTED rate limits
                 let waitMs = delayMs;
-                if (msg.includes('429')) {
+                if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')) {
                     const retryAfterMatch = msg.match(/retry.?after[:\s]*(\d+)/i);
-                    if (retryAfterMatch) waitMs = Math.max(waitMs, parseInt(retryAfterMatch[1]) * 1000);
+                    if (retryAfterMatch) {
+                        waitMs = Math.max(waitMs, parseInt(retryAfterMatch[1]) * 1000);
+                    } else {
+                        // Attempt to extract dynamic wait time from message (e.g. "Please retry in 27.67s")
+                        const retryInMatch = msg.match(/retry\s+in\s+([\d.]+)\s*s/i);
+                        if (retryInMatch) {
+                            // Convert to milliseconds and add a 1500ms safety buffer
+                            waitMs = Math.max(waitMs, Math.ceil(parseFloat(retryInMatch[1]) * 1000) + 1500);
+                        }
+                    }
                 }
                 onLog?.(`⏳ Retrying in ${(waitMs / 1000).toFixed(1)}s... (${retries} left)`);
                 emitServiceDebugEvent({
@@ -1828,7 +1840,11 @@ const retryOperation = async <T>(
                         abortSignal.addEventListener('abort', handler, { once: true });
                     }
                 });
-                const nextDelay = Math.min(waitMs * backoffMultiplier, maxDelay);
+                // Relax max delay to 60s for 429/RESOURCE_EXHAUSTED quota limits
+                const effectiveMaxDelay = (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED'))
+                    ? Math.max(maxDelay, 60000)
+                    : maxDelay;
+                const nextDelay = Math.min(waitMs * backoffMultiplier, effectiveMaxDelay);
                 return retryOperation(operation, retries - 1, nextDelay, opts);
             }
         }

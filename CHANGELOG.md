@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.10.12 - 2026-06-05
+
+- Release title: Nano Banana Ultra 3.10.12 - Gemini API 429 Retry Robustness
+- Release summary:
+    - Fixed an issue where Gemini API 429 rate limit exceptions (RESOURCE_EXHAUSTED) containing the word "quota" (e.g. "You exceeded your current quota...") were misclassified as deterministic quota errors and failed to trigger retry loops.
+    - Relaxed the deterministic quota detection in `retryOperation` for 429 rate limit errors, implemented regex to parse dynamic retry cooldown time (e.g., "Please retry in X.Xs") from error messages, and extended the maximum retry delay constraint to 60 seconds.
+
 ## v3.10.11 - 2026-06-03
 
 - Release title: Nano Banana Ultra 3.10.11 - LazyHistoryImage Src Warning Fix

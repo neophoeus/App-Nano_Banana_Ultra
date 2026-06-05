@@ -108,9 +108,9 @@ Nano Banana Ultra currently supports three Gemini image-model paths. The UI expo
 
 ## Version Overview
 
-### Latest Release: 3.10.11
+### Latest Release: 3.10.12
 
-Latest release: 3.10.11. Resolved remaining React console warnings and redundant duplicate page requests by passing undefined to img tags' src attributes in LazyHistoryImage.tsx. See [CHANGELOG.md](CHANGELOG.md) for release details.
+Latest release: 3.10.12. Fixed Gemini API 429 rate limit exceptions containing "quota" being misclassified as deterministic errors, preventing retries. Dynamic retry-in duration is now parsed and honored with a relaxed delay constraint up to 60 seconds. See [CHANGELOG.md](CHANGELOG.md) for release details.
 
 ### 3.5.x
 
@@ -281,9 +281,9 @@ Nano Banana Ultra 目前支援三條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：3.10.11
+### 最新版本：3.10.12
 
-最新版本：3.10.11。修正了 `LazyHistoryImage.tsx` 中圖片元件在空網址或初始化時，因傳入空字串 src 而觸發的 React 警告與重複請求問題，將 fallback 改為 undefined。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
+最新版本：3.10.12。修復了 Gemini API 429 資源耗盡（RESOURCE_EXHAUSTED）錯誤因包含 'quota' 被誤判為確定性錯誤而未重試的問題，現在能正確解析重試冷卻時間（如 `Please retry in X.Xs`）並在等待冷卻後自動重試。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 3.5.x
 
