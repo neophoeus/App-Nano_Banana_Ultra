@@ -9,11 +9,21 @@
     "search.exclude": {
         "**/node_modules": true,
         "**/dist": true,
-        "**/.git": true
+        "**/.git": true,
+        "**/output": true,
+        "**/output-test": true,
+        "**/test-results": true,
+        "**/playwright-report": true,
+        "**/coverage": true
     },
     "files.exclude": {
         "**/node_modules": true,
-        "**/dist": true
+        "**/dist": true,
+        "**/output": true,
+        "**/output-test": true,
+        "**/test-results": true,
+        "**/playwright-report": true,
+        "**/coverage": true
     },
     "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
