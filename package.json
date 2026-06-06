@@ -1,7 +1,7 @@
 {
     "name": "nano-banana-ultra-dev",
     "private": true,
-    "version": "3.10.12",
+    "version": "3.10.13",
     "type": "module",
     "scripts": {
         "dev": "vite",

@@ -1791,14 +1791,15 @@ const retryOperation = async <T>(
                 let waitMs = delayMs;
                 if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')) {
                     const retryAfterMatch = msg.match(/retry.?after[:\s]*(\d+)/i);
+                    const jitter = Math.random() * 1500; // 0 to 1.5s random jitter to avoid thundering herd
                     if (retryAfterMatch) {
-                        waitMs = Math.max(waitMs, parseInt(retryAfterMatch[1]) * 1000);
+                        waitMs = Math.max(waitMs, parseInt(retryAfterMatch[1]) * 1000 + jitter);
                     } else {
                         // Attempt to extract dynamic wait time from message (e.g. "Please retry in 27.67s")
                         const retryInMatch = msg.match(/retry\s+in\s+([\d.]+)\s*s/i);
                         if (retryInMatch) {
-                            // Convert to milliseconds and add a 1500ms safety buffer
-                            waitMs = Math.max(waitMs, Math.ceil(parseFloat(retryInMatch[1]) * 1000) + 1500);
+                            // Convert to milliseconds, add a 600ms safety buffer and random jitter
+                            waitMs = Math.max(waitMs, Math.ceil(parseFloat(retryInMatch[1]) * 1000) + 600 + jitter);
                         }
                     }
                 }
@@ -1958,7 +1959,7 @@ export const generateImageWithGemini = async (
     }
 
     // PARALLEL EXECUTION WITH STAGGER
-    const STAGGER_DELAY_MS = 300;
+    const STAGGER_DELAY_MS = 1000;
     let completedCount = 0;
 
     const finalizeBatchResult = (result: GenerationResult): GenerationResult => {

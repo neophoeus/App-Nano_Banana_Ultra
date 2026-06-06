@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.10.13 - 2026-06-06
+
+- Release title: Nano Banana Ultra 3.10.13 - Batch Concurrency & Retry Jitter Optimization
+- Release summary:
+    - Optimized batch image generation for `quantity > 1` by increasing the staggered parallel request delay from `300ms` to `1000ms`, significantly lowering the API concurrency pressure.
+    - Introduced a random retry jitter of `0ms ~ 1500ms` and reduced the safety buffer to `600ms` in `retryOperation` for 429/RESOURCE_EXHAUSTED errors to prevent synchronized concurrent retries (thundering herd effect) when multiple slots are throttled.
+
 ## v3.10.12 - 2026-06-05
 
 - Release title: Nano Banana Ultra 3.10.12 - Gemini API 429 Retry Robustness
