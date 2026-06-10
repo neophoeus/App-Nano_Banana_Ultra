@@ -116,6 +116,7 @@ export const de = {
     statusPanelLive: 'Aktiv',
     statusPanelHealthFailed: 'Health-Check fehlgeschlagen',
     statusGenerating: 'Generiere...',
+    statusWaiting: 'Wartend...',
     composerCancelFinalizingLabel: 'Abgebrochenen Lauf abschliessen',
     composerCancelFinalizingNote:
         'Abgeschlossene Bilder werden im Hintergrund weiter in den Verlauf geschrieben. Du kannst den naechsten Prompt schon vorbereiten, waehrend Generierungsaktionen noch gesperrt bleiben.',

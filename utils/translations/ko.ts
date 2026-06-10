@@ -113,6 +113,7 @@ export const ko = {
     statusPanelLive: '정상',
     statusPanelHealthFailed: '상태 확인 실패',
     statusGenerating: '그리는 중…',
+    statusWaiting: '대기 중…',
     composerCancelFinalizingLabel: '취소된 실행을 정리하는 중',
     composerCancelFinalizingNote:
         '완료된 이미지는 계속 백그라운드에서 히스토리에 기록됩니다. 생성 작업이 다시 활성화될 때까지 다음 프롬프트를 준비할 수 있습니다.',

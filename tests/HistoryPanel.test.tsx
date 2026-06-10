@@ -162,4 +162,30 @@ describe('HistoryPanel', () => {
         expect(markup.indexOf('history-preview-tile-1')).toBeLessThan(markup.indexOf('history-preview-tile-0'));
         expect(markup.indexOf('history-preview-tile-0')).toBeLessThan(markup.indexOf('history-card-turn-fresh'));
     });
+
+    it('renders waiting preview tiles and filters out committed preview tiles', () => {
+        const markup = renderToStaticMarkup(
+            <HistoryPanel
+                history={[]}
+                previewTiles={[
+                    {
+                        id: 'preview-waiting',
+                        slotIndex: 0,
+                        status: 'waiting',
+                    },
+                    {
+                        id: 'preview-committed',
+                        slotIndex: 1,
+                        status: 'committed',
+                    },
+                ]}
+                onSelect={vi.fn()}
+                currentLanguage="en"
+            />,
+        );
+
+        expect(markup).toContain('history-preview-waiting-0');
+        expect(markup).not.toContain('history-preview-waiting-1');
+        expect(markup).not.toContain('preview-committed');
+    });
 });

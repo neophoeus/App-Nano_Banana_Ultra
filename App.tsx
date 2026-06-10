@@ -614,7 +614,7 @@ const App: React.FC = () => {
                 tiles: Array.from({ length: batchSize }, (_, slotIndex) => ({
                     id: `${sessionId}-${slotIndex}`,
                     slotIndex,
-                    status: 'pending',
+                    status: 'waiting',
                     previewUrl: null,
                     stagePreviewUrl: null,
                     error: null,

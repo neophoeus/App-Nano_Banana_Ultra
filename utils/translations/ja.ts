@@ -113,6 +113,7 @@ export const ja = {
     statusPanelLive: '稼働中',
     statusPanelHealthFailed: 'ヘルスチェックに失敗しました',
     statusGenerating: '描画中…',
+    statusWaiting: '待機中…',
     composerCancelFinalizingLabel: 'キャンセル済み実行を整理中',
     composerCancelFinalizingNote:
         '完了済みの画像は引き続きバックグラウンドで履歴へ書き込まれます。生成操作が再び有効になるまでの間に、次のプロンプトを準備できます。',

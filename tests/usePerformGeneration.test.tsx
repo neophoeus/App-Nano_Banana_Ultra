@@ -568,6 +568,7 @@ describe('usePerformGeneration', () => {
             expect.any(Function),
             expect.any(Function),
             expect.any(Function),
+            expect.any(Function),
         );
     });
 
@@ -647,6 +648,7 @@ describe('usePerformGeneration', () => {
             expect.any(Function),
             expect.any(Function),
             expect.any(AbortSignal),
+            expect.any(Function),
             expect.any(Function),
             expect.any(Function),
             expect.any(Function),
@@ -741,6 +743,7 @@ describe('usePerformGeneration', () => {
             expect.any(Function),
             expect.any(Function),
             expect.any(AbortSignal),
+            expect.any(Function),
             expect.any(Function),
             expect.any(Function),
             expect.any(Function),

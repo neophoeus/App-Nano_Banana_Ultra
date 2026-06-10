@@ -71,7 +71,7 @@ function sortBatchHistoryItemsByVisualOrder(items: GeneratedImageType[]): Genera
 }
 
 function buildFailureDisplayContext(
-    result: GenerationResult,
+    result: { status?: string; failure?: { code: string } | null },
     batchHasSiblingSafetyBlockedFailure: boolean,
 ): GenerationFailureDisplayContext | undefined {
     if (
@@ -458,69 +458,59 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                         operation: 'Generation workflow',
                         batchSessionId,
                     });
-                };
-                const handleResultCallback = (result: GenerationResult) => {
-                    if (controller.signal.aborted && isCancelledGenerationResult(result)) {
+                 };
+                const committedSlotIndices = new Set<number>();
+                const handleResultCallback = async (res: GenerationResult) => {
+                    if (controller.signal.aborted && isCancelledGenerationResult(res)) {
                         return;
                     }
 
-                    if (result.status === 'failed') {
+                    if (res.status === 'failed') {
                         onBatchPreviewTileUpdate?.({
                             sessionId: batchSessionId,
                             tile: {
-                                id: `${batchSessionId}-${result.slotIndex}`,
-                                slotIndex: result.slotIndex,
+                                id: `${batchSessionId}-${res.slotIndex}`,
+                                slotIndex: res.slotIndex,
                                 status: 'failed',
                                 previewUrl: null,
-                                error: result.error || null,
+                                error: res.error || null,
                             },
                         });
                     }
-                };
 
-                const results = await generateImageWithGemini(
-                    {
-                        prompt: finalPrompt,
-                        aspectRatio: effectiveAspectRatio,
-                        imageSize: currentImageSize,
-                        style: targetStyle,
-                        objectImageInputs: finalObjectInputs,
-                        characterImageInputs: finalCharacterInputs,
-                        model: targetModel,
-                        outputFormat,
-                        temperature,
-                        thinkingLevel,
-                        includeThoughts,
-                        googleSearch,
-                        imageSearch,
-                        safetyThresholds,
-                        executionMode: currentExecutionMode,
-                        conversationContext,
-                        liveProgressBatchSessionId: batchSessionId,
-                    },
-                    currentBatchSize,
-                    handleImageReceived,
-                    handleLogCallback,
-                    controller.signal,
-                    (completed, total) => setBatchProgress({ completed, total }),
-                    handleResultCallback,
-                    onLiveProgressEvent,
-                );
-                const wasCancelled = controller.signal.aborted;
-                const historyResults = wasCancelled
-                    ? results.filter((result) => result.status === 'success')
-                    : results.filter((result) => !isCancelledGenerationResult(result));
-
-                const batchHasSiblingSafetyBlockedFailure = historyResults.some(
-                    (result) => result.status === 'failed' && result.failure?.code === 'safety-blocked',
-                );
-                const newHistoryItems: GeneratedImageType[] = [];
-                for (const [resultIndex, res] of historyResults.entries()) {
                     const batchResultIndex =
                         typeof res.slotIndex === 'number' && Number.isFinite(res.slotIndex)
                             ? res.slotIndex
-                            : resultIndex;
-                    const failureContext = buildFailureDisplayContext(res, batchHasSiblingSafetyBlockedFailure);
+                            : 0;
+
+                    if (committedSlotIndices.has(batchResultIndex)) {
+                        return;
+                    }
+                    committedSlotIndices.add(batchResultIndex);
+
+                    const hasSafetyBlocked =
+                        (res.status === 'failed' && res.failure?.code === 'safety-blocked') ||
+                        batchHistoryItems.some((item) => item.status === 'failed' && item.failure?.code === 'safety-blocked');
+
+                    if (hasSafetyBlocked) {
+                        batchHistoryItems.forEach((item) => {
+                            if (item.status === 'failed' && item.failure?.code === 'empty-response' && !item.failureContext?.hasSiblingSafetyBlockedFailure) {
+                                item.failureContext = {
+                                    hasSiblingSafetyBlockedFailure: true,
+                                };
+                                setHistory((prev: GeneratedImageType[]) =>
+                                    prev.map((prevItem) =>
+                                        prevItem.id === item.id
+                                            ? { ...prevItem, failureContext: { hasSiblingSafetyBlockedFailure: true } }
+                                            : prevItem
+                                    )
+                                );
+                            }
+                        });
+                    }
+
+                    const currentHasSiblingSafetyBlocked = hasSafetyBlocked;
+                    const failureContext = buildFailureDisplayContext(res, currentHasSiblingSafetyBlocked);
                     let thumbnailUrl = '';
                     let thumbnailSavedFilename: string | undefined;
                     let thumbnailInline: boolean | undefined;
@@ -562,7 +552,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                         thumbnailInline = persistedThumbnail.thumbnailInline;
                     }
 
-                    newHistoryItems.push({
+                    const historyItem: GeneratedImageType = {
                         id: crypto.randomUUID(),
                         url: thumbnailUrl,
                         thumbnailSavedFilename,
@@ -605,30 +595,105 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                         sourceHistoryId: generationLineage?.sourceHistoryId || null,
                         lineageAction: generationLineage?.lineageAction || 'root',
                         lineageDepth: generationLineage?.lineageDepth || 0,
-                    } as GeneratedImageType);
+                    };
+
+                    batchHistoryItems.push(historyItem);
+
+                    setHistory((prev: GeneratedImageType[]) => [historyItem, ...prev]);
+
+                    onBatchPreviewTileUpdate?.({
+                        sessionId: batchSessionId,
+                        tile: {
+                            id: `${batchSessionId}-${batchResultIndex}`,
+                            slotIndex: batchResultIndex,
+                            status: 'committed',
+                            previewUrl: null,
+                            error: null,
+                        },
+                    });
+                };
+
+                const handleSlotStart = (slotIndex: number) => {
+                    onBatchPreviewTileUpdate?.({
+                        sessionId: batchSessionId,
+                        tile: {
+                            id: `${batchSessionId}-${slotIndex}`,
+                            slotIndex,
+                            status: 'pending',
+                            previewUrl: null,
+                            stagePreviewUrl: null,
+                            error: null,
+                        },
+                    });
+                };
+
+                const batchHistoryItems: GeneratedImageType[] = [];
+
+                const results = await generateImageWithGemini(
+                    {
+                        prompt: finalPrompt,
+                        aspectRatio: effectiveAspectRatio,
+                        imageSize: currentImageSize,
+                        style: targetStyle,
+                        objectImageInputs: finalObjectInputs,
+                        characterImageInputs: finalCharacterInputs,
+                        model: targetModel,
+                        outputFormat,
+                        temperature,
+                        thinkingLevel,
+                        includeThoughts,
+                        googleSearch,
+                        imageSearch,
+                        safetyThresholds,
+                        executionMode: currentExecutionMode,
+                        conversationContext,
+                        liveProgressBatchSessionId: batchSessionId,
+                    },
+                    currentBatchSize,
+                    handleImageReceived,
+                    handleLogCallback,
+                    controller.signal,
+                    (completed, total) => setBatchProgress({ completed, total }),
+                    handleResultCallback,
+                    onLiveProgressEvent,
+                    handleSlotStart,
+                );
+                const wasCancelled = controller.signal.aborted;
+
+                const historyResults = wasCancelled
+                    ? results.filter((result) => result.status === 'success')
+                    : results.filter((result) => !isCancelledGenerationResult(result));
+
+                for (const res of historyResults) {
+                    const slotIndex = typeof res.slotIndex === 'number' && Number.isFinite(res.slotIndex)
+                        ? res.slotIndex
+                        : 0;
+                    if (!committedSlotIndices.has(slotIndex)) {
+                        await handleResultCallback(res);
+                    }
                 }
 
-                const orderedHistoryItems = sortBatchHistoryItemsByVisualOrder(newHistoryItems);
+                const orderedHistoryItems = sortBatchHistoryItemsByVisualOrder(batchHistoryItems);
 
-                if (orderedHistoryItems.length > 0) {
-                    setHistory((prev: GeneratedImageType[]) => [...orderedHistoryItems, ...prev]);
-                }
                 didNotifyBatchPreviewComplete = true;
                 onBatchPreviewComplete?.({
                     sessionId: batchSessionId,
                     historyItems: orderedHistoryItems,
                 });
 
-                const successCount = historyResults.filter((r) => r.status === 'success').length;
-                const failCount = historyResults.filter((r) => r.status === 'failed').length;
+                const successCount = batchHistoryItems.filter((r) => r.status === 'success').length;
+                const failCount = batchHistoryItems.filter((r) => r.status === 'failed').length;
 
                 if (!wasCancelled && successCount === 0 && failCount > 0) {
+                    const batchHasSiblingSafetyBlockedFailure = batchHistoryItems.some(
+                        (item) => item.status === 'failed' && item.failure?.code === 'safety-blocked',
+                    );
                     setError(
                         buildStageErrorState(
                             t,
-                            historyResults[0].failure,
-                            historyResults[0].error || t('errorAllFailed'),
-                            buildFailureDisplayContext(historyResults[0], batchHasSiblingSafetyBlockedFailure),
+                            batchHistoryItems[0].failure,
+                            batchHistoryItems[0].error || t('errorAllFailed'),
+                            buildFailureDisplayContext(batchHistoryItems[0], batchHasSiblingSafetyBlockedFailure),
                         ),
                     );
                 }

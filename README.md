@@ -108,9 +108,9 @@ Nano Banana Ultra currently supports three Gemini image-model paths. The UI expo
 
 ## Version Overview
 
-### Latest Release: 3.10.13
+### Latest Release: 3.10.14
 
-Latest release: 3.10.13. Optimized batch generation for `quantity > 1` by increasing the staggered parallel request delay to 1000ms. Added random retry jitter of 0~1500ms and reduced the safety buffer to 600ms in `retryOperation` to prevent concurrent retry storms when multiple requests are rate-limited. See [CHANGELOG.md](CHANGELOG.md) for release details.
+Latest release: 3.10.14. Optimized the 429 rate limit retry strategy by enforcing a minimum 60-second cooldown delay in `retryOperation` to recover under API rate limits, aligning with the protective measures in the Lite version. See [CHANGELOG.md](CHANGELOG.md) for release details.
 
 ### 3.5.x
 
@@ -281,9 +281,9 @@ Nano Banana Ultra 目前支援三條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：3.10.13
+### 最新版本：3.10.14
 
-最新版本：3.10.13。針對 `quantity > 1` 批次生圖進行優化，將併發 Stagger 發送延遲調增為 1000ms。重試機制加入 0ms ~ 1500ms 隨機抖動（Jitter）並將安全緩衝降至 600ms，徹底解決多個並行圖遭遇 429 時集體同時醒來重試再度撞上限流的問題。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
+最新版本：3.10.14。針對 429 RESOURCE_EXHAUSTED 錯誤優化重試機制，強制加入至少 60 秒的冷卻延遲（含隨機抖動），配合輕量版以因應 Google AI plans 在 Google AI Studio 內可能面臨的額度限制。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 3.5.x
 

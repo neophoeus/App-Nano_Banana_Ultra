@@ -186,7 +186,7 @@ export interface ConversationTurnReference {
     thoughtSignature: string | null;
 }
 
-export type BatchPreviewTileStatus = 'pending' | 'ready' | 'failed';
+export type BatchPreviewTileStatus = 'pending' | 'ready' | 'failed' | 'waiting' | 'committed';
 
 export interface BatchPreviewTile {
     id: string;

@@ -1795,13 +1795,18 @@ const retryOperation = async <T>(
                     if (retryAfterMatch) {
                         waitMs = Math.max(waitMs, parseInt(retryAfterMatch[1]) * 1000 + jitter);
                     } else {
-                        // Attempt to extract dynamic wait time from message (e.g. "Please retry in 27.67s")
-                        const retryInMatch = msg.match(/retry\s+in\s+([\d.]+)\s*s/i);
+                        // Attempt to extract dynamic wait time from message (e.g. "Please retry in 27.67s" or "363.33ms")
+                        const retryInMatch = msg.match(/retry\s+in\s+([\d.]+)\s*(ms|s)/i);
                         if (retryInMatch) {
+                            const value = parseFloat(retryInMatch[1]);
+                            const isMs = retryInMatch[2].toLowerCase() === 'ms';
+                            const ms = isMs ? value : value * 1000;
                             // Convert to milliseconds, add a 600ms safety buffer and random jitter
-                            waitMs = Math.max(waitMs, Math.ceil(parseFloat(retryInMatch[1]) * 1000) + 600 + jitter);
+                            waitMs = Math.max(waitMs, Math.ceil(ms) + 600 + jitter);
                         }
                     }
+                    // Enforce a minimum 60-second cooldown delay for rate limit errors
+                    waitMs = Math.max(waitMs, 60000 + jitter);
                 }
                 onLog?.(`⏳ Retrying in ${(waitMs / 1000).toFixed(1)}s... (${retries} left)`);
                 emitServiceDebugEvent({
@@ -1867,6 +1872,7 @@ export const generateImageWithGemini = async (
     onProgress?: (completed: number, total: number) => void, // F4: Batch progress
     onResult?: (result: GenerationResult) => void,
     onLiveProgressEvent?: (event: GenerationLiveProgressEvent) => void,
+    onSlotStart?: (slotIndex: number) => void,
 ): Promise<GenerationResult[]> => {
     if (batchSize === 1 && shouldUseLiveProgressStream(options, batchSize)) {
         const singleResult = await executeInteractiveStreamSlot(
@@ -1933,6 +1939,7 @@ export const generateImageWithGemini = async (
                 return;
             }
 
+            onSlotStart?.(slotIndex);
             const slotResult = await executeInteractiveStreamSlot(
                 streamOptions,
                 slotIndex,
@@ -1985,6 +1992,7 @@ export const generateImageWithGemini = async (
             };
         }
 
+        onSlotStart?.(index);
         const initialResult = await executeBlockingImageAttemptWithTransientRetry(
             options,
             index,

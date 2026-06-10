@@ -115,6 +115,7 @@ export const es = {
     statusPanelLive: 'Activo',
     statusPanelHealthFailed: 'Falló la comprobación de estado',
     statusGenerating: 'Generando...',
+    statusWaiting: 'Esperando...',
     composerCancelFinalizingLabel: 'Finalizando la ejecución cancelada',
     composerCancelFinalizingNote:
         'Las imágenes completadas todavía se están escribiendo en el historial en segundo plano. Puedes ir preparando el siguiente prompt mientras las acciones de generación siguen bloqueadas.',

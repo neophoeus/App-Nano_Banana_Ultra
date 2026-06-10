@@ -115,6 +115,7 @@ export const ru = {
     statusPanelLive: 'Активен',
     statusPanelHealthFailed: 'Проверка состояния не удалась',
     statusGenerating: 'Генерация...',
+    statusWaiting: 'В очереди...',
     composerCancelFinalizingLabel: 'Завершение отмененного запуска',
     composerCancelFinalizingNote:
         'Готовые изображения продолжают записываться в историю в фоновом режиме. Пока действия генерации остаются заблокированными, можно подготовить следующий промпт.',

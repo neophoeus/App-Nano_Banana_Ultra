@@ -115,6 +115,7 @@ export const fr = {
     statusPanelLive: 'Actif',
     statusPanelHealthFailed: "Échec de la vérification d'état",
     statusGenerating: 'Création...',
+    statusWaiting: 'En attente...',
     composerCancelFinalizingLabel: "Finalisation de l'exécution annulée",
     composerCancelFinalizingNote:
         "Les images terminées continuent d'être écrites dans l'historique en arrière-plan. Vous pouvez préparer le prochain prompt pendant que les actions de génération restent verrouillées.",

@@ -109,7 +109,9 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
         thumbnailMode === 'compact'
             ? 'pointer-events-none absolute inset-0 rounded-[18px] border-[3px] border-emerald-400 shadow-[0_0_22px_rgba(34,197,94,0.55)]'
             : 'pointer-events-none absolute inset-0 rounded-xl border-[3px] border-emerald-400 shadow-[0_0_22px_rgba(34,197,94,0.55)]';
-    const sortedPreviewTiles = [...previewTiles].sort((leftTile, rightTile) => rightTile.slotIndex - leftTile.slotIndex);
+    const sortedPreviewTiles = [...previewTiles]
+        .filter((tile) => tile.status !== 'committed')
+        .sort((leftTile, rightTile) => rightTile.slotIndex - leftTile.slotIndex);
 
     return (
         <div className={panelClassName}>
@@ -259,6 +261,20 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                     <div className="h-7 w-7 animate-spin rounded-full border-2 border-sky-300/60 border-t-sky-500 dark:border-sky-800 dark:border-t-sky-400" />
                                     <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
                                         {t('statusGenerating')}
+                                    </span>
+                                </div>
+                            ) : tile.status === 'waiting' ? (
+                                <div
+                                    data-testid={`history-preview-waiting-${tile.slotIndex}`}
+                                    className="flex h-full w-full flex-col items-center justify-center gap-2 bg-slate-50/90 px-2 text-center dark:bg-slate-950/80"
+                                >
+                                    <div className="h-7 w-7 rounded-full border border-dashed border-gray-300 dark:border-gray-700 animate-pulse flex items-center justify-center bg-white dark:bg-slate-900 shadow-sm">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500 animate-pulse">
+                                        {t('statusWaiting')}
                                     </span>
                                 </div>
                             ) : (

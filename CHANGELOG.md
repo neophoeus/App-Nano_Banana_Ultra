@@ -1,11 +1,18 @@
 # Changelog
 
+## v3.10.14 - 2026-06-10
+
+- Release title: Nano Banana Ultra 3.10.14 - 429 Retry Optimization
+- Release summary:
+    - Optimized the 429 `RESOURCE_EXHAUSTED` rate limit retry strategy inside `retryOperation` by enforcing a minimum 60-second cooldown delay (plus random jitter) to give API quotas sufficient time to recover under severe rate limiting, aligning with the protective measures in the Lite version.
+
 ## v3.10.13 - 2026-06-06
 
 - Release title: Nano Banana Ultra 3.10.13 - Batch Concurrency & Retry Jitter Optimization
 - Release summary:
     - Optimized batch image generation for `quantity > 1` by increasing the staggered parallel request delay from `300ms` to `1000ms`, significantly lowering the API concurrency pressure.
     - Introduced a random retry jitter of `0ms ~ 1500ms` and reduced the safety buffer to `600ms` in `retryOperation` for 429/RESOURCE_EXHAUSTED errors to prevent synchronized concurrent retries (thundering herd effect) when multiple slots are throttled.
+    - This optimization is introduced to align with the Lite version's rate-limiting measures for Google AI plans (e.g., Google AI Pro or Google AI Ultra subscriptions) in Google AI Studio, rather than paid pay-as-you-go developer APIs.
 
 ## v3.10.12 - 2026-06-05
 
@@ -13,6 +20,7 @@
 - Release summary:
     - Fixed an issue where Gemini API 429 rate limit exceptions (RESOURCE_EXHAUSTED) containing the word "quota" (e.g. "You exceeded your current quota...") were misclassified as deterministic quota errors and failed to trigger retry loops.
     - Relaxed the deterministic quota detection in `retryOperation` for 429 rate limit errors, implemented regex to parse dynamic retry cooldown time (e.g., "Please retry in X.Xs") from error messages, and extended the maximum retry delay constraint to 60 seconds.
+    - This robustness enhancement is introduced to align with the Lite version's rate-limiting measures for Google AI plans (e.g., Google AI Pro or Google AI Ultra subscriptions) in Google AI Studio, rather than paid pay-as-you-go developer APIs.
 
 ## v3.10.11 - 2026-06-03
 
