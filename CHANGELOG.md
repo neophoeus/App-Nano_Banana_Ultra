@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.10.16 - 2026-06-10
+
+- Release title: Nano Banana Ultra 3.10.16 - Cooperative Global Backoff Lock
+- Release summary:
+    - Implemented a cooperative global backoff lock in `retryOperation` to throttle and align parallel retry rates. When any slot hits a 429 rate limit, all other slots cooperate by delaying their next execution until the rate limit resets, incorporating a randomized release jitter of `0ms ~ 1000ms` to prevent concurrent thundering herd hits.
+
 ## v3.10.15 - 2026-06-10
 
 - Release title: Nano Banana Ultra 3.10.15 - Dynamic 429 Retry Delay
