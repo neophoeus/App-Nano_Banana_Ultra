@@ -1352,26 +1352,38 @@ export const enhancePromptWithGemini = async (
 ): Promise<string> => {
     const correlationId = createDebugTerminalCorrelationId('prompt');
     const requestPayload = { currentPrompt, lang, safetyThresholds };
-    const response = await fetchJson<{ text: string }>(
-        '/api/prompt/enhance',
+    const response = await retryOperation(
+        () => fetchJson<{ text: string }>(
+            '/api/prompt/enhance',
+            {
+                method: 'POST',
+                headers: jsonHeaders,
+                body: JSON.stringify(requestPayload),
+            },
+            {
+                source: 'prompt-tools',
+                route: '/api/prompt/enhance',
+                method: 'POST',
+                operation: 'Prompt enhancer',
+                correlationId,
+                requestLabel: 'Prompt enhancer request',
+                requestSummary: `Prompt enhancer (${lang})`,
+                requestPayload,
+                responseLabel: 'Prompt enhancer response',
+                responseSummary: (result: { text: string }) => buildTextResponseSummary(result.text),
+                responsePayload: (result: { text: string }) => ({ text: result.text }),
+                errorLabel: 'Prompt enhancer failed',
+            },
+        ),
+        2,
+        1500,
         {
-            method: 'POST',
-            headers: jsonHeaders,
-            body: JSON.stringify(requestPayload),
-        },
-        {
-            source: 'prompt-tools',
-            route: '/api/prompt/enhance',
-            method: 'POST',
-            operation: 'Prompt enhancer',
+            backoffMultiplier: 2,
+            maxDelay: 8000,
             correlationId,
-            requestLabel: 'Prompt enhancer request',
-            requestSummary: `Prompt enhancer (${lang})`,
-            requestPayload,
-            responseLabel: 'Prompt enhancer response',
-            responseSummary: (result: { text: string }) => buildTextResponseSummary(result.text),
-            responsePayload: (result: { text: string }) => ({ text: result.text }),
-            errorLabel: 'Prompt enhancer failed',
+            route: '/api/prompt/enhance',
+            source: 'prompt-tools',
+            operation: 'Prompt enhancer',
         },
     );
 
@@ -1403,26 +1415,38 @@ export const generateRandomPrompt = async (
 ): Promise<string> => {
     const correlationId = createDebugTerminalCorrelationId('prompt');
     const requestPayload = { lang, safetyThresholds };
-    const response = await fetchJson<{ text: string }>(
-        '/api/prompt/random',
+    const response = await retryOperation(
+        () => fetchJson<{ text: string }>(
+            '/api/prompt/random',
+            {
+                method: 'POST',
+                headers: jsonHeaders,
+                body: JSON.stringify(requestPayload),
+            },
+            {
+                source: 'prompt-tools',
+                route: '/api/prompt/random',
+                method: 'POST',
+                operation: 'Random prompt',
+                correlationId,
+                requestLabel: 'Random prompt request',
+                requestSummary: `Random prompt (${lang})`,
+                requestPayload,
+                responseLabel: 'Random prompt response',
+                responseSummary: (result: { text: string }) => buildTextResponseSummary(result.text),
+                responsePayload: (result: { text: string }) => ({ text: result.text }),
+                errorLabel: 'Random prompt failed',
+            },
+        ),
+        2,
+        1500,
         {
-            method: 'POST',
-            headers: jsonHeaders,
-            body: JSON.stringify(requestPayload),
-        },
-        {
-            source: 'prompt-tools',
-            route: '/api/prompt/random',
-            method: 'POST',
-            operation: 'Random prompt',
+            backoffMultiplier: 2,
+            maxDelay: 8000,
             correlationId,
-            requestLabel: 'Random prompt request',
-            requestSummary: `Random prompt (${lang})`,
-            requestPayload,
-            responseLabel: 'Random prompt response',
-            responseSummary: (result: { text: string }) => buildTextResponseSummary(result.text),
-            responsePayload: (result: { text: string }) => ({ text: result.text }),
-            errorLabel: 'Random prompt failed',
+            route: '/api/prompt/random',
+            source: 'prompt-tools',
+            operation: 'Random prompt',
         },
     );
 
@@ -1455,26 +1479,38 @@ export const generatePromptFromImage = async (
 ): Promise<string> => {
     const correlationId = createDebugTerminalCorrelationId('prompt');
     const requestPayload = { imageDataUrl, lang, safetyThresholds };
-    const response = await fetchJson<{ text: string }>(
-        '/api/prompt/image-to-prompt',
+    const response = await retryOperation(
+        () => fetchJson<{ text: string }>(
+            '/api/prompt/image-to-prompt',
+            {
+                method: 'POST',
+                headers: jsonHeaders,
+                body: JSON.stringify(requestPayload),
+            },
+            {
+                source: 'prompt-tools',
+                route: '/api/prompt/image-to-prompt',
+                method: 'POST',
+                operation: 'Image to prompt',
+                correlationId,
+                requestLabel: 'Image-to-prompt request',
+                requestSummary: `Image-to-prompt (${lang})`,
+                requestPayload,
+                responseLabel: 'Image-to-prompt response',
+                responseSummary: (result: { text: string }) => buildTextResponseSummary(result.text),
+                responsePayload: (result: { text: string }) => ({ text: result.text }),
+                errorLabel: 'Image-to-prompt failed',
+            },
+        ),
+        2,
+        1500,
         {
-            method: 'POST',
-            headers: jsonHeaders,
-            body: JSON.stringify(requestPayload),
-        },
-        {
-            source: 'prompt-tools',
-            route: '/api/prompt/image-to-prompt',
-            method: 'POST',
-            operation: 'Image to prompt',
+            backoffMultiplier: 2,
+            maxDelay: 8000,
             correlationId,
-            requestLabel: 'Image-to-prompt request',
-            requestSummary: `Image-to-prompt (${lang})`,
-            requestPayload,
-            responseLabel: 'Image-to-prompt response',
-            responseSummary: (result: { text: string }) => buildTextResponseSummary(result.text),
-            responsePayload: (result: { text: string }) => ({ text: result.text }),
-            errorLabel: 'Image-to-prompt failed',
+            route: '/api/prompt/image-to-prompt',
+            source: 'prompt-tools',
+            operation: 'Image to prompt',
         },
     );
 
@@ -1787,54 +1823,58 @@ const retryOperation = async <T>(
 
         if (abortSignal?.aborted) throw new Error('ABORTED');
 
+        const isRateLimit = msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED');
+        let calculatedWaitMs = delayMs;
+
+        if (isRateLimit) {
+            const retryAfterMatch = msg.match(/retry.?after[:\s]*(\d+)/i);
+            const jitter = Math.random() * 1500; // 0 to 1.5s random jitter to avoid thundering herd
+            let hasParsedTime = false;
+            if (retryAfterMatch) {
+                calculatedWaitMs = Math.max(calculatedWaitMs, parseInt(retryAfterMatch[1]) * 1000 + jitter);
+                hasParsedTime = true;
+            } else {
+                // Attempt to extract dynamic wait time from message (e.g. "Please retry in 27.67s" or "363.33ms")
+                const retryInMatch = msg.match(/retry\s+in\s+([\d.]+)\s*(ms|s)/i);
+                if (retryInMatch) {
+                    const value = parseFloat(retryInMatch[1]);
+                    const isMs = retryInMatch[2].toLowerCase() === 'ms';
+                    const ms = isMs ? value : value * 1000;
+                    calculatedWaitMs = Math.max(calculatedWaitMs, Math.ceil(ms) + 600 + jitter);
+                    hasParsedTime = true;
+                }
+            }
+            // Enforce a minimum 60-second cooldown delay for rate limit errors ONLY when no dynamic time was parsed
+            if (!hasParsedTime) {
+                calculatedWaitMs = Math.max(calculatedWaitMs, 60000 + jitter);
+            }
+            globalRateLimitBackoffUntil = Math.max(globalRateLimitBackoffUntil, Date.now() + calculatedWaitMs);
+        }
+
         if (retries > 0) {
             // Retry transient errors only
             if (
                 msg.includes('EMPTY_RESPONSE') ||
                 msg.includes('500') ||
                 msg.includes('503') ||
-                msg.includes('429') ||
-                msg.includes('RESOURCE_EXHAUSTED') ||
+                isRateLimit ||
                 msg.includes('fetch')
             ) {
-                // Parse Retry-After header or "retry in X.Xs" for 429/RESOURCE_EXHAUSTED rate limits
-                let waitMs = delayMs;
-                if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')) {
-                    const retryAfterMatch = msg.match(/retry.?after[:\s]*(\d+)/i);
-                    const jitter = Math.random() * 1500; // 0 to 1.5s random jitter to avoid thundering herd
-                    let hasParsedTime = false;
-                    if (retryAfterMatch) {
-                        waitMs = Math.max(waitMs, parseInt(retryAfterMatch[1]) * 1000 + jitter);
-                        hasParsedTime = true;
-                    } else {
-                        // Attempt to extract dynamic wait time from message (e.g. "Please retry in 27.67s" or "363.33ms")
-                        const retryInMatch = msg.match(/retry\s+in\s+([\d.]+)\s*(ms|s)/i);
-                        if (retryInMatch) {
-                            const value = parseFloat(retryInMatch[1]);
-                            const isMs = retryInMatch[2].toLowerCase() === 'ms';
-                            const ms = isMs ? value : value * 1000;
-                            // Convert to milliseconds, add a 600ms safety buffer and random jitter
-                            waitMs = Math.max(waitMs, Math.ceil(ms) + 600 + jitter);
-                            hasParsedTime = true;
-                        }
-                    }
-                    // Enforce a minimum 60-second cooldown delay for rate limit errors ONLY when no dynamic time was parsed
-                    if (!hasParsedTime) {
-                        waitMs = Math.max(waitMs, 60000 + jitter);
-                    }
-                    globalRateLimitBackoffUntil = Math.max(globalRateLimitBackoffUntil, Date.now() + waitMs);
-                }
+                const waitMs = isRateLimit 
+                    ? Math.max(calculatedWaitMs, globalRateLimitBackoffUntil - Date.now())
+                    : calculatedWaitMs;
+
                 onLog?.(`⏳ Retrying in ${(waitMs / 1000).toFixed(1)}s... (${retries} left)`);
                 emitServiceDebugEvent({
                     kind: 'retry',
                     label: 'Retry scheduled',
                     context: {
                         source: source || 'generation',
-                        operation: operationLabel || 'Retry operation',
+                        correlationId,
                         route,
                         method: 'POST',
                         phase: 'retry',
-                        correlationId,
+                        operation: operationLabel || 'Retry operation',
                     },
                     summary: `${msg || 'Transient failure'} -> ${(waitMs / 1000).toFixed(1)}s delay`,
                     payload: {
@@ -1863,7 +1903,7 @@ const retryOperation = async <T>(
                     }
                 });
                 // Relax max delay to 60s for 429/RESOURCE_EXHAUSTED quota limits
-                const effectiveMaxDelay = (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED'))
+                const effectiveMaxDelay = isRateLimit
                     ? Math.max(maxDelay, 60000)
                     : maxDelay;
                 const nextDelay = Math.min(waitMs * backoffMultiplier, effectiveMaxDelay);

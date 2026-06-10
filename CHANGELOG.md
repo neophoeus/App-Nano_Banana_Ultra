@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.10.18 - 2026-06-10
+
+- Release title: Nano Banana Ultra 3.10.18 - Global Backoff and Utility Retries
+- Release summary:
+    - Fixed an issue in `retryOperation` where the global backoff cooldown lock (`globalRateLimitBackoffUntil`) was bypassed after the final retry attempt failed with a 429 error (since updates were previously constrained inside `retries > 0` branches).
+    - Wrapped prompt engineering utilities (`enhancePromptWithGemini`, `generateRandomPrompt`, `generatePromptFromImage`) in `retryOperation` to support automatic transient retry and honor the global rate limit backoff cooldown.
+
 ## v3.10.17 - 2026-06-10
 
 - Release title: Nano Banana Ultra 3.10.17 - History Layout Pagination Optimization
