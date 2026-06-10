@@ -1792,8 +1792,10 @@ const retryOperation = async <T>(
                 if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')) {
                     const retryAfterMatch = msg.match(/retry.?after[:\s]*(\d+)/i);
                     const jitter = Math.random() * 1500; // 0 to 1.5s random jitter to avoid thundering herd
+                    let hasParsedTime = false;
                     if (retryAfterMatch) {
                         waitMs = Math.max(waitMs, parseInt(retryAfterMatch[1]) * 1000 + jitter);
+                        hasParsedTime = true;
                     } else {
                         // Attempt to extract dynamic wait time from message (e.g. "Please retry in 27.67s" or "363.33ms")
                         const retryInMatch = msg.match(/retry\s+in\s+([\d.]+)\s*(ms|s)/i);
@@ -1803,10 +1805,13 @@ const retryOperation = async <T>(
                             const ms = isMs ? value : value * 1000;
                             // Convert to milliseconds, add a 600ms safety buffer and random jitter
                             waitMs = Math.max(waitMs, Math.ceil(ms) + 600 + jitter);
+                            hasParsedTime = true;
                         }
                     }
-                    // Enforce a minimum 60-second cooldown delay for rate limit errors
-                    waitMs = Math.max(waitMs, 60000 + jitter);
+                    // Enforce a minimum 60-second cooldown delay for rate limit errors ONLY when no dynamic time was parsed
+                    if (!hasParsedTime) {
+                        waitMs = Math.max(waitMs, 60000 + jitter);
+                    }
                 }
                 onLog?.(`⏳ Retrying in ${(waitMs / 1000).toFixed(1)}s... (${retries} left)`);
                 emitServiceDebugEvent({

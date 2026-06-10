@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.10.15 - 2026-06-10
+
+- Release title: Nano Banana Ultra 3.10.15 - Dynamic 429 Retry Delay
+- Release summary:
+    - Implemented dynamic retry delay parsing in `retryOperation` for 429 rate limit errors. If the server response specifies a concrete wait time (e.g. "Please retry in X.Xs"), the client waits exactly that duration (plus safety buffer and jitter) instead of forcing a 60-second cooldown, significantly speeding up recovery on fast-reset limits.
+
 ## v3.10.14 - 2026-06-10
 
 - Release title: Nano Banana Ultra 3.10.14 - 429 Retry Optimization

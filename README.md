@@ -108,9 +108,9 @@ Nano Banana Ultra currently supports three Gemini image-model paths. The UI expo
 
 ## Version Overview
 
-### Latest Release: 3.10.14
+### Latest Release: 3.10.15
 
-Latest release: 3.10.14. Optimized the 429 rate limit retry strategy by enforcing a minimum 60-second cooldown delay in `retryOperation` to recover under API rate limits, aligning with the protective measures in the Lite version. See [CHANGELOG.md](CHANGELOG.md) for release details.
+Latest release: 3.10.15. Implemented dynamic retry delay parsing for 429 rate limit errors to prioritize the server's suggested wait time over a forced 60-second cooldown, significantly speeding up rate limit recovery. See [CHANGELOG.md](CHANGELOG.md) for release details.
 
 ### 3.5.x
 
@@ -281,9 +281,9 @@ Nano Banana Ultra 目前支援三條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：3.10.14
+### 最新版本：3.10.15
 
-最新版本：3.10.14。針對 429 RESOURCE_EXHAUSTED 錯誤優化重試機制，強制加入至少 60 秒的冷卻延遲（含隨機抖動），配合輕量版以因應 Google AI plans 在 Google AI Studio 內可能面臨的額度限制。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
+最新版本：3.10.15。實作 429 限流錯誤的動態重試延遲解析，優先採用 API 回傳之建議等待時間而非強制的 60 秒冷卻，大幅提升遭遇限流時的恢復效率。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 3.5.x
 
