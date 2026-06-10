@@ -10,7 +10,7 @@ import {
     WorkspaceSessionState,
     StickySendIntent,
 } from '../types';
-import { loadFullImage, persistHistoryThumbnail } from '../utils/imageSaveUtils';
+import { buildSavedImageLoadUrl, loadFullImage, persistHistoryThumbnail } from '../utils/imageSaveUtils';
 import { encodeWorkflowMessage } from '../utils/workflowTimeline';
 import {
     EMPTY_WORKSPACE_CONVERSATION_STATE,
@@ -118,10 +118,16 @@ export const resolveViewerStageSourceSyncArgs = ({
     }
 
     const selectedHistoryItem = selectedHistoryId ? getHistoryTurnById(selectedHistoryId) : null;
+    const expectedStageUrl = (selectedHistoryItem && selectedHistoryItem.savedFilename)
+        ? buildSavedImageLoadUrl(selectedHistoryItem.savedFilename)
+        : (selectedHistoryItem?.url || null);
+
     const shouldUseSelectedHistory = Boolean(
         selectedHistoryId &&
         selectedHistoryItem &&
-        (currentStageSourceHistoryId === selectedHistoryId || selectedHistoryItem.url === currentViewerImage),
+        (currentStageSourceHistoryId === selectedHistoryId ||
+            selectedHistoryItem.url === currentViewerImage ||
+            expectedStageUrl === currentViewerImage),
     );
     const nextSourceHistoryId = shouldUseSelectedHistory ? selectedHistoryId : currentStageSourceHistoryId;
     const nextHistoryItem = nextSourceHistoryId ? getHistoryTurnById(nextSourceHistoryId) : null;

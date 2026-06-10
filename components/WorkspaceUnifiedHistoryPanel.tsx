@@ -59,16 +59,20 @@ function WorkspaceUnifiedHistoryPanel({
         'inline-flex h-9 w-9 select-none items-center justify-center rounded-full border border-slate-200/80 bg-white/88 text-center font-mono text-[11px] font-black text-slate-600 shadow-[0_8px_18px_rgba(15,23,42,0.08)] dark:border-slate-700/80 dark:bg-slate-950/72 dark:text-slate-300 xl:h-10 xl:w-10';
     const itemCountLabel = t('workspaceInsightsItemsCount').replace('{0}', String(history.length));
     const branchCountLabel = t('workspaceInsightsBranchesCount').replace('{0}', String(branchSummariesCount));
-    const previewTileCount = previewTiles.length;
+    const activePreviewTiles = useMemo(
+        () => previewTiles.filter((tile) => tile.status !== 'committed'),
+        [previewTiles],
+    );
+    const previewTileCount = activePreviewTiles.length;
     const totalPages = useMemo(() => {
-        return Math.max(1, Math.ceil((history.length + previewTiles.length) / pageSize));
-    }, [history.length, previewTiles.length, pageSize]);
+        return Math.max(1, Math.ceil((history.length + activePreviewTiles.length) / pageSize));
+    }, [history.length, activePreviewTiles.length, pageSize]);
     const previousHistoryHeadIdRef = useRef<string | null>(history[0]?.id || null);
     const previousHistoryLengthRef = useRef(history.length);
     const displayedHistory = useMemo(
         () => {
-            if (previewTiles.length > 0) {
-                const shift = previewTiles.length;
+            if (activePreviewTiles.length > 0) {
+                const shift = activePreviewTiles.length;
                 if (page === 0) {
                     const allowedSlots = Math.max(0, pageSize - shift);
                     return history.slice(0, allowedSlots);
@@ -80,9 +84,9 @@ function WorkspaceUnifiedHistoryPanel({
             }
             return history.slice(page * pageSize, (page + 1) * pageSize);
         },
-        [history, page, pageSize, previewTiles.length],
+        [history, page, pageSize, activePreviewTiles.length],
     );
-    const pagePreviewTiles = page === 0 ? previewTiles : [];
+    const pagePreviewTiles = page === 0 ? activePreviewTiles : [];
 
     useEffect(() => {
         const nextHistoryHeadId = history[0]?.id || null;

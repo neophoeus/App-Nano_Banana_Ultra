@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.10.20 - 2026-06-10
+
+- Release title: Nano Banana Ultra 3.10.20 - Stage Selection Sync & Failed Slot Layout Fixes
+- Release summary:
+    - Fixed an issue where the generated image was not automatically selected and displayed on the stage upon completion due to URL format mismatches during sync state orchestration.
+    - Fixed a bug during batch generation (quantity > 1) where failed slots temporarily disappeared from the history panel by calculating the page layout offset (`shift`) based on active (uncommitted) preview tiles instead of the initial batch size.
+
 ## v3.10.19 - 2026-06-10
 
 - Release title: Nano Banana Ultra 3.10.19 - Shifted Paginated Slice Layout
