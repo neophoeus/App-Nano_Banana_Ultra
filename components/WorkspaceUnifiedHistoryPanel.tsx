@@ -61,15 +61,26 @@ function WorkspaceUnifiedHistoryPanel({
     const branchCountLabel = t('workspaceInsightsBranchesCount').replace('{0}', String(branchSummariesCount));
     const previewTileCount = previewTiles.length;
     const totalPages = useMemo(() => {
-        return Math.max(1, Math.ceil(history.length / pageSize));
-    }, [history.length, pageSize]);
+        return Math.max(1, Math.ceil((history.length + previewTiles.length) / pageSize));
+    }, [history.length, previewTiles.length, pageSize]);
     const previousHistoryHeadIdRef = useRef<string | null>(history[0]?.id || null);
     const previousHistoryLengthRef = useRef(history.length);
     const displayedHistory = useMemo(
         () => {
+            if (previewTiles.length > 0) {
+                const shift = previewTiles.length;
+                if (page === 0) {
+                    const allowedSlots = Math.max(0, pageSize - shift);
+                    return history.slice(0, allowedSlots);
+                } else {
+                    const start = page * pageSize - shift;
+                    const end = (page + 1) * pageSize - shift;
+                    return history.slice(Math.max(0, start), Math.max(0, end));
+                }
+            }
             return history.slice(page * pageSize, (page + 1) * pageSize);
         },
-        [history, page, pageSize],
+        [history, page, pageSize, previewTiles.length],
     );
     const pagePreviewTiles = page === 0 ? previewTiles : [];
 

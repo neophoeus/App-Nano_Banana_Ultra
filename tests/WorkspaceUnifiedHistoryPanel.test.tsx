@@ -378,12 +378,12 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
         expect(
             (container.querySelector('[data-testid="workspace-unified-history-page-total"]') as HTMLSpanElement | null)
                 ?.textContent,
-        ).toBe('2');
+        ).toBe('3');
         expect(container.innerHTML).toContain('history-preview-tile-3');
         expect(container.innerHTML).toContain('history-preview-tile-0');
         expect(container.innerHTML).toContain('history-card-turn-01');
-        expect(container.innerHTML).toContain('history-card-turn-06');
-        expect(container.innerHTML).not.toContain('history-card-turn-07');
+        expect(container.innerHTML).toContain('history-card-turn-02');
+        expect(container.innerHTML).not.toContain('history-card-turn-03');
         expect(container.innerHTML.indexOf('history-preview-tile-3')).toBeLessThan(
             container.innerHTML.indexOf('history-preview-tile-2'),
         );
@@ -405,9 +405,10 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
         expect(
             (container.querySelector('[data-testid="workspace-unified-history-page-total"]') as HTMLSpanElement | null)
                 ?.textContent,
-        ).toBe('2');
-        expect(container.innerHTML).toContain('history-card-turn-07');
-        expect(container.innerHTML).toContain('history-card-turn-12');
+        ).toBe('3');
+        expect(container.innerHTML).toContain('history-card-turn-03');
+        expect(container.innerHTML).toContain('history-card-turn-08');
+        expect(container.innerHTML).not.toContain('history-card-turn-09');
         expect(container.innerHTML).not.toContain('history-preview-tile-3');
         expect(container.innerHTML).not.toContain('history-card-turn-01');
     });
