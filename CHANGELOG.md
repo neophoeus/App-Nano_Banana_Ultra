@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.10.17 - 2026-06-10
+
+- Release title: Nano Banana Ultra 3.10.17 - History Layout Pagination Optimization
+- Release summary:
+    - Optimized the pagination layout inside `WorkspaceUnifiedHistoryPanel` by removing the preview slot reservation logic. Active generating slots (`previewTiles`) are now displayed inline on the first page alongside completed history entries, preventing completed items from being pushed to the next page and eliminating layout shifts during batch generation.
+
 ## v3.10.16 - 2026-06-10
 
 - Release title: Nano Banana Ultra 3.10.16 - Cooperative Global Backoff Lock

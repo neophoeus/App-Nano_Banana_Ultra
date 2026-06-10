@@ -60,30 +60,16 @@ function WorkspaceUnifiedHistoryPanel({
     const itemCountLabel = t('workspaceInsightsItemsCount').replace('{0}', String(history.length));
     const branchCountLabel = t('workspaceInsightsBranchesCount').replace('{0}', String(branchSummariesCount));
     const previewTileCount = previewTiles.length;
-    const firstPageHistorySlots = previewTileCount > 0 ? Math.max(pageSize - previewTileCount, 0) : pageSize;
     const totalPages = useMemo(() => {
-        if (previewTileCount === 0) {
-            return Math.max(1, Math.ceil(history.length / pageSize));
-        }
-
-        return Math.max(1, 1 + Math.ceil(Math.max(history.length - firstPageHistorySlots, 0) / pageSize));
-    }, [firstPageHistorySlots, history.length, pageSize, previewTileCount]);
+        return Math.max(1, Math.ceil(history.length / pageSize));
+    }, [history.length, pageSize]);
     const previousHistoryHeadIdRef = useRef<string | null>(history[0]?.id || null);
     const previousHistoryLengthRef = useRef(history.length);
     const displayedHistory = useMemo(
         () => {
-            if (previewTileCount === 0) {
-                return history.slice(page * pageSize, (page + 1) * pageSize);
-            }
-
-            if (page === 0) {
-                return history.slice(0, firstPageHistorySlots);
-            }
-
-            const startIndex = firstPageHistorySlots + (page - 1) * pageSize;
-            return history.slice(startIndex, startIndex + pageSize);
+            return history.slice(page * pageSize, (page + 1) * pageSize);
         },
-        [firstPageHistorySlots, history, page, pageSize, previewTileCount],
+        [history, page, pageSize],
     );
     const pagePreviewTiles = page === 0 ? previewTiles : [];
 
