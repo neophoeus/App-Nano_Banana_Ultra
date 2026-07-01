@@ -4,7 +4,8 @@
         "esbenp.prettier-vscode",
         "ms-playwright.playwright",
         "usernamehw.errorlens",
-        "eamodio.gitlens"
+        "eamodio.gitlens",
+        "vitest.explorer"
     ],
     "unwantedRecommendations": ["dbaeumer.vscode-eslint"]
 }
