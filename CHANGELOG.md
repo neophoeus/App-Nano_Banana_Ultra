@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.11.0 - 2026-07-02
+
+- Release title: Nano Banana Ultra 3.11.0 - Nano Banana 2 Lite Model Integration & Documentation Split
+- Release summary:
+    - Added support for the new **Nano Banana 2 Lite** (`gemini-3.1-flash-lite-image`) model in settings, capabilities configuration, translation files, and UI dropdowns. Configured precise model capability limits: 1K (1024px) supported resolution, 14 aspect ratios, up to 14 object references, 0 character references, and thinking levels (minimal/high).
+    - Split `README.md` into separate English (`README.md`) and Traditional Chinese (`README.zh-TW.md`) documentation files.
+
 ## v3.10.20 - 2026-06-10
 
 - Release title: Nano Banana Ultra 3.10.20 - Stage Selection Sync & Failed Slot Layout Fixes

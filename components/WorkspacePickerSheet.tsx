@@ -10,16 +10,7 @@ import SizeSelector from './SizeSelector';
 import StyleSelector from './StyleSelector';
 import WorkspaceModalFrame from './WorkspaceModalFrame';
 
-export type PickerSheet =
-    | 'prompt'
-    | 'styles'
-    | 'settings'
-    | 'model'
-    | 'ratio'
-    | 'size'
-    | 'batch'
-    | 'references'
-    | null;
+export type PickerSheet = 'prompt' | 'styles' | 'settings' | 'model' | 'ratio' | 'size' | 'batch' | 'references' | null;
 
 export type GenerationSettingsSheetVariant = 'full' | 'sketch';
 
@@ -237,6 +228,9 @@ export default function WorkspacePickerSheet({
     const getModelLabel = (model: ImageModel) => {
         if (model === 'gemini-3.1-flash-image') {
             return t('modelGemini31Flash');
+        }
+        if (model === 'gemini-3.1-flash-lite-image') {
+            return t('modelGemini31FlashLite');
         }
         if (model === 'gemini-3-pro-image') {
             return t('modelGemini3Pro');

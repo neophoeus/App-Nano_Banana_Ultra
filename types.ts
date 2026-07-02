@@ -1,18 +1,5 @@
 export type AspectRatio =
-    | '1:1'
-    | '16:9'
-    | '9:16'
-    | '4:3'
-    | '3:4'
-    | '2:3'
-    | '3:2'
-    | '21:9'
-    | '4:5'
-    | '5:4'
-    | '1:4'
-    | '4:1'
-    | '1:8'
-    | '8:1';
+    '1:1' | '16:9' | '9:16' | '4:3' | '3:4' | '2:3' | '3:2' | '21:9' | '4:5' | '5:4' | '1:4' | '4:1' | '1:8' | '8:1';
 export type EditorMode = 'inpaint' | 'outpaint';
 export type ImageSize = '512' | '1K' | '2K' | '4K';
 
@@ -98,7 +85,8 @@ export type ImageStyle =
     | 'Flat Design'
     | 'Miniature';
 
-export type ImageModel = 'gemini-3.1-flash-image' | 'gemini-3-pro-image' | 'gemini-2.5-flash-image';
+export type ImageModel =
+    'gemini-3.1-flash-image' | 'gemini-3-pro-image' | 'gemini-2.5-flash-image' | 'gemini-3.1-flash-lite-image';
 export type OutputFormat = 'images-only' | 'images-and-text';
 export type ThinkingLevel = 'disabled' | 'minimal' | 'high';
 export type GroundingMode = 'off' | 'google-search' | 'image-search' | 'google-search-plus-image-search';
@@ -137,12 +125,7 @@ export type StageAssetRole = 'object' | 'character' | 'stage-source';
 export type StageAssetOrigin = 'upload' | 'sketch' | 'generated' | 'history' | 'editor';
 export type TurnLineageAction = 'root' | 'continue' | 'branch' | 'editor-follow-up' | 'reopen';
 export type GenerationFailureCode =
-    | 'policy-blocked'
-    | 'safety-blocked'
-    | 'text-only'
-    | 'no-image-data'
-    | 'empty-response'
-    | 'unknown';
+    'policy-blocked' | 'safety-blocked' | 'text-only' | 'no-image-data' | 'empty-response' | 'unknown';
 export type GenerationFailureExtractionIssue = 'missing-candidates' | 'missing-parts' | 'no-image-data';
 
 export interface GenerationFailureInfo {

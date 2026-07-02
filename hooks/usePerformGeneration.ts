@@ -44,6 +44,7 @@ import { buildStyleTransferPrompt } from '../utils/styleRegistry';
 
 const MODEL_TRANSLATION_KEYS: Record<ImageModel, string> = {
     'gemini-3.1-flash-image': 'modelGemini31Flash',
+    'gemini-3.1-flash-lite-image': 'modelGemini31FlashLite',
     'gemini-3-pro-image': 'modelGemini3Pro',
     'gemini-2.5-flash-image': 'modelGemini25Flash',
 };
@@ -458,7 +459,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                         operation: 'Generation workflow',
                         batchSessionId,
                     });
-                 };
+                };
                 const committedSlotIndices = new Set<number>();
                 const handleResultCallback = async (res: GenerationResult) => {
                     if (controller.signal.aborted && isCancelledGenerationResult(res)) {
@@ -479,9 +480,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                     }
 
                     const batchResultIndex =
-                        typeof res.slotIndex === 'number' && Number.isFinite(res.slotIndex)
-                            ? res.slotIndex
-                            : 0;
+                        typeof res.slotIndex === 'number' && Number.isFinite(res.slotIndex) ? res.slotIndex : 0;
 
                     if (committedSlotIndices.has(batchResultIndex)) {
                         return;
@@ -490,11 +489,17 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
 
                     const hasSafetyBlocked =
                         (res.status === 'failed' && res.failure?.code === 'safety-blocked') ||
-                        batchHistoryItems.some((item) => item.status === 'failed' && item.failure?.code === 'safety-blocked');
+                        batchHistoryItems.some(
+                            (item) => item.status === 'failed' && item.failure?.code === 'safety-blocked',
+                        );
 
                     if (hasSafetyBlocked) {
                         batchHistoryItems.forEach((item) => {
-                            if (item.status === 'failed' && item.failure?.code === 'empty-response' && !item.failureContext?.hasSiblingSafetyBlockedFailure) {
+                            if (
+                                item.status === 'failed' &&
+                                item.failure?.code === 'empty-response' &&
+                                !item.failureContext?.hasSiblingSafetyBlockedFailure
+                            ) {
                                 item.failureContext = {
                                     hasSiblingSafetyBlockedFailure: true,
                                 };
@@ -502,8 +507,8 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                                     prev.map((prevItem) =>
                                         prevItem.id === item.id
                                             ? { ...prevItem, failureContext: { hasSiblingSafetyBlockedFailure: true } }
-                                            : prevItem
-                                    )
+                                            : prevItem,
+                                    ),
                                 );
                             }
                         });
@@ -665,9 +670,8 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                     : results.filter((result) => !isCancelledGenerationResult(result));
 
                 for (const res of historyResults) {
-                    const slotIndex = typeof res.slotIndex === 'number' && Number.isFinite(res.slotIndex)
-                        ? res.slotIndex
-                        : 0;
+                    const slotIndex =
+                        typeof res.slotIndex === 'number' && Number.isFinite(res.slotIndex) ? res.slotIndex : 0;
                     if (!committedSlotIndices.has(slotIndex)) {
                         await handleResultCallback(res);
                     }

@@ -37,6 +37,7 @@ export const fr = {
     modelSelect: 'Modèle',
     modelGemini3Pro: 'Nano Banana Pro (gemini-3-pro-image)',
     modelGemini31Flash: 'Nano Banana 2 (gemini-3.1-flash-image)',
+    modelGemini31FlashLite: 'Nano Banana 2 Lite (gemini-3.1-flash-lite-image)',
     modelGemini25Flash: 'Nano Banana (gemini-2.5-flash-image)',
     promptLabel: 'Prompt',
     composerPromptLabelIndependent: 'Instruction',

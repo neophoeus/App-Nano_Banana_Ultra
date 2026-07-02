@@ -15,6 +15,7 @@ interface ModelSelectorProps {
 const MODEL_SHORT_NAMES: Record<ImageModel, string> = {
     'gemini-3-pro-image': 'Nano Banana Pro',
     'gemini-3.1-flash-image': 'Nano Banana 2',
+    'gemini-3.1-flash-lite-image': 'Nano Banana 2 Lite',
     'gemini-2.5-flash-image': 'Nano Banana',
 };
 
@@ -36,6 +37,8 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                 return langDict.modelGemini3Pro || 'Gemini 3 Pro';
             case 'gemini-3.1-flash-image':
                 return langDict.modelGemini31Flash || 'Gemini 3.1 Flash';
+            case 'gemini-3.1-flash-lite-image':
+                return langDict.modelGemini31FlashLite || 'Gemini 3.1 Flash Lite';
             case 'gemini-2.5-flash-image':
                 return langDict.modelGemini25Flash || 'Gemini 2.5 Flash';
             default:

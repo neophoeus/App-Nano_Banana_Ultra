@@ -49,7 +49,9 @@ const LIVE_PROGRESS_EXECUTION_MODES: LiveProgressExecutionMode[] = ['single-turn
 const LIVE_PROGRESS_OUTPUT_FORMATS: OutputFormat[] = ['images-only', 'images-and-text'];
 
 const getProbeThinkingLevels = (model: ImageModel): ThinkingLevel[] =>
-    model === 'gemini-3.1-flash-image' ? ['minimal', 'high'] : ['disabled'];
+    model === 'gemini-3.1-flash-image' || model === 'gemini-3.1-flash-lite-image'
+        ? ['minimal', 'high']
+        : ['disabled'];
 
 export const buildLiveProgressCellId = ({
     model,

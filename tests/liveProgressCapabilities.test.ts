@@ -10,9 +10,10 @@ describe('live progress capabilities', () => {
     it('builds the expected included probe matrix for current supported image-model paths', () => {
         const includedCells = getLiveProgressCapabilityMatrix({ includeExcluded: false });
 
-        expect(includedCells).toHaveLength(12);
+        expect(includedCells).toHaveLength(20);
         expect(includedCells.every((cell) => cell.expectedEligible)).toBe(true);
         expect(includedCells.filter((cell) => cell.model === 'gemini-3.1-flash-image')).toHaveLength(8);
+        expect(includedCells.filter((cell) => cell.model === 'gemini-3.1-flash-lite-image')).toHaveLength(8);
         expect(includedCells.filter((cell) => cell.model === 'gemini-3-pro-image')).toHaveLength(4);
         expect(includedCells.some((cell) => cell.model === 'gemini-2.5-flash-image')).toBe(false);
     });
@@ -23,7 +24,9 @@ describe('live progress capabilities', () => {
 
         expect(excludedCells).toHaveLength(4);
         expect(excludedCells.every((cell) => cell.expectedEligible === false)).toBe(true);
-        expect(excludedCells.every((cell) => cell.expectedReason?.includes('does not support returning thoughts'))).toBe(true);
+        expect(
+            excludedCells.every((cell) => cell.expectedReason?.includes('does not support returning thoughts')),
+        ).toBe(true);
     });
 
     it('rejects ineligible runtime requests before the app attempts live streaming', () => {

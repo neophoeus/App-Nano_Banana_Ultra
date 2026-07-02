@@ -15,6 +15,7 @@ export interface ModelCapability {
 
 export const IMAGE_MODELS: ImageModel[] = [
     'gemini-3.1-flash-image',
+    'gemini-3.1-flash-lite-image',
     'gemini-3-pro-image',
     'gemini-2.5-flash-image',
 ];
@@ -51,6 +52,33 @@ export const MODEL_CAPABILITIES: Record<ImageModel, ModelCapability> = {
         supportsGoogleSearch: true,
         supportsImageSearch: true,
     },
+    'gemini-3.1-flash-lite-image': {
+        supportedSizes: ['1K'],
+        supportedRatios: [
+            '1:1',
+            '16:9',
+            '9:16',
+            '4:3',
+            '3:4',
+            '2:3',
+            '3:2',
+            '21:9',
+            '4:5',
+            '5:4',
+            '1:4',
+            '4:1',
+            '1:8',
+            '8:1',
+        ],
+        maxObjects: 14,
+        maxCharacters: 0,
+        outputFormats: ['images-and-text', 'images-only'],
+        supportsTemperature: true,
+        thinkingLevels: ['minimal', 'high'],
+        supportsIncludeThoughts: true,
+        supportsGoogleSearch: false,
+        supportsImageSearch: false,
+    },
     'gemini-3-pro-image': {
         supportedSizes: ['1K', '2K', '4K'],
         supportedRatios: ['1:1', '16:9', '9:16', '4:3', '3:4', '2:3', '3:2', '21:9', '4:5', '5:4'],
@@ -79,5 +107,5 @@ export const MODEL_CAPABILITIES: Record<ImageModel, ModelCapability> = {
 
 // Legacy model aliases for backwards compatibility with deprecated preview strings
 (MODEL_CAPABILITIES as any)['gemini-3.1-flash-image-preview'] = MODEL_CAPABILITIES['gemini-3.1-flash-image'];
+(MODEL_CAPABILITIES as any)['gemini-3.1-flash-lite-image-preview'] = MODEL_CAPABILITIES['gemini-3.1-flash-lite-image'];
 (MODEL_CAPABILITIES as any)['gemini-3-pro-image-preview'] = MODEL_CAPABILITIES['gemini-3-pro-image'];
-
