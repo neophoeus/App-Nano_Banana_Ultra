@@ -1005,4 +1005,8 @@ export const ja = {
     historyFilmstripDesc: '現在の結果はステージに残ったまま、近い文脈のターンをいつでも再表示、継続、分岐できます。',
     historyFilmstripSummary: '{0} ターン・{1} ブランチ',
     historyFilmstripEmpty: 'ターンストリップの蓄積を始めるには、まず画像を生成または読み込んでください。',
+    composerAdvancedHighThinkingHighTempWarning:
+        '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
+    generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
+    generationFailureDetailThinkingLoop: 'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
 } as const;

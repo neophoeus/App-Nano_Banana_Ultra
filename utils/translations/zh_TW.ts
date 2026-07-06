@@ -127,6 +127,8 @@ export const zh_TW = {
     generationFailureSummaryTextOnly: '模型只回傳了文字，沒有輸出圖片。',
     generationFailureSummaryEmpty: '模型回傳的資訊不足，系統無法可靠判定這次失敗原因。',
     generationFailureSummaryNoImage: '請求已完成，但模型沒有回傳圖片資料。',
+    generationFailureSummaryThinkingLoop: '偵測到思考無限循環',
+    generationFailureDetailThinkingLoop: '模型思考字數或時間超出上限，已自動中斷生成以防卡死。建議調整溫度（如降低至 1.0）或降低思考等級後重試。',
     generationFailureDetailRetry: '請調整提示詞後重試，或稍後再試一次。',
     generationFailureDetailPromptBlockReason: '政策攔截原因：{0}。',
     generationFailureDetailSafetyCategories: '安全分類：{0}。',
@@ -784,6 +786,7 @@ export const zh_TW = {
     composerAdvancedTemperatureGuideDefault: '預設值 1.0 會在穩定性與變化度之間維持平衡。',
     composerAdvancedTemperatureGuideHigher: '高於 1.0 會提高變化與驚喜感，但一致性與貼合提示詞的程度可能下降。',
     composerAdvancedTemperatureGuideLower: '低於 1.0 會讓結果更穩定、更貼近字面要求，但探索性通常會降低。',
+    composerAdvancedHighThinkingHighTempWarning: '⚠️ 當開啟「高度思考模式」且「溫度」大於 1.0 時，模型可能會陷入思考重複循環，無法完成生成。若遇到此情況，建議將溫度調整回 1.0。',
     composerAdvancedSafetyTitle: '安全過濾',
     composerAdvancedSafetyNote:
         '「模型預設」會省略該分類的 Gemini safetySettings。產品目前的預設仍是四類全部「不封鎖」。',

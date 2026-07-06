@@ -131,6 +131,8 @@ export const en = {
     generationFailureSummaryEmpty:
         'The model response did not include enough information to identify a trustworthy cause.',
     generationFailureSummaryNoImage: 'The request completed, but the model did not return image data.',
+    generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
+    generationFailureDetailThinkingLoop: 'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
     generationFailureDetailRetry: 'Try revising the prompt or retrying later.',
     generationFailureDetailPromptBlockReason: 'Policy block reason: {0}.',
     generationFailureDetailSafetyCategories: 'Safety categories: {0}.',
@@ -815,6 +817,8 @@ export const en = {
         'Above 1.0 increases variation and surprise, but can reduce consistency and prompt fidelity.',
     composerAdvancedTemperatureGuideLower:
         'Below 1.0 makes results more stable and literal, but usually less exploratory.',
+    composerAdvancedHighThinkingHighTempWarning:
+        '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
     composerAdvancedSafetyTitle: 'Safety filters',
     composerAdvancedSafetyNote:
         'Model default omits that category from Gemini safetySettings. The current app default keeps all four filters at Block none.',

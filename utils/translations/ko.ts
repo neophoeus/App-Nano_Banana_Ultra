@@ -994,4 +994,8 @@ export const ko = {
         '현재 결과는 스테이지에 그대로 유지되고, 가까운 문맥의 턴은 언제든 다시 열고 이어가거나 분기할 수 있습니다.',
     historyFilmstripSummary: '{0}개 턴 · {1}개 분기',
     historyFilmstripEmpty: '턴 스트립을 쌓기 시작하려면 먼저 이미지를 생성하거나 불러오세요.',
+    composerAdvancedHighThinkingHighTempWarning:
+        '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
+    generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
+    generationFailureDetailThinkingLoop: 'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
 } as const;

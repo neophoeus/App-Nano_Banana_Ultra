@@ -1021,4 +1021,8 @@ export const ru = {
         'Текущий результат остается на сцене, а ходы с близким контекстом в любой момент можно снова открыть, продолжить или разветвить.',
     historyFilmstripSummary: '{0} ходов · {1} веток',
     historyFilmstripEmpty: 'Сгенерируйте или загрузите изображение, чтобы начать собирать ленту ходов.',
+    composerAdvancedHighThinkingHighTempWarning:
+        '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
+    generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
+    generationFailureDetailThinkingLoop: 'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
 } as const;

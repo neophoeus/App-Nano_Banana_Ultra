@@ -217,6 +217,23 @@ type StreamFailureEvent = {
     summary: ReturnType<typeof summarizeLiveProgressTruthfulness>;
 };
 
+function detectThinkingLoop(thoughts: string | undefined | null): boolean {
+    if (!thoughts) return false;
+    const sentences = thoughts
+        .split(/[.\n!?，。！；？,]+/)
+        .map((s) => s.trim())
+        .filter((s) => s.length >= 10);
+    const counts = new Map<string, number>();
+    for (const sentence of sentences) {
+        const count = (counts.get(sentence) || 0) + 1;
+        if (count >= 5) {
+            return true;
+        }
+        counts.set(sentence, count);
+    }
+    return false;
+}
+
 const DEFAULT_LIVE_PROGRESS_PROBE_PROMPT =
     'Create a polished studio image of a single yellow banana card on a calm neutral background.';
 
@@ -1303,6 +1320,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 sessionId,
             });
 
+            const startTime = Date.now();
             for await (const chunk of stream) {
                 throwIfAborted(requestAbortState.signal);
                 lastChunk = chunk;
@@ -1322,6 +1340,24 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                         part,
                     });
                 });
+
+                const thoughts = liveState.aggregatedParts
+                    .filter((p) => p.kind === 'thought-text')
+                    .map((p) => p.text || '')
+                    .join('');
+
+                const duration = Date.now() - startTime;
+                const hasImage = liveState.aggregatedParts.some((p) => p.kind === 'output-image');
+
+                if (detectThinkingLoop(thoughts)) {
+                    throw new Error('Thinking loop detected: repetitive reasoning clauses observed 5 or more times.');
+                }
+                if (thoughts.length > 12000) {
+                    throw new Error('Thinking loop detected: reasoning character limit exceeded 12000 characters.');
+                }
+                if (duration > 180000 && !hasImage) {
+                    throw new Error('Thinking loop detected: stream ran for over 180 seconds without generating an image.');
+                }
             }
 
             throwIfAborted(requestAbortState.signal);
@@ -1429,10 +1465,19 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 if (!requestAbortState.isWritable()) {
                     return;
                 }
+                const isLoopError = error?.message?.includes('Thinking loop detected');
+                const failure = isLoopError
+                    ? resolveGenerationFailureInfo({
+                          explicitError: error.message,
+                          thoughts: extractStreamCompletionContent(liveState, lastChunk).thoughts,
+                      })
+                    : undefined;
+
                 writeNdjsonEvent<StreamFailureEvent>(res, {
                     type: 'failure',
                     sessionId,
                     error: error?.message || 'Image generation failed',
+                    failure,
                     summary,
                 });
                 if (requestAbortState.isWritable()) {

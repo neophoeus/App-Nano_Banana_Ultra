@@ -1028,4 +1028,8 @@ export const fr = {
         'Le resultat actuel reste sur la scene pendant que les tours au contexte proche restent prets a etre rouverts, poursuivis ou bifurques a tout moment.',
     historyFilmstripSummary: '{0} tours · {1} branches',
     historyFilmstripEmpty: 'Generez ou chargez une image pour commencer a construire la bande de tours.',
+    composerAdvancedHighThinkingHighTempWarning:
+        '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
+    generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
+    generationFailureDetailThinkingLoop: 'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
 } as const;

@@ -111,9 +111,9 @@ Nano Banana Ultra 目前支援四條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：3.11.0
+### 最新版本：3.12.0
 
-最新版本：3.11.0。新增支援 Nano Banana 2 Lite (gemini-3.1-flash-lite-image) 模型，並將 README 拆分為中英文獨立檔案。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
+最新版本：3.12.0。實作高思考搭配高溫度的提示警告，以及自動熔斷中斷機制，防止串流生成中陷入思考無限循環（鬼打牆）的狀況。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 3.5.x
 

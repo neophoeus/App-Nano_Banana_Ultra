@@ -334,6 +334,14 @@ export default function ComposerAdvancedSettingsContent({
                                     className="nbu-input-surface w-20 rounded-xl px-2 py-1.5 text-right"
                                 />
                             </div>
+                            {thinkingLevel === 'high' && temperature > 1.0 && (
+                                <div
+                                    data-testid="composer-advanced-thinking-temp-warning"
+                                    className="mt-2 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
+                                >
+                                    {t('composerAdvancedHighThinkingHighTempWarning')}
+                                </div>
+                            )}
                         </section>
                     )}
 

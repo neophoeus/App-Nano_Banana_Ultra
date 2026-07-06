@@ -298,4 +298,68 @@ describe('ComposerAdvancedSettingsDialog draft flow', () => {
         expect(panel.textContent).toContain(getTranslation('en', 'composerAdvancedTemperatureGuideLower'));
         expect(panel.textContent).not.toContain(getTranslation('en', 'composerAdvancedTemperatureGuideDefault'));
     });
+
+    it('shows a warning alert if thinkingLevel is high and temperature is above 1.0', () => {
+        act(() => {
+            root.render(
+                <ComposerAdvancedSettingsDialog
+                    currentLanguage="en"
+                    outputFormat="images-only"
+                    thinkingLevel="high"
+                    groundingMode="off"
+                    safetyThresholds={DEFAULT_SAFETY_THRESHOLDS}
+                    imageModel="gemini-3.1-flash-image"
+                    capability={MODEL_CAPABILITIES['gemini-3.1-flash-image']}
+                    availableGroundingModes={['off', 'google-search']}
+                    temperature={1.5}
+                    onOutputFormatChange={() => {}}
+                    onTemperatureChange={() => {}}
+                    onThinkingLevelChange={() => {}}
+                    onGroundingModeChange={() => {}}
+                    onSafetyThresholdsChange={() => {}}
+                    isOpen={true}
+                    onClose={() => {}}
+                />
+            );
+        });
+
+        // Check that warning appears
+        let warning = container.querySelector(
+            '[data-testid="composer-advanced-thinking-temp-warning"]',
+        );
+        expect(warning).toBeTruthy();
+        expect(warning?.textContent).toContain(
+            getTranslation('en', 'composerAdvancedHighThinkingHighTempWarning'),
+        );
+
+        // Re-render with temperature 1.0
+        act(() => {
+            root.render(
+                <ComposerAdvancedSettingsDialog
+                    currentLanguage="en"
+                    outputFormat="images-only"
+                    thinkingLevel="high"
+                    groundingMode="off"
+                    safetyThresholds={DEFAULT_SAFETY_THRESHOLDS}
+                    imageModel="gemini-3.1-flash-image"
+                    capability={MODEL_CAPABILITIES['gemini-3.1-flash-image']}
+                    availableGroundingModes={['off', 'google-search']}
+                    temperature={1.0}
+                    onOutputFormatChange={() => {}}
+                    onTemperatureChange={() => {}}
+                    onThinkingLevelChange={() => {}}
+                    onGroundingModeChange={() => {}}
+                    onSafetyThresholdsChange={() => {}}
+                    isOpen={true}
+                    onClose={() => {}}
+                />
+            );
+        });
+
+        // Warning should disappear
+        warning = container.querySelector(
+            '[data-testid="composer-advanced-thinking-temp-warning"]',
+        );
+        expect(warning).toBeFalsy();
+    });
 });

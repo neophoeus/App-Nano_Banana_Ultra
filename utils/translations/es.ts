@@ -1029,4 +1029,8 @@ export const es = {
         'El resultado actual permanece en escena mientras los turnos de contexto cercano siguen listos para abrir, continuar o ramificar en cualquier momento.',
     historyFilmstripSummary: '{0} turnos · {1} ramas',
     historyFilmstripEmpty: 'Genera o carga una imagen para empezar a construir la tira de turnos.',
+    composerAdvancedHighThinkingHighTempWarning:
+        '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
+    generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
+    generationFailureDetailThinkingLoop: 'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
 } as const;

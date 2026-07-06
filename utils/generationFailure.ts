@@ -52,6 +52,7 @@ const generationFailureCodes = new Set<GenerationFailureCode>([
     'text-only',
     'no-image-data',
     'empty-response',
+    'thinking-loop',
     'unknown',
 ]);
 
@@ -690,6 +691,16 @@ export function resolveGenerationFailureInfo(source: GenerationFailureSourceStat
     const returnedThoughtContent = hasReturnedThoughtContent(source);
 
     if (explicitError) {
+        if (explicitError.includes('Thinking loop detected')) {
+            return {
+                code: 'thinking-loop',
+                message: explicitError,
+                finishReason,
+                extractionIssue: source.extractionIssue ?? null,
+                returnedTextContent,
+                returnedThoughtContent,
+            };
+        }
         return {
             code: 'unknown',
             message: explicitError,
@@ -904,6 +915,14 @@ export function buildStageErrorState(
                         : null,
                     retryDetail,
                 ]),
+                failure: resolvedFailure,
+                rawError: fallbackError || null,
+                displayContext: displayContext ?? null,
+            };
+        case 'thinking-loop':
+            return {
+                summary: t('generationFailureSummaryThinkingLoop'),
+                detail: joinDisplayDetails([t('generationFailureDetailThinkingLoop'), retryDetail]),
                 failure: resolvedFailure,
                 rawError: fallbackError || null,
                 displayContext: displayContext ?? null,

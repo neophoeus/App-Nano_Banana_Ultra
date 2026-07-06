@@ -125,7 +125,13 @@ export type StageAssetRole = 'object' | 'character' | 'stage-source';
 export type StageAssetOrigin = 'upload' | 'sketch' | 'generated' | 'history' | 'editor';
 export type TurnLineageAction = 'root' | 'continue' | 'branch' | 'editor-follow-up' | 'reopen';
 export type GenerationFailureCode =
-    'policy-blocked' | 'safety-blocked' | 'text-only' | 'no-image-data' | 'empty-response' | 'unknown';
+    | 'policy-blocked'
+    | 'safety-blocked'
+    | 'text-only'
+    | 'no-image-data'
+    | 'empty-response'
+    | 'thinking-loop'
+    | 'unknown';
 export type GenerationFailureExtractionIssue = 'missing-candidates' | 'missing-parts' | 'no-image-data';
 
 export interface GenerationFailureInfo {

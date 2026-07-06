@@ -8,6 +8,8 @@ const translations: Record<string, string> = {
     generationFailureSummaryTextOnly: 'Text-only failure summary',
     generationFailureSummaryEmpty: 'Insufficient signal failure summary',
     generationFailureSummaryNoImage: 'No-image failure summary',
+    generationFailureSummaryThinkingLoop: 'Thinking loop failure summary',
+    generationFailureDetailThinkingLoop: 'Thinking loop details.',
     generationFailureDetailRetry: 'Retry detail',
     generationFailureDetailPromptBlockReason: 'Policy block reason: {0}.',
     generationFailureDetailSafetyCategories: 'Safety categories: {0}.',
@@ -241,5 +243,19 @@ describe('generationFailure helpers', () => {
         expect(stageError.summary).toBe('Safety failure summary');
         expect(stageError.detail).toContain('Finish reason: blocked by image safety filters.');
         expect(stageError.detail).not.toContain('模型');
+    });
+
+    it('classifies explicit Thinking loop detected errors into thinking-loop code', () => {
+        const failure = resolveGenerationFailureInfo({
+            explicitError: 'Thinking loop detected: repetitive reasoning clauses observed 5 or more times.',
+            finishReason: 'STOP',
+        });
+
+        expect(failure.code).toBe('thinking-loop');
+        expect(failure.message).toBe('Thinking loop detected: repetitive reasoning clauses observed 5 or more times.');
+
+        const stageError = buildStageErrorState(t, failure, null);
+        expect(stageError.summary).toBe('Thinking loop failure summary');
+        expect(stageError.detail).toContain('Thinking loop details.');
     });
 });

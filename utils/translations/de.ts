@@ -1033,4 +1033,8 @@ export const de = {
         'Das aktuelle Ergebnis bleibt auf der Buehne, waehrend naheliegende Zuge jederzeit erneut geoeffnet, fortgesetzt oder verzweigt werden koennen.',
     historyFilmstripSummary: '{0} Zuge · {1} Zweige',
     historyFilmstripEmpty: 'Erzeugen oder laden Sie ein Bild, um den Zugstreifen aufzubauen.',
+    composerAdvancedHighThinkingHighTempWarning:
+        '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
+    generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
+    generationFailureDetailThinkingLoop: 'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
 } as const;
