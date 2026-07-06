@@ -111,9 +111,9 @@ Nano Banana Ultra currently supports four Gemini image-model paths. The UI expos
 
 ## Version Overview
 
-### Latest Release: 3.12.0
+### Latest Release: 3.13.0
 
-Latest release: 3.12.0. Implemented a settings warning alert for High Thinking + High Temperature combinations and an auto-abort circuit breaker that terminates generations to prevent infinite model reasoning loops (鬼打牆) during streaming. See [CHANGELOG.md](CHANGELOG.md) for details.
+Latest release: 3.13.0. Introduced a solid bright green (R:0, G:255, B:0) repaint mask on the submission payload and simplified editor prompts for Inpainting, Outpainting, and Doodle modes to improve instruction-following efficiency. See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ### 3.5.x
 

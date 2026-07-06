@@ -175,13 +175,9 @@ export const buildEditorPrompt = ({
         if (retouchMode === 'mask') {
             return {
                 finalPrompt: joinPromptSegments(prompt, [
-                    'Treat the submitted image as the approved composition',
-                    'Preserve all visible unmasked content exactly as shown unless the prompt explicitly asks for broader changes',
-                    'Regenerate only the masked region',
-                    'Treat the masked cutout as missing image area that must be fully re-rendered, not as a white overlay or placeholder patch',
-                    'Blend the repaired region seamlessly into the surrounding image',
-                    WHITE_BLOCK_AVOIDANCE_INSTRUCTION,
-                    'Maintain or improve clarity, detail, texture, lighting, perspective, and overall fidelity across the final image',
+                    'The bright green (R:0, G:255, B:0) areas represent the region to repaint based on the prompt.',
+                    'Preserve everything outside the green areas exactly as shown.',
+                    'Blend the repainted regions seamlessly and ensure no green pixels remain.',
                 ]),
                 finalModeLabel,
             };
@@ -190,13 +186,9 @@ export const buildEditorPrompt = ({
         const visibleTextInstruction = formatVisibleTextInstruction(visibleTextLabels);
         return {
             finalPrompt: joinPromptSegments(prompt, [
-                'Treat the submitted image as the approved composition',
-                'Use the drawn doodles as spatial guidance for what should change',
-                'Preserve visible content outside the intended edited region exactly as shown unless the prompt explicitly asks for broader changes',
-                'Render any canvas text as visible text in the final image rather than treating it as hidden instructions',
-                'Integrate the changes naturally into the existing scene with consistent lighting, perspective, texture, and composition',
-                WHITE_BLOCK_AVOIDANCE_INSTRUCTION,
-                'Maintain or improve clarity, detail, texture, lighting, perspective, and overall fidelity across the final image',
+                'Use the doodles as spatial guidance for the edit.',
+                'Preserve content outside the edited areas exactly as shown.',
+                'Integrate changes naturally with consistent lighting, perspective, and texture.',
                 visibleTextInstruction,
             ]),
             finalModeLabel,
@@ -206,30 +198,22 @@ export const buildEditorPrompt = ({
     if (!outpaintContext) {
         return {
             finalPrompt: joinPromptSegments(prompt, [
-                'Treat the submitted frame as the approved composition',
-                'Preserve all currently visible content exactly as shown unless the prompt explicitly asks for broader changes',
-                'Regenerate only transparent or blank regions if any remain in the submitted frame; otherwise perform detail recovery and clarity enhancement only',
-                WHITE_BLOCK_AVOIDANCE_INSTRUCTION,
-                'Do not recenter, zoom out, or recompose the scene unless the prompt explicitly asks for it',
-                'Maintain or improve sharpness, detail, texture, lighting, perspective, and overall fidelity across the final submitted frame',
+                'The bright green (R:0, G:255, B:0) areas represent the region to repaint based on the prompt.',
+                'Preserve everything outside the green areas exactly as shown.',
+                'Blend the repainted regions seamlessly and ensure no green pixels remain.',
             ]),
             finalModeLabel,
         };
     }
 
     const outpaintAnalysis = analyzeOutpaintGeometry(outpaintContext);
-    const { blankSides, coversCanvas } = outpaintAnalysis;
+    const { coversCanvas } = outpaintAnalysis;
 
     return {
         finalPrompt: joinPromptSegments(prompt, [
-            'Treat the submitted frame as the approved composition',
-            'Preserve all currently visible content exactly as shown unless the prompt explicitly asks for broader changes',
             coversCanvas
-                ? 'The submitted frame is already fully covered, so perform detail recovery and clarity enhancement only'
-                : buildTransparentRegionInstruction(blankSides),
-            WHITE_BLOCK_AVOIDANCE_INSTRUCTION,
-            'Do not recenter, zoom out, or recompose the scene unless the prompt explicitly asks for it',
-            'Maintain or improve sharpness, detail, texture, lighting, perspective, and overall fidelity across the final submitted frame',
+                ? 'The frame is already fully covered. Perform detail recovery and clarity enhancement only.'
+                : 'The bright green (R:0, G:255, B:0) areas represent the region to repaint based on the prompt. Preserve everything outside the green areas exactly as shown. Blend the repainted regions seamlessly and ensure no green pixels remain.',
         ]),
         finalModeLabel,
         outpaintAnalysis,

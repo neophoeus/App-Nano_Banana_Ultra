@@ -711,11 +711,9 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
 
         if (mode === 'inpaint') {
             if (retouchMode === 'mask') {
-                // Standard Inpaint: Image + Mask (dest-out)
+                // Inpaint: Image + Green Mask (source-over)
                 ctx.drawImage(imgElement, 0, 0, originalDims.w, originalDims.h);
-                ctx.globalCompositeOperation = 'destination-out';
-                drawStrokesToCanvas(ctx, maskPaths, { strokeStyle: '#000000' });
-                ctx.globalCompositeOperation = 'source-over';
+                drawStrokesToCanvas(ctx, maskPaths, { strokeStyle: '#00ff00' });
             } else {
                 // Doodle Mode: Image + Doodle + Text (Source Over) -> Img2Img/Inpaint with doodle baked in
                 // We draw the original image, then doodles on top.
@@ -730,11 +728,17 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                 });
             }
         } else {
-            // Outpaint Logic (Source Image with transforms)
+            // Outpaint Logic (Pre-fill canvas with bright green mask color)
+            ctx.fillStyle = '#00ff00';
+            ctx.fillRect(0, 0, frameDims.w, frameDims.h);
+
+            // Draw transformed Source Image
+            ctx.save();
             ctx.translate(frameDims.w / 2, frameDims.h / 2);
             ctx.translate(imgTransform.x, imgTransform.y);
             ctx.scale(imgTransform.scale, imgTransform.scale);
             ctx.drawImage(imgElement, -originalDims.w / 2, -originalDims.h / 2);
+            ctx.restore();
         }
 
         const base64 = canvas.toDataURL('image/png');

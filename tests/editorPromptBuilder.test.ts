@@ -10,16 +10,13 @@ describe('editorPromptBuilder', () => {
         });
 
         expect(result.finalPrompt).toContain('Replace the mug with a glass vase.');
-        expect(result.finalPrompt).toContain('Treat the submitted image as the approved composition.');
-        expect(result.finalPrompt).toContain('Regenerate only the masked region.');
-        expect(result.finalPrompt).toContain('Preserve all visible unmasked content exactly as shown');
         expect(result.finalPrompt).toContain(
-            'Treat the masked cutout as missing image area that must be fully re-rendered, not as a white overlay or placeholder patch.',
+            'The bright green (R:0, G:255, B:0) areas represent the region to repaint based on the prompt.',
         );
+        expect(result.finalPrompt).toContain('Preserve everything outside the green areas exactly as shown.');
         expect(result.finalPrompt).toContain(
-            'Treat transparent, blank, or missing regions as areas to fully render with real image content, not as white boxes, white paint, placeholder blocks, or empty matte fill unless the prompt explicitly asks for white shapes or white background elements.',
+            'Blend the repainted regions seamlessly and ensure no green pixels remain.',
         );
-        expect(result.finalPrompt).toContain('Blend the repaired region seamlessly into the surrounding image.');
     });
 
     it('treats doodles as spatial guidance and baked labels as visible text intent', () => {
@@ -31,14 +28,9 @@ describe('editorPromptBuilder', () => {
         });
 
         expect(result.finalPrompt).toContain('Turn the sign into neon.');
-        expect(result.finalPrompt).toContain('Treat the submitted image as the approved composition.');
-        expect(result.finalPrompt).toContain('Use the drawn doodles as spatial guidance for what should change.');
-        expect(result.finalPrompt).toContain(
-            'Render any canvas text as visible text in the final image rather than treating it as hidden instructions.',
-        );
-        expect(result.finalPrompt).toContain(
-            'Treat transparent, blank, or missing regions as areas to fully render with real image content, not as white boxes, white paint, placeholder blocks, or empty matte fill unless the prompt explicitly asks for white shapes or white background elements.',
-        );
+        expect(result.finalPrompt).toContain('Use the doodles as spatial guidance for the edit.');
+        expect(result.finalPrompt).toContain('Preserve content outside the edited areas exactly as shown.');
+        expect(result.finalPrompt).toContain('Integrate changes naturally with consistent lighting, perspective, and texture.');
         expect(result.finalPrompt).toContain('"Open Late"');
     });
 
@@ -53,15 +45,8 @@ describe('editorPromptBuilder', () => {
             },
         });
 
-        expect(result.finalPrompt).toContain('Treat the submitted frame as the approved composition.');
         expect(result.finalPrompt).toContain(
-            'The submitted frame is already fully covered, so perform detail recovery and clarity enhancement only.',
-        );
-        expect(result.finalPrompt).toContain(
-            'Treat transparent, blank, or missing regions as areas to fully render with real image content, not as white boxes, white paint, placeholder blocks, or empty matte fill unless the prompt explicitly asks for white shapes or white background elements.',
-        );
-        expect(result.finalPrompt).toContain(
-            'Do not recenter, zoom out, or recompose the scene unless the prompt explicitly asks for it.',
+            'The frame is already fully covered. Perform detail recovery and clarity enhancement only.',
         );
     });
 
@@ -86,19 +71,12 @@ describe('editorPromptBuilder', () => {
         });
 
         expect(panResult.finalPrompt).toBe(zoomResult.finalPrompt);
-        expect(panResult.finalPrompt).toContain('Treat the submitted frame as the approved composition.');
         expect(panResult.finalPrompt).toContain(
-            'Regenerate only the transparent or blank regions along the right side.',
-        );
-        expect(panResult.finalPrompt).toContain(
-            'Treat transparent, blank, or missing regions as areas to fully render with real image content, not as white boxes, white paint, placeholder blocks, or empty matte fill unless the prompt explicitly asks for white shapes or white background elements.',
-        );
-        expect(panResult.finalPrompt).toContain(
-            'Do not recenter, zoom out, or recompose the scene unless the prompt explicitly asks for it.',
+            'The bright green (R:0, G:255, B:0) areas represent the region to repaint based on the prompt. Preserve everything outside the green areas exactly as shown. Blend the repainted regions seamlessly and ensure no green pixels remain.',
         );
     });
 
-    it('regenerates only the blank submitted regions even for corner-positioned outpaint frames', () => {
+    it('instructs the model to regenerate the green regions for outpaint frames', () => {
         const result = buildEditorPrompt({
             mode: 'outpaint',
             prompt: '',
@@ -110,7 +88,7 @@ describe('editorPromptBuilder', () => {
         });
 
         expect(result.finalPrompt).toContain(
-            'Regenerate only the transparent or blank regions along the left side and the bottom side.',
+            'The bright green (R:0, G:255, B:0) areas represent the region to repaint based on the prompt. Preserve everything outside the green areas exactly as shown. Blend the repainted regions seamlessly and ensure no green pixels remain.',
         );
         expect(result.finalPrompt).not.toContain('Keep the existing crop anchored');
         expect(result.finalPrompt).not.toContain('Keep the existing crop locked');
