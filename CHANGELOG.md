@@ -1,5 +1,16 @@
 # Changelog
 
+## v3.14.0 - 2026-07-11
+
+- Release title: Nano Banana Ultra 3.14.0 - Global Settings Locking System
+- Release summary:
+    - **Settings Locking System**: Implemented a glassmorphic Lock Settings toggle switch in the primary settings row next to the styles strip.
+    - **Guarded Settings States**: Blocked programmatic/user updates to generation model, aspect ratio, image size, batch size, style, temperature, output format, thinking level, and web search configurations when settings are locked.
+    - **Guarded Workflows**: Reference image aspect-ratio adjustments, workspace resets, and viewer/editor snapshot restores respect settings lock status and skip changing locked configuration values.
+    - **Locked UI Intercepts**: Clicks on locked panel buttons display a toast warning notification saying *"Settings are locked. Please unlock them first."* instead of opening the panels.
+    - **Full Localization**: Integrated translation keys for English, Traditional Chinese, Simplified Chinese, Japanese, Korean, German, Spanish, French, and Russian.
+    - **Test Coverage**: Added Vitest test cases validating lock toggle state and update guard logic.
+
 ## v3.13.0 - 2026-07-06
 
 - Release title: Nano Banana Ultra 3.13.0 - Bright Green Paint Mask & Streamlined Prompt Semantics

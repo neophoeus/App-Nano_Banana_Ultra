@@ -70,6 +70,9 @@ export type ComposerSettingsPanelProps = {
     promptTextareaRef?: React.RefObject<HTMLTextAreaElement | null>;
     onClearStyle?: () => void;
     imageToolsPanel?: React.ReactNode;
+    settingsLocked?: boolean;
+    onToggleSettingsLock?: () => void;
+    showNotification?: (message: string, type?: 'info' | 'error') => void;
 };
 
 type ActivePromptTool = NonNullable<ComposerSettingsPanelProps['activePromptTool']>;
@@ -173,6 +176,9 @@ function ComposerSettingsPanel({
     promptTextareaRef,
     onClearStyle,
     imageToolsPanel,
+    settingsLocked = false,
+    onToggleSettingsLock,
+    showNotification,
 }: ComposerSettingsPanelProps) {
     const fallbackPromptTextareaRef = React.useRef<HTMLTextAreaElement | null>(null);
     const imageToPromptInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -654,11 +660,14 @@ function ComposerSettingsPanel({
             aria-label={t('composerToolbarAdvancedSettings')}
             aria-haspopup="dialog"
             aria-expanded={isAdvancedSettingsOpen}
-            onClick={onToggleAdvancedSettings}
+            onClick={settingsLocked ? () => showNotification?.(t('settingsLockedNotice'), 'info') : onToggleAdvancedSettings}
             className="nbu-inline-panel group flex min-h-10 w-full min-w-0 items-center overflow-hidden rounded-[20px] px-2.5 py-2 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
         >
             <div className={summaryStripContentClassName}>
-                <span className={summaryStripAnchorClassName}>{t('composerToolbarAdvancedSettings')}</span>
+                <span className={summaryStripAnchorClassName}>
+                    {t('composerToolbarAdvancedSettings')}
+                    {settingsLocked && <span className="ml-1" title={t('settingsLocked')}>🔒</span>}
+                </span>
                 {advancedSummaryItems.map((item) => (
                     <span key={item.key} className={`${summaryStripChipClassName} ${item.className}`.trim()}>
                         {item.value}
@@ -678,12 +687,13 @@ function ComposerSettingsPanel({
                     type="button"
                     data-testid="composer-settings-button"
                     aria-label={t('workspaceSheetTitleGenerationSettings')}
-                    onClick={onOpenSettings}
+                    onClick={settingsLocked ? () => showNotification?.(t('settingsLockedNotice'), 'info') : onOpenSettings}
                     className="nbu-inline-panel group flex min-h-10 min-w-0 flex-1 items-center overflow-hidden rounded-[20px] px-2.5 py-2 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
                 >
                     <div className={summaryStripContentClassName}>
                         <span className={summaryStripAnchorClassName}>
                             {t('workspaceSheetTitleGenerationSettings')}
+                            {settingsLocked && <span className="ml-1" title={t('settingsLocked')}>🔒</span>}
                         </span>
                         {settingsSummaryItems.map((item) => (
                             <span key={item.key} className={`${summaryStripChipClassName} ${item.className}`.trim()}>
@@ -700,10 +710,13 @@ function ComposerSettingsPanel({
                         type="button"
                         data-testid="composer-style-button"
                         aria-label={t('workspaceSheetTitleStyles')}
-                        onClick={onOpenStyles}
+                        onClick={settingsLocked ? () => showNotification?.(t('settingsLockedNotice'), 'info') : onOpenStyles}
                         className="group flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-left"
                     >
-                        <span className={composerStyleLabelClassName}>{t('workspaceViewerStyle')}</span>
+                        <span className={composerStyleLabelClassName}>
+                            {t('workspaceViewerStyle')}
+                            {settingsLocked && <span className="ml-1" title={t('settingsLocked')}>🔒</span>}
+                        </span>
                         <span className={composerStyleValueClassName}>
                             <span className="truncate">{displayedStyleLabel}</span>
                         </span>
@@ -716,6 +729,10 @@ function ComposerSettingsPanel({
                             title={`${t('clear')} ${t('workspaceViewerStyle')}`}
                             onClick={(event) => {
                                 event.stopPropagation();
+                                if (settingsLocked) {
+                                    showNotification?.(t('settingsLockedNotice'), 'info');
+                                    return;
+                                }
                                 onClearStyle();
                             }}
                             className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-fuchsia-200/90 bg-fuchsia-50/90 text-fuchsia-700 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus:ring-2 focus:ring-amber-300 dark:border-fuchsia-500/25 dark:bg-fuchsia-950/25 dark:text-fuchsia-100 dark:hover:border-rose-900/40 dark:hover:bg-rose-950/30 dark:hover:text-rose-200"
@@ -724,6 +741,29 @@ function ComposerSettingsPanel({
                         </button>
                     )}
                 </div>
+                {/* Lock Settings Toggle Button */}
+                <button
+                    type="button"
+                    data-testid="composer-lock-button"
+                    title={settingsLocked ? t('unlockSettings') : t('lockSettings')}
+                    aria-label={settingsLocked ? t('unlockSettings') : t('lockSettings')}
+                    onClick={onToggleSettingsLock}
+                    className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[20px] border transition-all hover:-translate-y-0.5 hover:shadow-md ${
+                        settingsLocked
+                            ? 'border-amber-300 bg-amber-50 text-amber-600 dark:border-amber-500/35 dark:bg-amber-950/20 dark:text-amber-300 shadow-[0_4px_12px_rgba(245,158,11,0.1)]'
+                            : 'border-slate-200/80 bg-white/80 text-slate-400 hover:border-slate-300 hover:text-slate-600 dark:border-white/10 dark:bg-slate-900/80 dark:text-slate-500 dark:hover:border-white/20 dark:hover:text-slate-300'
+                    }`}
+                >
+                    {settingsLocked ? (
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    ) : (
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                        </svg>
+                    )}
+                </button>
             </div>
 
             <div className="grid gap-1.5 lg:grid-cols-[minmax(220px,248px)_minmax(0,1fr)] xl:grid-cols-[minmax(232px,256px)_minmax(0,1fr)]">

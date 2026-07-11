@@ -287,6 +287,8 @@ const App: React.FC = () => {
         applyViewerComposerSettingsSnapshot,
         setGroundingMode,
         restoreEditorComposerState,
+        settingsLocked,
+        setSettingsLocked,
     } = useComposerState({
         initialComposerState,
         generationMode,
@@ -1730,6 +1732,9 @@ const App: React.FC = () => {
     const handleClearStyle = useCallback(() => {
         setImageStyle('None');
     }, [setImageStyle]);
+    const handleToggleSettingsLock = useCallback(() => {
+        setSettingsLocked((prev) => !prev);
+    }, [setSettingsLocked]);
     const composerSettingsPanelProps = useComposerSettingsPanelProps({
         prompt,
         placeholder: t('placeholder'),
@@ -1779,6 +1784,9 @@ const App: React.FC = () => {
         t,
         getStageOriginLabel,
         getLineageActionLabel,
+        settingsLocked,
+        onToggleSettingsLock: handleToggleSettingsLock,
+        showNotification,
     });
     const advancedSettingsDialogProps: React.ComponentProps<typeof ComposerAdvancedSettingsDialog> | null =
         isAdvancedSettingsOpen

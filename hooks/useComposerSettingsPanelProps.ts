@@ -65,6 +65,9 @@ type UseComposerSettingsPanelPropsArgs = {
     t: (key: string) => string;
     getStageOriginLabel: (origin?: StageAsset['origin']) => string;
     getLineageActionLabel: (action?: TurnLineageAction) => string;
+    settingsLocked?: boolean;
+    onToggleSettingsLock?: () => void;
+    showNotification?: (message: string, type?: 'info' | 'error') => void;
 };
 
 type ComposerSettingsPanelHandlers = {
@@ -134,6 +137,9 @@ export function useComposerSettingsPanelProps({
     t,
     getStageOriginLabel,
     getLineageActionLabel,
+    settingsLocked,
+    onToggleSettingsLock,
+    showNotification,
 }: UseComposerSettingsPanelPropsArgs): ComposerSettingsPanelProps {
     const getModelLabel = useCallback(
         (model: ImageModel) => {
@@ -203,7 +209,6 @@ export function useComposerSettingsPanelProps({
         openAdvancedSettings,
         setActivePickerSheet,
     ]);
-
     return useMemo(
         () => ({
             prompt,
@@ -255,6 +260,9 @@ export function useComposerSettingsPanelProps({
             onToggleAdvancedSettings: () => latestHandlersRef.current.openAdvancedSettings(),
             getStageOriginLabel,
             getLineageActionLabel,
+            settingsLocked,
+            onToggleSettingsLock,
+            showNotification,
         }),
         [
             prompt,
@@ -291,6 +299,9 @@ export function useComposerSettingsPanelProps({
             handleImageToPrompt,
             getStageOriginLabel,
             getLineageActionLabel,
+            settingsLocked,
+            onToggleSettingsLock,
+            showNotification,
         ],
     );
 }

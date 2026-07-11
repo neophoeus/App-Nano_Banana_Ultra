@@ -111,9 +111,9 @@ Nano Banana Ultra currently supports four Gemini image-model paths. The UI expos
 
 ## Version Overview
 
-### Latest Release: 3.13.0
+### Latest Release: 3.14.0
 
-Latest release: 3.13.0. Introduced a solid bright green (R:0, G:255, B:0) repaint mask on the submission payload and simplified editor prompts for Inpainting, Outpainting, and Doodle modes to improve instruction-following efficiency. See [CHANGELOG.md](CHANGELOG.md) for details.
+Latest release: 3.14.0. Introduced a settings locking switch to guard aspect ratio, size, style, model, temperature, thinking level, output format, and web search configurations from image upload side effects, workspace resets, and snapshot updates, with instant toast feedback warnings when clicking locked panels. See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ### 3.5.x
 
