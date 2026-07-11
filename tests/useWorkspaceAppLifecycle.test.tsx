@@ -227,4 +227,26 @@ describe('useWorkspaceAppLifecycle', () => {
         expect(addLog).not.toHaveBeenCalled();
         expect(showNotification).not.toHaveBeenCalled();
     });
+
+    it('does not emit a log or toast or change aspect ratio when settings are locked', async () => {
+        imageDimensionsBySrc.set('https://example.com/reference-wide.png', { width: 1600, height: 900 });
+
+        const { setAspectRatio, addLog, showNotification } = renderHook({
+            orderedReferenceAssets: [
+                buildStageAsset({
+                    id: 'uploaded-ref',
+                    url: 'https://example.com/reference-wide.png',
+                    origin: 'upload',
+                }),
+            ],
+            aspectRatio: '1:1',
+            settingsLocked: true,
+        });
+
+        await flushEffects();
+
+        expect(setAspectRatio).not.toHaveBeenCalled();
+        expect(addLog).not.toHaveBeenCalled();
+        expect(showNotification).not.toHaveBeenCalled();
+    });
 });

@@ -111,9 +111,9 @@ Nano Banana Ultra currently supports four Gemini image-model paths. The UI expos
 
 ## Version Overview
 
-### Latest Release: 3.14.0
+### Latest Release: 3.14.1
 
-Latest release: 3.14.0. Introduced a settings locking switch to guard aspect ratio, size, style, model, temperature, thinking level, output format, and web search configurations from image upload side effects, workspace resets, and snapshot updates, with instant toast feedback warnings when clicking locked panels. See [CHANGELOG.md](CHANGELOG.md) for details.
+Latest release: 3.14.1. Refined the settings locking system to prevent reference image uploads from triggering auto-ratio toast notifications, log messages, or aspect-ratio updates when locked, and resolved hook type integration warnings. See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ### 3.5.x
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## v3.14.1 - 2026-07-11
+
+- Release title: Nano Banana Ultra 3.14.1 - Auto-Ratio Locking & ShowNotification Integration Fix
+- Release summary:
+    - **Auto-Ratio Locking**: Prevented reference image uploads from triggering auto-ratio toast notifications, log messages, and aspect-ratio updates when settings are locked.
+    - **ShowNotification Integration**: Fixed missing `showNotification` prop pass-through in `useComposerSettingsPanelProps` to resolve type warnings inside `App.tsx`.
+    - **Test Coverage**: Added Vitest test cases checking that no ratio adjustments or logs are emitted on reference image uploads when the lock is active.
+
 ## v3.14.0 - 2026-07-11
 
 - Release title: Nano Banana Ultra 3.14.0 - Global Settings Locking System

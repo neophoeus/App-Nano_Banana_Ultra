@@ -1101,6 +1101,7 @@ const App: React.FC = () => {
         addLog,
         showNotification,
         t,
+        settingsLocked,
     });
 
     useWorkspaceCapabilityConstraints({
