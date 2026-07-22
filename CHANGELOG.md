@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.15.0 - 2026-07-22
+
+- Release title: Nano Banana Ultra 3.15.0 - Gemini 3.6 Flash Text Model Upgrade
+- Release summary:
+    - **Text LLM Upgrade**: Upgraded all text-related tasks (prompt enhancement, random prompt generation, image-to-prompt analysis, and safety content analysis) to Google's latest `gemini-3.6-flash` model.
+    - **Test Suites**: Updated backend integration test assertions to verify `gemini-3.6-flash` request payloads.
+
 ## v3.14.1 - 2026-07-11
 
 - Release title: Nano Banana Ultra 3.14.1 - Auto-Ratio Locking & ShowNotification Integration Fix

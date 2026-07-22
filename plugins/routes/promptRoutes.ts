@@ -59,7 +59,7 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 promptLength: currentPrompt.trim().length,
             });
             const response = await ai.models.generateContent({
-                model: 'gemini-3.5-flash',
+                model: 'gemini-3.6-flash',
                 config: {
                     systemInstruction: buildPromptEnhancerInstruction(lang),
                     ...(resolvedSafetySettings ? { safetySettings: resolvedSafetySettings } : {}),
@@ -111,7 +111,7 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 lang,
             });
             const response = await ai.models.generateContent({
-                model: 'gemini-3.5-flash',
+                model: 'gemini-3.6-flash',
                 config: {
                     systemInstruction: buildRandomPromptInstruction(lang),
                     ...(resolvedSafetySettings ? { safetySettings: resolvedSafetySettings } : {}),
@@ -183,7 +183,7 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
             }
 
             const response = await ai.models.generateContent({
-                model: 'gemini-3.5-flash',
+                model: 'gemini-3.6-flash',
                 config: {
                     systemInstruction: buildImageToPromptInstruction(lang),
                     ...(resolvedSafetySettings ? { safetySettings: resolvedSafetySettings } : {}),

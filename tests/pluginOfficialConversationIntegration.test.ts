@@ -1162,7 +1162,7 @@ describe('imageSavePlugin official conversation integration', () => {
         expect(generateContentMock).toHaveBeenNthCalledWith(
             1,
             expect.objectContaining({
-                model: 'gemini-3.5-flash',
+                model: 'gemini-3.6-flash',
                 config: expect.objectContaining({
                     systemInstruction: expect.stringContaining('2-4 short prompt-only blocks separated by line breaks'),
                     safetySettings: [
@@ -1188,7 +1188,7 @@ describe('imageSavePlugin official conversation integration', () => {
 
         expect(randomCall).toEqual(
             expect.objectContaining({
-                model: 'gemini-3.5-flash',
+                model: 'gemini-3.6-flash',
                 config: expect.objectContaining({
                     systemInstruction: expect.stringContaining(
                         'Treat the scaffold as structure only and invent every subject, environment, prop, mood, style blend, and twist yourself.',
@@ -1241,7 +1241,7 @@ describe('imageSavePlugin official conversation integration', () => {
 
         expect(imageToPromptCall).toEqual(
             expect.objectContaining({
-                model: 'gemini-3.5-flash',
+                model: 'gemini-3.6-flash',
                 config: expect.objectContaining({
                     systemInstruction: expect.stringContaining(
                         'translate every visible element into a highly comprehensive, extremely detailed, and generation-ready image prompt',

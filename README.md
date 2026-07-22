@@ -111,9 +111,9 @@ Nano Banana Ultra currently supports four Gemini image-model paths. The UI expos
 
 ## Version Overview
 
-### Latest Release: 3.14.1
+### Latest Release: 3.15.0
 
-Latest release: 3.14.1. Refined the settings locking system to prevent reference image uploads from triggering auto-ratio toast notifications, log messages, or aspect-ratio updates when locked, and resolved hook type integration warnings. See [CHANGELOG.md](CHANGELOG.md) for details.
+Latest release: 3.15.0. Upgraded all text-related models (prompt enhancement, random prompt generation, image-to-prompt analysis, and safety content analysis) to Google's latest Gemini 3.6 Flash (`gemini-3.6-flash`). See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ### 3.5.x
 

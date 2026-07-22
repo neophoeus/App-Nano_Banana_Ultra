@@ -111,9 +111,9 @@ Nano Banana Ultra 目前支援四條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：3.14.1
+### 最新版本：3.15.0
 
-最新版本：3.14.1。優化設定鎖定機制，防範參考圖上傳在鎖定狀態下依然觸發比例調整的提示與紀錄，並修正 hook 內部的 showNotification 類型警告。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
+最新版本：3.15.0。將所有文字相關 LLM 模型（提示詞強化、隨機提示詞產生器、圖片轉提示詞、安全過濾關鍵字分析）全面升級至 Google 最新發布的 Gemini 3.6 Flash (`gemini-3.6-flash`)。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 3.5.x
 

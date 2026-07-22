@@ -136,7 +136,7 @@ Turn the scaffold into one fluent, production-ready image prompt. Keep it surpri
 export async function identifyBlockKeywords(ai: GoogleGenAI, prompt: string, category: string): Promise<string> {
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-3.5-flash',
+            model: 'gemini-3.6-flash',
             config: {
                 systemInstruction: `You are a content safety analyzer.
 Task: Analyze the input text which triggered a "${category}" safety filter.
