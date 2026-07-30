@@ -351,6 +351,10 @@ function ComposerSettingsPanel({
         openSendIntentInfoCard(stickySendIntent, 'manual');
     };
     const handleSetBatchSizeToOneAndEnableMemory = () => {
+        if (settingsLocked) {
+            showNotification?.(t('settingsLockedNotice'), 'info');
+            return;
+        }
         onBatchSizeChange?.(1);
         onStickySendIntentChange('memory');
         closeSendIntentInfoCard();
@@ -481,6 +485,7 @@ function ComposerSettingsPanel({
                             className="inline-flex items-center justify-center rounded-xl border border-amber-300 bg-amber-200/90 px-2.5 py-1 text-[11px] font-semibold text-amber-950 transition-colors hover:bg-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400 dark:border-amber-400/50 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300"
                         >
                             {resolveIntentText('composerSendIntentSetBatchToOne', '將數量改為 1')}
+                            {settingsLocked && <span className="ml-1" title={t('settingsLocked')}>🔒</span>}
                         </button>
                         <button
                             type="button"

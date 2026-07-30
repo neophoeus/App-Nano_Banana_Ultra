@@ -111,9 +111,9 @@ Nano Banana Ultra currently supports four Gemini image-model paths. The UI expos
 
 ## Version Overview
 
-### Latest Release: 3.15.1
+### Latest Release: 3.15.2
 
-Latest release: 3.15.1. Added interactive "Set quantity to 1" and "Cancel" action buttons to the Memory Send quantity limit warning popover, with full localization across 9 languages and complete Vitest suite verification. See [CHANGELOG.md](CHANGELOG.md) for details.
+Latest release: 3.15.2. Added `settingsLocked` protection and lock indicator 🔒 to the "Set quantity to 1" warning action button, ensuring locked settings display a toast notification and prevent state desynchronization. See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ### 3.5.x
 

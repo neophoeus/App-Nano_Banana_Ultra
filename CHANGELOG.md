@@ -1,5 +1,13 @@
 # Changelog
 
+## v3.15.2 - 2026-07-30
+
+- Release title: Nano Banana Ultra 3.15.2 - Locked Settings Guard Fix
+- Release summary:
+    - **Locked Settings Guard Fix**: Added `settingsLocked` protection to the "Set quantity to 1" warning action button so that when settings are locked, clicking it displays the notification toast *"Settings are locked. Please unlock them first."* (`settingsLockedNotice`) and prevents state desynchronization.
+    - **Visual Lock Indicator**: Added 🔒 lock icon indicator on the action button when settings are locked.
+    - **Test Coverage**: Added Vitest test assertions verifying locked settings interception behavior.
+
 ## v3.15.1 - 2026-07-30
 
 - Release title: Nano Banana Ultra 3.15.1 - Memory Send Quantity Warning Actions

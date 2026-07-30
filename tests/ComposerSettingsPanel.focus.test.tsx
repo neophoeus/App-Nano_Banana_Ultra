@@ -758,4 +758,47 @@ describe('ComposerSettingsPanel prompt focus wiring', () => {
         expect(onStickySendIntentChange).not.toHaveBeenCalled();
         expect(container.querySelector('[data-testid="composer-sticky-send-intent-info-card"]')).toBeNull();
     });
+
+    it('shows notification and prevents batch size change when settingsAreLocked and Set Quantity to 1 is clicked', () => {
+        const onBatchSizeChange = vi.fn();
+        const onStickySendIntentChange = vi.fn();
+        const showNotification = vi.fn();
+
+        act(() => {
+            root.render(
+                <ComposerSettingsPanel
+                    {...baseProps}
+                    batchSize={3}
+                    stickySendIntent="independent"
+                    settingsLocked={true}
+                    showNotification={showNotification}
+                    onBatchSizeChange={onBatchSizeChange}
+                    onStickySendIntentChange={onStickySendIntentChange}
+                />,
+            );
+        });
+
+        const toggle = container.querySelector(
+            '[data-testid="composer-sticky-send-intent-toggle"]',
+        ) as HTMLButtonElement;
+
+        act(() => {
+            toggle.click();
+        });
+
+        const setBatchOneBtn = container.querySelector(
+            '[data-testid="composer-sticky-send-intent-set-batch-one"]',
+        ) as HTMLButtonElement;
+
+        expect(setBatchOneBtn).toBeTruthy();
+
+        act(() => {
+            setBatchOneBtn.click();
+        });
+
+        expect(showNotification).toHaveBeenCalledWith('Settings are locked. Please unlock them first.', 'info');
+        expect(onBatchSizeChange).not.toHaveBeenCalled();
+        expect(onStickySendIntentChange).not.toHaveBeenCalled();
+        expect(container.querySelector('[data-testid="composer-sticky-send-intent-info-card"]')).not.toBeNull();
+    });
 });
