@@ -35,6 +35,7 @@ export type ComposerSettingsPanelProps = {
     aspectRatio: AspectRatio;
     imageSize: ImageSize;
     batchSize: number;
+    onBatchSizeChange?: (value: number) => void;
     outputFormat: OutputFormat;
     thinkingLevel: ThinkingLevel;
     groundingMode: GroundingMode;
@@ -141,6 +142,7 @@ function ComposerSettingsPanel({
     aspectRatio,
     imageSize,
     batchSize,
+    onBatchSizeChange,
     outputFormat,
     thinkingLevel,
     groundingMode,
@@ -348,6 +350,14 @@ function ComposerSettingsPanel({
         }
         openSendIntentInfoCard(stickySendIntent, 'manual');
     };
+    const handleSetBatchSizeToOneAndEnableMemory = () => {
+        onBatchSizeChange?.(1);
+        onStickySendIntentChange('memory');
+        closeSendIntentInfoCard();
+    };
+    const handleCancelMemoryUnavailable = () => {
+        closeSendIntentInfoCard();
+    };
     const handleSendIntentToggle = () => {
         if (stickySendIntent === 'memory') {
             onStickySendIntentChange('independent');
@@ -356,7 +366,7 @@ function ComposerSettingsPanel({
         }
 
         if (!canUseMemorySendIntent) {
-            openSendIntentInfoCard('memory-unavailable', 'auto');
+            openSendIntentInfoCard('memory-unavailable', 'manual');
             return;
         }
 
@@ -462,7 +472,25 @@ function ComposerSettingsPanel({
                     data-testid="composer-sticky-send-intent-info-reason"
                     className="mt-2 rounded-2xl border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-[11px] leading-4 text-amber-800 dark:border-amber-500/20 dark:bg-amber-950/20 dark:text-amber-100"
                 >
-                    {sendIntentInfoReason}
+                    <div>{sendIntentInfoReason}</div>
+                    <div className="mt-2.5 flex items-center gap-2">
+                        <button
+                            type="button"
+                            data-testid="composer-sticky-send-intent-set-batch-one"
+                            onClick={handleSetBatchSizeToOneAndEnableMemory}
+                            className="inline-flex items-center justify-center rounded-xl border border-amber-300 bg-amber-200/90 px-2.5 py-1 text-[11px] font-semibold text-amber-950 transition-colors hover:bg-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400 dark:border-amber-400/50 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300"
+                        >
+                            {resolveIntentText('composerSendIntentSetBatchToOne', '將數量改為 1')}
+                        </button>
+                        <button
+                            type="button"
+                            data-testid="composer-sticky-send-intent-cancel"
+                            onClick={handleCancelMemoryUnavailable}
+                            className="inline-flex items-center justify-center rounded-xl border border-amber-300/60 bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-amber-900 transition-colors hover:bg-amber-100/60 focus:outline-none focus:ring-2 focus:ring-amber-300 dark:border-amber-500/30 dark:bg-slate-900/80 dark:text-amber-200 dark:hover:bg-slate-800"
+                        >
+                            {resolveIntentText('composerSendIntentCancel', '取消')}
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

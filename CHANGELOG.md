@@ -1,5 +1,14 @@
 # Changelog
 
+## v3.15.1 - 2026-07-30
+
+- Release title: Nano Banana Ultra 3.15.1 - Memory Send Quantity Warning Actions
+- Release summary:
+    - **Memory Send Warning Actions**: Added interactive "Set quantity to 1" (`composerSendIntentSetBatchToOne`) and "Cancel" (`composerSendIntentCancel`) action buttons to the batch size limit warning dialog when switching to Memory Send mode.
+    - **Interactive Warning UX**: Changed warning dialog trigger to manual mode when switching send intent with `batchSize > 1` so that auto-close timeouts do not dismiss the popover while user is interacting.
+    - **Internationalization**: Added localized strings across all 9 supported languages (`zh_TW`, `zh_CN`, `en`, `de`, `es`, `fr`, `ja`, `ko`, `ru`).
+    - **Test Coverage**: Added Vitest component tests verifying action button rendering, batch size reset, and dialog cancellation logic.
+
 ## v3.15.0 - 2026-07-22
 
 - Release title: Nano Banana Ultra 3.15.0 - Gemini 3.6 Flash Text Model Upgrade

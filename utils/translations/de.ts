@@ -58,6 +58,8 @@ export const de = {
     composerSendIntentHelperMemory: 'Der naechste Versand nutzt den offiziellen Gespraechsspeicher weiter.',
     composerSendIntentMemoryTokenNotice: 'Gespeicherter Kontext erhoeht den Token-Verbrauch.',
     composerSendIntentDisabledReason: 'Senden mit Speicher ist nur bei Menge 1 verfuegbar.',
+    composerSendIntentSetBatchToOne: 'Menge auf 1 ändern',
+    composerSendIntentCancel: 'Abbrechen',
     composerSendIntentInfoButton: 'Details zur Senderegel',
     composerPromptToolImageToPrompt: 'Bild zu Prompt',
     composerPromptToolSurpriseMe: 'Uberrasch mich',

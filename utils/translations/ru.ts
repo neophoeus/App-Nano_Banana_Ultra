@@ -58,6 +58,8 @@ export const ru = {
     composerSendIntentHelperMemory: 'Следующая отправка продолжит официальную память диалога.',
     composerSendIntentMemoryTokenNotice: 'Сохраненный контекст увеличивает расход токенов.',
     composerSendIntentDisabledReason: 'Отправка с памятью доступна только когда количество равно 1.',
+    composerSendIntentSetBatchToOne: 'Изменить количество на 1',
+    composerSendIntentCancel: 'Отмена',
     composerSendIntentInfoButton: 'Описание правила отправки',
     composerPromptToolImageToPrompt: 'Изображение в промпт',
     composerPromptToolSurpriseMe: 'Удиви меня',

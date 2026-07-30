@@ -58,6 +58,8 @@ export const fr = {
     composerSendIntentHelperMemory: 'Le prochain envoi reste dans la memoire officielle de la conversation.',
     composerSendIntentMemoryTokenNotice: 'Le contexte memorise augmente l utilisation de tokens.',
     composerSendIntentDisabledReason: 'L envoi avec memoire est disponible seulement quand la quantite est 1.',
+    composerSendIntentSetBatchToOne: 'Changer la quantité à 1',
+    composerSendIntentCancel: 'Annuler',
     composerSendIntentInfoButton: 'Details de la regle d envoi',
     composerPromptToolImageToPrompt: 'Image vers prompt',
     composerPromptToolSurpriseMe: 'Surprends-moi',

@@ -561,8 +561,14 @@ describe('ComposerSettingsPanel prompt focus wiring', () => {
         expect(container.textContent).toContain('Remembered context increases token usage.');
         expect(container.textContent).toContain('Memory send is available only when quantity is 1.');
 
+        expect(container.querySelector('[data-testid="composer-sticky-send-intent-info-card"]')).not.toBeNull();
+
+        const cancelBtn = container.querySelector(
+            '[data-testid="composer-sticky-send-intent-cancel"]',
+        ) as HTMLButtonElement;
+
         act(() => {
-            vi.advanceTimersByTime(3300);
+            cancelBtn.click();
         });
 
         expect(container.querySelector('[data-testid="composer-sticky-send-intent-info-card"]')).toBeNull();
@@ -671,5 +677,85 @@ describe('ComposerSettingsPanel prompt focus wiring', () => {
                 ?.getAttribute('data-active-intent'),
         ).toBe('memory');
         expect(container.textContent).toContain('New Conversation');
+    });
+
+    it('shows action buttons in quantity warning card when switching to memory send with batchSize > 1 and handles actions', () => {
+        const onBatchSizeChange = vi.fn();
+        const onStickySendIntentChange = vi.fn();
+
+        act(() => {
+            root.render(
+                <ComposerSettingsPanel
+                    {...baseProps}
+                    batchSize={3}
+                    stickySendIntent="independent"
+                    onBatchSizeChange={onBatchSizeChange}
+                    onStickySendIntentChange={onStickySendIntentChange}
+                />,
+            );
+        });
+
+        const toggle = container.querySelector(
+            '[data-testid="composer-sticky-send-intent-toggle"]',
+        ) as HTMLButtonElement;
+
+        act(() => {
+            toggle.click();
+        });
+
+        const setBatchOneBtn = container.querySelector(
+            '[data-testid="composer-sticky-send-intent-set-batch-one"]',
+        ) as HTMLButtonElement;
+        const cancelBtn = container.querySelector(
+            '[data-testid="composer-sticky-send-intent-cancel"]',
+        ) as HTMLButtonElement;
+
+        expect(setBatchOneBtn).toBeTruthy();
+        expect(cancelBtn).toBeTruthy();
+
+        act(() => {
+            setBatchOneBtn.click();
+        });
+
+        expect(onBatchSizeChange).toHaveBeenCalledWith(1);
+        expect(onStickySendIntentChange).toHaveBeenCalledWith('memory');
+        expect(container.querySelector('[data-testid="composer-sticky-send-intent-info-card"]')).toBeNull();
+    });
+
+    it('closes quantity warning card without changing batch size or send intent when Cancel is clicked', () => {
+        const onBatchSizeChange = vi.fn();
+        const onStickySendIntentChange = vi.fn();
+
+        act(() => {
+            root.render(
+                <ComposerSettingsPanel
+                    {...baseProps}
+                    batchSize={3}
+                    stickySendIntent="independent"
+                    onBatchSizeChange={onBatchSizeChange}
+                    onStickySendIntentChange={onStickySendIntentChange}
+                />,
+            );
+        });
+
+        const toggle = container.querySelector(
+            '[data-testid="composer-sticky-send-intent-toggle"]',
+        ) as HTMLButtonElement;
+
+        act(() => {
+            toggle.click();
+        });
+
+        const cancelBtn = container.querySelector(
+            '[data-testid="composer-sticky-send-intent-cancel"]',
+        ) as HTMLButtonElement;
+
+        act(() => {
+            cancelBtn.click();
+        });
+
+        expect(onBatchSizeChange).not.toHaveBeenCalled();
+        expect(onStickySendIntentChange).not.toHaveBeenCalled();
+        expect(container.querySelector('[data-testid="composer-sticky-send-intent-info-card"]')).toBeNull();
     });
 });

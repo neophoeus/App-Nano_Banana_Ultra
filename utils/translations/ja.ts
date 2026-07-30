@@ -56,6 +56,8 @@ export const ja = {
     composerSendIntentHelperMemory: '次の送信は公式の会話記憶を引き継ぎます。',
     composerSendIntentMemoryTokenNotice: '保持した文脈によりトークン使用量が増えます。',
     composerSendIntentDisabledReason: '記憶送信は枚数が 1 のときだけ使えます。',
+    composerSendIntentSetBatchToOne: '枚数を 1 に変更',
+    composerSendIntentCancel: 'キャンセル',
     composerSendIntentInfoButton: '送信ルールの説明',
     composerPromptToolImageToPrompt: '画像からプロンプト',
     composerPromptToolSurpriseMe: 'おまかせ',

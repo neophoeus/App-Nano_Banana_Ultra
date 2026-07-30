@@ -1768,6 +1768,7 @@ const App: React.FC = () => {
         queueBatchConversationNotice,
         promptTextareaRef: composerPromptTextareaRef,
         setPrompt,
+        setBatchSize,
         setStickySendIntent,
         toggleEnterToSubmit,
         handleGenerate,

@@ -55,6 +55,8 @@ export const zh_CN = {
     composerSendIntentHelperMemory: '下一次发送会延续官方对话记忆。',
     composerSendIntentMemoryTokenNotice: '上下文会增加token使用量。',
     composerSendIntentDisabledReason: '记忆发送只有在数量为 1 时才能使用。',
+    composerSendIntentSetBatchToOne: '将数量改为 1',
+    composerSendIntentCancel: '取消',
     composerSendIntentInfoButton: '发送规则说明',
     composerPromptToolImageToPrompt: '图转提示词',
     composerPromptToolSurpriseMe: '来点惊喜',

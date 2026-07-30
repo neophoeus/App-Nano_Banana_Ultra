@@ -58,6 +58,8 @@ export const es = {
     composerSendIntentHelperMemory: 'Mantiene el siguiente envio dentro de la memoria oficial de la conversacion.',
     composerSendIntentMemoryTokenNotice: 'El contexto recordado aumenta el uso de tokens.',
     composerSendIntentDisabledReason: 'El envio con memoria solo esta disponible cuando la cantidad es 1.',
+    composerSendIntentSetBatchToOne: 'Cambiar cantidad a 1',
+    composerSendIntentCancel: 'Cancelar',
     composerSendIntentInfoButton: 'Detalles de la regla de envio',
     composerPromptToolImageToPrompt: 'Imagen a prompt',
     composerPromptToolSurpriseMe: 'Sorprendeme',

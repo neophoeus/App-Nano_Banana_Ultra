@@ -55,6 +55,8 @@ export const zh_TW = {
     composerSendIntentHelperMemory: '下一次發送會延續官方對話記憶。',
     composerSendIntentMemoryTokenNotice: '上下文會增加token使用量。',
     composerSendIntentDisabledReason: '記憶發送只有在數量為 1 時才能使用。',
+    composerSendIntentSetBatchToOne: '將數量改為 1',
+    composerSendIntentCancel: '取消',
     composerSendIntentInfoButton: '發送規則說明',
     composerPromptToolImageToPrompt: '圖轉提示詞',
     composerPromptToolSurpriseMe: '驚喜一下',

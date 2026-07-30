@@ -48,6 +48,7 @@ type UseComposerSettingsPanelPropsArgs = {
     queueBatchConversationNotice: string | null;
     promptTextareaRef: MutableRefObject<HTMLTextAreaElement | null>;
     setPrompt: (value: string) => void;
+    setBatchSize?: Dispatch<SetStateAction<number>> | ((value: number) => void);
     setStickySendIntent: Dispatch<SetStateAction<StickySendIntent>>;
     toggleEnterToSubmit: () => void;
     handleGenerate: () => void;
@@ -72,6 +73,7 @@ type UseComposerSettingsPanelPropsArgs = {
 
 type ComposerSettingsPanelHandlers = {
     setPrompt: (value: string) => void;
+    setBatchSize?: Dispatch<SetStateAction<number>> | ((value: number) => void);
     setStickySendIntent: Dispatch<SetStateAction<StickySendIntent>>;
     toggleEnterToSubmit: () => void;
     handleGenerate: () => void;
@@ -120,6 +122,7 @@ export function useComposerSettingsPanelProps({
     queueBatchConversationNotice,
     promptTextareaRef,
     setPrompt,
+    setBatchSize,
     setStickySendIntent,
     toggleEnterToSubmit,
     handleGenerate,
@@ -158,6 +161,7 @@ export function useComposerSettingsPanelProps({
     );
     const latestHandlersRef = useRef<ComposerSettingsPanelHandlers>({
         setPrompt,
+        setBatchSize,
         setStickySendIntent,
         toggleEnterToSubmit,
         handleGenerate,
@@ -177,6 +181,7 @@ export function useComposerSettingsPanelProps({
     useLayoutEffect(() => {
         latestHandlersRef.current = {
             setPrompt,
+            setBatchSize,
             setStickySendIntent,
             toggleEnterToSubmit,
             handleGenerate,
@@ -194,6 +199,7 @@ export function useComposerSettingsPanelProps({
         };
     }, [
         setPrompt,
+        setBatchSize,
         setStickySendIntent,
         toggleEnterToSubmit,
         handleGenerate,
@@ -242,6 +248,7 @@ export function useComposerSettingsPanelProps({
             queueBatchConversationNotice,
             promptTextareaRef,
             onPromptChange: (value: string) => latestHandlersRef.current.setPrompt(value),
+            onBatchSizeChange: (value: number) => latestHandlersRef.current.setBatchSize?.(value),
             onStickySendIntentChange: (value: StickySendIntent) => latestHandlersRef.current.setStickySendIntent(value),
             onToggleEnterToSubmit: () => latestHandlersRef.current.toggleEnterToSubmit(),
             onGenerate: () => latestHandlersRef.current.handleGenerate(),
