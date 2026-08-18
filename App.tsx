@@ -4,6 +4,7 @@ import {
     BranchNameOverrides,
     GeneratedImage as GeneratedImageType,
     ImageModel,
+    PromptThinkingLevel,
     ResultPart,
     ViewerComposerSettingsSnapshot,
 } from './types';
@@ -1059,6 +1060,27 @@ const App: React.FC = () => {
         onLiveProgressReset: handleLiveProgressReset,
     });
 
+    const [promptThinkingLevel, setPromptThinkingLevel] = useState<PromptThinkingLevel>(() => {
+        try {
+            const saved = localStorage.getItem('nb_prompt_thinking_level');
+            if (saved === 'low' || saved === 'medium' || saved === 'high') {
+                return saved;
+            }
+        } catch {
+            // Ignore localStorage errors
+        }
+        return 'low';
+    });
+
+    const handlePromptThinkingLevelChange = useCallback((level: PromptThinkingLevel) => {
+        setPromptThinkingLevel(level);
+        try {
+            localStorage.setItem('nb_prompt_thinking_level', level);
+        } catch {
+            // Ignore localStorage errors
+        }
+    }, []);
+
     const {
         isEnhancingPrompt: isEnhancingComposerPrompt,
         activePromptTool: activeComposerPromptTool,
@@ -1068,6 +1090,7 @@ const App: React.FC = () => {
     } = usePromptTools({
         currentLanguage: currentLang,
         prompt,
+        promptThinkingLevel,
         safetyThresholds,
         setPrompt,
         addLog,
@@ -1079,6 +1102,7 @@ const App: React.FC = () => {
     const { isEnhancingPrompt: isEnhancingEditorPrompt } = usePromptTools({
         currentLanguage: currentLang,
         prompt: editorPrompt,
+        promptThinkingLevel,
         safetyThresholds,
         setPrompt: setEditorPrompt,
         addLog,
@@ -1789,6 +1813,8 @@ const App: React.FC = () => {
         settingsLocked,
         onToggleSettingsLock: handleToggleSettingsLock,
         showNotification,
+        promptThinkingLevel,
+        onPromptThinkingLevelChange: handlePromptThinkingLevelChange,
     });
     const advancedSettingsDialogProps: React.ComponentProps<typeof ComposerAdvancedSettingsDialog> | null =
         isAdvancedSettingsOpen

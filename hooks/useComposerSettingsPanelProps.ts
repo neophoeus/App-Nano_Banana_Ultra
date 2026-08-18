@@ -8,6 +8,7 @@ import {
     ImageModel,
     ImageSize,
     OutputFormat,
+    PromptThinkingLevel,
     StageAsset,
     StickySendIntent,
     ThinkingLevel,
@@ -69,6 +70,8 @@ type UseComposerSettingsPanelPropsArgs = {
     settingsLocked?: boolean;
     onToggleSettingsLock?: () => void;
     showNotification?: (message: string, type?: 'info' | 'error') => void;
+    promptThinkingLevel?: PromptThinkingLevel;
+    onPromptThinkingLevelChange?: (level: PromptThinkingLevel) => void;
 };
 
 type ComposerSettingsPanelHandlers = {
@@ -143,6 +146,8 @@ export function useComposerSettingsPanelProps({
     settingsLocked,
     onToggleSettingsLock,
     showNotification,
+    promptThinkingLevel,
+    onPromptThinkingLevelChange,
 }: UseComposerSettingsPanelPropsArgs): ComposerSettingsPanelProps {
     const getModelLabel = useCallback(
         (model: ImageModel) => {
@@ -270,6 +275,8 @@ export function useComposerSettingsPanelProps({
             settingsLocked,
             onToggleSettingsLock,
             showNotification,
+            promptThinkingLevel,
+            onPromptThinkingLevelChange,
         }),
         [
             prompt,
@@ -309,6 +316,8 @@ export function useComposerSettingsPanelProps({
             settingsLocked,
             onToggleSettingsLock,
             showNotification,
+            promptThinkingLevel,
+            onPromptThinkingLevelChange,
         ],
     );
 }

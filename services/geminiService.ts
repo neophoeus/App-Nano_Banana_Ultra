@@ -6,6 +6,7 @@ import {
     QueuedBatchJobStats,
     ResultPart,
     ResultImagePart,
+    type PromptThinkingLevel,
     type SafetyThresholds,
 } from '../types';
 import {
@@ -1349,9 +1350,10 @@ export const enhancePromptWithGemini = async (
     currentPrompt: string,
     lang: Language,
     safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
+    thinkingLevel: PromptThinkingLevel = 'low',
 ): Promise<string> => {
     const correlationId = createDebugTerminalCorrelationId('prompt');
-    const requestPayload = { currentPrompt, lang, safetyThresholds };
+    const requestPayload = { currentPrompt, lang, safetyThresholds, thinkingLevel };
     const response = await retryOperation(
         () => fetchJson<{ text: string }>(
             '/api/prompt/enhance',
@@ -1412,9 +1414,10 @@ export const enhancePromptWithGemini = async (
 export const generateRandomPrompt = async (
     lang: Language,
     safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
+    thinkingLevel: PromptThinkingLevel = 'low',
 ): Promise<string> => {
     const correlationId = createDebugTerminalCorrelationId('prompt');
-    const requestPayload = { lang, safetyThresholds };
+    const requestPayload = { lang, safetyThresholds, thinkingLevel };
     const response = await retryOperation(
         () => fetchJson<{ text: string }>(
             '/api/prompt/random',
@@ -1476,9 +1479,10 @@ export const generatePromptFromImage = async (
     imageDataUrl: string,
     lang: Language,
     safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
+    thinkingLevel: PromptThinkingLevel = 'low',
 ): Promise<string> => {
     const correlationId = createDebugTerminalCorrelationId('prompt');
-    const requestPayload = { imageDataUrl, lang, safetyThresholds };
+    const requestPayload = { imageDataUrl, lang, safetyThresholds, thinkingLevel };
     const response = await retryOperation(
         () => fetchJson<{ text: string }>(
             '/api/prompt/image-to-prompt',

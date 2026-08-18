@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.16.0 - 2026-08-18
+
+- Release title: Nano Banana Ultra 3.16.0 - Gemini 3.7 Flash Text LLM & Thinking Level Controls
+- Release summary:
+    - **Gemini 3.7 Flash Text LLM Upgrade**: Upgraded all text-related tasks (prompt enhancement, random prompt generation, image-to-prompt forensic analysis, and content safety keyword extraction) to Google's latest `gemini-3.7-flash` model.
+    - **Google GenAI SDK Specification Conformance**: Removed legacy sampling parameters (`temperature`, `top_p`, `top_k`) and transitioned to official `thinkingConfig: { thinkingLevel: ... }` controls in accordance with latest Google GenAI SDK standards.
+    - **Selectable Thinking Level (Option B)**: Introduced a glassmorphic Prompt Thinking Level segmented selector (`⚡ Low` / `🧠 Med` / `🔬 High`) integrated directly into the prompt tools toolbar, allowing users to balance latency and reasoning depth. Preference is remembered across sessions.
+    - **Internationalization**: Added localized translations for Prompt Thinking Level and descriptions across all 9 supported languages (`zh_TW`, `zh_CN`, `en`, `de`, `es`, `fr`, `ja`, `ko`, `ru`).
+    - **Test Coverage**: Updated unit and integration test suites to assert against `gemini-3.7-flash` and `thinkingConfig` parameters.
+
 ## v3.15.2 - 2026-07-30
 
 - Release title: Nano Banana Ultra 3.15.2 - Locked Settings Guard Fix

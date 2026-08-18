@@ -123,13 +123,13 @@ describe('usePromptTools', () => {
         await act(async () => {
             await latestHook?.handleSmartRewrite();
         });
-        expect(enhancePromptWithGeminiMock).toHaveBeenCalledWith('hola mundo', 'es', DEFAULT_SAFETY_THRESHOLDS);
+        expect(enhancePromptWithGeminiMock).toHaveBeenCalledWith('hola mundo', 'es', DEFAULT_SAFETY_THRESHOLDS, 'low');
         expect(prompt).toBe(rewrittenPrompt);
 
         await act(async () => {
             await latestHook?.handleSurpriseMe();
         });
-        expect(generateRandomPromptMock).toHaveBeenCalledWith('es', DEFAULT_SAFETY_THRESHOLDS);
+        expect(generateRandomPromptMock).toHaveBeenCalledWith('es', DEFAULT_SAFETY_THRESHOLDS, 'low');
         expect(prompt).toBe(randomPrompt);
         expect(logs).toEqual(['Rewrite ok.', 'Random ok.']);
     });
@@ -213,6 +213,7 @@ describe('usePromptTools', () => {
             'data:image/png;base64,AAA',
             'es',
             DEFAULT_SAFETY_THRESHOLDS,
+            'low',
         );
         expect(prompt).toBe(imagePrompt);
         expect(logs).toEqual(['Image prompt ok.']);

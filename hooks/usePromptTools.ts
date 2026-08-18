@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { enhancePromptWithGemini, generatePromptFromImage, generateRandomPrompt } from '../services/geminiService';
-import type { SafetyThresholds } from '../types';
+import type { PromptThinkingLevel, SafetyThresholds } from '../types';
 import { prepareImageAssetFromFile } from '../utils/imageSaveUtils';
 import { Language } from '../utils/translations';
 
@@ -10,6 +10,7 @@ type PromptToolId = 'image-to-prompt' | 'inspiration' | 'rewrite';
 interface UsePromptToolsOptions {
     currentLanguage: Language;
     prompt: string;
+    promptThinkingLevel?: PromptThinkingLevel;
     safetyThresholds: SafetyThresholds;
     setPrompt: Dispatch<SetStateAction<string>>;
     addLog: (msg: string) => void;
@@ -34,6 +35,7 @@ interface UsePromptToolsReturn {
 export function usePromptTools({
     currentLanguage,
     prompt,
+    promptThinkingLevel = 'low',
     safetyThresholds,
     setPrompt,
     addLog,
@@ -60,7 +62,7 @@ export function usePromptTools({
         setActivePromptTool('rewrite');
         setIsEnhancingPrompt(true);
         try {
-            const enhanced = await enhancePromptWithGemini(prompt, currentLanguage, safetyThresholds);
+            const enhanced = await enhancePromptWithGemini(prompt, currentLanguage, safetyThresholds, promptThinkingLevel);
             setPrompt(enhanced);
             addLog(t('logRewriteOk'));
         } catch (e) {
@@ -71,7 +73,7 @@ export function usePromptTools({
             setIsEnhancingPrompt(false);
             setActivePromptTool(null);
         }
-    }, [apiKeyReady, currentLanguage, handleApiKeyConnect, addLog, prompt, safetyThresholds, setPrompt, showNotification, t]);
+    }, [apiKeyReady, currentLanguage, handleApiKeyConnect, addLog, prompt, promptThinkingLevel, safetyThresholds, setPrompt, showNotification, t]);
 
     const handleSurpriseMe = useCallback(async () => {
         if (!apiKeyReady) {
@@ -83,7 +85,7 @@ export function usePromptTools({
         setActivePromptTool('inspiration');
         setIsEnhancingPrompt(true);
         try {
-            const randomPrompt = await generateRandomPrompt(currentLanguage, safetyThresholds);
+            const randomPrompt = await generateRandomPrompt(currentLanguage, safetyThresholds, promptThinkingLevel);
             setPrompt(randomPrompt);
             addLog(t('logRandomOk'));
         } catch (e) {
@@ -94,7 +96,7 @@ export function usePromptTools({
             setIsEnhancingPrompt(false);
             setActivePromptTool(null);
         }
-    }, [apiKeyReady, currentLanguage, handleApiKeyConnect, addLog, safetyThresholds, setPrompt, t]);
+    }, [apiKeyReady, currentLanguage, handleApiKeyConnect, addLog, promptThinkingLevel, safetyThresholds, setPrompt, t]);
 
     const handleImageToPrompt = useCallback(
         async (file: File) => {
@@ -118,6 +120,7 @@ export function usePromptTools({
                     preparedImage.dataUrl,
                     currentLanguage,
                     safetyThresholds,
+                    promptThinkingLevel,
                 );
                 setPrompt(generatedPrompt);
                 addLog(t('logImageToPromptOk'));
@@ -134,7 +137,7 @@ export function usePromptTools({
                 setActivePromptTool(null);
             }
         },
-        [apiKeyReady, currentLanguage, handleApiKeyConnect, addLog, safetyThresholds, setPrompt, showNotification, t],
+        [apiKeyReady, currentLanguage, handleApiKeyConnect, addLog, promptThinkingLevel, safetyThresholds, setPrompt, showNotification, t],
     );
 
     return {

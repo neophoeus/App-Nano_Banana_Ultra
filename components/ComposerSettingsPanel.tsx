@@ -14,6 +14,7 @@ import {
     ImageModel,
     ImageSize,
     OutputFormat,
+    PromptThinkingLevel,
     StageAsset,
     StickySendIntent,
     ThinkingLevel,
@@ -21,6 +22,8 @@ import {
 } from '../types';
 
 export type ComposerSettingsPanelProps = {
+    promptThinkingLevel?: PromptThinkingLevel;
+    onPromptThinkingLevelChange?: (level: PromptThinkingLevel) => void;
     prompt: string;
     placeholder: string;
     enterToSubmit: boolean;
@@ -181,6 +184,8 @@ function ComposerSettingsPanel({
     settingsLocked = false,
     onToggleSettingsLock,
     showNotification,
+    promptThinkingLevel = 'low',
+    onPromptThinkingLevelChange,
 }: ComposerSettingsPanelProps) {
     const fallbackPromptTextareaRef = React.useRef<HTMLTextAreaElement | null>(null);
     const imageToPromptInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -806,7 +811,7 @@ function ComposerSettingsPanel({
 
                 <div className="min-w-0">
                     <div className="nbu-subpanel overflow-hidden p-2.5">
-                        <div className="mb-1.5 flex flex-wrap items-start justify-between gap-1.5 px-1">
+                        <div className="mb-1.5 flex flex-wrap items-center justify-between gap-1.5 px-1">
                             <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                                 <h3 className="text-[15px] font-black text-slate-900 dark:text-slate-100">
                                     {promptSurfaceLabel}
@@ -822,11 +827,55 @@ function ComposerSettingsPanel({
                                     </button>
                                 )}
                             </div>
-                            <div
-                                ref={sendIntentInfoRootRef}
-                                data-testid="composer-sticky-send-intent"
-                                className="relative flex min-w-0 max-w-full flex-1 items-center justify-end gap-1.5 sm:flex-none"
-                            >
+                            <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
+                                <div
+                                    data-testid="composer-prompt-thinking-level-control"
+                                    className="flex items-center gap-0.5 rounded-full border border-slate-200/80 bg-slate-100/90 p-0.5 shadow-sm dark:border-slate-800 dark:bg-slate-900/90"
+                                    title={t('promptThinkingLevel')}
+                                >
+                                    {(['low', 'medium', 'high'] as const).map((level) => {
+                                        const isSelected = (promptThinkingLevel || 'low') === level;
+                                        const label =
+                                            level === 'low'
+                                                ? t('promptThinkingLevelLow')
+                                                : level === 'medium'
+                                                  ? t('promptThinkingLevelMedium')
+                                                  : t('promptThinkingLevelHigh');
+                                        const tooltip =
+                                            level === 'low'
+                                                ? t('promptThinkingLevelLowTooltip')
+                                                : level === 'medium'
+                                                  ? t('promptThinkingLevelMediumTooltip')
+                                                  : t('promptThinkingLevelHighTooltip');
+                                        const icon = level === 'low' ? '⚡' : level === 'medium' ? '🧠' : '🔬';
+
+                                        return (
+                                            <button
+                                                key={level}
+                                                type="button"
+                                                data-testid={`composer-prompt-thinking-level-${level}`}
+                                                data-active={isSelected ? 'true' : 'false'}
+                                                title={tooltip}
+                                                aria-label={`${t('promptThinkingLevel')}: ${label}`}
+                                                disabled={isEnhancingPrompt}
+                                                onClick={() => onPromptThinkingLevelChange?.(level)}
+                                                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold transition-all ${
+                                                    isSelected
+                                                        ? 'bg-amber-500 text-slate-950 shadow-sm dark:bg-amber-400 dark:text-slate-950'
+                                                        : 'text-slate-600 hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-200'
+                                                } ${isEnhancingPrompt ? 'cursor-not-allowed opacity-50' : ''}`}
+                                            >
+                                                <span className="text-[10px]">{icon}</span>
+                                                <span>{label}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <div
+                                    ref={sendIntentInfoRootRef}
+                                    data-testid="composer-sticky-send-intent"
+                                    className="relative flex min-w-0 max-w-full items-center justify-end gap-1.5 sm:flex-none"
+                                >
                                 <button
                                     type="button"
                                     data-testid="composer-sticky-send-intent-toggle"
@@ -895,6 +944,7 @@ function ComposerSettingsPanel({
                                     : sendIntentInfoPanelNode}
                             </div>
                         </div>
+                    </div>
                         <div data-testid="composer-quick-tools" className="grid min-w-0 grid-cols-3 gap-1.5">
                             {quickToolButtons.map((button) => {
                                 const isActiveTool = activePromptTool === button.id;

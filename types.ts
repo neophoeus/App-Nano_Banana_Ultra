@@ -89,6 +89,7 @@ export type ImageModel =
     'gemini-3.1-flash-image' | 'gemini-3-pro-image' | 'gemini-2.5-flash-image' | 'gemini-3.1-flash-lite-image';
 export type OutputFormat = 'images-only' | 'images-and-text';
 export type ThinkingLevel = 'disabled' | 'minimal' | 'high';
+export type PromptThinkingLevel = 'low' | 'medium' | 'high';
 export type GroundingMode = 'off' | 'google-search' | 'image-search' | 'google-search-plus-image-search';
 export type StickySendIntent = 'independent' | 'memory';
 export const SAFETY_CATEGORY_KEYS = ['harassment', 'hate-speech', 'sexually-explicit', 'dangerous-content'] as const;

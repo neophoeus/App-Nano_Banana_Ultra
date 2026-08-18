@@ -111,9 +111,9 @@ Nano Banana Ultra currently supports four Gemini image-model paths. The UI expos
 
 ## Version Overview
 
-### Latest Release: 3.15.2
+### Latest Release: 3.16.0
 
-Latest release: 3.15.2. Added `settingsLocked` protection and lock indicator 🔒 to the "Set quantity to 1" warning action button, ensuring locked settings display a toast notification and prevent state desynchronization. See [CHANGELOG.md](CHANGELOG.md) for details.
+Latest release: 3.16.0. Upgraded all text-related LLM workflows to Google's latest `gemini-3.7-flash` model, fully conforming to latest Google GenAI SDK standards (removed deprecated sampling controls, transitioned to `thinkingConfig.thinkingLevel`), and introduced a selectable Prompt Thinking Level control (`⚡ Low` / `🧠 Med` / `🔬 High`) directly in the quick tools toolbar. See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ### 3.5.x
 

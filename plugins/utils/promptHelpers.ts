@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai/node';
 import { cleanResponseText } from './apiHelpers';
-import { PERMISSIVE_SAFETY_SETTINGS } from './geminiApiConfig';
+import { PERMISSIVE_SAFETY_SETTINGS, toPromptGeminiThinkingLevel } from './geminiApiConfig';
 
 export { PERMISSIVE_SAFETY_SETTINGS } from './geminiApiConfig';
 
@@ -133,10 +133,15 @@ ${scaffold}
 Turn the scaffold into one fluent, production-ready image prompt. Keep it surprising, specific, and directly generative. Do not output headings, bullets, brackets, placeholder names, or commentary.`;
 }
 
-export async function identifyBlockKeywords(ai: GoogleGenAI, prompt: string, category: string): Promise<string> {
+export async function identifyBlockKeywords(
+    ai: GoogleGenAI,
+    prompt: string,
+    category: string,
+    thinkingLevel: string = 'low',
+): Promise<string> {
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-3.6-flash',
+            model: 'gemini-3.7-flash',
             config: {
                 systemInstruction: `You are a content safety analyzer.
 Task: Analyze the input text which triggered a "${category}" safety filter.
@@ -146,6 +151,9 @@ Constraints:
 2. Do NOT output conversational text, definitions, or markdown.
 3. If specific words are not found, output the concept (e.g. "explicit violence").`,
                 safetySettings: PERMISSIVE_SAFETY_SETTINGS,
+                thinkingConfig: {
+                    thinkingLevel: toPromptGeminiThinkingLevel(thinkingLevel),
+                },
             },
             contents: `Text: "${prompt}"`,
         });

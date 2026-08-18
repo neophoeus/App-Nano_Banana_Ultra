@@ -61,6 +61,18 @@ export function toGeminiThinkingLevel(thinkingLevel: AppThinkingLevel): Thinking
     }
 }
 
+export function toPromptGeminiThinkingLevel(thinkingLevel?: string): ThinkingLevel {
+    switch (thinkingLevel) {
+        case 'medium':
+            return ThinkingLevel.MEDIUM;
+        case 'high':
+            return ThinkingLevel.HIGH;
+        case 'low':
+        default:
+            return ThinkingLevel.LOW;
+    }
+}
+
 export function buildGeminiResponseModalities(
     outputFormat: OutputFormat | undefined,
     requiresTextResponse: boolean,
