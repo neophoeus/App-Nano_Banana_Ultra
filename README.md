@@ -111,9 +111,9 @@ Nano Banana Ultra currently supports four Gemini image-model paths. The UI expos
 
 ## Version Overview
 
-### Latest Release: 3.16.0
+### Latest Release: 3.16.1
 
-Latest release: 3.16.0. Upgraded all text-related LLM workflows to Google's latest `gemini-3.7-flash` model, fully conforming to latest Google GenAI SDK standards (removed deprecated sampling controls, transitioned to `thinkingConfig.thinkingLevel`), and introduced a selectable Prompt Thinking Level control (`⚡ Low` / `🧠 Med` / `🔬 High`) directly in the quick tools toolbar. See [CHANGELOG.md](CHANGELOG.md) for details.
+Latest release: 3.16.1. Localized Prompt Thinking Level segment options and tooltips across all 9 supported languages (e.g. `低` / `中` / `高` in Chinese/Japanese), and upgraded text LLM services to `gemini-3.7-flash` with Google GenAI SDK parameter conformance. See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ### 3.5.x
 

@@ -111,9 +111,9 @@ Nano Banana Ultra 目前支援四條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：3.16.0
+### 最新版本：3.16.1
 
-最新版本：3.16.0。全面升級文字 LLM 服務至 `gemini-3.7-flash`，遵循 Google GenAI SDK 最新規格（移除已棄用取樣參數，採用 `thinkingConfig.thinkingLevel`），並在快捷工具列新增提示詞思考等級切換器（`⚡ Low` / `🧠 Med` / `🔬 High`）。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
+最新版本：3.16.1。將提示詞思考等級切換選項與說明全面在地化（例如中文與日文標籤為 `低` / `中` / `高`），並升級文字 LLM 服務至 `gemini-3.7-flash`。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 3.5.x
 

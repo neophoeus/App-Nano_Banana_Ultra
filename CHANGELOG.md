@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.16.1 - 2026-08-18
+
+- Release title: Nano Banana Ultra 3.16.1 - Localized Prompt Thinking Level Options
+- Release summary:
+    - **Localized Thinking Level Labels**: Localized the Prompt Thinking Level segment labels and tooltips across all 9 supported languages (e.g. `低` / `中` / `高` in Traditional Chinese, Simplified Chinese, and Japanese; `낮음` / `중간` / `높음` in Korean; `Bajo` / `Medio` / `Alto` in Spanish, etc.), enhancing readability and native user experience.
+
 ## v3.16.0 - 2026-08-18
 
 - Release title: Nano Banana Ultra 3.16.0 - Gemini 3.7 Flash Text LLM & Thinking Level Controls
