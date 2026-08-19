@@ -1,5 +1,15 @@
 # Changelog
 
+## v4.1.1 - 2026-08-19
+
+- Release title: Nano Banana Ultra 4.1.1 - Workspace Stage Stability, Lite Mode Thought Images & History Chips Ergonomics
+- Release summary:
+    - **Fixed 1:1 Square Main Stage & History Empty Height Alignment**: Ensured `StageFrame` in `GeneratedImage` maintains a strict 1:1 aspect ratio (`aspect-square`) across all states (empty, image, loading, error). Updated `WorkspaceUnifiedHistoryPanel` empty state with `aspect-[4/1] w-full` to precisely match the exact height of the 4-column thumbnail row.
+    - **Lite Mode Thought Process Image Display Fix**: Integrated `useResolvedImageSource` hook in `WorkspaceProgressDetailPanel` (`WorkspaceProgressThoughtImage`) to resolve virtual browser-stored image paths (`/lite/session-images/...`) to renderable Data URLs, eliminating 404 broken image failures when inspecting thought images in AI Studio Direct (Lite) mode and ensuring thought image downloads operate seamlessly.
+    - **Workspace History Header Actions & Metadata Layout Optimization (Option A)**: Refactored repetitive right-side Workspace actions (`Import Workspace`, `Export Workspace`, `Clear Workspace`) into a unified segmented pill group (`[ Workspace: Import ｜ Export ｜ Clear ]`), reducing action bar width by >50%. Consolidated left-side item and branch count badges into a single compact pill (`[ 8 items · 3 branches ]`), ensuring title, status badges, and active version tag stay cleanly aligned on a single horizontal line without awkward wrapping.
+    - **Complete 9-Language Localization**: Full translation coverage for all new workspace toolbar action group keys (`workspaceToolbarGroupLabel`, `workspaceToolbarActionImport`, `workspaceToolbarActionExport`, `workspaceToolbarActionClear`) across Traditional Chinese (`zh_TW`), Simplified Chinese (`zh_CN`), English (`en`), Japanese (`ja`), Korean (`ko`), German (`de`), French (`fr`), Spanish (`es`), and Russian (`ru`).
+    - **Testing & Verification**: 100% test pass rate across all 113 test suites (925 tests) and clean TypeScript type checks.
+
 ## v4.1.0 - 2026-08-19
 
 - Release title: Nano Banana Ultra 4.1.0 - Workspace Layout Proportions Restructure & Prompt Composer Ergonomics

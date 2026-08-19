@@ -92,10 +92,7 @@ const stageTopRightOverflowChipClassNameByTone: Record<StageTopRightChipTone, st
         'border-emerald-500 bg-emerald-300 text-slate-950 shadow-[0_5px_12px_rgba(5,150,105,0.18)] dark:border-emerald-500 dark:bg-emerald-300 dark:text-slate-950',
 };
 
-const stageTopRightVisibleActionClassNameByEmphasis: Record<
-    StageTopRightActionEmphasis,
-    string
-> = {
+const stageTopRightVisibleActionClassNameByEmphasis: Record<StageTopRightActionEmphasis, string> = {
     primary:
         'border-amber-500 bg-amber-300 text-slate-950 hover:border-amber-600 hover:bg-amber-400 dark:border-amber-600 dark:bg-amber-500 dark:text-white dark:hover:border-amber-500 dark:hover:bg-amber-400',
     secondary:
@@ -171,7 +168,7 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
         <div className="mx-auto flex h-full min-h-0 w-full flex-1 items-center justify-center">
             <div
                 data-testid="generated-image-stage-frame"
-                className="relative aspect-square w-full max-w-full xl:h-full xl:w-auto xl:max-h-full xl:max-w-full"
+                className="relative aspect-square w-full max-w-full max-h-full xl:h-auto xl:w-full xl:max-h-full xl:max-w-full"
             >
                 {children}
             </div>

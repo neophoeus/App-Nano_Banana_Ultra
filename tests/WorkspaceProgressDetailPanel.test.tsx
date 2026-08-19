@@ -346,4 +346,48 @@ describe('WorkspaceProgressDetailPanel', () => {
             savedFilename: 'thought-download.png',
         });
     });
+
+    it('resolves virtual Lite mode thought-image URLs to renderable data URLs', async () => {
+        const { persistBrowserSavedImageRecord, clearBrowserSavedImageRecords } =
+            await import('../utils/browserImageStore');
+        const testDataUrl =
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+        await persistBrowserSavedImageRecord('thought-lite-1.png', testDataUrl);
+
+        act(() => {
+            root.render(
+                <WorkspaceProgressDetailPanel
+                    currentLanguage="en"
+                    thoughtEntries={[
+                        {
+                            id: 'turn-lite',
+                            shortId: 'turn-lt',
+                            prompt: 'Lite mode prompt',
+                            thoughts: 'Lite mode thought text',
+                            resultParts: [
+                                {
+                                    sequence: 0,
+                                    kind: 'thought-image',
+                                    imageUrl: '/lite/session-images/thought-lite-1.png',
+                                    mimeType: 'image/png',
+                                    savedFilename: 'thought-lite-1.png',
+                                },
+                            ],
+                            createdAtLabel: '10:20',
+                            createdAtMs: 1710253200000,
+                        },
+                    ]}
+                />,
+            );
+        });
+
+        const imageElement = container.querySelector(
+            '[data-testid="workspace-progress-detail-part-image-turn-lt-0"] img',
+        ) as HTMLImageElement | null;
+
+        expect(imageElement).toBeTruthy();
+        expect(imageElement?.getAttribute('src')).toBe(testDataUrl);
+
+        await clearBrowserSavedImageRecords();
+    });
 });

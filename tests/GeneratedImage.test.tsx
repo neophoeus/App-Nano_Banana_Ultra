@@ -428,10 +428,35 @@ describe('GeneratedImage', () => {
         expect(stageFrameTag).toBeDefined();
         expect(stageFrameTag).toContain('aspect-square');
         expect(stageFrameTag).toContain('max-w-full');
-        expect(stageFrameTag).toContain('xl:h-full');
-        expect(stageFrameTag).toContain('xl:w-auto');
+        expect(stageFrameTag).toContain('max-h-full');
+        expect(stageFrameTag).toContain('xl:h-auto');
+        expect(stageFrameTag).toContain('xl:w-full');
         expect(stageFrameTag).toContain('xl:max-h-full');
         expect(stageFrameTag).toContain('xl:max-w-full');
+    });
+
+    it('locks the empty stage into the same square frame', () => {
+        const markup = renderToStaticMarkup(
+            <GeneratedImage
+                imageUrls={[]}
+                isLoading={false}
+                generationMode="Text to Image"
+                executionMode="single-turn"
+                onGenerate={() => {}}
+            />,
+        );
+
+        const stageFrameTag = markup.match(/<div[^>]*data-testid="generated-image-stage-frame"[^>]*>/)?.[0];
+
+        expect(stageFrameTag).toBeDefined();
+        expect(stageFrameTag).toContain('aspect-square');
+        expect(stageFrameTag).toContain('max-w-full');
+        expect(stageFrameTag).toContain('max-h-full');
+        expect(stageFrameTag).toContain('xl:h-auto');
+        expect(stageFrameTag).toContain('xl:w-full');
+        expect(stageFrameTag).toContain('xl:max-h-full');
+        expect(stageFrameTag).toContain('xl:max-w-full');
+        expect(markup).toContain('nbu-empty-state-panel');
     });
 
     it('renders the failed selected-history state without crashing when clear is available', () => {

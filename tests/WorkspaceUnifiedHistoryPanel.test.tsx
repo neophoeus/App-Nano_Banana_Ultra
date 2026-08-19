@@ -168,16 +168,23 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
         const exportButton = container.querySelector('[data-testid="history-export-workspace"]');
         const clearButton = container.querySelector('[data-testid="workspace-unified-history-clear"]');
         const utilityActions = container.querySelector('[data-testid="workspace-unified-history-utility-actions"]');
+        const workspaceGroup = container.querySelector('[data-testid="workspace-unified-history-workspace-group"]');
 
         expect(versionsButton).not.toBeNull();
         expect(importButton).not.toBeNull();
         expect(exportButton).not.toBeNull();
         expect(clearButton).not.toBeNull();
         expect(utilityActions).not.toBeNull();
+        expect(workspaceGroup).not.toBeNull();
         expect(utilityActions?.contains(versionsButton as Node)).toBe(true);
-        expect(utilityActions?.contains(importButton as Node)).toBe(true);
-        expect(utilityActions?.contains(exportButton as Node)).toBe(true);
-        expect(utilityActions?.contains(clearButton as Node)).toBe(true);
+        expect(utilityActions?.contains(workspaceGroup as Node)).toBe(true);
+        expect(workspaceGroup?.contains(importButton as Node)).toBe(true);
+        expect(workspaceGroup?.contains(exportButton as Node)).toBe(true);
+        expect(workspaceGroup?.contains(clearButton as Node)).toBe(true);
+        expect(workspaceGroup?.textContent).toContain('Workspace');
+        expect(importButton?.textContent).toBe('Import');
+        expect(exportButton?.textContent).toBe('Export');
+        expect(clearButton?.textContent).toBe('Clear');
         expect(container.querySelector('[data-testid="workspace-unified-history-footer"]')).toBeNull();
 
         flushSync(() => {
@@ -457,10 +464,14 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
         expect(container.querySelector('[data-testid="workspace-unified-history-clear-confirm-action"]')).toBeNull();
     });
 
-    it('renders the empty state when no history turns exist', () => {
+    it('renders the empty state when no history turns exist with fixed aspect-ratio container', () => {
         renderPanel({ history: [] });
 
-        expect(container.querySelector('[data-testid="workspace-unified-history-empty"]')).not.toBeNull();
+        const emptyElement = container.querySelector('[data-testid="workspace-unified-history-empty"]');
+        expect(emptyElement).not.toBeNull();
+        expect(emptyElement?.className).toContain('aspect-[4/1]');
+        expect(emptyElement?.className).toContain('w-full');
+        expect(emptyElement?.className).not.toContain('min-h-[200px]');
         expect(container.innerHTML).not.toContain('history-card-turn-');
     });
 });

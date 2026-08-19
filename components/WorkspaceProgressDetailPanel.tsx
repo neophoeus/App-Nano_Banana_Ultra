@@ -1,5 +1,6 @@
 import React from 'react';
-import { QueuedBatchJob, ResultPart, ResultTextPart } from '../types';
+import { useResolvedImageSource } from '../hooks/useResolvedImageSource';
+import { QueuedBatchJob, ResultImagePart, ResultPart, ResultTextPart } from '../types';
 import { getTranslation, Language } from '../utils/translations';
 import {
     isQueuedBatchJobActive,
@@ -75,6 +76,56 @@ const getPreferredSelectedEntryId = (
     allEntries: WorkspaceProgressThoughtEntry[],
 ) => liveEntries[0]?.id ?? archivedEntries[0]?.id ?? allEntries[0]?.id ?? null;
 
+type WorkspaceProgressThoughtImageProps = {
+    entry: WorkspaceProgressThoughtEntry;
+    part: ResultImagePart & { kind: 'thought-image' };
+    t: (key: string) => string;
+    onDownloadThoughtImage?: (request: WorkspaceProgressThoughtImageDownloadRequest) => void;
+};
+
+const WorkspaceProgressThoughtImage: React.FC<WorkspaceProgressThoughtImageProps> = ({
+    entry,
+    part,
+    t,
+    onDownloadThoughtImage,
+}) => {
+    const resolvedImageUrl = useResolvedImageSource(part.imageUrl);
+
+    return (
+        <figure
+            data-testid={`workspace-progress-detail-part-image-${entry.shortId}-${part.sequence}`}
+            className="relative overflow-hidden rounded-[20px] border border-amber-200/80 bg-slate-950/70 p-2 dark:border-amber-500/20"
+        >
+            {onDownloadThoughtImage ? (
+                <button
+                    type="button"
+                    data-testid={`workspace-progress-detail-part-image-download-${entry.shortId}-${part.sequence}`}
+                    onClick={() =>
+                        onDownloadThoughtImage({
+                            entryId: entry.id,
+                            shortId: entry.shortId,
+                            slotIndex: entry.slotIndex,
+                            sequence: part.sequence,
+                            imageUrl: resolvedImageUrl || part.imageUrl,
+                            mimeType: part.mimeType,
+                            savedFilename: part.savedFilename,
+                        })
+                    }
+                    className="absolute right-4 top-4 z-10 rounded-full border border-white/20 bg-slate-950/80 px-3 py-1 text-[11px] font-semibold text-white transition-colors hover:border-amber-300/60 hover:text-amber-100"
+                    aria-label={t('thoughtImageDownload')}
+                >
+                    {t('thoughtImageDownload')}
+                </button>
+            ) : null}
+            <img
+                src={resolvedImageUrl || part.imageUrl}
+                alt={t('workspaceViewerThoughts')}
+                className="max-h-72 w-full rounded-[14px] object-contain"
+            />
+        </figure>
+    );
+};
+
 const renderThoughtEntryContent = (
     entry: WorkspaceProgressThoughtEntry,
     t: (key: string) => string,
@@ -96,38 +147,13 @@ const renderThoughtEntryContent = (
                 );
             } else if (part.kind === 'thought-image') {
                 return (
-                    <figure
+                    <WorkspaceProgressThoughtImage
                         key={`${entry.id}-${part.sequence}`}
-                        data-testid={`workspace-progress-detail-part-image-${entry.shortId}-${part.sequence}`}
-                        className="relative overflow-hidden rounded-[20px] border border-amber-200/80 bg-slate-950/70 p-2 dark:border-amber-500/20"
-                    >
-                        {onDownloadThoughtImage ? (
-                            <button
-                                type="button"
-                                data-testid={`workspace-progress-detail-part-image-download-${entry.shortId}-${part.sequence}`}
-                                onClick={() =>
-                                    onDownloadThoughtImage({
-                                        entryId: entry.id,
-                                        shortId: entry.shortId,
-                                        slotIndex: entry.slotIndex,
-                                        sequence: part.sequence,
-                                        imageUrl: part.imageUrl,
-                                        mimeType: part.mimeType,
-                                        savedFilename: part.savedFilename,
-                                    })
-                                }
-                                className="absolute right-4 top-4 z-10 rounded-full border border-white/20 bg-slate-950/80 px-3 py-1 text-[11px] font-semibold text-white transition-colors hover:border-amber-300/60 hover:text-amber-100"
-                                aria-label={t('thoughtImageDownload')}
-                            >
-                                {t('thoughtImageDownload')}
-                            </button>
-                        ) : null}
-                        <img
-                            src={part.imageUrl}
-                            alt={t('workspaceViewerThoughts')}
-                            className="max-h-72 w-full rounded-[14px] object-contain"
-                        />
-                    </figure>
+                        entry={entry}
+                        part={part as ResultImagePart & { kind: 'thought-image' }}
+                        t={t}
+                        onDownloadThoughtImage={onDownloadThoughtImage}
+                    />
                 );
             }
             return null;
@@ -329,7 +355,9 @@ function WorkspaceProgressDetailPanel({
             : detailThoughtEntries.length > 0
               ? t('workspacePanelStatusEnabled')
               : t('workspacePanelStatusReserved');
-    const selectedEntryLabel = selectedEntry ? getEntryNavigatorLabel(selectedEntry, t('workspaceViewerThoughts')) : null;
+    const selectedEntryLabel = selectedEntry
+        ? getEntryNavigatorLabel(selectedEntry, t('workspaceViewerThoughts'))
+        : null;
     const selectedPromptPreview = selectedEntry?.prompt?.trim() ? truncateText(selectedEntry.prompt, 280) : null;
     const selectedThoughtParts = selectedEntry ? getEntryThoughtParts(selectedEntry) : [];
     const navigatorButtonBaseClassName =
@@ -392,76 +420,91 @@ function WorkspaceProgressDetailPanel({
 
                 <div className="space-y-3">
                     {hasWorkflowSummary ? (
-                        <div data-testid="workspace-progress-workflow-summary" className={progressWorkflowCardClassName}>
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
-                                {t('workflowStatusLabel')}
-                            </div>
-                            <span data-testid="workspace-progress-workflow-status" className={progressPillClassName}>
-                                {workflowStatusLabel}
-                            </span>
-                        </div>
                         <div
-                            data-testid="workspace-progress-workflow-headline"
-                            className="mt-2.5 break-words text-sm font-semibold leading-6 text-slate-800 dark:text-slate-100"
+                            data-testid="workspace-progress-workflow-summary"
+                            className={progressWorkflowCardClassName}
                         >
-                            {workflowHeadline}
-                        </div>
-                        {shouldShowWorkflowDetailMessage ? (
-                            <div
-                                data-testid="workspace-progress-workflow-detail"
-                                className="mt-2 break-words text-xs leading-5 text-gray-500 dark:text-gray-400"
-                            >
-                                {workflowDetailMessage}
-                            </div>
-                        ) : null}
-                        {batchProgress.total > 0 ||
-                        activeQueueCount > 0 ||
-                        importReadyQueueCount > 0 ||
-                        issueQueueCount > 0 ? (
-                            <div className="mt-2.5 flex flex-wrap gap-2 text-xs">
-                                {batchProgress.total > 0 ? (
-                                    <span
-                                        data-testid="workspace-progress-workflow-progress"
-                                        className={progressAmberChipClassName}
-                                    >
-                                        {batchProgress.completed}/{batchProgress.total}
-                                    </span>
-                                ) : null}
-                                {activeQueueCount > 0 ? (
-                                    <span data-testid="workspace-progress-workflow-active-queue" className="nbu-chip">
-                                        {t('queuedBatchJobsActiveCount').replace('{0}', String(activeQueueCount))}
-                                    </span>
-                                ) : null}
-                                {importReadyQueueCount > 0 ? (
-                                    <span
-                                        data-testid="workspace-progress-workflow-import-ready-queue"
-                                        className="nbu-chip"
-                                    >
-                                        {t('queuedBatchJobsImportReadyCount').replace(
-                                            '{0}',
-                                            String(importReadyQueueCount),
-                                        )}
-                                    </span>
-                                ) : null}
-                                {issueQueueCount > 0 ? (
-                                    <span data-testid="workspace-progress-workflow-issue-queue" className="nbu-chip">
-                                        {t('queuedBatchJobsClosedIssuesCount').replace('{0}', String(issueQueueCount))}
-                                    </span>
-                                ) : null}
-                            </div>
-                        ) : null}
-                        {resultStatusSummary ? (
-                            <div
-                                data-testid="workspace-progress-workflow-result-status"
-                                className={`${resultStatusClassName} mt-2.5`}
-                            >
-                                <span className="mr-2 inline-flex rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-current dark:bg-black/35">
-                                    {t('stageGroundingResultStatus')}
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
+                                    {t('workflowStatusLabel')}
+                                </div>
+                                <span
+                                    data-testid="workspace-progress-workflow-status"
+                                    className={progressPillClassName}
+                                >
+                                    {workflowStatusLabel}
                                 </span>
-                                <span>{resultStatusSummary}</span>
                             </div>
-                        ) : null}
+                            <div
+                                data-testid="workspace-progress-workflow-headline"
+                                className="mt-2.5 break-words text-sm font-semibold leading-6 text-slate-800 dark:text-slate-100"
+                            >
+                                {workflowHeadline}
+                            </div>
+                            {shouldShowWorkflowDetailMessage ? (
+                                <div
+                                    data-testid="workspace-progress-workflow-detail"
+                                    className="mt-2 break-words text-xs leading-5 text-gray-500 dark:text-gray-400"
+                                >
+                                    {workflowDetailMessage}
+                                </div>
+                            ) : null}
+                            {batchProgress.total > 0 ||
+                            activeQueueCount > 0 ||
+                            importReadyQueueCount > 0 ||
+                            issueQueueCount > 0 ? (
+                                <div className="mt-2.5 flex flex-wrap gap-2 text-xs">
+                                    {batchProgress.total > 0 ? (
+                                        <span
+                                            data-testid="workspace-progress-workflow-progress"
+                                            className={progressAmberChipClassName}
+                                        >
+                                            {batchProgress.completed}/{batchProgress.total}
+                                        </span>
+                                    ) : null}
+                                    {activeQueueCount > 0 ? (
+                                        <span
+                                            data-testid="workspace-progress-workflow-active-queue"
+                                            className="nbu-chip"
+                                        >
+                                            {t('queuedBatchJobsActiveCount').replace('{0}', String(activeQueueCount))}
+                                        </span>
+                                    ) : null}
+                                    {importReadyQueueCount > 0 ? (
+                                        <span
+                                            data-testid="workspace-progress-workflow-import-ready-queue"
+                                            className="nbu-chip"
+                                        >
+                                            {t('queuedBatchJobsImportReadyCount').replace(
+                                                '{0}',
+                                                String(importReadyQueueCount),
+                                            )}
+                                        </span>
+                                    ) : null}
+                                    {issueQueueCount > 0 ? (
+                                        <span
+                                            data-testid="workspace-progress-workflow-issue-queue"
+                                            className="nbu-chip"
+                                        >
+                                            {t('queuedBatchJobsClosedIssuesCount').replace(
+                                                '{0}',
+                                                String(issueQueueCount),
+                                            )}
+                                        </span>
+                                    ) : null}
+                                </div>
+                            ) : null}
+                            {resultStatusSummary ? (
+                                <div
+                                    data-testid="workspace-progress-workflow-result-status"
+                                    className={`${resultStatusClassName} mt-2.5`}
+                                >
+                                    <span className="mr-2 inline-flex rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-current dark:bg-black/35">
+                                        {t('stageGroundingResultStatus')}
+                                    </span>
+                                    <span>{resultStatusSummary}</span>
+                                </div>
+                            ) : null}
                         </div>
                     ) : null}
                 </div>
@@ -479,7 +522,9 @@ function WorkspaceProgressDetailPanel({
                                     <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
                                         {t('workspaceViewerThoughts')}
                                     </span>
-                                    <span className={progressAmberChipClassName}>{t('workspaceInsightsPhaseLabel')}</span>
+                                    <span className={progressAmberChipClassName}>
+                                        {t('workspaceInsightsPhaseLabel')}
+                                    </span>
                                 </div>
                                 {batchProgress.total > 0 ? (
                                     <span className="nbu-chip px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:text-slate-300">
@@ -504,7 +549,9 @@ function WorkspaceProgressDetailPanel({
                                             aria-pressed={isSelected}
                                             onClick={() => handleSelectEntry(entry.id)}
                                             className={`${navigatorButtonBaseClassName} min-w-[220px] shrink-0 xl:min-w-0 ${
-                                                isSelected ? navigatorButtonSelectedClassName : navigatorButtonIdleClassName
+                                                isSelected
+                                                    ? navigatorButtonSelectedClassName
+                                                    : navigatorButtonIdleClassName
                                             }`}
                                         >
                                             <div className="flex items-center justify-between gap-2">
@@ -533,7 +580,10 @@ function WorkspaceProgressDetailPanel({
                     ) : null}
 
                     {archivedThoughtEntries.length > 0 ? (
-                        <section data-testid="workspace-progress-detail-history-nav" className={selectionPanelClassName}>
+                        <section
+                            data-testid="workspace-progress-detail-history-nav"
+                            className={selectionPanelClassName}
+                        >
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
                                     {t('historyFilmstripTitle')}
@@ -559,7 +609,9 @@ function WorkspaceProgressDetailPanel({
                                             aria-pressed={isSelected}
                                             onClick={() => handleSelectEntry(entry.id)}
                                             className={`${navigatorButtonBaseClassName} ${
-                                                isSelected ? navigatorButtonSelectedClassName : navigatorButtonIdleClassName
+                                                isSelected
+                                                    ? navigatorButtonSelectedClassName
+                                                    : navigatorButtonIdleClassName
                                             }`}
                                         >
                                             <div className="flex items-center justify-between gap-2">
@@ -651,7 +703,10 @@ function WorkspaceProgressDetailPanel({
 
                             <div className="mt-3 flex flex-wrap gap-2 text-xs">
                                 <span className="nbu-chip px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:text-slate-300">
-                                    {t('workspaceInsightsItemsCount').replace('{0}', String(selectedThoughtParts.length || 1))}
+                                    {t('workspaceInsightsItemsCount').replace(
+                                        '{0}',
+                                        String(selectedThoughtParts.length || 1),
+                                    )}
                                 </span>
                                 {!selectedEntry.isLive ? (
                                     <span className="nbu-chip px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:text-slate-300">
@@ -664,10 +719,7 @@ function WorkspaceProgressDetailPanel({
                                 {t('workspaceProgressChronologicalHint')}
                             </div>
 
-                            <div
-                                data-testid="workspace-progress-detail-selected-content"
-                                className="mt-4 space-y-3"
-                            >
+                            <div data-testid="workspace-progress-detail-selected-content" className="mt-4 space-y-3">
                                 {renderThoughtEntryContent(selectedEntry, t, onDownloadThoughtImage)}
                             </div>
                         </>

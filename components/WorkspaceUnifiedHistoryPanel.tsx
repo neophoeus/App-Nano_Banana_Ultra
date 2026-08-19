@@ -119,30 +119,23 @@ function WorkspaceUnifiedHistoryPanel({
             data-testid="workspace-unified-history-panel"
             className="nbu-stage-hero-filmstrip-shell flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-[24px] border p-3"
         >
-            <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
-                <div className="min-w-0 flex flex-1 flex-wrap items-center gap-2">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0 flex flex-1 flex-wrap items-center gap-1.5 sm:gap-2">
                     <h2
                         data-testid="workspace-unified-history-title"
                         className="text-[15px] font-black text-slate-900 dark:text-slate-100"
                     >
                         {t('workspaceSheetTitleHistory')}
                     </h2>
-                    <span
-                        data-testid="workspace-unified-history-count"
-                        className="nbu-stage-hero-filmstrip-summary rounded-full border px-2 py-1 text-[10px] font-semibold text-gray-500 dark:text-gray-300"
-                    >
-                        {itemCountLabel}
-                    </span>
-                    <span
-                        data-testid="workspace-unified-history-branches"
-                        className="nbu-stage-hero-filmstrip-summary rounded-full border px-2 py-1 text-[10px] font-semibold text-gray-500 dark:text-gray-300"
-                    >
-                        {branchCountLabel}
-                    </span>
+                    <div className="nbu-stage-hero-filmstrip-summary inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:text-gray-300">
+                        <span data-testid="workspace-unified-history-count">{itemCountLabel}</span>
+                        <span className="text-gray-300 dark:text-gray-600">·</span>
+                        <span data-testid="workspace-unified-history-branches">{branchCountLabel}</span>
+                    </div>
                     {activeBranchSummary ? (
                         <span
                             data-testid="workspace-unified-history-active-branch"
-                            className={`rounded-full border px-2 py-1 text-[10px] font-semibold ${getBranchAccentClassName(activeBranchSummary.branchOriginId, activeBranchSummary.branchLabel)}`}
+                            className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${getBranchAccentClassName(activeBranchSummary.branchOriginId, activeBranchSummary.branchLabel)}`}
                         >
                             {`${t('workspaceInsightsActiveBranch')}: ${activeBranchSummary.branchLabel}`}
                         </span>
@@ -163,34 +156,45 @@ function WorkspaceUnifiedHistoryPanel({
                             {t('workspaceInsightsVersions')}
                         </button>
                     ) : null}
-                    {onImportWorkspace ? (
-                        <button
-                            type="button"
-                            data-testid="history-import-workspace"
-                            onClick={onImportWorkspace}
-                            className={utilityActionButtonClassName}
-                        >
-                            {t('composerToolbarImportWorkspace')}
-                        </button>
-                    ) : null}
-                    {onExportWorkspace ? (
-                        <button
-                            type="button"
-                            data-testid="history-export-workspace"
-                            onClick={onExportWorkspace}
-                            className={utilityActionButtonClassName}
-                        >
-                            {t('composerToolbarExportWorkspace')}
-                        </button>
-                    ) : null}
-                    <button
-                        type="button"
-                        data-testid="workspace-unified-history-clear"
-                        onClick={onClearWorkspace}
-                        className="inline-flex items-center justify-center rounded-full border border-red-200/80 bg-red-50/90 px-2.5 py-1.5 text-[11px] font-semibold text-red-600 transition-colors hover:border-red-300 hover:bg-red-100 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200 dark:hover:border-red-800 dark:hover:bg-red-950/50"
+                    <div
+                        data-testid="workspace-unified-history-workspace-group"
+                        className="inline-flex items-center divide-x divide-gray-200/80 overflow-hidden rounded-full border border-gray-200/80 bg-white/70 shadow-xs dark:divide-gray-700/80 dark:border-gray-700/80 dark:bg-gray-900/60"
                     >
-                        {t('clearHistory')}
-                    </button>
+                        <span className="select-none px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                            {t('workspaceToolbarGroupLabel') || 'Workspace'}
+                        </span>
+                        {onImportWorkspace ? (
+                            <button
+                                type="button"
+                                data-testid="history-import-workspace"
+                                onClick={onImportWorkspace}
+                                className="px-2 py-1 text-[11px] font-semibold text-gray-600 transition-colors hover:bg-amber-50/80 hover:text-amber-700 dark:text-gray-300 dark:hover:bg-amber-950/30 dark:hover:text-amber-200"
+                                title={t('composerToolbarImportWorkspace')}
+                            >
+                                {t('workspaceToolbarActionImport') || 'Import'}
+                            </button>
+                        ) : null}
+                        {onExportWorkspace ? (
+                            <button
+                                type="button"
+                                data-testid="history-export-workspace"
+                                onClick={onExportWorkspace}
+                                className="px-2 py-1 text-[11px] font-semibold text-gray-600 transition-colors hover:bg-amber-50/80 hover:text-amber-700 dark:text-gray-300 dark:hover:bg-amber-950/30 dark:hover:text-amber-200"
+                                title={t('composerToolbarExportWorkspace')}
+                            >
+                                {t('workspaceToolbarActionExport') || 'Export'}
+                            </button>
+                        ) : null}
+                        <button
+                            type="button"
+                            data-testid="workspace-unified-history-clear"
+                            onClick={onClearWorkspace}
+                            className="px-2 py-1 text-[11px] font-semibold text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300"
+                            title={t('clearHistory')}
+                        >
+                            {t('workspaceToolbarActionClear') || 'Clear'}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -330,11 +334,13 @@ function WorkspaceUnifiedHistoryPanel({
                     ) : null}
                 </div>
             ) : (
-                <div
-                    data-testid="workspace-unified-history-empty"
-                    className="flex min-h-[200px] flex-1 items-center justify-center rounded-2xl border border-dashed border-gray-300 px-4 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400"
-                >
-                    {t('workspacePickerEmptyGallery')}
+                <div className="flex min-h-0 flex-1 items-center">
+                    <div
+                        data-testid="workspace-unified-history-empty"
+                        className="flex aspect-[4/1] w-full items-center justify-center rounded-2xl border border-dashed border-gray-300 px-4 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400"
+                    >
+                        {t('workspacePickerEmptyGallery')}
+                    </div>
                 </div>
             )}
         </section>

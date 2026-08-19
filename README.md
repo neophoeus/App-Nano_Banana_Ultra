@@ -112,9 +112,9 @@ Nano Banana Ultra currently supports four Gemini image-model paths. The UI expos
 
 ## Version Overview
 
-### Latest Release: 4.1.0
+### Latest Release: 4.1.1
 
-Latest release: 4.1.0. Desktop Workspace Layout Restructure & Prompt Composer Ergonomics. Introduces 60/40 proportional layout rebalance (top navigation 60% / support rail 40%, generation composer 60% / history & stage 40% with dual-column height matching), 4-item history filmstrip page size, Lite mode dynamic header queue button gating, downwards popover for side tool references, prompt textarea font size adjustment with localStorage persistence, Enter mode switcher iconification with 34px equal width alignment, and prompt text to scrollbar/buttons spacing optimization. See [CHANGELOG.md](CHANGELOG.md) for details.
+See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ### 4.x
 
