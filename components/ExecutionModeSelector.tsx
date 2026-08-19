@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Language, getTranslation } from '../utils/translations';
-import {
-    useWorkspaceExecutionMode,
-} from '../hooks/useWorkspaceExecutionMode';
+import { useWorkspaceExecutionMode } from '../hooks/useWorkspaceExecutionMode';
 import type { WorkspaceExecutionModeSetting } from '../utils/workspaceExecutionMode';
 
 interface ExecutionModeSelectorProps {
@@ -53,7 +51,7 @@ const ExecutionModeSelector: React.FC<ExecutionModeSelectorProps> = ({
             case 'local':
                 return getTranslation(currentLanguage, 'executionModeLocal') || 'Local API';
             case 'direct':
-                return getTranslation(currentLanguage, 'executionModeDirect') || 'AI Studio Direct';
+                return getTranslation(currentLanguage, 'executionModeDirect') || 'AI Studio';
         }
     };
 
@@ -62,13 +60,13 @@ const ExecutionModeSelector: React.FC<ExecutionModeSelectorProps> = ({
             if (resolvedMode === 'local') {
                 return {
                     icon: '⚡',
-                    label: `${getTranslation(currentLanguage, 'executionModeAuto') || 'Auto'} (Ultra)`,
+                    label: `${getTranslation(currentLanguage, 'executionModeAuto') || 'Auto'} (${getTranslation(currentLanguage, 'executionModeLocal') || 'Local API'})`,
                     badgeColor: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20',
                 };
             }
             return {
                 icon: '🌐',
-                label: `${getTranslation(currentLanguage, 'executionModeAuto') || 'Auto'} (Lite)`,
+                label: `${getTranslation(currentLanguage, 'executionModeAuto') || 'Auto'} (${getTranslation(currentLanguage, 'executionModeDirect') || 'AI Studio'})`,
                 badgeColor: 'text-sky-600 dark:text-sky-400 bg-sky-500/10 border-sky-500/20',
             };
         }
@@ -83,7 +81,7 @@ const ExecutionModeSelector: React.FC<ExecutionModeSelectorProps> = ({
 
         return {
             icon: '🌐',
-            label: getTranslation(currentLanguage, 'executionModeDirect') || 'AI Studio Direct',
+            label: getTranslation(currentLanguage, 'executionModeDirect') || 'AI Studio',
             badgeColor: 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 border-indigo-500/20',
         };
     };
@@ -147,7 +145,12 @@ const ExecutionModeSelector: React.FC<ExecutionModeSelectorProps> = ({
                                 </span>
                                 {isSelected && (
                                     <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2.5}
+                                            d="M5 13l4 4L19 7"
+                                        />
                                     </svg>
                                 )}
                             </button>

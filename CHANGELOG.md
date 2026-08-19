@@ -1,5 +1,15 @@
 # Changelog
 
+## v4.1.2 - 2026-08-19
+
+- Release title: Nano Banana Ultra 4.1.2 - Execution Engine Mode Localization, Dynamic Header Badges & Dark Mode Diagnostics Toggle Ergonomics
+- Release summary:
+    - **Execution Engine Mode Label Modernization Across 9 Languages**: Refined execution engine mode terminology to streamline naming and remove legacy `(Ultra)` and `(Lite)` suffixes. In Traditional Chinese (`zh_TW`), modes are now clearly designated as `本地 API 運行` and `AI Studio 運行` (Simplified Chinese `zh_CN`: `本地 API 运行` and `AI Studio 运行`). In English (`en`), modes now cleanly read `Local API` and `AI Studio`. Japanese (`ja`), Korean (`ko`), German (`de`), French (`fr`), Spanish (`es`), and Russian (`ru`) translations have been completely unified with updated mode labels and selector tooltips.
+    - **Dynamic Execution Mode Header Badge Integration**: Modernized `ExecutionModeSelector` auto-detection badge to construct labels dynamically via the translation dictionary (`${executionModeAuto} (${executionModeLocal})` / `${executionModeAuto} (${executionModeDirect})`), eliminating hardcoded `(Ultra)` and `(Lite)` strings and standardizing fallback values across locales.
+    - **Dark Mode Diagnostics Terminal Toggle Button Restyling**: Fixed the top navigation bar diagnostics terminal toggle button (`debug-terminal-toggle`) in dark theme to use consistent dark slate styling (`dark:bg-gray-800` instead of semi-transparent light layer) with smooth interactive hover feedback (`hover:bg-slate-100 dark:hover:bg-gray-700`, `dark:hover:border-cyan-400/50`, and `dark:hover:text-cyan-300`), matching surrounding top rail controls with responsive `sm:h-8 sm:w-8` proportions.
+    - **Documentation & Test Suite Synchronization**: Updated English and Traditional Chinese `README` documentation to reflect the latest dual-engine architecture terminology and release version. Expanded `executionModeSelector.test.tsx` with multi-language assertion coverage across English, Japanese, and Traditional Chinese locales.
+    - **Testing & Verification**: 100% test pass rate across all 113 test suites (928 tests) with clean Prettier formatting and error-free production build.
+
 ## v4.1.1 - 2026-08-19
 
 - Release title: Nano Banana Ultra 4.1.1 - Workspace Stage Stability, Lite Mode Thought Images & History Chips Ergonomics

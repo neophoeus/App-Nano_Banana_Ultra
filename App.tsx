@@ -1919,7 +1919,7 @@ const App: React.FC = () => {
                     type="button"
                     data-testid="debug-terminal-toggle"
                     onClick={() => setIsDebugTerminalOpen(true)}
-                    className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200/80 bg-white/70 text-slate-500 transition-colors hover:border-cyan-300/80 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 dark:border-white/10 dark:bg-[#141922]/78 dark:text-slate-300 dark:hover:border-cyan-400/50 dark:hover:text-slate-50"
+                    className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200/80 bg-white/70 text-slate-500 transition-colors hover:border-cyan-300/80 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 dark:border-white/10 dark:bg-gray-800 dark:text-slate-300 dark:hover:border-cyan-400/50 dark:hover:bg-gray-700 dark:hover:text-cyan-300 sm:h-8 sm:w-8"
                     aria-label={t('debugTerminalOpen')}
                     title={t('debugTerminalOpen')}
                 >
