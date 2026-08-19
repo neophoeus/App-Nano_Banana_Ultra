@@ -81,12 +81,30 @@ describe('workspaceExecutionMode', () => {
         delete (window as any).aistudio;
     });
 
-    it('probes local mode when /api/health responds ok', async () => {
-        const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    it('probes local mode when on localhost and /api/health responds ok with json', async () => {
+        const fetchMock = vi.fn().mockResolvedValue(
+            new Response(JSON.stringify({ ok: true }), {
+                status: 200,
+                headers: { 'content-type': 'application/json' },
+            }),
+        );
         vi.stubGlobal('fetch', fetchMock);
 
         const resolved = await probeExecutionMode();
         expect(resolved).toBe('local');
         expect(fetchMock).toHaveBeenCalledWith('/api/health', expect.anything());
+    });
+
+    it('rejects SPA HTML fallback (200 text/html) and resolves direct mode', async () => {
+        const fetchMock = vi.fn().mockResolvedValue(
+            new Response('<!DOCTYPE html><html><body>SPA Index</body></html>', {
+                status: 200,
+                headers: { 'content-type': 'text/html' },
+            }),
+        );
+        vi.stubGlobal('fetch', fetchMock);
+
+        const resolved = await probeExecutionMode();
+        expect(resolved).toBe('direct');
     });
 });

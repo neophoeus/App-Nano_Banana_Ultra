@@ -2,6 +2,7 @@ import React from 'react';
 import { getTranslation, Language } from '../utils/translations';
 import { GeneratedImage } from '../types';
 import InfoTooltip from './InfoTooltip';
+import LazyHistoryImage from './LazyHistoryImage';
 
 type BranchSummary = {
     branchOriginId: string;
@@ -155,10 +156,12 @@ function RecentHistoryFilmstrip({
                                                 <div className="h-9 w-9 rounded-2xl border border-slate-300/70 bg-white/70 shadow-inner dark:border-slate-700 dark:bg-slate-900/60" />
                                             </div>
                                         ) : (
-                                            <img
+                                            <LazyHistoryImage
                                                 src={item.url}
+                                                savedFilename={item.thumbnailSavedFilename || item.savedFilename}
                                                 alt={t('stageGeneratedImageAlt')}
                                                 className="h-full w-full object-cover"
+                                                wrapperClassName="h-full w-full"
                                             />
                                         )}
                                         {!isFailed && isCurrentSource && (

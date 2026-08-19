@@ -92,6 +92,7 @@ import { useWorkspaceShellOwnerState } from './hooks/useWorkspaceShellOwnerState
 import { useWorkspaceSettingsSession } from './hooks/useWorkspaceSettingsSession';
 import { useWorkspaceTransientUiState } from './hooks/useWorkspaceTransientUiState';
 import { useDebugTerminal } from './hooks/useDebugTerminal';
+import { useWorkspaceExecutionMode } from './hooks/useWorkspaceExecutionMode';
 import { useLegacyWorkspaceSnapshotMigration } from './hooks/useLegacyWorkspaceSnapshotMigration';
 import { resolveCurrentStageSelectionFirstSourceOverride } from './utils/generationSourceOverride';
 import { buildSavedImageLoadUrl, loadImageMetadata } from './utils/imageSaveUtils';
@@ -1200,6 +1201,7 @@ const App: React.FC = () => {
         showNotification,
         t,
     });
+    const { capabilities: executionModeCapabilities } = useWorkspaceExecutionMode();
     const {
         canQueueComposerBatch,
         showEditorQueueBatch,
@@ -1785,6 +1787,7 @@ const App: React.FC = () => {
         temperature,
         isAdvancedSettingsOpen,
         generateLabel: t('generate'),
+        supportsQueuedBatch: executionModeCapabilities.supportsQueuedBatch,
         isQueueBatchDisabled,
         queueBatchDisabledReason,
         queueBatchModeSummary,
@@ -2756,7 +2759,12 @@ const App: React.FC = () => {
                                     batchSize={batchSize}
                                     onBatchSizeChange={setBatchSize}
                                     onGenerate={handleEditorGenerate}
-                                    onQueueBatch={showEditorQueueBatch ? handleEditorQueueBatch : undefined}
+                                    supportsQueuedBatch={executionModeCapabilities.supportsQueuedBatch}
+                                    onQueueBatch={
+                                        executionModeCapabilities.supportsQueuedBatch && showEditorQueueBatch
+                                            ? handleEditorQueueBatch
+                                            : undefined
+                                    }
                                     queueBatchDisabledReason={showEditorQueueBatch ? null : editorQueueDisabledReason}
                                     onCancel={closeEditor}
                                     isGenerating={isGenerating}

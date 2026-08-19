@@ -1,3 +1,5 @@
+import { loadBrowserSavedImageDataUrl, BROWSER_SAVED_IMAGE_PATH_PREFIX } from './browserImageStore';
+
 const IMAGE_MIME_TYPE_EXTENSION_MAP: Record<string, string> = {
     'image/jpeg': 'jpg',
     'image/png': 'png',
@@ -65,19 +67,55 @@ export async function downloadImageSource(
         mimeType?: string | null;
     } = {},
 ): Promise<string> {
-    const response = await fetch(imageUrl);
-    if (!response.ok) {
-        throw new Error(`Failed to fetch image for download (${response.status})`);
+    let resolvedUrl = imageUrl;
+    let blob: Blob | null = null;
+
+    if (imageUrl.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX)) {
+        const key = imageUrl.slice(BROWSER_SAVED_IMAGE_PATH_PREFIX.length);
+        const dataUrl = await loadBrowserSavedImageDataUrl(key).catch(() => null);
+        if (dataUrl) {
+            resolvedUrl = dataUrl;
+        }
+    } else if (filename && !imageUrl.startsWith('data:')) {
+        const dataUrl = await loadBrowserSavedImageDataUrl(filename).catch(() => null);
+        if (dataUrl) {
+            resolvedUrl = dataUrl;
+        }
     }
 
-    const blob = await response.blob();
+    try {
+        const response = await fetch(resolvedUrl);
+        if (response.ok) {
+            blob = await response.blob();
+        }
+    } catch {
+        // If direct fetch fails, fallback to loading from indexedDB browser store
+        const fallbackFilename =
+            filename ||
+            (imageUrl.includes('filename=') ? decodeURIComponent(imageUrl.split('filename=')[1]) : undefined);
+        if (fallbackFilename) {
+            const dataUrl = await loadBrowserSavedImageDataUrl(fallbackFilename).catch(() => null);
+            if (dataUrl) {
+                const fallbackResponse = await fetch(dataUrl);
+                if (fallbackResponse.ok) {
+                    blob = await fallbackResponse.blob();
+                    resolvedUrl = dataUrl;
+                }
+            }
+        }
+    }
+
+    if (!blob) {
+        throw new Error('Failed to fetch image for download');
+    }
+
     const resolvedFilename =
         filename && /\.[^.]+$/.test(filename)
             ? filename
             : `${filename || filenameStem || DEFAULT_DOWNLOAD_FILENAME_STEM}.${resolveImageDownloadExtension({
                   mimeType: mimeType || blob.type,
                   savedFilename: filename,
-                  imageUrl,
+                  imageUrl: resolvedUrl,
               })}`;
     const objectUrl = URL.createObjectURL(blob);
     triggerObjectUrlDownload(objectUrl, resolvedFilename);

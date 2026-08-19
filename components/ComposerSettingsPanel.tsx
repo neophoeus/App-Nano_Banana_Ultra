@@ -22,6 +22,7 @@ import {
 } from '../types';
 
 export type ComposerSettingsPanelProps = {
+    supportsQueuedBatch?: boolean;
     promptThinkingLevel?: PromptThinkingLevel;
     onPromptThinkingLevelChange?: (level: PromptThinkingLevel) => void;
     prompt: string;
@@ -184,6 +185,7 @@ function ComposerSettingsPanel({
     settingsLocked = false,
     onToggleSettingsLock,
     showNotification,
+    supportsQueuedBatch = true,
     promptThinkingLevel = 'low',
     onPromptThinkingLevelChange,
 }: ComposerSettingsPanelProps) {
@@ -1113,58 +1115,60 @@ function ComposerSettingsPanel({
                             </Button>
                         ) : null}
                     </div>
-                    <div
-                        data-testid="composer-queue-actions"
-                        className={`grid gap-1.5 ${showSecondaryQueueButton ? 'sm:grid-cols-[minmax(0,1fr)_minmax(0,180px)]' : 'sm:grid-cols-1'}`}
-                    >
-                        <div className="flex min-w-0 items-center gap-1.5">
-                            <Button
-                                data-testid="composer-queue-batch-primary-button"
-                                variant="secondary"
-                                onClick={handlePrimaryQueueAction}
-                                aria-label={primaryQueueAriaLabel}
-                                disabled={isActionLocked || isQueueBatchDisabled}
-                                title={primaryQueueTitle}
-                                className="min-h-9 min-w-0 flex-1 rounded-[20px] px-3 text-[12px] font-semibold"
-                            >
-                                {primaryQueueLabel}
-                            </Button>
-                            <InfoTooltip
-                                content={primaryQueueModeHint}
-                                buttonLabel={primaryQueueLabel}
-                                ariaLabel={primaryQueueModeHint}
-                                dataTestId="composer-queue-batch-mode-hint"
-                                tone="light"
-                                align="right"
-                                preferredVerticalPlacement="top"
-                                autoAdjust={true}
-                            />
-                        </div>
-                        {showSecondaryQueueButton ? (
+                    {supportsQueuedBatch ? (
+                        <div
+                            data-testid="composer-queue-actions"
+                            className={`grid gap-1.5 ${showSecondaryQueueButton ? 'sm:grid-cols-[minmax(0,1fr)_minmax(0,180px)]' : 'sm:grid-cols-1'}`}
+                        >
                             <div className="flex min-w-0 items-center gap-1.5">
                                 <Button
-                                    data-testid="composer-queue-batch-generate-button"
+                                    data-testid="composer-queue-batch-primary-button"
                                     variant="secondary"
-                                    onClick={onQueueBatchJob}
+                                    onClick={handlePrimaryQueueAction}
+                                    aria-label={primaryQueueAriaLabel}
                                     disabled={isActionLocked || isQueueBatchDisabled}
-                                    title={isQueueBatchDisabled ? secondaryQueueModeHint : undefined}
+                                    title={primaryQueueTitle}
                                     className="min-h-9 min-w-0 flex-1 rounded-[20px] px-3 text-[12px] font-semibold"
                                 >
-                                    {secondaryQueueLabel}
+                                    {primaryQueueLabel}
                                 </Button>
                                 <InfoTooltip
-                                    content={secondaryQueueModeHint}
-                                    buttonLabel={secondaryQueueLabel}
-                                    ariaLabel={secondaryQueueModeHint}
-                                    dataTestId="composer-queue-batch-generate-mode-hint"
+                                    content={primaryQueueModeHint}
+                                    buttonLabel={primaryQueueLabel}
+                                    ariaLabel={primaryQueueModeHint}
+                                    dataTestId="composer-queue-batch-mode-hint"
                                     tone="light"
                                     align="right"
                                     preferredVerticalPlacement="top"
                                     autoAdjust={true}
                                 />
                             </div>
-                        ) : null}
-                    </div>
+                            {showSecondaryQueueButton ? (
+                                <div className="flex min-w-0 items-center gap-1.5">
+                                    <Button
+                                        data-testid="composer-queue-batch-generate-button"
+                                        variant="secondary"
+                                        onClick={onQueueBatchJob}
+                                        disabled={isActionLocked || isQueueBatchDisabled}
+                                        title={isQueueBatchDisabled ? secondaryQueueModeHint : undefined}
+                                        className="min-h-9 min-w-0 flex-1 rounded-[20px] px-3 text-[12px] font-semibold"
+                                    >
+                                        {secondaryQueueLabel}
+                                    </Button>
+                                    <InfoTooltip
+                                        content={secondaryQueueModeHint}
+                                        buttonLabel={secondaryQueueLabel}
+                                        ariaLabel={secondaryQueueModeHint}
+                                        dataTestId="composer-queue-batch-generate-mode-hint"
+                                        tone="light"
+                                        align="right"
+                                        preferredVerticalPlacement="top"
+                                        autoAdjust={true}
+                                    />
+                                </div>
+                            ) : null}
+                        </div>
+                    ) : null}
                     {isCancelFinalizing ? (
                         <p
                             data-testid="composer-cancel-finalizing-note"

@@ -1,5 +1,15 @@
 # Changelog
 
+## v4.0.1 - 2026-08-19
+
+- Release title: Nano Banana Ultra 4.0.1 - Dual-Engine Image Resolution & Queue Controls Refinement
+- Release summary:
+    - **AI Studio / Direct Mode Image Resolution**: Introduced `useResolvedImageSource` hook and asynchronous asset resolvers (`resolveDisplayImageSource`, `resolveDisplayImageSourceAsync`) to seamlessly resolve virtual session image paths (`/lite/session-images/...`, `browser-img://...`) into full-resolution IndexedDB / cache Data URLs across the main stage (`GeneratedImage`), full-screen viewer (`WorkspaceViewerOverlay`), canvas image editor (`ImageEditor`), and recent history filmstrip (`RecentHistoryFilmstrip`).
+    - **Engine-Aware Queue Button Visibility**: Properly bound the "加入佇列 / 將舞台圖加入佇列" (Queued Batch) buttons in both `ComposerSettingsPanel` and `ImageEditor` to `executionCapabilities.supportsQueuedBatch`, cleanly hiding them in Direct / AI Studio mode while keeping them fully operational in Local mode.
+    - **Local Mode History Thumbnail Immediate Render**: Fixed `LazyHistoryImage` to render local `/api/load-image` endpoints immediately without waiting for IndexedDB queries, preventing thumbnails from going blank in Local mode.
+    - **Editor & Canvas Direct Mode Integration**: Enhanced `useWorkspaceEditorActions` to asynchronously resolve virtual images prior to canvas dimension measurement and inpainting/outpainting entry.
+    - **Testing & Verification**: 100% test pass rate across 112 test suites (916 tests).
+
 ## v4.0.0 - 2026-08-19
 
 - Release title: Nano Banana Ultra 4.0.0 - Unified Dual-Engine Architecture (Local API & AI Studio Direct)
@@ -31,7 +41,7 @@
 
 - Release title: Nano Banana Ultra 3.15.2 - Locked Settings Guard Fix
 - Release summary:
-    - **Locked Settings Guard Fix**: Added `settingsLocked` protection to the "Set quantity to 1" warning action button so that when settings are locked, clicking it displays the notification toast *"Settings are locked. Please unlock them first."* (`settingsLockedNotice`) and prevents state desynchronization.
+    - **Locked Settings Guard Fix**: Added `settingsLocked` protection to the "Set quantity to 1" warning action button so that when settings are locked, clicking it displays the notification toast _"Settings are locked. Please unlock them first."_ (`settingsLockedNotice`) and prevents state desynchronization.
     - **Visual Lock Indicator**: Added 🔒 lock icon indicator on the action button when settings are locked.
     - **Test Coverage**: Added Vitest test assertions verifying locked settings interception behavior.
 
@@ -66,7 +76,7 @@
     - **Settings Locking System**: Implemented a glassmorphic Lock Settings toggle switch in the primary settings row next to the styles strip.
     - **Guarded Settings States**: Blocked programmatic/user updates to generation model, aspect ratio, image size, batch size, style, temperature, output format, thinking level, and web search configurations when settings are locked.
     - **Guarded Workflows**: Reference image aspect-ratio adjustments, workspace resets, and viewer/editor snapshot restores respect settings lock status and skip changing locked configuration values.
-    - **Locked UI Intercepts**: Clicks on locked panel buttons display a toast warning notification saying *"Settings are locked. Please unlock them first."* instead of opening the panels.
+    - **Locked UI Intercepts**: Clicks on locked panel buttons display a toast warning notification saying _"Settings are locked. Please unlock them first."_ instead of opening the panels.
     - **Full Localization**: Integrated translation keys for English, Traditional Chinese, Simplified Chinese, Japanese, Korean, German, Spanish, French, and Russian.
     - **Test Coverage**: Added Vitest test cases validating lock toggle state and update guard logic.
 

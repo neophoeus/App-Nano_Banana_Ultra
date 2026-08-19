@@ -4,6 +4,8 @@ import { WORKSPACE_EDITOR_Z_INDEX } from '../constants/workspaceOverlays';
 import { EditorMode, ImageSize, AspectRatio, ImageModel } from '../types';
 import { Language, getTranslation } from '../utils/translations';
 import { MODEL_CAPABILITIES } from '../constants';
+import { resolveDisplayImageSourceAsync } from '../utils/browserImageStore';
+import { useResolvedImageSource } from '../hooks/useResolvedImageSource';
 import { buildEditorPrompt } from '../utils/editorPromptBuilder';
 import {
     appendPointToLatestStroke,
@@ -72,6 +74,7 @@ interface ImageEditorProps {
         characterImages?: string[],
         targetRatio?: AspectRatio,
     ) => void | Promise<void>;
+    supportsQueuedBatch?: boolean;
     queueBatchDisabledReason?: string | null;
     onCancel: (options?: { discardSharedContext?: boolean }) => void;
     isGenerating: boolean;
@@ -139,6 +142,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     batchSize,
     onGenerate,
     onQueueBatch,
+    supportsQueuedBatch = true,
     queueBatchDisabledReason = null,
     onCancel,
     isGenerating,
@@ -149,6 +153,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     leftDockTopOffset = null,
 }) => {
     const t = (key: string) => getTranslation(currentLanguage, key);
+    const resolvedInitialImageUrl = useResolvedImageSource(initialImageUrl);
 
     // --- Core State ---
     const [retouchMode, setRetouchMode] = useState<RetouchMode>('mask'); // Default to Mask (original behavior)
@@ -271,30 +276,37 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         }
 
         let cancelled = false;
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
+        const resolveAndLoad = async () => {
+            const effectiveSrc = await resolveDisplayImageSourceAsync(initialImageUrl);
             if (cancelled) {
                 return;
             }
 
-            const w = initialPreparedSource?.width || img.width;
-            const h = initialPreparedSource?.height || img.height;
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+                if (cancelled) {
+                    return;
+                }
 
-            setOriginalDims({ w, h });
-            setImgElement(img);
+                const w = initialPreparedSource?.width || img.width;
+                const h = initialPreparedSource?.height || img.height;
 
-            if (eventSurfaceRef.current) {
-                const { clientWidth, clientHeight } = eventSurfaceRef.current;
-                setViewport(fitImageToViewport(w, h, clientWidth, clientHeight));
-            }
+                setOriginalDims({ w, h });
+                setImgElement(img);
+
+                if (eventSurfaceRef.current) {
+                    const { clientWidth, clientHeight } = eventSurfaceRef.current;
+                    setViewport(fitImageToViewport(w, h, clientWidth, clientHeight));
+                }
+            };
+            img.src = effectiveSrc;
         };
-        img.src = initialImageUrl;
+
+        void resolveAndLoad();
 
         return () => {
             cancelled = true;
-            img.onload = null;
-            img.onerror = null;
         };
     }, [initialImageUrl, initialPreparedSource?.height, initialPreparedSource?.width]);
 
@@ -1361,7 +1373,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                         >
                             <span className="text-center leading-tight drop-shadow-md">{t('btnRender')}</span>
                         </Button>
-                        {onQueueBatch ? (
+                        {supportsQueuedBatch && onQueueBatch ? (
                             <Button
                                 data-testid="editor-queue-batch"
                                 variant="secondary"
@@ -1411,7 +1423,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                 className="relative shadow-2xl"
                                 style={{ width: originalDims.w, height: originalDims.h }}
                             >
-                                <img src={initialImageUrl || undefined} className="w-full h-full block" alt="Source" />
+                                <img src={resolvedInitialImageUrl || initialImageUrl || undefined} className="w-full h-full block" alt="Source" />
                                 <canvas
                                     ref={overlayCanvasRef}
                                     width={originalDims.w}
@@ -1434,7 +1446,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                     }}
                                 >
                                     <img
-                                        src={initialImageUrl || undefined}
+                                        src={resolvedInitialImageUrl || initialImageUrl || undefined}
                                         className="w-full h-full object-cover shadow-xl"
                                         alt="Source"
                                     />

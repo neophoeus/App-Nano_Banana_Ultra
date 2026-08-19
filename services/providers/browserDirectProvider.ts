@@ -1104,7 +1104,6 @@ export class BrowserDirectProvider implements WorkspaceExecutionProvider {
         callbacks: ProgressCallbacks = {},
     ): Promise<any[]> {
         const { onImageReceived, onLog, abortSignal, onProgress, onResult, onSlotStart } = callbacks;
-        const STAGGER_DELAY_MS = 1000;
         let completedCount = 0;
 
         const finalizeBatchResult = (result: any) => {
@@ -1114,20 +1113,39 @@ export class BrowserDirectProvider implements WorkspaceExecutionProvider {
             return result;
         };
 
-        const promises = Array.from({ length: batchSize }).map(async (_, index): Promise<InitialBatchAttemptOutcome> => {
-            if (index > 0) {
-                await delayWithAbort(index * STAGGER_DELAY_MS, abortSignal);
+        const results: any[] = [];
+        const isUnitTest = typeof process !== 'undefined' && process.env.NODE_ENV === 'test';
+
+        for (let index = 0; index < batchSize; index++) {
+            if (index > 0 && !isUnitTest) {
+                try {
+                    const isProModel = options.model?.toLowerCase().includes('pro');
+                    const staggerDelay = isProModel ? 15000 : 5000;
+                    await delayWithAbort(staggerDelay, abortSignal);
+                } catch (error) {
+                    results.push(
+                        finalizeBatchResult({
+                            slotIndex: index,
+                            status: 'failed',
+                            error:
+                                error instanceof Error && error.message === 'ABORTED'
+                                    ? 'Generation cancelled'
+                                    : String(error),
+                        }),
+                    );
+                    continue;
+                }
             }
 
             if (abortSignal?.aborted) {
-                return {
-                    result: finalizeBatchResult({
+                results.push(
+                    finalizeBatchResult({
                         slotIndex: index,
                         status: 'failed',
                         error: 'Generation cancelled',
                     }),
-                    needsRecovery: false,
-                };
+                );
+                continue;
             }
 
             onSlotStart?.(index);
@@ -1140,54 +1158,64 @@ export class BrowserDirectProvider implements WorkspaceExecutionProvider {
             );
 
             if (initialResult.status === 'success' || initialResult.error === 'Generation cancelled') {
-                return {
-                    result: finalizeBatchResult(initialResult),
-                    needsRecovery: false,
-                };
+                results.push(finalizeBatchResult(initialResult));
+                continue;
             }
 
             if (shouldAttemptImageAbsenceRecovery(initialResult)) {
                 onLog?.(`Image #${index + 1}: No final image returned. Scheduling one recovery attempt.`);
-                return {
-                    result: initialResult,
-                    needsRecovery: true,
-                };
-            }
 
-            onLog?.(`Image #${index + 1} Failed: ${initialResult.error}`);
-            return {
-                result: finalizeBatchResult(initialResult),
-                needsRecovery: false,
-            };
-        });
+                if (!isUnitTest) {
+                    try {
+                        const isProModel = options.model?.toLowerCase().includes('pro');
+                        const staggerDelay = isProModel ? 15000 : 5000;
+                        await delayWithAbort(staggerDelay, abortSignal);
+                    } catch (error) {
+                        results.push(
+                            finalizeBatchResult({
+                                slotIndex: index,
+                                status: 'failed',
+                                error: 'Generation cancelled',
+                            }),
+                        );
+                        continue;
+                    }
+                }
 
-        const initialOutcomes = await Promise.all(promises);
-        const results = initialOutcomes.map((outcome) => outcome.result);
+                if (abortSignal?.aborted) {
+                    results.push(
+                        finalizeBatchResult({
+                            slotIndex: index,
+                            status: 'failed',
+                            error: 'Generation cancelled',
+                        }),
+                    );
+                    continue;
+                }
 
-        for (const outcome of initialOutcomes) {
-            if (!outcome.needsRecovery) {
+                onLog?.(`Image #${index + 1}: Retrying once after image-absence failure.`);
+                const recoveredResult = await executeBlockingImageAttempt(
+                    options,
+                    index,
+                    onImageReceived,
+                    onLog,
+                    abortSignal,
+                );
+                const finalizedResult =
+                    recoveredResult.status === 'success'
+                        ? recoveredResult
+                        : mergeRecoveredFailureResult(initialResult, recoveredResult);
+
+                if (finalizedResult.status === 'failed') {
+                    onLog?.(`Image #${index + 1} Failed: ${finalizedResult.error}`);
+                }
+
+                results.push(finalizeBatchResult(finalizedResult));
                 continue;
             }
 
-            const slotIndex = outcome.result.slotIndex;
-            onLog?.(`Image #${slotIndex + 1}: Retrying once after image-absence failure.`);
-            const recoveredResult = await executeBlockingImageAttempt(
-                options,
-                slotIndex,
-                onImageReceived,
-                onLog,
-                abortSignal,
-            );
-            const finalizedResult =
-                recoveredResult.status === 'success'
-                    ? recoveredResult
-                    : mergeRecoveredFailureResult(outcome.result, recoveredResult);
-
-            if (finalizedResult.status === 'failed') {
-                onLog?.(`Image #${slotIndex + 1} Failed: ${finalizedResult.error}`);
-            }
-
-            results[slotIndex] = finalizeBatchResult(finalizedResult);
+            onLog?.(`Image #${index + 1} Failed: ${initialResult.error}`);
+            results.push(finalizeBatchResult(initialResult));
         }
 
         return results;

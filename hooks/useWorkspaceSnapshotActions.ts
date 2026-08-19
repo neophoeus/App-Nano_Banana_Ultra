@@ -261,10 +261,10 @@ export const useWorkspaceSnapshotActions = ({
         workspaceImportReview,
     ]);
 
-    const handleExportWorkspaceSnapshot = useCallback(() => {
+    const handleExportWorkspaceSnapshot = useCallback(async () => {
         try {
             const snapshot = composeCurrentWorkspaceSnapshot();
-            const blob = new Blob([exportWorkspaceSnapshotDocument(snapshot)], { type: 'application/json' });
+            const blob = await exportWorkspaceSnapshotDocument(snapshot);
             const objectUrl = URL.createObjectURL(blob);
             const downloadLink = document.createElement('a');
             downloadLink.href = objectUrl;

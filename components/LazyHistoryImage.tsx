@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { loadBrowserSavedImageDataUrl, BROWSER_SAVED_IMAGE_PATH_PREFIX } from '../utils/browserImageStore';
+import { buildSavedImageLoadUrl } from '../utils/imageSaveUtils';
 
 type LazyHistoryImageProps = {
     src: string;
+    savedFilename?: string;
     alt: string;
     className?: string;
     wrapperClassName?: string;
@@ -13,6 +16,7 @@ type LazyHistoryImageProps = {
 
 function LazyHistoryImage({
     src,
+    savedFilename,
     alt,
     className,
     wrapperClassName,
@@ -29,6 +33,13 @@ function LazyHistoryImage({
 
         return typeof window.IntersectionObserver === 'undefined';
     });
+
+    const [resolvedSrc, setResolvedSrc] = useState<string>('');
+
+    const isDataUrl = Boolean(src && src.startsWith('data:'));
+    const isVirtual = Boolean(src && src.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX));
+    const isLocalResolutionNeeded = !isDataUrl && (isVirtual || Boolean(savedFilename));
+    const displaySrc = resolvedSrc || src;
 
     useEffect(() => {
         if (typeof window === 'undefined' || typeof window.IntersectionObserver === 'undefined') {
@@ -55,11 +66,44 @@ function LazyHistoryImage({
         };
     }, [rootMargin]);
 
+    useEffect(() => {
+        if (!isVisible || !isLocalResolutionNeeded) {
+            return;
+        }
+
+        const filename = savedFilename || (src && isVirtual ? src.slice(BROWSER_SAVED_IMAGE_PATH_PREFIX.length) : undefined);
+        if (!filename) {
+            return;
+        }
+
+        // Check sync cache first
+        const syncUrl = buildSavedImageLoadUrl(filename);
+        if (syncUrl && syncUrl.startsWith('data:')) {
+            setResolvedSrc(syncUrl);
+            return;
+        }
+
+        let active = true;
+        loadBrowserSavedImageDataUrl(filename)
+            .then((dataUrl) => {
+                if (active && dataUrl) {
+                    setResolvedSrc(dataUrl);
+                }
+            })
+            .catch(() => {
+                // Ignore fallback failure
+            });
+
+        return () => {
+            active = false;
+        };
+    }, [isVisible, src, savedFilename, isLocalResolutionNeeded, isVirtual]);
+
     return (
         <div ref={containerRef} className={wrapperClassName}>
-            {isVisible ? (
+            {isVisible && displaySrc ? (
                 <img
-                    src={src || undefined}
+                    src={displaySrc || undefined}
                     alt={alt}
                     className={className}
                     data-testid={dataTestId}

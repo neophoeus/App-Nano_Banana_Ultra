@@ -20,10 +20,28 @@ export const EXECUTION_MODE_STORAGE_KEY = 'nbu_execution_mode_setting';
 
 const listeners = new Set<(mode: ResolvedExecutionMode, setting: WorkspaceExecutionModeSetting) => void>();
 
-let currentSetting: WorkspaceExecutionModeSetting = 'auto';
-let resolvedMode: ResolvedExecutionMode = 'local';
-let isDetecting = false;
-let hasDetectedOnce = false;
+export const isLocalhostEnvironment = (): boolean => {
+    if (typeof window === 'undefined' || !window.location) {
+        return true;
+    }
+
+    const hostname = window.location.hostname;
+    return (
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname === '[::1]' ||
+        hostname.endsWith('.localhost') ||
+        hostname.endsWith('.internal')
+    );
+};
+
+export const isAiStudioEnvironment = (): boolean => {
+    if (typeof window === 'undefined') {
+        return false;
+    }
+
+    return Boolean(window.aistudio);
+};
 
 export const getStoredExecutionModeSetting = (): WorkspaceExecutionModeSetting => {
     if (typeof window === 'undefined') {
@@ -41,6 +59,25 @@ export const getStoredExecutionModeSetting = (): WorkspaceExecutionModeSetting =
 
     return 'auto';
 };
+
+const resolveInitialExecutionMode = (): ResolvedExecutionMode => {
+    const stored = getStoredExecutionModeSetting();
+    if (stored === 'local') {
+        return 'local';
+    }
+    if (stored === 'direct') {
+        return 'direct';
+    }
+    if (typeof window !== 'undefined' && (!isLocalhostEnvironment() || isAiStudioEnvironment())) {
+        return 'direct';
+    }
+    return 'local';
+};
+
+let currentSetting: WorkspaceExecutionModeSetting = 'auto';
+let resolvedMode: ResolvedExecutionMode = resolveInitialExecutionMode();
+let isDetecting = false;
+let hasDetectedOnce = false;
 
 export const setStoredExecutionModeSetting = (setting: WorkspaceExecutionModeSetting): void => {
     currentSetting = setting;
@@ -76,16 +113,12 @@ export const subscribeExecutionMode = (
     };
 };
 
-export const isAiStudioEnvironment = (): boolean => {
-    if (typeof window === 'undefined') {
+export const probeLocalServerHealth = async (timeoutMs = 1500): Promise<boolean> => {
+    if (typeof window === 'undefined' || typeof fetch === 'undefined') {
         return false;
     }
 
-    return Boolean(window.aistudio);
-};
-
-export const probeLocalServerHealth = async (timeoutMs = 1500): Promise<boolean> => {
-    if (typeof window === 'undefined' || typeof fetch === 'undefined') {
+    if (!isLocalhostEnvironment()) {
         return false;
     }
 
@@ -100,7 +133,17 @@ export const probeLocalServerHealth = async (timeoutMs = 1500): Promise<boolean>
         });
 
         clearTimeout(timeoutId);
-        return response.ok;
+        if (!response.ok) {
+            return false;
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            return false;
+        }
+
+        const data = await response.json().catch(() => null);
+        return Boolean(data && (data.ok === true || data.status === 'ok'));
     } catch {
         return false;
     }
@@ -130,7 +173,7 @@ export const detectExecutionMode = async (): Promise<ResolvedExecutionMode> => {
     isDetecting = true;
 
     try {
-        if (isAiStudioEnvironment()) {
+        if (isAiStudioEnvironment() || !isLocalhostEnvironment()) {
             resolvedMode = 'direct';
         } else {
             const isLocalServerHealthy = await probeLocalServerHealth(1500);
@@ -149,12 +192,7 @@ export const detectExecutionMode = async (): Promise<ResolvedExecutionMode> => {
 
 export const getResolvedExecutionMode = (): ResolvedExecutionMode => {
     if (!hasDetectedOnce) {
-        currentSetting = getStoredExecutionModeSetting();
-        if (currentSetting === 'local') {
-            resolvedMode = 'local';
-        } else if (currentSetting === 'direct') {
-            resolvedMode = 'direct';
-        }
+        resolvedMode = resolveInitialExecutionMode();
     }
 
     return resolvedMode;

@@ -380,6 +380,78 @@ export const findSavedFilenameByDataUrl = (dataUrl: string): string | undefined 
     return undefined;
 };
 
+export const extractBrowserSavedImageFilename = (source: string | null | undefined): string | null => {
+    if (!source || typeof source !== 'string') {
+        return null;
+    }
+    const trimmed = source.trim();
+    if (!trimmed) {
+        return null;
+    }
+    if (trimmed.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX)) {
+        return trimmed.slice(BROWSER_SAVED_IMAGE_PATH_PREFIX.length);
+    }
+    if (trimmed.startsWith('browser-img://')) {
+        return trimmed.slice('browser-img://'.length);
+    }
+    if (trimmed.includes('filename=')) {
+        try {
+            const queryPart = trimmed.split('filename=')[1]?.split('&')[0];
+            if (queryPart) {
+                return decodeURIComponent(queryPart);
+            }
+        } catch {
+            // ignore
+        }
+    }
+    return null;
+};
+
+export const resolveDisplayImageSource = (source: string | null | undefined): string => {
+    if (!source || typeof source !== 'string') {
+        return '';
+    }
+    if (
+        source.startsWith('data:') ||
+        source.startsWith('blob:') ||
+        source.startsWith('http://') ||
+        source.startsWith('https://')
+    ) {
+        return source;
+    }
+    const filename = extractBrowserSavedImageFilename(source);
+    if (filename) {
+        const syncRecord = readBrowserSavedImageRecordSync(filename);
+        if (syncRecord?.dataUrl) {
+            return syncRecord.dataUrl;
+        }
+    }
+    return source;
+};
+
+export const resolveDisplayImageSourceAsync = async (source: string | null | undefined): Promise<string> => {
+    if (!source || typeof source !== 'string') {
+        return '';
+    }
+    const syncResolved = resolveDisplayImageSource(source);
+    if (
+        syncResolved.startsWith('data:') ||
+        syncResolved.startsWith('blob:') ||
+        syncResolved.startsWith('http://') ||
+        syncResolved.startsWith('https://')
+    ) {
+        return syncResolved;
+    }
+    const filename = extractBrowserSavedImageFilename(source);
+    if (filename) {
+        const dataUrl = await loadBrowserSavedImageDataUrl(filename);
+        if (dataUrl) {
+            return dataUrl;
+        }
+    }
+    return syncResolved;
+};
+
 export const loadBrowserSavedImageDataUrl = async (savedFilename: string): Promise<string | null> =>
     (await loadBrowserSavedImageRecord(savedFilename))?.dataUrl || null;
 
@@ -416,3 +488,4 @@ export const calculateBrowserSavedImageDbSize = async (): Promise<number> => {
         }
     });
 };
+

@@ -111,9 +111,9 @@ Nano Banana Ultra 目前支援四條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：4.0.0
+### 最新版本：4.0.1
 
-最新版本：4.0.0。全新雙引擎整合架構（Unified Dual-Engine Architecture），將本機 API 模式（Node 後端）與 AI Studio 直連模式（原 Ultra Lite）完整合併至單一專案。支援環境自動偵測、頂部導覽列即時引擎切換（`自動偵測` / `本地 API` / `AI Studio 直連`）、本機磁碟與瀏覽器 IndexedDB 雙軌持久化。原獨立之 Ultra Lite 專案已正式整併並廢除。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
+最新版本：4.0.1。雙引擎影像解析與排程佇列控制優化。引入 `useResolvedImageSource` 智慧來源解析 Hook，完美支援舞台大圖、全螢幕檢視器、編輯器畫布及歷史底片解析 IndexedDB 與快取高畫質 Data URL；針對 Direct / AI Studio 模式自動隱藏排程佇列按鈕；修復 Local 模式縮圖即時渲染。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 4.x
 

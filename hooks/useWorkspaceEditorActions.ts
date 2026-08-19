@@ -11,6 +11,7 @@ import {
 } from '../utils/imageSaveUtils';
 import { resolveCurrentStageSelectionFirstSourceOverride } from '../utils/generationSourceOverride';
 import { findClosestAspectRatio, findClosestImageSize } from '../utils/canvasWorkspace';
+import { resolveDisplayImageSourceAsync } from '../utils/browserImageStore';
 import {
     AspectRatio,
     ContinuationLineageAction,
@@ -259,6 +260,8 @@ export function useWorkspaceEditorActions({
             setEditingImageSource(null);
 
             try {
+                const effectiveImageSource = await resolveDisplayImageSourceAsync(nextImageSource);
+                resolvedImageSource = effectiveImageSource;
                 const providedPreparedAsset = options?.preparedAsset;
                 if (providedPreparedAsset) {
                     resolvedImageSource = providedPreparedAsset.dataUrl;
@@ -268,7 +271,7 @@ export function useWorkspaceEditorActions({
                         wasResized: providedPreparedAsset.wasResized,
                     };
                 } else {
-                    const measuredDimensions = await loadImageDimensions(nextImageSource);
+                    const measuredDimensions = await loadImageDimensions(effectiveImageSource);
                     const constrainedDimensions = constrainImageDimensions(
                         measuredDimensions.width,
                         measuredDimensions.height,
@@ -282,7 +285,7 @@ export function useWorkspaceEditorActions({
 
                     if (constrainedDimensions.wasResized) {
                         const preparedAsset = await prepareImageAssetFromSource(
-                            nextImageSource,
+                            effectiveImageSource,
                             EDITOR_IMAGE_MAX_DIMENSION,
                         );
                         resolvedImageSource = preparedAsset.dataUrl;

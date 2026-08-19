@@ -345,6 +345,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                             ) : (
                                 <LazyHistoryImage
                                     src={item.url}
+                                    savedFilename={item.thumbnailSavedFilename || item.savedFilename}
                                     alt={t('stageGeneratedImageAlt')}
                                     dataTestId={`history-card-${item.id}-image`}
                                     placeholderTestId={`history-card-${item.id}-deferred-media`}

@@ -29,6 +29,12 @@ import {
     createDebugTerminalCorrelationId,
     emitDebugTerminalEvent,
 } from './debugTerminalEvents';
+import {
+    BrowserSavedImageRecordMap,
+    collectBrowserSavedImageRecords,
+    hydrateBrowserSavedImageRecords,
+    loadBrowserSavedImageRecord,
+} from './browserImageStore';
 import { normalizeGenerationFailureInfo, resolveDisplayGenerationFailureInfo } from './generationFailure';
 import { sanitizeSessionHintsForStorage } from './inlineImageDisplay';
 import { buildLineagePresentation } from './lineage';
@@ -230,6 +236,55 @@ const FAILURE_EXTRACTION_ISSUE_VALUES = new Set<NonNullable<QueuedBatchJobImport
     'missing-parts',
     'no-image-data',
 ]);
+const isImageResultPart = (part: ResultPart): part is Extract<ResultPart, { imageUrl: string }> =>
+    part.kind === 'thought-image' || part.kind === 'output-image';
+
+const pushSavedFilename = (savedFilenames: Set<string>, savedFilename?: string | null): void => {
+    if (typeof savedFilename !== 'string') {
+        return;
+    }
+
+    const normalizedSavedFilename = savedFilename.trim();
+    if (!normalizedSavedFilename) {
+        return;
+    }
+
+    savedFilenames.add(normalizedSavedFilename);
+};
+
+const collectResultPartSavedFilenames = (resultParts: ResultPart[] | null | undefined, savedFilenames: Set<string>): void => {
+    resultParts?.forEach((part) => {
+        if (isImageResultPart(part)) {
+            pushSavedFilename(savedFilenames, part.savedFilename);
+        }
+    });
+};
+
+const collectWorkspaceSnapshotSavedFilenames = (snapshot: WorkspacePersistenceSnapshot): string[] => {
+    const savedFilenames = new Set<string>();
+
+    snapshot.history.forEach((item) => {
+        pushSavedFilename(savedFilenames, item.savedFilename);
+        pushSavedFilename(savedFilenames, item.thumbnailSavedFilename);
+        collectResultPartSavedFilenames(item.resultParts, savedFilenames);
+    });
+
+    snapshot.stagedAssets.forEach((asset) => {
+        pushSavedFilename(savedFilenames, asset.savedFilename);
+    });
+
+    collectResultPartSavedFilenames(snapshot.workspaceSession.activeResult?.resultParts, savedFilenames);
+
+    return [...savedFilenames];
+};
+
+const hydrateWorkspaceSnapshotDocumentAssets = (value: unknown): void => {
+    if (!isRecord(value) || !isRecord(value.assets) || !isRecord(value.assets.savedImages)) {
+        return;
+    }
+
+    hydrateBrowserSavedImageRecords(value.assets.savedImages as BrowserSavedImageRecordMap);
+};
 
 const isAspectRatio = (value: unknown): value is GeneratedImage['aspectRatio'] =>
     typeof value === 'string' && ASPECT_RATIO_VALUES.has(value as GeneratedImage['aspectRatio']);
@@ -284,9 +339,6 @@ const isFailureExtractionIssue = (value: unknown): value is NonNullable<QueuedBa
 
 const buildLoadImageUrl = (savedFilename: string): string =>
     `${LOAD_IMAGE_ENDPOINT}?filename=${encodeURIComponent(savedFilename)}`;
-
-const isImageResultPart = (part: ResultPart): part is Extract<ResultPart, { imageUrl: string }> =>
-    part.kind === 'thought-image' || part.kind === 'output-image';
 
 const sanitizeResultParts = (value: unknown): ResultPart[] | undefined => {
     if (!Array.isArray(value)) {
@@ -1616,19 +1668,43 @@ export const clearSharedWorkspaceSnapshot = async (): Promise<void> => {
     await saveSharedWorkspaceSnapshot(EMPTY_WORKSPACE_SNAPSHOT, { allowClearing: true });
 };
 
-export const exportWorkspaceSnapshotDocument = (snapshot: WorkspacePersistenceSnapshot): string =>
-    JSON.stringify({
-        format: WORKSPACE_SNAPSHOT_EXPORT_FORMAT,
-        version: WORKSPACE_SNAPSHOT_EXPORT_VERSION,
-        exportedAt: new Date().toISOString(),
-        snapshot: buildPersistableWorkspaceSnapshot(snapshot),
-    });
+export const exportWorkspaceSnapshotDocument = async (snapshot: WorkspacePersistenceSnapshot): Promise<Blob> => {
+    const normalizedSnapshot = sanitizeWorkspaceSnapshot(snapshot);
+    const embeddedSavedImages = await collectBrowserSavedImageRecords(
+        collectWorkspaceSnapshotSavedFilenames(normalizedSnapshot),
+    );
+
+    const chunks: (string | Blob)[] = [];
+    chunks.push(`{"format":${JSON.stringify(WORKSPACE_SNAPSHOT_EXPORT_FORMAT)},"version":${WORKSPACE_SNAPSHOT_EXPORT_VERSION},"exportedAt":${JSON.stringify(new Date().toISOString())},"snapshot":`);
+    chunks.push(JSON.stringify(buildPersistableWorkspaceSnapshot(normalizedSnapshot)));
+
+    if (embeddedSavedImages && Object.keys(embeddedSavedImages).length > 0) {
+        chunks.push(`,"assets":{"savedImages":{`);
+        const imageKeys = Object.keys(embeddedSavedImages);
+        for (let i = 0; i < imageKeys.length; i++) {
+            const key = imageKeys[i];
+            const val = embeddedSavedImages[key];
+            if (i > 0) {
+                chunks.push(',');
+            }
+            chunks.push(JSON.stringify(key));
+            chunks.push(':');
+            chunks.push(JSON.stringify(val));
+        }
+        chunks.push('}}}');
+    } else {
+        chunks.push('}');
+    }
+
+    return new Blob(chunks, { type: 'application/json' });
+};
 
 export const parseWorkspaceSnapshotDocument = (raw: string): WorkspacePersistenceSnapshot | null => {
     try {
         const parsed = JSON.parse(raw);
 
         if (isRecord(parsed) && parsed.format === WORKSPACE_SNAPSHOT_EXPORT_FORMAT && 'snapshot' in parsed) {
+            hydrateWorkspaceSnapshotDocumentAssets(parsed);
             return buildRuntimeWorkspaceSnapshot(parsed.snapshot);
         }
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import Button from './Button';
 import HexagonHUD from './HexagonHUD';
+import { useResolvedImageSource } from '../hooks/useResolvedImageSource';
 import { AspectRatio, ExecutionMode, ImageSize, ImageStyle, StageErrorState } from '../types';
 import { normalizeGenerationModeKind, resolveGenerationModeLabel } from '../utils/generationMode';
 import { Language, getTranslation } from '../utils/translations';
@@ -138,6 +139,7 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
     const t = (key: string) => getTranslation(currentLanguage, key);
 
     const activeImage = selectedImageUrl || (imageUrls.length > 0 ? imageUrls[0] : '');
+    const displayImage = useResolvedImageSource(activeImage);
 
     // Show full loading screen ONLY if we are loading AND we have no images yet
     const showFullLoading = isLoading && imageUrls.length === 0;
@@ -434,7 +436,7 @@ const GeneratedImage: React.FC<GeneratedImageProps> = ({
                     <StageTopRightCluster />
 
                     <img
-                        src={activeImage || undefined}
+                        src={displayImage || activeImage || undefined}
                         alt={t('stageGeneratedImageAlt')}
                         className={`h-full w-full object-contain transition-transform duration-700 ease-out ${onOpenViewer ? 'cursor-zoom-in' : ''}`}
                         style={{ transform: 'scale(1)' }}

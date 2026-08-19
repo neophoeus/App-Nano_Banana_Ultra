@@ -42,6 +42,7 @@ type UseComposerSettingsPanelPropsArgs = {
     temperature: number;
     isAdvancedSettingsOpen: boolean;
     generateLabel: string;
+    supportsQueuedBatch?: boolean;
     isQueueBatchDisabled: boolean;
     queueBatchDisabledReason: string | null;
     queueBatchModeSummary: string;
@@ -118,6 +119,7 @@ export function useComposerSettingsPanelProps({
     temperature,
     isAdvancedSettingsOpen,
     generateLabel,
+    supportsQueuedBatch,
     isQueueBatchDisabled,
     queueBatchDisabledReason,
     queueBatchModeSummary,
@@ -275,6 +277,7 @@ export function useComposerSettingsPanelProps({
             settingsLocked,
             onToggleSettingsLock,
             showNotification,
+            supportsQueuedBatch,
             promptThinkingLevel,
             onPromptThinkingLevelChange,
         }),
@@ -303,6 +306,7 @@ export function useComposerSettingsPanelProps({
             temperature,
             isAdvancedSettingsOpen,
             generateLabel,
+            supportsQueuedBatch,
             isQueueBatchDisabled,
             queueBatchDisabledReason,
             queueBatchModeSummary,

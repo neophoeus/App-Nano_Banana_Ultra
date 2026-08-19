@@ -154,8 +154,9 @@ describe('workspacePersistence', () => {
         );
     });
 
-    it('round-trips the wrapped export document', () => {
-        const serialized = exportWorkspaceSnapshotDocument(baseSnapshot);
+    it('round-trips the wrapped export document', async () => {
+        const serializedBlob = await exportWorkspaceSnapshotDocument(baseSnapshot);
+        const serialized = await serializedBlob.text();
         const parsed = parseWorkspaceSnapshotDocument(serialized);
 
         expect(parsed).not.toBeNull();
