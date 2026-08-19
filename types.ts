@@ -458,6 +458,10 @@ export interface WorkspaceComposerState {
     stickySendIntent?: StickySendIntent;
     generationMode: string;
     executionMode: ExecutionMode;
+    roundCount?: number;
+    autoExportTrigger?: 'off' | 'count' | 'size' | 'both';
+    autoExportImageCount?: number;
+    autoExportFileSizeMb?: number;
 }
 
 export interface ViewerComposerSettingsSnapshot {

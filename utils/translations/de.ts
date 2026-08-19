@@ -42,6 +42,13 @@ export const de = {
     switchDark: 'Dunkler Modus',
     shiftEnter: 'Shift+Enter Umbruch',
     qtyX: '{0}x',
+    roundCount: 'Runden',
+    autoExportSwitch: 'Automatische Sicherung',
+    autoExportTriggerCondition: 'Sicherungsbedingung',
+    imagesCountUnit: 'Bilder',
+    autoExportNotificationText: 'Automatische Sicherung: {0} Bilder erfolgreich generiert oder Kapazitätsgrenze von {1}MB erreicht. Die Sicherungsdatei wurde in Downloads gespeichert.',
+    logAutoExportSuccess: 'Es wurde automatisch eine Kopie des Arbeitsbereichs mit {0} Verlaufseinträgen exportiert.',
+    cancelWithCountdown: 'Abbrechen (Runde {0}/{1} • {2} übrig)',
     objectRefs: 'Objektreferenzen',
     characterRefs: 'Charakterreferenzen',
     unsupportedModel: 'Wird von diesem Modell nicht unterstützt',
@@ -322,6 +329,9 @@ export const de = {
     logCancelled: '🛑 Generierung abgebrochen',
     logSaved: '💾 Gespeichert: {0}',
     logAutoSaveFailed: '⚠️ Automatisches Speichern fehlgeschlagen',
+    workspaceStorageWarningNotice:
+        '[Warnung] Der lokale Bild-Cache beträgt derzeit {0}MB und nähert sich dem 300MB-Limit. Bitte sichern Sie Ihren Arbeitsbereich und leeren Sie den Verlauf.',
+    workspaceStorageWarningTitle: 'Speicherplatz-Warnung',
 
     // --- P7: Enter to Send ---
     enterToSend: 'Enter = Senden',

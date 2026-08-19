@@ -155,6 +155,10 @@ export const EMPTY_WORKSPACE_COMPOSER_STATE: WorkspaceComposerState = {
     stickySendIntent: 'independent',
     generationMode: 'Text to Image',
     executionMode: 'single-turn',
+    roundCount: 1,
+    autoExportTrigger: 'both',
+    autoExportImageCount: 20,
+    autoExportFileSizeMb: 100,
 };
 
 export const EMPTY_WORKSPACE_SNAPSHOT: WorkspacePersistenceSnapshot = {
@@ -1266,6 +1270,25 @@ const sanitizeWorkspaceComposerState = (value: unknown): WorkspaceComposerState 
             typeof value.executionMode === 'string'
                 ? value.executionMode
                 : EMPTY_WORKSPACE_COMPOSER_STATE.executionMode,
+        roundCount:
+            typeof value.roundCount === 'number' && Number.isFinite(value.roundCount)
+                ? value.roundCount
+                : EMPTY_WORKSPACE_COMPOSER_STATE.roundCount,
+        autoExportTrigger:
+            value.autoExportTrigger === 'off' ||
+            value.autoExportTrigger === 'count' ||
+            value.autoExportTrigger === 'size' ||
+            value.autoExportTrigger === 'both'
+                ? value.autoExportTrigger
+                : EMPTY_WORKSPACE_COMPOSER_STATE.autoExportTrigger,
+        autoExportImageCount:
+            typeof value.autoExportImageCount === 'number' && Number.isFinite(value.autoExportImageCount)
+                ? value.autoExportImageCount
+                : EMPTY_WORKSPACE_COMPOSER_STATE.autoExportImageCount,
+        autoExportFileSizeMb:
+            typeof value.autoExportFileSizeMb === 'number' && Number.isFinite(value.autoExportFileSizeMb)
+                ? value.autoExportFileSizeMb
+                : EMPTY_WORKSPACE_COMPOSER_STATE.autoExportFileSizeMb,
     } as WorkspaceComposerState;
 };
 

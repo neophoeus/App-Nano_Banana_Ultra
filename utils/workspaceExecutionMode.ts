@@ -13,6 +13,9 @@ export interface ExecutionCapabilities {
     supportsQueuedBatch: boolean;
     supportsServerStreaming: boolean;
     supportsCustomApiKey: boolean;
+    supportsAutoBackup: boolean;
+    supportsStorageWarning: boolean;
+    supportsKeepAliveHeartbeat: boolean;
     executionModeName: ResolvedExecutionMode;
 }
 
@@ -203,6 +206,9 @@ export const getExecutionCapabilities = (mode = getResolvedExecutionMode()): Exe
     supportsQueuedBatch: mode === 'local',
     supportsServerStreaming: mode === 'local',
     supportsCustomApiKey: mode === 'direct',
+    supportsAutoBackup: mode === 'direct',
+    supportsStorageWarning: mode === 'direct',
+    supportsKeepAliveHeartbeat: mode === 'direct' || isAiStudioEnvironment(),
     executionModeName: mode,
 });
 

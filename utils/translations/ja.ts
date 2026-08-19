@@ -42,6 +42,13 @@ export const ja = {
     switchDark: 'ダークモードに切り替え',
     shiftEnter: 'Shift+Enterで改行',
     qtyX: '{0} 枚',
+    roundCount: 'ラウンド数',
+    autoExportSwitch: '自動バックアップ',
+    autoExportTriggerCondition: 'バックアップ条件',
+    imagesCountUnit: '枚',
+    autoExportNotificationText: '自動バックアップ通知：{0}枚の画像を正常に生成したか、ワークスペース容量が{1}MB増加しました。進捗の紛失を防ぐため、現在のワークスペースのスナップショット（.json）をダウンロードフォルダに自動的にエクスポートしました。',
+    logAutoExportSuccess: '{0}個の履歴項目を含むワークスペースのスナップショットを自動的にエクスポートしました。',
+    cancelWithCountdown: 'キャンセル (ラウンド {0}/{1} • 残り {2} 枚)',
     objectRefs: 'オブジェクトの参照',
     characterRefs: 'キャラクターの参照',
     unsupportedModel: 'このモデルではサポートされていません',
@@ -314,6 +321,9 @@ export const ja = {
     logCancelled: '🛑 生成がキャンセルされました',
     logSaved: '💾 保存済み: {0}',
     logAutoSaveFailed: '⚠️ 自動保存に失敗しました',
+    workspaceStorageWarningNotice:
+        '[警告] 現在のローカル画像キャッシュは {0}MB で、300MBの制限に近づいています。パフォーマンス低下を防ぐため、バックアップをエクスポートして履歴を消去してください。',
+    workspaceStorageWarningTitle: 'ストレージ警告',
 
     // --- P7: Enter to Send ---
     enterToSend: 'Enter で送信',

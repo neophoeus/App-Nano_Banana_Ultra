@@ -75,6 +75,21 @@ export type ComposerSettingsPanelProps = {
     promptTextareaRef?: React.RefObject<HTMLTextAreaElement | null>;
     onClearStyle?: () => void;
     imageToolsPanel?: React.ReactNode;
+    roundCount?: number;
+    onRoundCountChange?: (rounds: number) => void;
+    autoExportTrigger?: 'off' | 'count' | 'size' | 'both';
+    onAutoExportTriggerChange?: (trigger: 'off' | 'count' | 'size' | 'both') => void;
+    autoExportImageCount?: number;
+    onAutoExportImageCountChange?: (count: number) => void;
+    autoExportFileSizeMb?: number;
+    onAutoExportFileSizeMbChange?: (size: number) => void;
+    batchProgress?: {
+        completed: number;
+        total: number;
+        currentRound?: number;
+        totalRounds?: number;
+    };
+    supportsAutoBackup?: boolean;
     settingsLocked?: boolean;
     onToggleSettingsLock?: () => void;
     showNotification?: (message: string, type?: 'info' | 'error') => void;
@@ -182,6 +197,16 @@ function ComposerSettingsPanel({
     promptTextareaRef,
     onClearStyle,
     imageToolsPanel,
+    roundCount = 1,
+    onRoundCountChange,
+    autoExportTrigger = 'off',
+    onAutoExportTriggerChange,
+    autoExportImageCount = 20,
+    onAutoExportImageCountChange,
+    autoExportFileSizeMb = 100,
+    onAutoExportFileSizeMbChange,
+    batchProgress,
+    supportsAutoBackup = false,
     settingsLocked = false,
     onToggleSettingsLock,
     showNotification,
@@ -202,7 +227,24 @@ function ComposerSettingsPanel({
     const [sendIntentInfoVariant, setSendIntentInfoVariant] = React.useState<StickySendIntent | 'memory-unavailable'>(
         stickySendIntent,
     );
+    const [isRoundGridOpen, setIsRoundGridOpen] = React.useState(false);
     const t = (key: string) => getTranslation(currentLanguage, key);
+    const cancelLabel = React.useMemo(() => {
+        const totalRounds = batchProgress?.totalRounds || 1;
+        const currentRound = batchProgress?.currentRound || 1;
+        if (totalRounds > 1) {
+            const currentBatchSize = batchProgress?.total || batchSize;
+            const completedInCurrentRound = batchProgress?.completed || 0;
+            const totalImages = totalRounds * currentBatchSize;
+            const completedImages = (currentRound - 1) * currentBatchSize + completedInCurrentRound;
+            const remainingImages = Math.max(0, totalImages - completedImages);
+            return t('cancelWithCountdown')
+                .replace('{0}', String(currentRound))
+                .replace('{1}', String(totalRounds))
+                .replace('{2}', String(remainingImages));
+        }
+        return t('clearHistoryCancel');
+    }, [batchProgress, batchSize, currentLanguage]);
     const resolveIntentText = (key: string, fallback: string) => {
         const value = t(key);
         return value === key ? fallback : value;
@@ -1084,7 +1126,7 @@ function ComposerSettingsPanel({
                                 variant="danger"
                                 className="min-h-[64px] rounded-[28px] text-[15px]"
                             >
-                                {t('clearHistoryCancel')}
+                                {cancelLabel}
                             </Button>
                         ) : isCancelFinalizing ? (
                             <Button
@@ -1177,6 +1219,146 @@ function ComposerSettingsPanel({
                             {t('composerCancelFinalizingNote')}
                         </p>
                     ) : null}
+
+                    <div
+                        data-testid="composer-round-backup-strip"
+                        className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 text-xs border-t border-gray-100/50 dark:border-slate-800 pt-2 bg-gray-50/50 dark:bg-slate-900/40 rounded-2xl mt-1.5"
+                    >
+                        {/* Left: Round Count */}
+                        <div className="flex items-center gap-2" data-testid="composer-round-count-control">
+                            <span className="font-semibold text-slate-600 dark:text-slate-300">{t('roundCount')}</span>
+                            <div className="flex items-center gap-1 bg-white dark:bg-slate-800 rounded-lg p-0.5 border dark:border-slate-700 shadow-sm">
+                                <button
+                                    type="button"
+                                    data-testid="composer-round-count-decrease"
+                                    disabled={roundCount <= 1 || isActionLocked || settingsLocked}
+                                    onClick={() => onRoundCountChange?.(Math.max(1, roundCount - 1))}
+                                    className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-40 font-bold select-none text-slate-600 dark:text-slate-300"
+                                >
+                                    -
+                                </button>
+                                <div className="relative flex items-center justify-center">
+                                    <button
+                                        type="button"
+                                        data-testid="composer-round-count-grid-trigger"
+                                        disabled={isActionLocked || settingsLocked}
+                                        onClick={() => setIsRoundGridOpen(!isRoundGridOpen)}
+                                        className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-slate-700 text-center font-mono font-bold text-[11px] text-slate-700 dark:text-slate-200 focus:outline-none"
+                                        title={t('roundCount')}
+                                    >
+                                        {roundCount}
+                                    </button>
+
+                                    {isRoundGridOpen && (
+                                        <>
+                                            {/* Click outside backdrop */}
+                                            <div
+                                                className="fixed inset-0 z-40"
+                                                onClick={() => setIsRoundGridOpen(false)}
+                                            />
+                                            {/* Glassmorphic Popover Grid */}
+                                            <div
+                                                data-testid="composer-round-count-popover"
+                                                className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur border border-gray-200/80 dark:border-slate-800 rounded-xl p-2 shadow-xl w-[130px] select-none pointer-events-auto"
+                                            >
+                                                <div className="grid grid-cols-5 gap-1">
+                                                    {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => {
+                                                        const isSelected = num === roundCount;
+                                                        return (
+                                                            <button
+                                                                key={num}
+                                                                type="button"
+                                                                data-testid={`composer-round-count-option-${num}`}
+                                                                onClick={() => {
+                                                                    onRoundCountChange?.(num);
+                                                                    setIsRoundGridOpen(false);
+                                                                }}
+                                                                className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold font-mono transition-all ${
+                                                                    isSelected
+                                                                        ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-white shadow-sm shadow-amber-500/20'
+                                                                        : 'hover:bg-gray-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                                                }`}
+                                                            >
+                                                                {num}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                                {/* Popover Arrow */}
+                                                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-white dark:border-t-slate-900" />
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                                <button
+                                    type="button"
+                                    data-testid="composer-round-count-increase"
+                                    disabled={roundCount >= 10 || isActionLocked || settingsLocked}
+                                    onClick={() => onRoundCountChange?.(Math.min(10, roundCount + 1))}
+                                    className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-40 font-bold select-none text-slate-600 dark:text-slate-300"
+                                >
+                                    +
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Right: Auto-Export Backup (Rendered ONLY when supportsAutoBackup is true) */}
+                        {supportsAutoBackup ? (
+                            <div className="flex flex-wrap items-center gap-3" data-testid="composer-auto-export-control">
+                                <div className="flex items-center gap-2">
+                                    <span className="font-semibold text-slate-600 dark:text-slate-300">{t('autoExportSwitch')}</span>
+                                    <button
+                                        type="button"
+                                        data-testid="composer-auto-export-toggle"
+                                        onClick={() => onAutoExportTriggerChange?.(autoExportTrigger === 'off' ? 'both' : 'off')}
+                                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-amber-500 focus:ring-offset-1 dark:focus:ring-offset-slate-900 ${
+                                            autoExportTrigger !== 'off' ? 'bg-amber-500' : 'bg-gray-200 dark:bg-slate-700'
+                                        }`}
+                                    >
+                                        <span
+                                            aria-hidden="true"
+                                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                                autoExportTrigger !== 'off' ? 'translate-x-4' : 'translate-x-0'
+                                            }`}
+                                        />
+                                    </button>
+                                </div>
+
+                                {autoExportTrigger !== 'off' && (
+                                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                                        <span className="text-[11px]">({t('autoExportTriggerCondition')}:</span>
+
+                                        <select
+                                            data-testid="composer-auto-export-count-select"
+                                            value={autoExportImageCount}
+                                            onChange={(e) => onAutoExportImageCountChange?.(Number(e.target.value))}
+                                            className="bg-white dark:bg-slate-800 border dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-medium outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-slate-700 dark:text-slate-200"
+                                        >
+                                            <option value={10}>10 {t('imagesCountUnit')}</option>
+                                            <option value={20}>20 {t('imagesCountUnit')}</option>
+                                            <option value={30}>30 {t('imagesCountUnit')}</option>
+                                            <option value={50}>50 {t('imagesCountUnit')}</option>
+                                        </select>
+
+                                        <span>/</span>
+
+                                        <select
+                                            data-testid="composer-auto-export-size-select"
+                                            value={autoExportFileSizeMb}
+                                            onChange={(e) => onAutoExportFileSizeMbChange?.(Number(e.target.value))}
+                                            className="bg-white dark:bg-slate-800 border dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-medium outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-slate-700 dark:text-slate-200"
+                                        >
+                                            <option value={50}>50MB</option>
+                                            <option value={100}>100MB</option>
+                                            <option value={150}>150MB</option>
+                                            <option value={200}>200MB</option>
+                                        </select>
+                                        <span className="text-[11px]">)</span>
+                                    </div>
+                                )}
+                            </div>
+                        ) : null}
+                    </div>
                 </div>
             </div>
         </section>

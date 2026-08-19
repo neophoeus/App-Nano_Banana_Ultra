@@ -42,6 +42,13 @@ export const ko = {
     switchDark: '다크 모드로 전환',
     shiftEnter: 'Shift+Enter로 줄바꿈',
     qtyX: '{0} 장',
+    roundCount: '라운드 수',
+    autoExportSwitch: '자동 백업',
+    autoExportTriggerCondition: '백업 조건',
+    imagesCountUnit: '장',
+    autoExportNotificationText: '자동 백업 알림: {0}개의 이미지를 정상적으로 생성했거나 작업 공간 용량이 {1}MB 증가했습니다. 진행 상황의 손실을 방지하기 위해 현재 작업 공간의 스냅샷(.json)을 다운로드 폴더에 자동으로 내보냈습니다.',
+    logAutoExportSuccess: '{0}개의 내역 항목을 포함하는 작업 공간 스냅샷을 자동으로 내보냈습니다.',
+    cancelWithCountdown: '취소 (라운드 {0}/{1} • {2}장 남음)',
     objectRefs: '오브젝트 참조',
     characterRefs: '캐릭터 참조',
     unsupportedModel: '해당 모델에서는 지원하지 않습니다',
@@ -314,6 +321,9 @@ export const ko = {
     logCancelled: '🛑 생성이 취소되었습니다',
     logSaved: '💾 저장됨: {0}',
     logAutoSaveFailed: '⚠️ 자동 저장 실패',
+    workspaceStorageWarningNotice:
+        '[경고] 로컬 이미지 캐시 용량이 {0}MB에 도달하여 300MB 제한에 근접했습니다. 성능 저하를 방지하기 위해 작업 공간을 내보내고 기록을 정리해 주세요.',
+    workspaceStorageWarningTitle: '저장 공간 경고',
 
     // --- P7: Enter to Send ---
     enterToSend: 'Enter 전송',

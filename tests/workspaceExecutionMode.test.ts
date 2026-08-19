@@ -46,11 +46,17 @@ describe('workspaceExecutionMode', () => {
         expect(localCaps.supportsLocalDiskSave).toBe(true);
         expect(localCaps.supportsQueuedBatch).toBe(true);
         expect(localCaps.supportsServerStreaming).toBe(true);
+        expect(localCaps.supportsAutoBackup).toBe(false);
+        expect(localCaps.supportsStorageWarning).toBe(false);
+        expect(localCaps.supportsKeepAliveHeartbeat).toBe(false);
 
         const directCaps = getWorkspaceExecutionCapabilities('direct');
         expect(directCaps.supportsLocalDiskSave).toBe(false);
         expect(directCaps.supportsQueuedBatch).toBe(false);
         expect(directCaps.supportsServerStreaming).toBe(false);
+        expect(directCaps.supportsAutoBackup).toBe(true);
+        expect(directCaps.supportsStorageWarning).toBe(true);
+        expect(directCaps.supportsKeepAliveHeartbeat).toBe(true);
     });
 
     it('notifies subscribers on setting change', () => {

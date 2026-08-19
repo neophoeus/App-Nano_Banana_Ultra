@@ -42,6 +42,13 @@ export const ru = {
     switchDark: 'Темная тема',
     shiftEnter: 'Shift+Enter перенос',
     qtyX: '{0}x',
+    roundCount: 'Раунды',
+    autoExportSwitch: 'Авторезервирование',
+    autoExportTriggerCondition: 'Условие резервирования',
+    imagesCountUnit: 'изображений',
+    autoExportNotificationText: 'Авторезервное копирование: успешно сгенерировано {0} изображений или достигнут лимит в {1} МБ. Файл сохранен в Загрузки.',
+    logAutoExportSuccess: 'Автоматически экспортирована копия рабочей области, содержащая {0} элементов истории.',
+    cancelWithCountdown: 'Отмена (Раунд {0}/{1} • осталось {2})',
     objectRefs: 'Ссылки на объекты',
     characterRefs: 'Ссылки на персонажей',
     unsupportedModel: 'Не поддерживается данной моделью',
@@ -317,6 +324,9 @@ export const ru = {
     logCancelled: '🛑 Генерация отменена',
     logSaved: '💾 Сохранено: {0}',
     logAutoSaveFailed: '⚠️ Автосохранение не удалось',
+    workspaceStorageWarningNotice:
+        '[Предупреждение] Кэш локальных изображений составляет {0} МБ (лимит 300 МБ). Пожалуйста, экспортируйте резервную копию и очистите историю.',
+    workspaceStorageWarningTitle: 'Предупреждение о нехватке места',
 
     // --- P7: Enter to Send ---
     enterToSend: 'Enter = Отпр.',

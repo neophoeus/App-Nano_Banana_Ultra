@@ -105,7 +105,51 @@ export const MODEL_CAPABILITIES: Record<ImageModel, ModelCapability> = {
     },
 };
 
+export interface ModelQuotaSpec {
+    defaultRpm: number;
+    defaultTpm: number;
+    recommendedStaggerMs: number;
+}
+
+export const MODEL_QUOTA_SPECS: Record<ImageModel, ModelQuotaSpec> = {
+    'gemini-3.1-flash-image': {
+        defaultRpm: 15,
+        defaultTpm: 200000,
+        recommendedStaggerMs: 1200,
+    },
+    'gemini-3.1-flash-lite-image': {
+        defaultRpm: 15,
+        defaultTpm: 200000,
+        recommendedStaggerMs: 800,
+    },
+    'gemini-3-pro-image': {
+        defaultRpm: 2,
+        defaultTpm: 32000,
+        recommendedStaggerMs: 5000,
+    },
+    'gemini-2.5-flash-image': {
+        defaultRpm: 15,
+        defaultTpm: 200000,
+        recommendedStaggerMs: 1200,
+    },
+};
+
+export const getModelQuotaSpec = (model?: string | null): ModelQuotaSpec => {
+    if (!model) {
+        return MODEL_QUOTA_SPECS['gemini-3.1-flash-image'];
+    }
+    const normalizedModel = model.replace(/-preview$/i, '') as ImageModel;
+    if (MODEL_QUOTA_SPECS[normalizedModel]) {
+        return MODEL_QUOTA_SPECS[normalizedModel];
+    }
+    if (model.toLowerCase().includes('pro')) {
+        return MODEL_QUOTA_SPECS['gemini-3-pro-image'];
+    }
+    return MODEL_QUOTA_SPECS['gemini-3.1-flash-image'];
+};
+
 // Legacy model aliases for backwards compatibility with deprecated preview strings
 (MODEL_CAPABILITIES as any)['gemini-3.1-flash-image-preview'] = MODEL_CAPABILITIES['gemini-3.1-flash-image'];
 (MODEL_CAPABILITIES as any)['gemini-3.1-flash-lite-image-preview'] = MODEL_CAPABILITIES['gemini-3.1-flash-lite-image'];
 (MODEL_CAPABILITIES as any)['gemini-3-pro-image-preview'] = MODEL_CAPABILITIES['gemini-3-pro-image'];
+

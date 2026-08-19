@@ -42,6 +42,13 @@ export const en = {
     switchDark: 'Switch to Dark Mode',
     shiftEnter: 'Shift+Enter ↵',
     qtyX: '{0}x',
+    roundCount: 'Rounds',
+    autoExportSwitch: 'Auto Backup',
+    autoExportTriggerCondition: 'Backup Condition',
+    imagesCountUnit: 'images',
+    autoExportNotificationText: 'Auto-backup: successfully generated {0} images or reached {1}MB size limit. Snapshot has been saved to your Downloads folder.',
+    logAutoExportSuccess: 'Auto-exported workspace snapshot containing {0} history items.',
+    cancelWithCountdown: 'Cancel (Round {0}/{1} • {2} left)',
     objectRefs: 'Object References',
     characterRefs: 'Character References',
     unsupportedModel: 'Not supported by model',
@@ -308,6 +315,9 @@ export const en = {
     logCancelled: '🛑 Generation cancelled by user',
     logSaved: '💾 Saved: {0}',
     logAutoSaveFailed: '⚠️ Auto-save failed',
+    workspaceStorageWarningNotice:
+        '[Warning] Browser cache for local images is currently {0}MB, which is close to or exceeds the 300MB limit. To prevent performance slowdowns or browser crashes, please export a backup of your workspace and clear your history.',
+    workspaceStorageWarningTitle: 'Storage Capacity Warning',
 
     // --- P7: Enter to Send ---
     enterToSend: 'Enter = Send',

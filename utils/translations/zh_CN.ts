@@ -42,6 +42,13 @@ export const zh_CN = {
     switchDark: '切换为暗色模式',
     shiftEnter: 'Shift+回车键换行',
     qtyX: '{0} 张',
+    roundCount: '回合数',
+    autoExportSwitch: '自动备份',
+    autoExportTriggerCondition: '备份条件',
+    imagesCountUnit: '张',
+    autoExportNotificationText: '自动备份提示：已成功生成 {0} 张图片，或工作区容量增加了 {1}MB。已自动为您导出当前的工作区备份文件（.json）至下载文件夹，以防进度丢失。',
+    logAutoExportSuccess: '已自动导出包含 {0} 笔历史记录的工作区备份。',
+    cancelWithCountdown: '取消 (第 {0}/{1} 回合 • 剩 {2} 张)',
     objectRefs: '物件参考',
     characterRefs: '角色参考',
     unsupportedModel: '当前模型不支持',
@@ -351,6 +358,9 @@ export const zh_CN = {
     logCancelled: '🛑 已取消生成',
     logSaved: '💾 已保存：{0}',
     logAutoSaveFailed: '⚠️ 自动保存失败',
+    workspaceStorageWarningNotice:
+        '[警告] 目前本地图片缓存已达 {0}MB，接近或超过 300MB 限制。为避免效能变慢或浏览器崩溃，建议您尽速导出备份 Workspace，并清理历史记录。',
+    workspaceStorageWarningTitle: '存储空间预警',
 
     // --- P7: Enter to Send ---
     enterToSend: '回车键发送',

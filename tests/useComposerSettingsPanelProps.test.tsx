@@ -159,4 +159,74 @@ describe('useComposerSettingsPanelProps', () => {
 
         expect(container.querySelector('[data-testid="send-intent-state"]')?.textContent).toBe('memory');
     });
+
+    it('passes through roundCount, autoExport and batchProgress correctly', () => {
+        let capturedProps: any = null;
+        function RoundHarness() {
+            const t = (key: string) => getTranslation('en', key);
+            capturedProps = useComposerSettingsPanelProps({
+                prompt: 'Test',
+                placeholder: 'Type',
+                enterToSubmit: false,
+                isGenerating: true,
+                isEnhancingPrompt: false,
+                currentLanguage: 'en',
+                imageStyleLabel: 'None',
+                outputFormat: 'images-only',
+                thinkingLevel: 'high',
+                groundingMode: 'off',
+                stickySendIntent: 'independent',
+                imageModel: 'gemini-3.1-flash-image',
+                aspectRatio: '1:1',
+                imageSize: '2K',
+                batchSize: 4,
+                capability: MODEL_CAPABILITIES['gemini-3.1-flash-image'],
+                availableGroundingModes: ['off'],
+                temperature: 1,
+                isAdvancedSettingsOpen: false,
+                generateLabel: 'Generate',
+                isQueueBatchDisabled: true,
+                queueBatchDisabledReason: null,
+                queueBatchModeSummary: '',
+                queueBatchGenerateModeSummary: '',
+                queueBatchConversationNotice: null,
+                promptTextareaRef,
+                setPrompt: vi.fn(),
+                setStickySendIntent: vi.fn() as any,
+                toggleEnterToSubmit: vi.fn(),
+                handleGenerate: vi.fn(),
+                handleQueueBatchJob: vi.fn(),
+                handleQueueBatchFollowUpJob: vi.fn(),
+                handleCancelGeneration: vi.fn(),
+                handleStartNewConversation: vi.fn(),
+                handleFollowUpGenerate: vi.fn(),
+                handleSurpriseMe: vi.fn(),
+                handleSmartRewrite: vi.fn(),
+                openSettings: vi.fn(),
+                openAdvancedSettings: vi.fn(),
+                setActivePickerSheet: vi.fn() as any,
+                t,
+                getStageOriginLabel: () => '',
+                getLineageActionLabel: () => '',
+                roundCount: 5,
+                autoExportTrigger: 'both',
+                autoExportImageCount: 30,
+                autoExportFileSizeMb: 150,
+                batchProgress: { completed: 2, total: 4, currentRound: 2, totalRounds: 5 },
+                supportsAutoBackup: true,
+            } as any);
+            return <div data-testid="round-test">{capturedProps.roundCount}</div>;
+        }
+
+        act(() => {
+            root.render(<RoundHarness />);
+        });
+
+        expect(capturedProps.roundCount).toBe(5);
+        expect(capturedProps.autoExportTrigger).toBe('both');
+        expect(capturedProps.autoExportImageCount).toBe(30);
+        expect(capturedProps.autoExportFileSizeMb).toBe(150);
+        expect(capturedProps.supportsAutoBackup).toBe(true);
+        expect(capturedProps.batchProgress).toEqual({ completed: 2, total: 4, currentRound: 2, totalRounds: 5 });
+    });
 });

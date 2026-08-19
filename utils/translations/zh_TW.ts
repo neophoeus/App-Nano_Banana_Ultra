@@ -42,6 +42,13 @@ export const zh_TW = {
     switchDark: '切換為暗色模式',
     shiftEnter: 'Shift+輸入鍵換行',
     qtyX: '{0} 張',
+    roundCount: '回合數',
+    autoExportSwitch: '自動備份',
+    autoExportTriggerCondition: '備份條件',
+    imagesCountUnit: '張',
+    autoExportNotificationText: '自動備份提示：已成功生成 {0} 張圖片，或工作區容量增加了 {1}MB。已自動為您匯出目前的工作區備份檔案（.json）至下載資料夾，以防進度遺失。',
+    logAutoExportSuccess: '已自動匯出包含 {0} 筆歷史紀錄的工作區備份。',
+    cancelWithCountdown: '取消 (第 {0}/{1} 回合 • 剩 {2} 張)',
     objectRefs: '物件參考',
     characterRefs: '角色參考',
     unsupportedModel: '目前模型不支援',
@@ -303,6 +310,9 @@ export const zh_TW = {
     logCancelled: '🛑 已取消生成',
     logSaved: '💾 已儲存：{0}',
     logAutoSaveFailed: '⚠️ 自動儲存失敗',
+    workspaceStorageWarningNotice:
+        '[警告] 目前本機圖片快取已達 {0}MB，接近或超過 300MB 限制。為避免效能變慢或瀏覽器崩潰，建議您儘速匯出備份 Workspace，並清理歷史記錄。',
+    workspaceStorageWarningTitle: '儲存空間預警',
 
     // --- P7: Enter to Send ---
     enterToSend: '輸入鍵送出',

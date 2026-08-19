@@ -111,9 +111,9 @@ Nano Banana Ultra currently supports four Gemini image-model paths. The UI expos
 
 ## Version Overview
 
-### Latest Release: 4.0.1
+### Latest Release: 4.0.2
 
-Latest release: 4.0.1. Dual-Engine Image Resolution & Queue Controls Refinement. Introduces asynchronous asset resolvers (`useResolvedImageSource`) to resolve virtual session image paths into full-resolution IndexedDB/cache Data URLs on the stage, viewer, editor canvas, and filmstrip; properly guards queue batch button visibility in Direct / AI Studio mode; fixes local mode thumbnail immediate rendering. See [CHANGELOG.md](CHANGELOG.md) for details.
+Latest release: 4.0.2. Full Lite Capabilities Integration & Strict Engine-Mode Gating. Introduces multi-round continuous generation (1~10 rounds) with dynamic cancellation countdowns across both engines, auto snapshot backup to Downloads (gated to Direct/Lite mode), periodic IndexedDB 300MB storage capacity warning, AI Studio delayed detection polling and 30s `/favicon.ico` keep-alive ping, Pro/Flash rate quota handling, and complete 9-language i18n support. See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ### 4.x
 

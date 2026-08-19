@@ -42,6 +42,13 @@ export const es = {
     switchDark: 'Modo Oscuro',
     shiftEnter: 'Shift+Enter salto',
     qtyX: '{0}x',
+    roundCount: 'Rondas',
+    autoExportSwitch: 'Copia de seguridad automática',
+    autoExportTriggerCondition: 'Condición de copia',
+    imagesCountUnit: 'imágenes',
+    autoExportNotificationText: 'Copia de seguridad automática: se han generado con éxito {0} imágenes o se ha alcanzado el límite de {1}MB. El archivo se ha guardado en Descargas.',
+    logAutoExportSuccess: 'Se ha exportado automáticamente una copia del espacio de trabajo con {0} elementos de historial.',
+    cancelWithCountdown: 'Cancelar (Ronda {0}/{1} • {2} rest.)',
     objectRefs: 'Referencias de objetos',
     characterRefs: 'Referencias de personajes',
     unsupportedModel: 'No compatible con este modelo',
@@ -319,6 +326,9 @@ export const es = {
     logCancelled: '🛑 Generación cancelada',
     logSaved: '💾 Guardado: {0}',
     logAutoSaveFailed: '⚠️ Guardado automático fallido',
+    workspaceStorageWarningNotice:
+        '[Advertencia] La memoria caché de imágenes locales es de {0}MB (cercana al límite de 300MB). Exporte una copia de seguridad y limpie el historial.',
+    workspaceStorageWarningTitle: 'Advertencia de almacenamiento',
 
     // --- P7: Enter to Send ---
     enterToSend: 'Enter = Enviar',

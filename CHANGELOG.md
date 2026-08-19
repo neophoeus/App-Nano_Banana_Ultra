@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.0.2 - 2026-08-19
+
+- Release title: Nano Banana Ultra 4.0.2 - Full Lite Capabilities Integration & Strict Engine-Mode Gating
+- Release summary:
+    - **Multi-Round Continuous Generation (1~10 Rounds)**: Added multi-round continuous batch generation supporting 1~10 rounds with dedicated round count stepper, 1~10 popover grid selector, per-round batch preview session retention, and dynamic cancellation countdown button label (`cancelWithCountdown`). Fully operational across both Local (Ultra) and Direct (Lite) modes.
+    - **Auto Snapshot Backup to Downloads**: Introduced auto-export trigger settings (by image count 20/40/60/100, storage size 100MB/200MB/300MB/500MB, or both) that automatically backs up workspace state JSON directly to Downloads. Mode-gated to Direct / Lite mode only (hidden in Local mode where local disk saving already preserves artifacts).
+    - **IndexedDB 300MB Storage Capacity Warning**: Added periodic 30s background scan of IndexedDB data usage that triggers a dedicated warning modal with one-click workspace export when storage exceeds 300MB and auto-backup is not active. Mode-gated to Direct / Lite mode only.
+    - **AI Studio Connection Resilience & Keep-Alive**: Added 12x (500ms) delayed polling retry for `window.aistudio` injection, 10s background connection heartbeat, and 30s `/favicon.ico` keep-alive ping to prevent Cloud Run container scale-to-zero suspension. Mode-gated to Direct / Lite mode only.
+    - **Model Quota Specification**: Added `getModelQuotaSpec` accommodating Gemini 3.1 Flash (15 RPM / 1.2s stagger) and Gemini 3 Pro (2 RPM / 5s stagger) for stable multi-round generation.
+    - **Complete 9-Language Localization**: Full translation coverage for all new multi-round and auto-backup keys across Traditional Chinese (`zh_TW`), Simplified Chinese (`zh_CN`), English (`en`), Japanese (`ja`), Korean (`ko`), German (`de`), Spanish (`es`), French (`fr`), and Russian (`ru`).
+    - **Testing & Verification**: 100% test pass rate across all 113 test suites (920 tests) and seamless production build.
+
 ## v4.0.1 - 2026-08-19
 
 - Release title: Nano Banana Ultra 4.0.1 - Dual-Engine Image Resolution & Queue Controls Refinement

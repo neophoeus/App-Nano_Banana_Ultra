@@ -42,6 +42,13 @@ export const fr = {
     switchDark: 'Mode Sombre',
     shiftEnter: 'Maj+Entrée à la ligne',
     qtyX: '{0}x',
+    roundCount: 'Tours',
+    autoExportSwitch: 'Sauvegarde automatique',
+    autoExportTriggerCondition: 'Condition de sauvegarde',
+    imagesCountUnit: 'images',
+    autoExportNotificationText: 'Sauvegarde automatique : {0} images ont été générées ou la limite de {1} Mo a été atteinte. Le fichier a été sauvegardé dans Téléchargements.',
+    logAutoExportSuccess: 'Une copie de sauvegarde de l\'espace de travail contenant {0} éléments d\'historique a été exportée automatiquement.',
+    cancelWithCountdown: 'Annuler (Tour {0}/{1} • {2} rest.)',
     objectRefs: "Références d'objets",
     characterRefs: 'Références de personnages',
     unsupportedModel: 'Non pris en charge par ce modèle',
@@ -318,6 +325,9 @@ export const fr = {
     logCancelled: '🛑 Génération annulée',
     logSaved: '💾 Enregistré : {0}',
     logAutoSaveFailed: '⚠️ Échec de la sauvegarde auto',
+    workspaceStorageWarningNotice:
+        '[Avertissement] Le cache local des images est de {0} Mo (proche de la limite de 300 Mo). Veuillez exporter une sauvegarde et effacer votre historique.',
+    workspaceStorageWarningTitle: "Alerte d'espace de stockage",
 
     // --- P7: Enter to Send ---
     enterToSend: 'Enter = Envoyer',
