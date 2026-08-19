@@ -46,7 +46,8 @@ export const zh_TW = {
     autoExportSwitch: '自動備份',
     autoExportTriggerCondition: '備份條件',
     imagesCountUnit: '張',
-    autoExportNotificationText: '自動備份提示：已成功生成 {0} 張圖片，或工作區容量增加了 {1}MB。已自動為您匯出目前的工作區備份檔案（.json）至下載資料夾，以防進度遺失。',
+    autoExportNotificationText:
+        '自動備份提示：已成功生成 {0} 張圖片，或工作區容量增加了 {1}MB。已自動為您匯出目前的工作區備份檔案（.json）至下載資料夾，以防進度遺失。',
     logAutoExportSuccess: '已自動匯出包含 {0} 筆歷史紀錄的工作區備份。',
     cancelWithCountdown: '取消 (第 {0}/{1} 回合 • 剩 {2} 張)',
     objectRefs: '物件參考',
@@ -154,7 +155,8 @@ export const zh_TW = {
     generationFailureSummaryEmpty: '模型回傳的資訊不足，系統無法可靠判定這次失敗原因。',
     generationFailureSummaryNoImage: '請求已完成，但模型沒有回傳圖片資料。',
     generationFailureSummaryThinkingLoop: '偵測到思考無限循環',
-    generationFailureDetailThinkingLoop: '模型思考字數或時間超出上限，已自動中斷生成以防卡死。建議調整溫度（如降低至 1.0）或降低思考等級後重試。',
+    generationFailureDetailThinkingLoop:
+        '模型思考字數或時間超出上限，已自動中斷生成以防卡死。建議調整溫度（如降低至 1.0）或降低思考等級後重試。',
     generationFailureDetailRetry: '請調整提示詞後重試，或稍後再試一次。',
     generationFailureDetailPromptBlockReason: '政策攔截原因：{0}。',
     generationFailureDetailSafetyCategories: '安全分類：{0}。',
@@ -497,6 +499,9 @@ export const zh_TW = {
     workspaceRestoreTurns: '{0} 個回合',
     workspaceRestoreActionsTitle: '選擇下一步',
     workspaceTopHeaderReferenceTray: '參考托盤',
+    workspaceIncreaseFontSize: '放大字體',
+    workspaceDecreaseFontSize: '縮小字體',
+    workspaceResetFontSize: '還原字體大小',
     workspaceTopHeaderSendIntent: '發送',
     workspaceSendIntentIndependent: '獨立',
     workspaceSendIntentMemory: '記憶',
@@ -815,7 +820,8 @@ export const zh_TW = {
     composerAdvancedTemperatureGuideDefault: '預設值 1.0 會在穩定性與變化度之間維持平衡。',
     composerAdvancedTemperatureGuideHigher: '高於 1.0 會提高變化與驚喜感，但一致性與貼合提示詞的程度可能下降。',
     composerAdvancedTemperatureGuideLower: '低於 1.0 會讓結果更穩定、更貼近字面要求，但探索性通常會降低。',
-    composerAdvancedHighThinkingHighTempWarning: '⚠️ 當開啟「高度思考模式」且「溫度」大於 1.0 時，模型可能會陷入思考重複循環，無法完成生成。若遇到此情況，建議將溫度調整回 1.0。',
+    composerAdvancedHighThinkingHighTempWarning:
+        '⚠️ 當開啟「高度思考模式」且「溫度」大於 1.0 時，模型可能會陷入思考重複循環，無法完成生成。若遇到此情況，建議將溫度調整回 1.0。',
     composerAdvancedSafetyTitle: '安全過濾',
     composerAdvancedSafetyNote:
         '「模型預設」會省略該分類的 Gemini safetySettings。產品目前的預設仍是四類全部「不封鎖」。',

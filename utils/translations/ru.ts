@@ -46,7 +46,8 @@ export const ru = {
     autoExportSwitch: 'Авторезервирование',
     autoExportTriggerCondition: 'Условие резервирования',
     imagesCountUnit: 'изображений',
-    autoExportNotificationText: 'Авторезервное копирование: успешно сгенерировано {0} изображений или достигнут лимит в {1} МБ. Файл сохранен в Загрузки.',
+    autoExportNotificationText:
+        'Авторезервное копирование: успешно сгенерировано {0} изображений или достигнут лимит в {1} МБ. Файл сохранен в Загрузки.',
     logAutoExportSuccess: 'Автоматически экспортирована копия рабочей области, содержащая {0} элементов истории.',
     cancelWithCountdown: 'Отмена (Раунд {0}/{1} • осталось {2})',
     objectRefs: 'Ссылки на объекты',
@@ -532,6 +533,9 @@ export const ru = {
     workspaceRestoreTurns: '{0} ходов',
     workspaceRestoreActionsTitle: 'Выберите следующий шаг',
     workspaceTopHeaderReferenceTray: 'Лоток референсов',
+    workspaceIncreaseFontSize: 'Увеличить размер шрифта',
+    workspaceDecreaseFontSize: 'Уменьшить размер шрифта',
+    workspaceResetFontSize: 'Сбросить размер шрифта',
     workspaceTopHeaderSendIntent: 'Отправка',
     workspaceSendIntentIndependent: 'Независимо',
     workspaceSendIntentMemory: 'Память',
@@ -1053,5 +1057,6 @@ export const ru = {
     composerAdvancedHighThinkingHighTempWarning:
         '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
     generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
-    generationFailureDetailThinkingLoop: 'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
+    generationFailureDetailThinkingLoop:
+        'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
 } as const;

@@ -4318,7 +4318,7 @@ test.describe('workspace restore flows', () => {
         await expect(workColumn).toBeVisible();
         await expect(historyColumn).toBeVisible();
         await expect(stageFrame).toBeVisible();
-        await expect(visibleHistoryCards).toHaveCount(6);
+        await expect(visibleHistoryCards).toHaveCount(4);
 
         const [stageColumnBox, workColumnBox] = await Promise.all([
             stageColumn.boundingBox(),

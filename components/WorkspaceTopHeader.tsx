@@ -40,18 +40,14 @@ function WorkspaceTopHeader({
     });
     const supportRailItemCount = supportRailItems.length;
     const supportRailColumnClassName =
-        supportRailItemCount <= 1
-            ? 'grid-cols-1'
-            : supportRailItemCount === 2
-              ? 'grid-cols-2 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]'
-              : 'grid-cols-3';
+        supportRailItemCount <= 1 ? 'grid-cols-1' : supportRailItemCount === 2 ? 'grid-cols-2' : 'grid-cols-3';
 
     return (
         <header data-testid="workspace-top-header" className="pointer-events-none fixed inset-x-0 top-0 z-30 shrink-0">
             <div className="mx-auto w-full max-w-[1560px] px-4 lg:px-4 xl:px-3">
                 <div
                     data-testid="workspace-top-band"
-                    className="flex flex-col gap-1.5 xl:grid xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] xl:items-end"
+                    className="flex flex-col gap-1.5 xl:grid xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] xl:items-end"
                 >
                     <div className="min-w-0">
                         <div

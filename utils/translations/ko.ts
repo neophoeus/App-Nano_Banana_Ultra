@@ -46,7 +46,8 @@ export const ko = {
     autoExportSwitch: '자동 백업',
     autoExportTriggerCondition: '백업 조건',
     imagesCountUnit: '장',
-    autoExportNotificationText: '자동 백업 알림: {0}개의 이미지를 정상적으로 생성했거나 작업 공간 용량이 {1}MB 증가했습니다. 진행 상황의 손실을 방지하기 위해 현재 작업 공간의 스냅샷(.json)을 다운로드 폴더에 자동으로 내보냈습니다.',
+    autoExportNotificationText:
+        '자동 백업 알림: {0}개의 이미지를 정상적으로 생성했거나 작업 공간 용량이 {1}MB 증가했습니다. 진행 상황의 손실을 방지하기 위해 현재 작업 공간의 스냅샷(.json)을 다운로드 폴더에 자동으로 내보냈습니다.',
     logAutoExportSuccess: '{0}개의 내역 항목을 포함하는 작업 공간 스냅샷을 자동으로 내보냈습니다.',
     cancelWithCountdown: '취소 (라운드 {0}/{1} • {2}장 남음)',
     objectRefs: '오브젝트 참조',
@@ -525,6 +526,9 @@ export const ko = {
     workspaceRestoreTurns: '{0}개 턴',
     workspaceRestoreActionsTitle: '다음 작업 선택',
     workspaceTopHeaderReferenceTray: '참조 트레이',
+    workspaceIncreaseFontSize: '글꼴 크기 확대',
+    workspaceDecreaseFontSize: '글꼴 크기 축소',
+    workspaceResetFontSize: '글꼴 크기 초기화',
     workspaceTopHeaderSendIntent: '전송',
     workspaceSendIntentIndependent: '독립',
     workspaceSendIntentMemory: '기억',
@@ -1026,5 +1030,6 @@ export const ko = {
     composerAdvancedHighThinkingHighTempWarning:
         '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
     generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
-    generationFailureDetailThinkingLoop: 'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
+    generationFailureDetailThinkingLoop:
+        'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
 } as const;

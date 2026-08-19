@@ -46,8 +46,10 @@ export const es = {
     autoExportSwitch: 'Copia de seguridad automática',
     autoExportTriggerCondition: 'Condición de copia',
     imagesCountUnit: 'imágenes',
-    autoExportNotificationText: 'Copia de seguridad automática: se han generado con éxito {0} imágenes o se ha alcanzado el límite de {1}MB. El archivo se ha guardado en Descargas.',
-    logAutoExportSuccess: 'Se ha exportado automáticamente una copia del espacio de trabajo con {0} elementos de historial.',
+    autoExportNotificationText:
+        'Copia de seguridad automática: se han generado con éxito {0} imágenes o se ha alcanzado el límite de {1}MB. El archivo se ha guardado en Descargas.',
+    logAutoExportSuccess:
+        'Se ha exportado automáticamente una copia del espacio de trabajo con {0} elementos de historial.',
     cancelWithCountdown: 'Cancelar (Ronda {0}/{1} • {2} rest.)',
     objectRefs: 'Referencias de objetos',
     characterRefs: 'Referencias de personajes',
@@ -534,6 +536,9 @@ export const es = {
     workspaceRestoreTurns: '{0} turnos',
     workspaceRestoreActionsTitle: 'Elige el siguiente paso',
     workspaceTopHeaderReferenceTray: 'Bandeja de referencias',
+    workspaceIncreaseFontSize: 'Aumentar tamaño de fuente',
+    workspaceDecreaseFontSize: 'Reducir tamaño de fuente',
+    workspaceResetFontSize: 'Restablecer tamaño de fuente',
     workspaceTopHeaderSendIntent: 'Envio',
     workspaceSendIntentIndependent: 'Independiente',
     workspaceSendIntentMemory: 'Memoria',
@@ -1061,5 +1066,6 @@ export const es = {
     composerAdvancedHighThinkingHighTempWarning:
         '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
     generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
-    generationFailureDetailThinkingLoop: 'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
+    generationFailureDetailThinkingLoop:
+        'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
 } as const;

@@ -91,11 +91,11 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
     const titleIconClassName = isEmbedded ? 'h-4 w-4 text-slate-400 dark:text-slate-500' : 'h-4 w-4';
     const gridClassName =
         thumbnailMode === 'compact'
-            ? 'grid w-full min-w-0 grid-cols-4 gap-1.5 xl:grid-cols-[repeat(6,minmax(128px,128px))] xl:justify-center xl:gap-1.5'
+            ? 'grid w-full min-w-0 grid-cols-4 gap-1.5 xl:grid-cols-[repeat(4,minmax(0,1fr))] xl:justify-center xl:gap-1.5'
             : 'grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4';
     const cardSizeClassName =
         thumbnailMode === 'compact'
-            ? 'aspect-square w-full rounded-[18px] xl:h-[128px] xl:w-[128px] xl:shrink-0'
+            ? 'aspect-square w-full rounded-[18px] xl:h-auto xl:w-full xl:shrink-0'
             : 'aspect-square rounded-xl';
     const badgeContainerClassName =
         thumbnailMode === 'compact'
@@ -231,7 +231,12 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                 className="h-full w-full object-cover bg-gray-100 dark:bg-gray-900"
                             />
                             <div className="pointer-events-none absolute inset-0 bg-slate-950/0 transition-colors group-hover:bg-slate-950/12" />
-                            {isSelectedPreview ? <div data-testid={`history-preview-selected-${tile.slotIndex}`} className={selectedMarkerClassName} /> : null}
+                            {isSelectedPreview ? (
+                                <div
+                                    data-testid={`history-preview-selected-${tile.slotIndex}`}
+                                    className={selectedMarkerClassName}
+                                />
+                            ) : null}
                         </>
                     );
 
@@ -250,7 +255,11 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                             </div>
                         </button>
                     ) : (
-                        <div key={tile.id} data-testid={`history-preview-tile-${tile.slotIndex}`} className={previewTileClassName}>
+                        <div
+                            key={tile.id}
+                            data-testid={`history-preview-tile-${tile.slotIndex}`}
+                            className={previewTileClassName}
+                        >
                             {isReady ? (
                                 readyPreviewContent
                             ) : isPending ? (
@@ -269,8 +278,19 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                     className="flex h-full w-full flex-col items-center justify-center gap-2 bg-slate-50/90 px-2 text-center dark:bg-slate-950/80"
                                 >
                                     <div className="h-7 w-7 rounded-full border border-dashed border-gray-300 dark:border-gray-700 animate-pulse flex items-center justify-center bg-white dark:bg-slate-900 shadow-sm">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                            />
                                         </svg>
                                     </div>
                                     <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500 animate-pulse">
@@ -355,7 +375,9 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                 />
                             )}
 
-                            {isFresh ? <div data-testid={`history-fresh-${item.id}`} className={freshnessGlowClassName} /> : null}
+                            {isFresh ? (
+                                <div data-testid={`history-fresh-${item.id}`} className={freshnessGlowClassName} />
+                            ) : null}
 
                             {!isFailed && isCurrentSource && (
                                 <div className={badgeContainerClassName}>

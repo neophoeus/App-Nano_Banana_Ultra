@@ -5,7 +5,7 @@ import { BranchSummary } from '../utils/lineage';
 import { getTranslation, Language } from '../utils/translations';
 import HistoryPanel from './HistoryPanel';
 
-const DESKTOP_HISTORY_PAGE_SIZE = 6;
+const DESKTOP_HISTORY_PAGE_SIZE = 4;
 const MOBILE_HISTORY_PAGE_SIZE = 4;
 
 type WorkspaceUnifiedHistoryPanelProps = {
@@ -69,23 +69,20 @@ function WorkspaceUnifiedHistoryPanel({
     }, [history.length, activePreviewTiles.length, pageSize]);
     const previousHistoryHeadIdRef = useRef<string | null>(history[0]?.id || null);
     const previousHistoryLengthRef = useRef(history.length);
-    const displayedHistory = useMemo(
-        () => {
-            if (activePreviewTiles.length > 0) {
-                const shift = activePreviewTiles.length;
-                if (page === 0) {
-                    const allowedSlots = Math.max(0, pageSize - shift);
-                    return history.slice(0, allowedSlots);
-                } else {
-                    const start = page * pageSize - shift;
-                    const end = (page + 1) * pageSize - shift;
-                    return history.slice(Math.max(0, start), Math.max(0, end));
-                }
+    const displayedHistory = useMemo(() => {
+        if (activePreviewTiles.length > 0) {
+            const shift = activePreviewTiles.length;
+            if (page === 0) {
+                const allowedSlots = Math.max(0, pageSize - shift);
+                return history.slice(0, allowedSlots);
+            } else {
+                const start = page * pageSize - shift;
+                const end = (page + 1) * pageSize - shift;
+                return history.slice(Math.max(0, start), Math.max(0, end));
             }
-            return history.slice(page * pageSize, (page + 1) * pageSize);
-        },
-        [history, page, pageSize, activePreviewTiles.length],
-    );
+        }
+        return history.slice(page * pageSize, (page + 1) * pageSize);
+    }, [history, page, pageSize, activePreviewTiles.length]);
     const pagePreviewTiles = page === 0 ? activePreviewTiles : [];
 
     useEffect(() => {
@@ -94,9 +91,9 @@ function WorkspaceUnifiedHistoryPanel({
         const previousHistoryLength = previousHistoryLengthRef.current;
         const didPrependNewTurn = Boolean(
             nextHistoryHeadId &&
-                previousHistoryHeadId &&
-                nextHistoryHeadId !== previousHistoryHeadId &&
-                history.length > previousHistoryLength,
+            previousHistoryHeadId &&
+            nextHistoryHeadId !== previousHistoryHeadId &&
+            history.length > previousHistoryLength,
         );
 
         if (!nextHistoryHeadId || didPrependNewTurn) {
@@ -340,7 +337,6 @@ function WorkspaceUnifiedHistoryPanel({
                     {t('workspacePickerEmptyGallery')}
                 </div>
             )}
-
         </section>
     );
 }

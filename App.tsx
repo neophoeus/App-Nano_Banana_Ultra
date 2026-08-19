@@ -2392,17 +2392,19 @@ const App: React.FC = () => {
                     <span className={topLauncherCompactLabelClassName}>{t('workspaceSupportSources')}</span>
                 </span>
             </button>
-            <button
-                type="button"
-                data-testid="workspace-queue-open-details"
-                onClick={handleOpenQueuedBatchJobs}
-                className={`${topLauncherCompactButtonClassName} nbu-shell-surface-context-rail hover:border-emerald-300 dark:hover:border-emerald-500/30`}
-            >
-                <span className="flex min-w-0 items-center gap-2">
-                    <TopLauncherSignal active={hasQueuedBatchActivity} dataTestId="workspace-queue-signal" />
-                    <span className={topLauncherCompactLabelClassName}>{t('workspaceQueueLauncher')}</span>
-                </span>
-            </button>
+            {executionModeCapabilities.supportsQueuedBatch ? (
+                <button
+                    type="button"
+                    data-testid="workspace-queue-open-details"
+                    onClick={handleOpenQueuedBatchJobs}
+                    className={`${topLauncherCompactButtonClassName} nbu-shell-surface-context-rail hover:border-emerald-300 dark:hover:border-emerald-500/30`}
+                >
+                    <span className="flex min-w-0 items-center gap-2">
+                        <TopLauncherSignal active={hasQueuedBatchActivity} dataTestId="workspace-queue-signal" />
+                        <span className={topLauncherCompactLabelClassName}>{t('workspaceQueueLauncher')}</span>
+                    </span>
+                </button>
+            ) : null}
         </>
     );
     const workspaceTopHeaderProps = useWorkspaceTopHeaderProps({
@@ -2920,27 +2922,37 @@ const App: React.FC = () => {
                     <main className="mt-0 flex flex-1 flex-col gap-1.5 xl:min-h-0 xl:flex-none">
                         <section
                             data-testid="workspace-main-shell"
-                            className="grid min-w-0 gap-1.5 xl:min-h-0 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] xl:items-stretch"
+                            className="grid min-w-0 gap-1.5 xl:min-h-0 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] xl:items-stretch"
                         >
                             <div
-                                data-testid="workspace-stage-column"
-                                className="min-w-0 xl:flex xl:min-h-0 xl:flex-col"
+                                data-testid="workspace-work-column"
+                                className="grid min-w-0 gap-1.5 xl:min-h-0 xl:flex xl:flex-col"
                             >
-                                {focusSurface}
-                            </div>
-
-                            <div data-testid="workspace-work-column" className="grid min-w-0 gap-1.5 xl:min-h-0">
-                                <div data-testid="workspace-history-column" className="min-w-0 xl:min-h-0">
-                                    {historySurface}
-                                </div>
-
-                                <section data-testid="workspace-actions-composer-row" className="min-w-0 xl:min-h-0">
+                                <section
+                                    data-testid="workspace-actions-composer-row"
+                                    className="min-w-0 xl:min-h-0 xl:flex xl:flex-1 xl:flex-col"
+                                >
                                     <ComposerSettingsPanel
                                         {...composerSettingsPanelProps}
                                         imageToolsPanel={sideToolPanel}
                                         onClearStyle={handleClearStyle}
                                     />
                                 </section>
+                            </div>
+
+                            <div
+                                data-testid="workspace-stage-column"
+                                className="grid min-w-0 gap-1.5 xl:min-h-0 xl:flex xl:flex-col"
+                            >
+                                <div data-testid="workspace-history-column" className="min-w-0 xl:min-h-0">
+                                    {historySurface}
+                                </div>
+                                <div
+                                    data-testid="workspace-stage-surface"
+                                    className="min-w-0 xl:flex xl:min-h-0 xl:flex-1 xl:flex-col"
+                                >
+                                    {focusSurface}
+                                </div>
                             </div>
                         </section>
                     </main>

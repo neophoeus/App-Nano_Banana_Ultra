@@ -28,7 +28,9 @@ const baseProps = {
     groundingMode: 'off' as const,
     currentStageAsset: null,
     capability: MODEL_CAPABILITIES['gemini-3.1-flash-image'],
-    availableGroundingModes: ['off', 'google-search', 'image-search', 'google-search-plus-image-search'] as ('off' | 'google-search' | 'image-search' | 'google-search-plus-image-search')[],
+    availableGroundingModes: ['off', 'google-search', 'image-search', 'google-search-plus-image-search'] as (
+        'off' | 'google-search' | 'image-search' | 'google-search-plus-image-search'
+    )[],
     temperature: 1,
     isAdvancedSettingsOpen: true,
     generateLabel: 'Generate',
@@ -800,5 +802,57 @@ describe('ComposerSettingsPanel prompt focus wiring', () => {
         expect(onBatchSizeChange).not.toHaveBeenCalled();
         expect(onStickySendIntentChange).not.toHaveBeenCalled();
         expect(container.querySelector('[data-testid="composer-sticky-send-intent-info-card"]')).not.toBeNull();
+    });
+
+    it('adjusts prompt textarea font size, persists to localStorage, and supports reset', () => {
+        window.localStorage.clear();
+
+        act(() => {
+            root.render(<ComposerSettingsPanel {...baseProps} />);
+        });
+
+        const textarea = container.querySelector('textarea') as HTMLTextAreaElement;
+        const increaseBtn = container.querySelector('[data-testid="composer-font-size-increase"]') as HTMLButtonElement;
+        const decreaseBtn = container.querySelector('[data-testid="composer-font-size-decrease"]') as HTMLButtonElement;
+        const resetBtn = container.querySelector('[data-testid="composer-font-size-reset"]') as HTMLButtonElement;
+
+        expect(textarea).toBeTruthy();
+        expect(increaseBtn).toBeTruthy();
+        expect(decreaseBtn).toBeTruthy();
+        expect(resetBtn).toBeTruthy();
+        expect(textarea.style.fontSize).toBe('14px');
+        expect(resetBtn.textContent).toContain('14');
+        expect(resetBtn.disabled).toBe(true);
+
+        // Increase font size
+        act(() => {
+            increaseBtn.click();
+        });
+
+        expect(textarea.style.fontSize).toBe('15px');
+        expect(resetBtn.textContent).toContain('15');
+        expect(window.localStorage.getItem('nbu_prompt_font_size')).toBe('15');
+        expect(resetBtn.disabled).toBe(false);
+
+        // Decrease font size twice
+        act(() => {
+            decreaseBtn.click();
+            decreaseBtn.click();
+        });
+
+        expect(textarea.style.fontSize).toBe('13px');
+        expect(resetBtn.textContent).toContain('13');
+        expect(window.localStorage.getItem('nbu_prompt_font_size')).toBe('13');
+        expect(resetBtn.disabled).toBe(false);
+
+        // Reset to default
+        act(() => {
+            resetBtn.click();
+        });
+
+        expect(textarea.style.fontSize).toBe('14px');
+        expect(resetBtn.textContent).toContain('14');
+        expect(window.localStorage.getItem('nbu_prompt_font_size')).toBe('14');
+        expect(resetBtn.disabled).toBe(true);
     });
 });

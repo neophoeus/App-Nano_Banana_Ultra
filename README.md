@@ -6,7 +6,7 @@ Nano Banana Ultra is a Gemini-powered image workspace for creation, guided editi
 
 Instead of treating image generation as a disposable one-shot action, Nano Banana Ultra keeps prompting, references, history, editing, reuse, and restore inside one connected workspace flow.
 
-Starting from v4.0.0, Nano Banana Ultra features a unified dual-engine architecture that combines both the Local API (Node backend) and AI Studio Direct mode (formerly the separate Ultra Lite project) into a single cohesive codebase. You can run it locally with your local dev server, or run directly within Google AI Studio to take advantage of Google AI Pro/Ultra subscription quotas. The workspace automatically detects the environment and provides an on-the-fly engine selector in the top bar (`Auto Detect`, `Local API`, and `AI Studio Direct`).
+The workspace features a dual-engine architecture combining both the Local API (Node backend) and AI Studio Direct mode into a single cohesive codebase. You can run it locally with your local dev server, or run directly within Google AI Studio to take advantage of Google AI Pro/Ultra subscription quotas. The workspace automatically detects the environment and provides an on-the-fly engine selector in the top bar (`Auto Detect`, `Local API`, and `AI Studio Direct`).
 
 ## At a Glance
 
@@ -14,6 +14,7 @@ Starting from v4.0.0, Nano Banana Ultra features a unified dual-engine architect
 - one connected flow for create, edit, compare, branch, recover, and reuse
 - source-aware history and Versions model so the current working source stays explicit
 - model-aware controls that adapt to each Gemini image path instead of forcing one shared lowest-common-denominator UI
+- flexible prompt composer with adjustable font sizing and compact aligned action tools
 - built for longer-running visual work rather than only one-pass generation
 
 ## Core Capabilities
@@ -111,9 +112,9 @@ Nano Banana Ultra currently supports four Gemini image-model paths. The UI expos
 
 ## Version Overview
 
-### Latest Release: 4.0.2
+### Latest Release: 4.1.0
 
-Latest release: 4.0.2. Full Lite Capabilities Integration & Strict Engine-Mode Gating. Introduces multi-round continuous generation (1~10 rounds) with dynamic cancellation countdowns across both engines, auto snapshot backup to Downloads (gated to Direct/Lite mode), periodic IndexedDB 300MB storage capacity warning, AI Studio delayed detection polling and 30s `/favicon.ico` keep-alive ping, Pro/Flash rate quota handling, and complete 9-language i18n support. See [CHANGELOG.md](CHANGELOG.md) for details.
+Latest release: 4.1.0. Desktop Workspace Layout Restructure & Prompt Composer Ergonomics. Introduces 60/40 proportional layout rebalance (top navigation 60% / support rail 40%, generation composer 60% / history & stage 40% with dual-column height matching), 4-item history filmstrip page size, Lite mode dynamic header queue button gating, downwards popover for side tool references, prompt textarea font size adjustment with localStorage persistence, Enter mode switcher iconification with 34px equal width alignment, and prompt text to scrollbar/buttons spacing optimization. See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ### 4.x
 

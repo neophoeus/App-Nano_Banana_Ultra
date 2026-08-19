@@ -20,4 +20,43 @@ describe('WorkspaceTopHeader', () => {
         expect(markup).not.toContain('Ratio:');
         expect(markup).not.toContain('Reference Tray');
     });
+
+    it('renders grid-cols-2 when 2 support items are provided (Lite mode)', () => {
+        const markup = renderToStaticMarkup(
+            <WorkspaceTopHeader
+                headerConsole={<div>console</div>}
+                currentLanguage="en"
+                onLanguageChange={vi.fn()}
+                supportRail={
+                    <>
+                        <button type="button">Progress</button>
+                        <button type="button">Support</button>
+                    </>
+                }
+            />,
+        );
+
+        expect(markup).toContain('grid-cols-2');
+        expect(markup).not.toContain('grid-cols-3');
+    });
+
+    it('renders grid-cols-3 when 3 support items are provided (Local mode)', () => {
+        const markup = renderToStaticMarkup(
+            <WorkspaceTopHeader
+                headerConsole={<div>console</div>}
+                currentLanguage="en"
+                onLanguageChange={vi.fn()}
+                supportRail={
+                    <>
+                        <button type="button">Progress</button>
+                        <button type="button">Support</button>
+                        <button type="button">Queue</button>
+                    </>
+                }
+            />,
+        );
+
+        expect(markup).toContain('grid-cols-3');
+        expect(markup).not.toContain('grid-cols-2');
+    });
 });

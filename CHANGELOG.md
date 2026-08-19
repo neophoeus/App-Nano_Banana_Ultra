@@ -1,10 +1,24 @@
 # Changelog
 
+## v4.1.0 - 2026-08-19
+
+- Release title: Nano Banana Ultra 4.1.0 - Workspace Layout Proportions Restructure & Prompt Composer Ergonomics
+- Release summary:
+    - **Header & Support Rail Proportions Swapped**: Rebalanced the top bar layout on desktop (`xl:`) so the primary top header navigation occupies 60% (`xl:w-[60%]`) and the support rail occupies 40% (`xl:w-[40%]`), granting greater prominence to title, model selector, and breadcrumbs.
+    - **Lower Workspace Column Swap & Height Matching**: Reorganized the lower workspace shell into a 60/40 split (`xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]`). The left column (60%) houses the Generation Input and Settings (Composer), while the right column (40%) neatly nests Generated History on top and the Main Stage on the bottom. Prompt input textarea expands dynamically to ensure total left and right column heights match identically.
+    - **4-Thumbnail History Grid**: Refined compact history filmstrip to render 4 items per page (`DESKTOP_HISTORY_PAGE_SIZE = 4`) across a 4-column responsive grid.
+    - **Lite / Direct Mode Header Queue Button Gating**: In AI Studio Direct (Lite) mode where queued batching is unsupported, the Queue button is automatically hidden from the top rail, and the Progress and Support buttons automatically expand with `grid-cols-2` to evenly span the 40% header width.
+    - **Downwards Popover for Side Tool References**: Adjusted large-screen floating popover positioning for the Reference Tray in `WorkspaceSideToolPanel` to open downwards, preventing horizontal overflow off-screen to the left.
+    - **Prompt Font Size Adjuster with LocalStorage Persistence**: Added a vertical control pill below the trash can button in `ComposerSettingsPanel` with Increase (`+`, up to 24px), Reset / Size indicator (14px default), and Decrease (`-`, down to 12px) buttons. Prompt textarea dynamically updates font size and proportional line height, persisted across sessions in `localStorage` under `nbu_prompt_font_size`.
+    - **Enter Mode Switcher Iconification & 34px Equal Width Alignment**: Converted the "Enter sends" / "Enter newline" text toggle into sleek SVG Send (Paper plane) and Newline (Return `↵`) icons with tooltips. Aligned button width to 34px (`w-[34px]`), perfectly matching the trash can and font size controller stack in a cohesive vertical column.
+    - **Prompt Text & Scrollbar Spacing Optimization**: Reduced prompt textarea right padding from `pr-4` (16px) to `pr-1.5` (6px) and narrowed right overlay reserve from `4.75rem / 5rem` to `2.75rem / 3rem`, reclaiming horizontal typing space and eliminating empty gaps.
+    - **Testing & Verification**: 100% test pass rate across all 113 test suites (923 tests) and flawless production build.
+
 ## v4.0.2 - 2026-08-19
 
 - Release title: Nano Banana Ultra 4.0.2 - Full Lite Capabilities Integration & Strict Engine-Mode Gating
 - Release summary:
-    - **Multi-Round Continuous Generation (1~10 Rounds)**: Added multi-round continuous batch generation supporting 1~10 rounds with dedicated round count stepper, 1~10 popover grid selector, per-round batch preview session retention, and dynamic cancellation countdown button label (`cancelWithCountdown`). Fully operational across both Local (Ultra) and Direct (Lite) modes.
+    - **Multi-Round Continuous Generation (1~10 Rounds)**: Added multi-round continuous batch generation supporting 1~~10 rounds with dedicated round count stepper, 1~~10 popover grid selector, per-round batch preview session retention, and dynamic cancellation countdown button label (`cancelWithCountdown`). Fully operational across both Local (Ultra) and Direct (Lite) modes.
     - **Auto Snapshot Backup to Downloads**: Introduced auto-export trigger settings (by image count 20/40/60/100, storage size 100MB/200MB/300MB/500MB, or both) that automatically backs up workspace state JSON directly to Downloads. Mode-gated to Direct / Lite mode only (hidden in Local mode where local disk saving already preserves artifacts).
     - **IndexedDB 300MB Storage Capacity Warning**: Added periodic 30s background scan of IndexedDB data usage that triggers a dedicated warning modal with one-click workspace export when storage exceeds 300MB and auto-backup is not active. Mode-gated to Direct / Lite mode only.
     - **AI Studio Connection Resilience & Keep-Alive**: Added 12x (500ms) delayed polling retry for `window.aistudio` injection, 10s background connection heartbeat, and 30s `/favicon.ico` keep-alive ping to prevent Cloud Run container scale-to-zero suspension. Mode-gated to Direct / Lite mode only.

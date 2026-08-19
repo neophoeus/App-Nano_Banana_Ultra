@@ -46,7 +46,8 @@ export const ja = {
     autoExportSwitch: '自動バックアップ',
     autoExportTriggerCondition: 'バックアップ条件',
     imagesCountUnit: '枚',
-    autoExportNotificationText: '自動バックアップ通知：{0}枚の画像を正常に生成したか、ワークスペース容量が{1}MB増加しました。進捗の紛失を防ぐため、現在のワークスペースのスナップショット（.json）をダウンロードフォルダに自動的にエクスポートしました。',
+    autoExportNotificationText:
+        '自動バックアップ通知：{0}枚の画像を正常に生成したか、ワークスペース容量が{1}MB増加しました。進捗の紛失を防ぐため、現在のワークスペースのスナップショット（.json）をダウンロードフォルダに自動的にエクスポートしました。',
     logAutoExportSuccess: '{0}個の履歴項目を含むワークスペースのスナップショットを自動的にエクスポートしました。',
     cancelWithCountdown: 'キャンセル (ラウンド {0}/{1} • 残り {2} 枚)',
     objectRefs: 'オブジェクトの参照',
@@ -526,6 +527,9 @@ export const ja = {
     workspaceRestoreTurns: '{0} 件のターン',
     workspaceRestoreActionsTitle: '次の操作を選択',
     workspaceTopHeaderReferenceTray: '参照トレイ',
+    workspaceIncreaseFontSize: 'フォントサイズを拡大',
+    workspaceDecreaseFontSize: 'フォントサイズを縮小',
+    workspaceResetFontSize: 'フォントサイズをリセット',
     workspaceTopHeaderSendIntent: '送信',
     workspaceSendIntentIndependent: '独立',
     workspaceSendIntentMemory: '記憶',
@@ -1037,5 +1041,6 @@ export const ja = {
     composerAdvancedHighThinkingHighTempWarning:
         '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
     generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
-    generationFailureDetailThinkingLoop: 'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
+    generationFailureDetailThinkingLoop:
+        'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
 } as const;

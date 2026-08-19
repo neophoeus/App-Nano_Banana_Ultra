@@ -46,7 +46,8 @@ export const de = {
     autoExportSwitch: 'Automatische Sicherung',
     autoExportTriggerCondition: 'Sicherungsbedingung',
     imagesCountUnit: 'Bilder',
-    autoExportNotificationText: 'Automatische Sicherung: {0} Bilder erfolgreich generiert oder Kapazitätsgrenze von {1}MB erreicht. Die Sicherungsdatei wurde in Downloads gespeichert.',
+    autoExportNotificationText:
+        'Automatische Sicherung: {0} Bilder erfolgreich generiert oder Kapazitätsgrenze von {1}MB erreicht. Die Sicherungsdatei wurde in Downloads gespeichert.',
     logAutoExportSuccess: 'Es wurde automatisch eine Kopie des Arbeitsbereichs mit {0} Verlaufseinträgen exportiert.',
     cancelWithCountdown: 'Abbrechen (Runde {0}/{1} • {2} übrig)',
     objectRefs: 'Objektreferenzen',
@@ -537,6 +538,9 @@ export const de = {
     workspaceRestoreTurns: '{0} Runden',
     workspaceRestoreActionsTitle: 'Nächsten Schritt wählen',
     workspaceTopHeaderReferenceTray: 'Referenzablage',
+    workspaceIncreaseFontSize: 'Schriftgröße vergrößern',
+    workspaceDecreaseFontSize: 'Schriftgröße verkleinern',
+    workspaceResetFontSize: 'Schriftgröße zurücksetzen',
     workspaceTopHeaderSendIntent: 'Senden',
     workspaceSendIntentIndependent: 'Unabhangig',
     workspaceSendIntentMemory: 'Speicher',
@@ -1065,5 +1069,6 @@ export const de = {
     composerAdvancedHighThinkingHighTempWarning:
         '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
     generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
-    generationFailureDetailThinkingLoop: 'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
+    generationFailureDetailThinkingLoop:
+        'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
 } as const;

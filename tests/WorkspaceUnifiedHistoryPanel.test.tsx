@@ -145,10 +145,10 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
         expect(visibleText).not.toContain('Prompt A should stay hidden.');
         expect(visibleText).not.toContain('Prompt B should stay hidden.');
         expect(markup).toContain('grid-cols-4');
-        expect(markup).toContain('xl:grid-cols-[repeat(6,minmax(128px,128px))]');
+        expect(markup).toContain('xl:grid-cols-[repeat(4,minmax(0,1fr))]');
         expect(markup).toContain('xl:justify-center');
         expect(markup).toContain('xl:gap-1.5');
-        expect(markup).toContain('xl:h-[128px] xl:w-[128px] xl:shrink-0');
+        expect(markup).toContain('xl:h-auto xl:w-full xl:shrink-0');
         expect(markup).not.toContain('workspace-unified-history-footer');
     });
 
@@ -236,7 +236,7 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
         expect(container.innerHTML).not.toContain('history-card-turn-a');
     });
 
-    it('uses desktop page size 6 and exposes first or last pager controls', () => {
+    it('uses desktop page size 4 and exposes first or last pager controls', () => {
         renderPanel({
             history: buildHistory(21),
             branchSummariesCount: 3,
@@ -263,7 +263,7 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
             'workspace-unified-history-page-total',
         ]);
         expect(currentPageLabel?.textContent).toBe('1');
-        expect(totalPageLabel?.textContent).toBe('4');
+        expect(totalPageLabel?.textContent).toBe('6');
         expect(firstPageButton?.className).toContain('rounded-[16px]');
         expect(firstPageButton?.className).toContain('h-9');
         expect(currentPageLabel?.className).toContain('rounded-full');
@@ -271,8 +271,8 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
         expect(totalPageLabel?.className).toContain('rounded-full');
         expect(totalPageLabel?.className).toContain('bg-white/88');
         expect(container.innerHTML).toContain('history-card-turn-01');
-        expect(container.innerHTML).toContain('history-card-turn-06');
-        expect(container.innerHTML).not.toContain('history-card-turn-07');
+        expect(container.innerHTML).toContain('history-card-turn-04');
+        expect(container.innerHTML).not.toContain('history-card-turn-05');
 
         const lastButton = container.querySelector(
             '[data-testid="workspace-unified-history-page-last"]',
@@ -281,8 +281,8 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
             lastButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
         });
 
-        expect(currentPageLabel?.textContent).toBe('4');
-        expect(totalPageLabel?.textContent).toBe('4');
+        expect(currentPageLabel?.textContent).toBe('6');
+        expect(totalPageLabel?.textContent).toBe('6');
         expect(container.innerHTML).toContain('history-card-turn-21');
         expect(container.innerHTML).not.toContain('history-card-turn-01');
 
@@ -294,7 +294,7 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
         });
 
         expect(currentPageLabel?.textContent).toBe('1');
-        expect(totalPageLabel?.textContent).toBe('4');
+        expect(totalPageLabel?.textContent).toBe('6');
         expect(container.innerHTML).toContain('history-card-turn-01');
         expect(container.innerHTML).not.toContain('history-card-turn-21');
     });
@@ -314,7 +314,7 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
             (container.querySelector('[data-testid="workspace-unified-history-page-label"]') as HTMLSpanElement | null)
                 ?.textContent,
         ).toBe('2');
-        expect(container.innerHTML).toContain('history-card-turn-11');
+        expect(container.innerHTML).toContain('history-card-turn-05');
 
         renderPanel({
             history: [
@@ -337,7 +337,7 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
                 ?.textContent,
         ).toBe('1');
         expect(container.innerHTML).toContain('history-card-turn-12');
-        expect(container.innerHTML).not.toContain('history-card-turn-11');
+        expect(container.innerHTML).not.toContain('history-card-turn-05');
     });
 
     it('shows preview tiles on the first page without squeezing completed history items', () => {
@@ -378,17 +378,12 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
         expect(
             (container.querySelector('[data-testid="workspace-unified-history-page-total"]') as HTMLSpanElement | null)
                 ?.textContent,
-        ).toBe('3');
+        ).toBe('4');
         expect(container.innerHTML).toContain('history-preview-tile-3');
         expect(container.innerHTML).toContain('history-preview-tile-0');
-        expect(container.innerHTML).toContain('history-card-turn-01');
-        expect(container.innerHTML).toContain('history-card-turn-02');
-        expect(container.innerHTML).not.toContain('history-card-turn-03');
+        expect(container.innerHTML).not.toContain('history-card-turn-01');
         expect(container.innerHTML.indexOf('history-preview-tile-3')).toBeLessThan(
             container.innerHTML.indexOf('history-preview-tile-2'),
-        );
-        expect(container.innerHTML.indexOf('history-preview-tile-0')).toBeLessThan(
-            container.innerHTML.indexOf('history-card-turn-01'),
         );
 
         const nextButton = container.querySelector(
@@ -405,12 +400,11 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
         expect(
             (container.querySelector('[data-testid="workspace-unified-history-page-total"]') as HTMLSpanElement | null)
                 ?.textContent,
-        ).toBe('3');
-        expect(container.innerHTML).toContain('history-card-turn-03');
-        expect(container.innerHTML).toContain('history-card-turn-08');
-        expect(container.innerHTML).not.toContain('history-card-turn-09');
+        ).toBe('4');
+        expect(container.innerHTML).toContain('history-card-turn-01');
+        expect(container.innerHTML).toContain('history-card-turn-04');
+        expect(container.innerHTML).not.toContain('history-card-turn-05');
         expect(container.innerHTML).not.toContain('history-preview-tile-3');
-        expect(container.innerHTML).not.toContain('history-card-turn-01');
     });
 
     it('forwards ready preview tile selection through the unified history surface', () => {

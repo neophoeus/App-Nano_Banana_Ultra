@@ -256,7 +256,7 @@ function WorkspaceSideToolPanel({
                             id={referencesCardId}
                             role="dialog"
                             aria-label={t('workspaceSheetTitleReferences')}
-                            className="nbu-floating-panel absolute bottom-[calc(100%+0.5rem)] left-0 top-auto z-40 flex max-h-[min(32rem,calc(100vh-1rem))] w-full max-w-[calc(100vw-2rem)] flex-col overflow-hidden p-2.5 xl:right-[calc(100%+0.75rem)] xl:bottom-0 xl:left-auto xl:top-auto xl:w-[min(23rem,calc(100vw-4rem))]"
+                            className="nbu-floating-panel absolute top-[calc(100%+0.5rem)] left-0 bottom-auto right-auto z-40 flex max-h-[min(32rem,calc(100vh-1rem))] w-full max-w-[calc(100vw-2rem)] flex-col overflow-hidden p-2.5 xl:w-[min(23rem,calc(100vw-4rem))]"
                         >
                             <div className="mb-1.5 flex items-center justify-between gap-2">
                                 <span className="inline-flex h-6 items-center rounded-full border border-slate-200/80 bg-white/85 px-2.5 text-[10px] font-black uppercase tracking-[0.16em] text-slate-600 dark:border-slate-700/80 dark:bg-slate-900/85 dark:text-slate-300">

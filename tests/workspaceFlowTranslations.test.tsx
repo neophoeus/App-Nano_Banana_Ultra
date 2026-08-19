@@ -17,6 +17,9 @@ beforeAll(async () => {
 
 const workspaceFlowKeys = [
     'workspaceTopHeaderReferenceTray',
+    'workspaceIncreaseFontSize',
+    'workspaceDecreaseFontSize',
+    'workspaceResetFontSize',
     'workspaceImportReviewEyebrow',
     'workspaceImportReviewTitle',
     'workspaceImportReviewDesc',

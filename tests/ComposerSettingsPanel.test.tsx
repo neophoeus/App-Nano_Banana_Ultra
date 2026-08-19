@@ -24,7 +24,9 @@ const baseProps = {
     thinkingLevel: 'high' as const,
     stickySendIntent: 'independent' as const,
     currentStageAsset: null,
-    availableGroundingModes: ['off', 'google-search', 'image-search', 'google-search-plus-image-search'] as ('off' | 'google-search' | 'image-search' | 'google-search-plus-image-search')[],
+    availableGroundingModes: ['off', 'google-search', 'image-search', 'google-search-plus-image-search'] as (
+        'off' | 'google-search' | 'image-search' | 'google-search-plus-image-search'
+    )[],
     temperature: 1,
     isAdvancedSettingsOpen: true,
     generateLabel: 'Generate',
@@ -62,7 +64,9 @@ const baseAdvancedSettingsDialogProps = {
     safetyThresholds: DEFAULT_SAFETY_THRESHOLDS,
     imageModel: 'gemini-3.1-flash-image' as const,
     capability: MODEL_CAPABILITIES['gemini-3.1-flash-image'],
-    availableGroundingModes: ['off', 'google-search', 'image-search', 'google-search-plus-image-search'] as ('off' | 'google-search' | 'image-search' | 'google-search-plus-image-search')[],
+    availableGroundingModes: ['off', 'google-search', 'image-search', 'google-search-plus-image-search'] as (
+        'off' | 'google-search' | 'image-search' | 'google-search-plus-image-search'
+    )[],
     temperature: 1,
     onOutputFormatChange: vi.fn(),
     onTemperatureChange: vi.fn(),
@@ -113,10 +117,11 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).toContain('Enter\nnewline');
         expect(markup).toContain('border-slate-200/85 bg-slate-100/90');
         expect(markup).toContain('border-slate-200/80 bg-slate-100/85');
-        expect(markup).toContain('absolute bottom-3.5 z-10 right-[var(--composer-prompt-overlay-inset)] sm:right-[var(--composer-prompt-overlay-inset-sm)]');
+        expect(markup).toContain(
+            'absolute bottom-3.5 z-10 right-[var(--composer-prompt-overlay-inset)] sm:right-[var(--composer-prompt-overlay-inset-sm)]',
+        );
         expect(markup).toContain('h-48');
-        expect(markup).toContain('min-h-[52px] w-[3.5rem]');
-        expect(markup).toContain('sm:w-[3.75rem]');
+        expect(markup).toContain('min-h-[56px] w-[34px]');
         expect(markup).toContain('grid-rows-2');
         expect(markup).toContain('pb-3.5');
         expect(markup).toContain('relative overflow-hidden rounded-[26px] border nbu-composer-dock-textarea');
@@ -124,12 +129,12 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).toContain('w-[calc(100%-var(--composer-prompt-text-reserve))]');
         expect(markup).toContain('sm:w-[calc(100%-var(--composer-prompt-text-reserve-sm))]');
         expect(markup).toContain('bg-transparent');
-        expect(markup).toContain('pr-4');
+        expect(markup).toContain('pr-1.5');
         expect(markup).toContain('--composer-prompt-overlay-inset:0.375rem');
         expect(markup).toContain('--composer-prompt-overlay-inset-sm:0.5rem');
-        expect(markup).toContain('--composer-prompt-text-reserve:4.75rem');
-        expect(markup).toContain('--composer-prompt-text-reserve-sm:5rem');
-        expect(markup).toContain('whitespace-pre-line break-words');
+        expect(markup).toContain('--composer-prompt-text-reserve:2.75rem');
+        expect(markup).toContain('--composer-prompt-text-reserve-sm:3rem');
+        expect(markup).toContain('sr-only');
         expect(markup).toContain('top-[calc(50%+0.125rem)] bottom-px');
         expect(markup).not.toContain('composer-sticky-send-intent-info-card');
         expect(markup).not.toContain(
@@ -226,8 +231,7 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).toContain('dark:bg-slate-950');
         expect(markup).toContain('bg-amber-500');
         expect(markup).toContain('text-white dark:text-slate-950');
-        expect(markup).toContain('px-1.5 py-1.5');
-        expect(markup).toContain('leading-[0.85rem]');
+        expect(markup).toContain('p-1.5');
         expect(markup.indexOf('composer-enter-behavior-card')).toBeLessThan(markup.indexOf('composer-generate-card'));
     });
 

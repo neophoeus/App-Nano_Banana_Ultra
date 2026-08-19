@@ -380,14 +380,15 @@ describe('Phase B render stability', () => {
         const composerSettingsPanel = await waitFor(() =>
             document.querySelector('[data-testid="mock-composer-settings-panel"]'),
         );
-        const stageShellClassName = stageColumn?.firstElementChild?.getAttribute('class') || '';
+        const stageShellClassName =
+            stageColumn?.querySelector('.nbu-shell-surface-stage-hero')?.getAttribute('class') || '';
 
         expect(actionsComposerRow).toBeTruthy();
         expect(actionsComposerRow?.getAttribute('class')).not.toContain('xl:max-w-[1320px]');
         expect(actionsComposerRow?.getAttribute('class')).not.toContain('xl:mr-auto');
-        expect(mainShell?.getAttribute('class')).toContain('xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]');
+        expect(mainShell?.getAttribute('class')).toContain('xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]');
         expect(mainShell?.getAttribute('class')).not.toContain('xl:flex-1');
-        expect(workColumn?.contains(historyPanel)).toBe(true);
+        expect(stageColumn?.contains(historyPanel)).toBe(true);
         expect(workColumn?.contains(actionsComposerRow)).toBe(true);
         expect(workColumn?.getAttribute('class')).not.toContain('xl:h-full');
         expect(workColumn?.getAttribute('class')).not.toContain('xl:grid-rows-[minmax(0,1fr)_auto]');
@@ -404,7 +405,7 @@ describe('Phase B render stability', () => {
         expect(composerSettingsPanel?.contains(sideToolPanel)).toBe(true);
     });
 
-    it('keeps the top launchers as a compact three-button rail with a 40/60 desktop split', async () => {
+    it('keeps the top launchers as a compact three-button rail with a 60/40 desktop split', async () => {
         const topBand = await waitFor(() => document.querySelector('[data-testid="workspace-top-band"]'));
         const topLauncherRow = await waitFor(() =>
             document.querySelector('[data-testid="workspace-insights-collapsible"]'),
@@ -425,7 +426,7 @@ describe('Phase B render stability', () => {
             'workspace-sources-open-details',
             'workspace-queue-open-details',
         ]);
-        expect(topBand?.getAttribute('class')).toContain('xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]');
+        expect(topBand?.getAttribute('class')).toContain('xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]');
         expect(normalizeText(progressButton?.textContent)).toBe('Progress');
         expect(normalizeText(sourceButton?.textContent)).toBe('Support');
         expect(normalizeText(queueButton?.textContent)).toBe('Queue');

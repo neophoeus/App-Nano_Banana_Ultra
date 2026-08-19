@@ -21,6 +21,11 @@ import {
     TurnLineageAction,
 } from '../types';
 
+const PROMPT_FONT_SIZE_STORAGE_KEY = 'nbu_prompt_font_size';
+const DEFAULT_PROMPT_FONT_SIZE = 14;
+const MIN_PROMPT_FONT_SIZE = 12;
+const MAX_PROMPT_FONT_SIZE = 24;
+
 export type ComposerSettingsPanelProps = {
     supportsQueuedBatch?: boolean;
     promptThinkingLevel?: PromptThinkingLevel;
@@ -228,6 +233,49 @@ function ComposerSettingsPanel({
         stickySendIntent,
     );
     const [isRoundGridOpen, setIsRoundGridOpen] = React.useState(false);
+    const [promptFontSize, setPromptFontSize] = React.useState<number>(() => {
+        try {
+            const saved =
+                typeof window !== 'undefined' ? window.localStorage.getItem(PROMPT_FONT_SIZE_STORAGE_KEY) : null;
+            if (saved !== null) {
+                const parsed = parseInt(saved, 10);
+                if (!Number.isNaN(parsed) && parsed >= MIN_PROMPT_FONT_SIZE && parsed <= MAX_PROMPT_FONT_SIZE) {
+                    return parsed;
+                }
+            }
+        } catch {
+            // Ignore localStorage read errors
+        }
+        return DEFAULT_PROMPT_FONT_SIZE;
+    });
+
+    const updatePromptFontSize = React.useCallback((updater: number | ((prev: number) => number)) => {
+        setPromptFontSize((prev) => {
+            const nextSize = typeof updater === 'function' ? updater(prev) : updater;
+            const clamped = Math.max(MIN_PROMPT_FONT_SIZE, Math.min(MAX_PROMPT_FONT_SIZE, nextSize));
+            try {
+                if (typeof window !== 'undefined') {
+                    window.localStorage.setItem(PROMPT_FONT_SIZE_STORAGE_KEY, String(clamped));
+                }
+            } catch {
+                // Ignore localStorage write errors
+            }
+            return clamped;
+        });
+    }, []);
+
+    const handleIncreasePromptFontSize = React.useCallback(() => {
+        updatePromptFontSize((prev) => prev + 1);
+    }, [updatePromptFontSize]);
+
+    const handleDecreasePromptFontSize = React.useCallback(() => {
+        updatePromptFontSize((prev) => prev - 1);
+    }, [updatePromptFontSize]);
+
+    const handleResetPromptFontSize = React.useCallback(() => {
+        updatePromptFontSize(DEFAULT_PROMPT_FONT_SIZE);
+    }, [updatePromptFontSize]);
+
     const t = (key: string) => getTranslation(currentLanguage, key);
     const cancelLabel = React.useMemo(() => {
         const totalRounds = batchProgress?.totalRounds || 1;
@@ -534,7 +582,11 @@ function ComposerSettingsPanel({
                             className="inline-flex items-center justify-center rounded-xl border border-amber-300 bg-amber-200/90 px-2.5 py-1 text-[11px] font-semibold text-amber-950 transition-colors hover:bg-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400 dark:border-amber-400/50 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300"
                         >
                             {resolveIntentText('composerSendIntentSetBatchToOne', '將數量改為 1')}
-                            {settingsLocked && <span className="ml-1" title={t('settingsLocked')}>🔒</span>}
+                            {settingsLocked && (
+                                <span className="ml-1" title={t('settingsLocked')}>
+                                    🔒
+                                </span>
+                            )}
                         </button>
                         <button
                             type="button"
@@ -621,8 +673,8 @@ function ComposerSettingsPanel({
     const promptOverlaySpacingStyle = {
         '--composer-prompt-overlay-inset': '0.375rem',
         '--composer-prompt-overlay-inset-sm': '0.5rem',
-        '--composer-prompt-text-reserve': '4.75rem',
-        '--composer-prompt-text-reserve-sm': '5rem',
+        '--composer-prompt-text-reserve': '2.75rem',
+        '--composer-prompt-text-reserve-sm': '3rem',
     } as React.CSSProperties;
     const promptTextareaReserveClassName =
         'w-[calc(100%-var(--composer-prompt-text-reserve))] sm:w-[calc(100%-var(--composer-prompt-text-reserve-sm))]';
@@ -742,13 +794,19 @@ function ComposerSettingsPanel({
             aria-label={t('composerToolbarAdvancedSettings')}
             aria-haspopup="dialog"
             aria-expanded={isAdvancedSettingsOpen}
-            onClick={settingsLocked ? () => showNotification?.(t('settingsLockedNotice'), 'info') : onToggleAdvancedSettings}
+            onClick={
+                settingsLocked ? () => showNotification?.(t('settingsLockedNotice'), 'info') : onToggleAdvancedSettings
+            }
             className="nbu-inline-panel group flex min-h-10 w-full min-w-0 items-center overflow-hidden rounded-[20px] px-2.5 py-2 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
         >
             <div className={summaryStripContentClassName}>
                 <span className={summaryStripAnchorClassName}>
                     {t('composerToolbarAdvancedSettings')}
-                    {settingsLocked && <span className="ml-1" title={t('settingsLocked')}>🔒</span>}
+                    {settingsLocked && (
+                        <span className="ml-1" title={t('settingsLocked')}>
+                            🔒
+                        </span>
+                    )}
                 </span>
                 {advancedSummaryItems.map((item) => (
                     <span key={item.key} className={`${summaryStripChipClassName} ${item.className}`.trim()}>
@@ -762,20 +820,26 @@ function ComposerSettingsPanel({
     return (
         <section
             data-testid="composer-settings-panel"
-            className="nbu-shell-panel nbu-shell-surface-composer-dock shrink-0 p-3 md:p-4"
+            className="nbu-shell-panel nbu-shell-surface-composer-dock shrink-0 p-3 md:p-4 xl:flex xl:flex-col xl:flex-1 xl:min-h-0 xl:justify-between"
         >
             <div data-testid="composer-settings-row" className="mb-1.5 flex flex-wrap items-stretch gap-1.5">
                 <button
                     type="button"
                     data-testid="composer-settings-button"
                     aria-label={t('workspaceSheetTitleGenerationSettings')}
-                    onClick={settingsLocked ? () => showNotification?.(t('settingsLockedNotice'), 'info') : onOpenSettings}
+                    onClick={
+                        settingsLocked ? () => showNotification?.(t('settingsLockedNotice'), 'info') : onOpenSettings
+                    }
                     className="nbu-inline-panel group flex min-h-10 min-w-0 flex-1 items-center overflow-hidden rounded-[20px] px-2.5 py-2 text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
                 >
                     <div className={summaryStripContentClassName}>
                         <span className={summaryStripAnchorClassName}>
                             {t('workspaceSheetTitleGenerationSettings')}
-                            {settingsLocked && <span className="ml-1" title={t('settingsLocked')}>🔒</span>}
+                            {settingsLocked && (
+                                <span className="ml-1" title={t('settingsLocked')}>
+                                    🔒
+                                </span>
+                            )}
                         </span>
                         {settingsSummaryItems.map((item) => (
                             <span key={item.key} className={`${summaryStripChipClassName} ${item.className}`.trim()}>
@@ -792,12 +856,18 @@ function ComposerSettingsPanel({
                         type="button"
                         data-testid="composer-style-button"
                         aria-label={t('workspaceSheetTitleStyles')}
-                        onClick={settingsLocked ? () => showNotification?.(t('settingsLockedNotice'), 'info') : onOpenStyles}
+                        onClick={
+                            settingsLocked ? () => showNotification?.(t('settingsLockedNotice'), 'info') : onOpenStyles
+                        }
                         className="group flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden text-left"
                     >
                         <span className={composerStyleLabelClassName}>
                             {t('workspaceViewerStyle')}
-                            {settingsLocked && <span className="ml-1" title={t('settingsLocked')}>🔒</span>}
+                            {settingsLocked && (
+                                <span className="ml-1" title={t('settingsLocked')}>
+                                    🔒
+                                </span>
+                            )}
                         </span>
                         <span className={composerStyleValueClassName}>
                             <span className="truncate">{displayedStyleLabel}</span>
@@ -838,23 +908,33 @@ function ComposerSettingsPanel({
                 >
                     {settingsLocked ? (
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1.8}
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                            />
                         </svg>
                     ) : (
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1.8}
+                                d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
+                            />
                         </svg>
                     )}
                 </button>
             </div>
 
-            <div className="grid gap-1.5 lg:grid-cols-[minmax(220px,248px)_minmax(0,1fr)] xl:grid-cols-[minmax(232px,256px)_minmax(0,1fr)]">
-                <div data-testid="composer-image-tools-slot" className="min-w-0">
+            <div className="grid gap-1.5 lg:grid-cols-[minmax(220px,248px)_minmax(0,1fr)] xl:grid-cols-[minmax(232px,256px)_minmax(0,1fr)] xl:flex-1 xl:min-h-0">
+                <div data-testid="composer-image-tools-slot" className="min-w-0 xl:flex xl:flex-col">
                     {imageToolsPanel ?? null}
                 </div>
 
-                <div className="min-w-0">
-                    <div className="nbu-subpanel overflow-hidden p-2.5">
+                <div className="min-w-0 xl:flex xl:flex-col xl:min-h-0">
+                    <div className="nbu-subpanel overflow-hidden p-2.5 xl:flex xl:flex-1 xl:flex-col xl:justify-between xl:min-h-0">
                         <div className="mb-1.5 flex flex-wrap items-center justify-between gap-1.5 px-1">
                             <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                                 <h3 className="text-[15px] font-black text-slate-900 dark:text-slate-100">
@@ -920,75 +1000,75 @@ function ComposerSettingsPanel({
                                     data-testid="composer-sticky-send-intent"
                                     className="relative flex min-w-0 max-w-full items-center justify-end gap-1.5 sm:flex-none"
                                 >
-                                <button
-                                    type="button"
-                                    data-testid="composer-sticky-send-intent-toggle"
-                                    data-active-intent={stickySendIntent}
-                                    data-memory-available={canUseMemorySendIntent ? 'true' : 'false'}
-                                    aria-label={sendIntentToggleAriaLabel}
-                                    aria-pressed={stickySendIntent === 'memory'}
-                                    onClick={handleSendIntentToggle}
-                                    className="group relative grid min-w-0 flex-1 grid-cols-2 gap-1 rounded-full border border-slate-300/90 bg-slate-200/95 p-1 shadow-inner shadow-slate-300/70 transition-colors hover:border-slate-400/80 focus:outline-none focus:ring-2 focus:ring-amber-300 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30 sm:flex-none"
-                                >
-                                    <span
-                                        data-testid="composer-sticky-send-intent-thumb"
+                                    <button
+                                        type="button"
+                                        data-testid="composer-sticky-send-intent-toggle"
                                         data-active-intent={stickySendIntent}
-                                        aria-hidden="true"
-                                        className={`pointer-events-none absolute bottom-1 top-1 rounded-full bg-amber-500 transition-all duration-200 ease-out dark:bg-amber-300 ${
-                                            stickySendIntent === 'memory'
-                                                ? 'left-[calc(50%+0.125rem)] right-1 shadow-[0_10px_24px_rgba(245,158,11,0.18)] dark:shadow-none'
-                                                : 'left-1 right-[calc(50%+0.125rem)] shadow-[0_10px_24px_rgba(245,158,11,0.18)] dark:shadow-none'
-                                        }`}
-                                    />
-                                    <span
-                                        data-testid="composer-sticky-send-intent-independent"
-                                        data-selected={stickySendIntent === 'independent' ? 'true' : 'false'}
-                                        aria-hidden="true"
-                                        className={`relative z-10 flex min-w-0 items-center justify-center rounded-full px-2 py-1.5 text-[10px] font-semibold leading-none transition-colors ${
-                                            stickySendIntent === 'independent'
-                                                ? 'text-white dark:text-slate-950'
-                                                : 'text-slate-600 dark:text-slate-500'
-                                        }`}
+                                        data-memory-available={canUseMemorySendIntent ? 'true' : 'false'}
+                                        aria-label={sendIntentToggleAriaLabel}
+                                        aria-pressed={stickySendIntent === 'memory'}
+                                        onClick={handleSendIntentToggle}
+                                        className="group relative grid min-w-0 flex-1 grid-cols-2 gap-1 rounded-full border border-slate-300/90 bg-slate-200/95 p-1 shadow-inner shadow-slate-300/70 transition-colors hover:border-slate-400/80 focus:outline-none focus:ring-2 focus:ring-amber-300 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30 sm:flex-none"
                                     >
-                                        <span className="truncate">{independentSendIntentButtonLabel}</span>
-                                    </span>
-                                    <span
-                                        data-testid="composer-sticky-send-intent-memory"
-                                        data-selected={stickySendIntent === 'memory' ? 'true' : 'false'}
-                                        data-available={canUseMemorySendIntent ? 'true' : 'false'}
-                                        aria-hidden="true"
-                                        className={`relative z-10 flex min-w-0 items-center justify-center rounded-full px-2 py-1.5 text-[10px] font-semibold leading-none transition-colors ${
-                                            stickySendIntent === 'memory'
-                                                ? 'text-white dark:text-slate-950'
-                                                : canUseMemorySendIntent
-                                                  ? 'text-slate-600 dark:text-slate-500'
-                                                  : 'text-slate-500 dark:text-slate-600'
-                                        }`}
+                                        <span
+                                            data-testid="composer-sticky-send-intent-thumb"
+                                            data-active-intent={stickySendIntent}
+                                            aria-hidden="true"
+                                            className={`pointer-events-none absolute bottom-1 top-1 rounded-full bg-amber-500 transition-all duration-200 ease-out dark:bg-amber-300 ${
+                                                stickySendIntent === 'memory'
+                                                    ? 'left-[calc(50%+0.125rem)] right-1 shadow-[0_10px_24px_rgba(245,158,11,0.18)] dark:shadow-none'
+                                                    : 'left-1 right-[calc(50%+0.125rem)] shadow-[0_10px_24px_rgba(245,158,11,0.18)] dark:shadow-none'
+                                            }`}
+                                        />
+                                        <span
+                                            data-testid="composer-sticky-send-intent-independent"
+                                            data-selected={stickySendIntent === 'independent' ? 'true' : 'false'}
+                                            aria-hidden="true"
+                                            className={`relative z-10 flex min-w-0 items-center justify-center rounded-full px-2 py-1.5 text-[10px] font-semibold leading-none transition-colors ${
+                                                stickySendIntent === 'independent'
+                                                    ? 'text-white dark:text-slate-950'
+                                                    : 'text-slate-600 dark:text-slate-500'
+                                            }`}
+                                        >
+                                            <span className="truncate">{independentSendIntentButtonLabel}</span>
+                                        </span>
+                                        <span
+                                            data-testid="composer-sticky-send-intent-memory"
+                                            data-selected={stickySendIntent === 'memory' ? 'true' : 'false'}
+                                            data-available={canUseMemorySendIntent ? 'true' : 'false'}
+                                            aria-hidden="true"
+                                            className={`relative z-10 flex min-w-0 items-center justify-center rounded-full px-2 py-1.5 text-[10px] font-semibold leading-none transition-colors ${
+                                                stickySendIntent === 'memory'
+                                                    ? 'text-white dark:text-slate-950'
+                                                    : canUseMemorySendIntent
+                                                      ? 'text-slate-600 dark:text-slate-500'
+                                                      : 'text-slate-500 dark:text-slate-600'
+                                            }`}
+                                        >
+                                            <span className="truncate">{memorySendIntentButtonLabel}</span>
+                                        </span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        data-testid="composer-sticky-send-intent-info-trigger"
+                                        aria-label={sendIntentInfoButtonLabel}
+                                        aria-controls={sendIntentInfoOpen ? sendIntentInfoCardId : undefined}
+                                        aria-expanded={sendIntentInfoOpen}
+                                        aria-haspopup="dialog"
+                                        title={sendIntentInfoButtonLabel}
+                                        onClick={handleSendIntentInfoButtonClick}
+                                        className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-slate-300/90 bg-slate-100/95 text-slate-600 transition-colors hover:border-amber-300 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-amber-300 dark:border-slate-700/90 dark:bg-slate-950 dark:text-slate-500 dark:hover:border-amber-400/40 dark:hover:text-slate-200"
                                     >
-                                        <span className="truncate">{memorySendIntentButtonLabel}</span>
-                                    </span>
-                                </button>
-                                <button
-                                    type="button"
-                                    data-testid="composer-sticky-send-intent-info-trigger"
-                                    aria-label={sendIntentInfoButtonLabel}
-                                    aria-controls={sendIntentInfoOpen ? sendIntentInfoCardId : undefined}
-                                    aria-expanded={sendIntentInfoOpen}
-                                    aria-haspopup="dialog"
-                                    title={sendIntentInfoButtonLabel}
-                                    onClick={handleSendIntentInfoButtonClick}
-                                    className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-slate-300/90 bg-slate-100/95 text-slate-600 transition-colors hover:border-amber-300 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-amber-300 dark:border-slate-700/90 dark:bg-slate-950 dark:text-slate-500 dark:hover:border-amber-400/40 dark:hover:text-slate-200"
-                                >
-                                    {renderInfoIcon()}
-                                </button>
-                                {usesWorkspaceFloatingLayer &&
-                                workspaceFloatingLayer?.hostElement &&
-                                sendIntentInfoPanelNode
-                                    ? createPortal(sendIntentInfoPanelNode, workspaceFloatingLayer.hostElement)
-                                    : sendIntentInfoPanelNode}
+                                        {renderInfoIcon()}
+                                    </button>
+                                    {usesWorkspaceFloatingLayer &&
+                                    workspaceFloatingLayer?.hostElement &&
+                                    sendIntentInfoPanelNode
+                                        ? createPortal(sendIntentInfoPanelNode, workspaceFloatingLayer.hostElement)
+                                        : sendIntentInfoPanelNode}
+                                </div>
                             </div>
                         </div>
-                    </div>
                         <div data-testid="composer-quick-tools" className="grid min-w-0 grid-cols-3 gap-1.5">
                             {quickToolButtons.map((button) => {
                                 const isActiveTool = activePromptTool === button.id;
@@ -1022,14 +1102,18 @@ function ComposerSettingsPanel({
                             onChange={handleImageToPromptInputChange}
                         />
 
-                        <div className="mt-1.5 min-w-0 space-y-1.5">
+                        <div className="mt-1.5 min-w-0 space-y-1.5 xl:flex xl:flex-1 xl:flex-col xl:min-h-0">
                             <div
-                                className="relative overflow-hidden rounded-[26px] border nbu-composer-dock-textarea transition-all focus-within:border-amber-400/90 focus-within:ring-4 focus-within:ring-amber-100/70 dark:focus-within:border-amber-400/50 dark:focus-within:ring-amber-500/10"
+                                className="relative overflow-hidden rounded-[26px] border nbu-composer-dock-textarea transition-all focus-within:border-amber-400/90 focus-within:ring-4 focus-within:ring-amber-100/70 dark:focus-within:border-amber-400/50 dark:focus-within:ring-amber-500/10 xl:flex xl:flex-1 xl:flex-col xl:min-h-[220px]"
                                 style={promptOverlaySpacingStyle}
                             >
                                 <textarea
                                     ref={resolvedPromptTextareaRef}
-                                    className={`nbu-scrollbar-subtle block h-48 resize-none overflow-y-auto bg-transparent px-4 py-3.5 pb-3.5 pr-4 text-sm leading-6 outline-none ${promptTextareaReserveClassName}`}
+                                    style={{
+                                        fontSize: `${promptFontSize}px`,
+                                        lineHeight: `${Math.max(20, Math.round(promptFontSize * 1.5))}px`,
+                                    }}
+                                    className={`nbu-scrollbar-subtle block h-48 xl:h-full xl:min-h-[220px] resize-none overflow-y-auto bg-transparent pl-4 pr-1.5 py-3.5 pb-3.5 outline-none ${promptTextareaReserveClassName}`}
                                     placeholder={promptSurfacePlaceholder}
                                     value={prompt}
                                     onChange={(e) => onPromptChange(e.target.value)}
@@ -1052,6 +1136,56 @@ function ComposerSettingsPanel({
                                     {renderClearIcon()}
                                 </button>
                                 <div
+                                    data-testid="composer-font-size-controls"
+                                    className={`absolute top-[3.25rem] z-10 flex flex-col items-center gap-0.5 rounded-[18px] border border-slate-200/80 bg-white/92 p-1 shadow-sm dark:border-slate-700/80 dark:bg-slate-950/70 ${promptOverlayInsetClassName}`}
+                                >
+                                    <button
+                                        type="button"
+                                        data-testid="composer-font-size-increase"
+                                        aria-label={t('workspaceIncreaseFontSize')}
+                                        title={t('workspaceIncreaseFontSize')}
+                                        disabled={promptFontSize >= MAX_PROMPT_FONT_SIZE}
+                                        onClick={handleIncreasePromptFontSize}
+                                        className="flex h-6 w-6 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-amber-100 hover:text-amber-700 focus:outline-none focus:ring-1 focus:ring-amber-400 disabled:cursor-not-allowed disabled:opacity-30 dark:text-slate-400 dark:hover:bg-amber-950/40 dark:hover:text-amber-200"
+                                    >
+                                        <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                                                clipRule="evenodd"
+                                            />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        data-testid="composer-font-size-reset"
+                                        aria-label={t('workspaceResetFontSize')}
+                                        title={`${t('workspaceResetFontSize')} (${promptFontSize}px)`}
+                                        disabled={promptFontSize === DEFAULT_PROMPT_FONT_SIZE}
+                                        onClick={handleResetPromptFontSize}
+                                        className="flex h-5 w-6 items-center justify-center rounded-full text-[10px] font-bold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 focus:outline-none focus:ring-1 focus:ring-amber-400 disabled:cursor-not-allowed disabled:opacity-35 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                    >
+                                        <span className="font-mono text-[10px]">{promptFontSize}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        data-testid="composer-font-size-decrease"
+                                        aria-label={t('workspaceDecreaseFontSize')}
+                                        title={t('workspaceDecreaseFontSize')}
+                                        disabled={promptFontSize <= MIN_PROMPT_FONT_SIZE}
+                                        onClick={handleDecreasePromptFontSize}
+                                        className="flex h-6 w-6 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-amber-100 hover:text-amber-700 focus:outline-none focus:ring-1 focus:ring-amber-400 disabled:cursor-not-allowed disabled:opacity-30 dark:text-slate-400 dark:hover:bg-amber-950/40 dark:hover:text-amber-200"
+                                    >
+                                        <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z"
+                                                clipRule="evenodd"
+                                            />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div
                                     data-testid="composer-enter-behavior-card"
                                     className={`pointer-events-none absolute bottom-3.5 z-10 ${promptOverlayInsetClassName}`}
                                 >
@@ -1060,9 +1194,14 @@ function ComposerSettingsPanel({
                                         data-testid="composer-enter-behavior-toggle"
                                         data-active-mode={enterToSubmit ? 'send' : 'newline'}
                                         aria-label={enterBehaviorToggleAriaLabel}
+                                        title={
+                                            enterToSubmit
+                                                ? enterBehaviorSendLabel.replace('\n', ' ')
+                                                : enterBehaviorNewlineLabel.replace('\n', ' ')
+                                        }
                                         aria-pressed={enterToSubmit}
                                         onClick={onToggleEnterToSubmit}
-                                        className="pointer-events-auto group relative grid min-h-[52px] w-[3.5rem] min-w-0 grid-rows-2 gap-1 overflow-hidden rounded-[20px] border border-slate-300/90 bg-slate-200/95 p-px text-left shadow-inner shadow-slate-300/70 transition-colors hover:border-slate-400/80 focus:outline-none focus:ring-2 focus:ring-amber-300 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30 sm:w-[3.75rem]"
+                                        className="pointer-events-auto group relative grid min-h-[56px] w-[34px] min-w-0 grid-rows-2 gap-0.5 overflow-hidden rounded-[18px] border border-slate-300/90 bg-slate-200/95 p-px text-left shadow-inner shadow-slate-300/70 transition-colors hover:border-slate-400/80 focus:outline-none focus:ring-2 focus:ring-amber-300 dark:border-slate-800 dark:bg-slate-950 dark:shadow-black/30"
                                     >
                                         <span
                                             data-testid="composer-enter-behavior-thumb"
@@ -1070,37 +1209,51 @@ function ComposerSettingsPanel({
                                             aria-hidden="true"
                                             className={`pointer-events-none absolute left-px right-px bg-amber-500 transition-all duration-200 ease-out dark:bg-amber-300 ${
                                                 enterToSubmit
-                                                    ? 'top-px bottom-[calc(50%+0.125rem)] rounded-t-[19px] rounded-b-[4px] shadow-[0_10px_24px_rgba(245,158,11,0.18)] dark:shadow-none'
-                                                    : 'top-[calc(50%+0.125rem)] bottom-px rounded-t-[4px] rounded-b-[19px] shadow-[0_10px_24px_rgba(245,158,11,0.18)] dark:shadow-none'
+                                                    ? 'top-px bottom-[calc(50%+0.125rem)] rounded-t-[17px] rounded-b-[4px] shadow-[0_10px_24px_rgba(245,158,11,0.18)] dark:shadow-none'
+                                                    : 'top-[calc(50%+0.125rem)] bottom-px rounded-t-[4px] rounded-b-[17px] shadow-[0_10px_24px_rgba(245,158,11,0.18)] dark:shadow-none'
                                             }`}
                                         />
                                         <span
                                             data-testid="composer-enter-behavior-send-option"
                                             data-selected={enterToSubmit ? 'true' : 'false'}
                                             aria-hidden="true"
-                                            className={`relative z-10 flex min-w-0 items-center justify-center rounded-t-[19px] rounded-b-[4px] px-1.5 py-1.5 text-center text-[10px] font-semibold leading-[0.85rem] transition-colors ${
+                                            title={enterBehaviorSendLabel.replace('\n', ' ')}
+                                            className={`relative z-10 flex min-w-0 items-center justify-center rounded-t-[17px] rounded-b-[4px] p-1.5 transition-colors ${
                                                 enterToSubmit
                                                     ? 'text-white dark:text-slate-950'
-                                                    : 'text-slate-600 dark:text-slate-500'
+                                                    : 'text-slate-500 dark:text-slate-400'
                                             }`}
                                         >
-                                            <span className="whitespace-pre-line break-words">
-                                                {enterBehaviorSendLabel}
-                                            </span>
+                                            <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                                            </svg>
+                                            <span className="sr-only">{enterBehaviorSendLabel}</span>
                                         </span>
                                         <span
                                             data-testid="composer-enter-behavior-newline-option"
                                             data-selected={enterToSubmit ? 'false' : 'true'}
                                             aria-hidden="true"
-                                            className={`relative z-10 flex min-w-0 items-center justify-center rounded-t-[4px] rounded-b-[19px] px-1.5 py-1.5 text-center text-[10px] font-semibold leading-[0.85rem] transition-colors ${
+                                            title={enterBehaviorNewlineLabel.replace('\n', ' ')}
+                                            className={`relative z-10 flex min-w-0 items-center justify-center rounded-t-[4px] rounded-b-[17px] p-1.5 transition-colors ${
                                                 enterToSubmit
-                                                    ? 'text-slate-600 dark:text-slate-500'
+                                                    ? 'text-slate-500 dark:text-slate-400'
                                                     : 'text-white dark:text-slate-950'
                                             }`}
                                         >
-                                            <span className="whitespace-pre-line break-words">
-                                                {enterBehaviorNewlineLabel}
-                                            </span>
+                                            <svg
+                                                className="h-3.5 w-3.5"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2.2"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    d="M19 8v6a2 2 0 01-2 2H5m0 0l4-4m-4 4l4 4"
+                                                />
+                                            </svg>
+                                            <span className="sr-only">{enterBehaviorNewlineLabel}</span>
                                         </span>
                                     </button>
                                 </div>
@@ -1304,15 +1457,24 @@ function ComposerSettingsPanel({
 
                         {/* Right: Auto-Export Backup (Rendered ONLY when supportsAutoBackup is true) */}
                         {supportsAutoBackup ? (
-                            <div className="flex flex-wrap items-center gap-3" data-testid="composer-auto-export-control">
+                            <div
+                                className="flex flex-wrap items-center gap-3"
+                                data-testid="composer-auto-export-control"
+                            >
                                 <div className="flex items-center gap-2">
-                                    <span className="font-semibold text-slate-600 dark:text-slate-300">{t('autoExportSwitch')}</span>
+                                    <span className="font-semibold text-slate-600 dark:text-slate-300">
+                                        {t('autoExportSwitch')}
+                                    </span>
                                     <button
                                         type="button"
                                         data-testid="composer-auto-export-toggle"
-                                        onClick={() => onAutoExportTriggerChange?.(autoExportTrigger === 'off' ? 'both' : 'off')}
+                                        onClick={() =>
+                                            onAutoExportTriggerChange?.(autoExportTrigger === 'off' ? 'both' : 'off')
+                                        }
                                         className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-amber-500 focus:ring-offset-1 dark:focus:ring-offset-slate-900 ${
-                                            autoExportTrigger !== 'off' ? 'bg-amber-500' : 'bg-gray-200 dark:bg-slate-700'
+                                            autoExportTrigger !== 'off'
+                                                ? 'bg-amber-500'
+                                                : 'bg-gray-200 dark:bg-slate-700'
                                         }`}
                                     >
                                         <span
