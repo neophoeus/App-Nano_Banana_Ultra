@@ -45,3 +45,9 @@ e2e-global-log-focus.txt
 *.njsproj
 *.sln
 *.sw?
+
+# AI Studio local packaging scripts and archives
+pack_ai_studio.bat
+package_ai_studio.bat
+scripts/pack_ai_studio.ps1
+*.zip
