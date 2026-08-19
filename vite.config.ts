@@ -10,6 +10,10 @@ export default defineConfig(({ mode }) => {
     const outputDir = isTest ? path.resolve(__dirname, 'output-test') : path.resolve(__dirname, 'output');
 
     return {
+        define: {
+            'process.env.API_KEY': JSON.stringify(process.env.GEMINI_API_KEY || env.GEMINI_API_KEY || ''),
+            'process.env.GEMINI_API_KEY': JSON.stringify(process.env.GEMINI_API_KEY || env.GEMINI_API_KEY || ''),
+        },
         server: {
             port: Number.isNaN(devPort) ? 22287 : devPort,
             host: '0.0.0.0',

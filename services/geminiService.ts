@@ -28,6 +28,8 @@ import {
 } from '../utils/debugTerminalEvents';
 import { buildStyleAwareImagePrompt } from '../utils/stylePromptBuilder';
 import { Language } from '../utils/translations';
+import { getResolvedExecutionMode } from '../utils/workspaceExecutionMode';
+import { browserDirectProvider } from './providers/browserDirectProvider';
 
 const jsonHeaders = {
     'Content-Type': 'application/json',
@@ -932,6 +934,10 @@ const executeBlockingImageAttemptWithTransientRetry = async (
 
 // Helper to ensure we get the key
 export const checkApiKey = async (): Promise<boolean> => {
+    if (getResolvedExecutionMode() === 'direct') {
+        return await browserDirectProvider.checkApiKey();
+    }
+
     try {
         const payload = await fetchJson<{ hasApiKey: boolean }>('/api/runtime-config', undefined, {
             source: 'runtime',
@@ -1341,6 +1347,10 @@ const executeInteractiveStreamSlot = async (
     }
 };
 export const promptForApiKey = async (): Promise<void> => {
+    if (getResolvedExecutionMode() === 'direct') {
+        await browserDirectProvider.promptForApiKey();
+        return;
+    }
     window.alert('Missing GEMINI_API_KEY. Add it to .env.local and restart the dev server.');
 };
 
@@ -1352,6 +1362,10 @@ export const enhancePromptWithGemini = async (
     safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
     thinkingLevel: PromptThinkingLevel = 'low',
 ): Promise<string> => {
+    if (getResolvedExecutionMode() === 'direct') {
+        return await browserDirectProvider.enhancePrompt(currentPrompt, lang, safetyThresholds, thinkingLevel);
+    }
+
     const correlationId = createDebugTerminalCorrelationId('prompt');
     const requestPayload = { currentPrompt, lang, safetyThresholds, thinkingLevel };
     const response = await retryOperation(
@@ -1416,6 +1430,10 @@ export const generateRandomPrompt = async (
     safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
     thinkingLevel: PromptThinkingLevel = 'low',
 ): Promise<string> => {
+    if (getResolvedExecutionMode() === 'direct') {
+        return await browserDirectProvider.generateRandomPrompt(lang, safetyThresholds, thinkingLevel);
+    }
+
     const correlationId = createDebugTerminalCorrelationId('prompt');
     const requestPayload = { lang, safetyThresholds, thinkingLevel };
     const response = await retryOperation(
@@ -1481,6 +1499,10 @@ export const generatePromptFromImage = async (
     safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
     thinkingLevel: PromptThinkingLevel = 'low',
 ): Promise<string> => {
+    if (getResolvedExecutionMode() === 'direct') {
+        return await browserDirectProvider.generatePromptFromImage(imageDataUrl, lang, safetyThresholds, thinkingLevel);
+    }
+
     const correlationId = createDebugTerminalCorrelationId('prompt');
     const requestPayload = { imageDataUrl, lang, safetyThresholds, thinkingLevel };
     const response = await retryOperation(
@@ -1934,6 +1956,18 @@ export const generateImageWithGemini = async (
     onLiveProgressEvent?: (event: GenerationLiveProgressEvent) => void,
     onSlotStart?: (slotIndex: number) => void,
 ): Promise<GenerationResult[]> => {
+    if (getResolvedExecutionMode() === 'direct') {
+        return await browserDirectProvider.generateImages(options, batchSize, {
+            onImageReceived,
+            onLog,
+            abortSignal,
+            onProgress,
+            onResult,
+            onLiveProgressEvent,
+            onSlotStart,
+        });
+    }
+
     if (batchSize === 1 && shouldUseLiveProgressStream(options, batchSize)) {
         const singleResult = await executeInteractiveStreamSlot(
             options,

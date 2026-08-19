@@ -6,7 +6,7 @@ Nano Banana Ultra 是一個以 Google Gemini 影像模型為核心的影像創�
 
 它更像一個可以推進整條創作脈絡的影像 workspace，而不是一次性的生圖工具。你可以從草稿開始，一路做到批次探索、來源接續、局部編修、版本比較、工作區回復，最後再把有價值的結果帶回下一輪。
 
-這個 repo 是 Nano Banana Ultra 的本機 API 版本。如果你已經訂閱 Google AI Pro 或 Google AI Ultra，也可以改用 [App-Nano_Banana_Ultra_lite](https://github.com/neophoeus/App-Nano_Banana_Ultra_lite)：只要把它上傳到 Google AI Studio 裡執行，就能獲得相近的使用體驗，而且對 Google AI Pro / Ultra 訂閱者來說，額度通常也會更換算。
+從 v4.0.0 開始，Nano Banana Ultra 採用全新雙引擎架構，將本機 API 模式（Node 後端）與 AI Studio 直連模式（原 Ultra Lite 專案）完整整合成單一專案。你可以於本地環境啟動本機開發伺服器運行，也可以直接部署／運行於 Google AI Studio 享受 Google AI Pro / Ultra 訂閱額度。工作區支援自動環境偵測，亦可在頂部導覽列隨時手動切換執行引擎（「自動偵測」、「本地 API (Ultra)」、「AI Studio 直連 (Lite)」）。原獨立之 Ultra Lite 專案已併入本儲存庫。
 
 ## 產品概要
 
@@ -111,19 +111,17 @@ Nano Banana Ultra 目前支援四條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：3.16.1
+### 最新版本：4.0.0
 
-最新版本：3.16.1。將提示詞思考等級切換選項與說明全面在地化（例如中文與日文標籤為 `低` / `中` / `高`），並升級文字 LLM 服務至 `gemini-3.7-flash`。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
+最新版本：4.0.0。全新雙引擎整合架構（Unified Dual-Engine Architecture），將本機 API 模式（Node 後端）與 AI Studio 直連模式（原 Ultra Lite）完整合併至單一專案。支援環境自動偵測、頂部導覽列即時引擎切換（`自動偵測` / `本地 API` / `AI Studio 直連`）、本機磁碟與瀏覽器 IndexedDB 雙軌持久化。原獨立之 Ultra Lite 專案已正式整併並廢除。版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
-### 3.5.x
+### 4.x
 
-3.5.x 是 Nano Banana Ultra 3.x 正式收斂成以選取為核心的工作區模型版本。history 選取現在會直接決定下一輪來源，stage 有圖時會把 `以此圖接續` 提升為主要動作，Versions 也改成直接顯示查看中與目前來源狀態，而不是再分開查看 / 接續。
+4.x 版本導入雙引擎統一架構，將本機後端引擎與 AI Studio 直連客戶端引擎無縫整合於同一套工作區。具備即時環境偵測、一鍵切換執行引擎、自適配本機磁碟與 IndexedDB 儲存，以及完整的 9 國語系診斷監控能力。
 
-簡單說，3.5.x 是目前產品真正的實用基準版。
+### 3.5.x+（3.x 系列）
 
-### 3.x
-
-3.x 版本包含 2.x 的全部能力，並代表 Nano Banana Ultra 目前的產品狀態：它已不是單次生成工具，而是以選取決定來源的流程為核心的 Gemini 影像工作區，採用 summary-first shell 與按按需展開的 detail surfaces，並整合 persistent history、restore/import、provenance 檢視、queued batch、official conversation continuity，以及更安全的 file-backed recovery 行為。
+3.5.x 是 Nano Banana Ultra 3.x 正式收斂成以選取為核心的工作區模型版本，3.5.x 以後的所有版本皆為 3.x 系列的實用基準版：history 選取直接決定下一輪來源，stage 有圖時把 `以此圖接續` 提升為主要動作，Versions 直接顯示目前來源狀態。3.x 系列採用 summary-first shell 與按需展開的 detail surfaces，並整合 persistent history、restore/import、provenance 檢視、queued batch、official conversation continuity，以及更安全的 file-backed recovery 行為。
 
 ### 2.x
 

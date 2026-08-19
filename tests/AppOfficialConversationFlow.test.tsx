@@ -289,6 +289,13 @@ describe('App official conversation flow', () => {
         fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
             const url = String(input);
 
+            if (url === '/api/health') {
+                return new Response(JSON.stringify({ ok: true, hasApiKey: true }), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' },
+                });
+            }
+
             if (url === '/api/runtime-config') {
                 return new Response(JSON.stringify({ hasApiKey: true }), {
                     status: 200,

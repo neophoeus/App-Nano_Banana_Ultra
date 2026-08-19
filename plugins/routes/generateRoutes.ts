@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai/node';
-import type { ConversationRequestContext, ResultPart, GroundingMetadata, ImageModel, ImageSize, ResultImagePart } from '../../types';
+import type { ConversationRequestContext, ResultPart, ResultTextPart, GroundingMetadata, ImageModel, ImageSize, ResultImagePart } from '../../types';
 import { deriveGroundingMode } from '../../utils/groundingMode';
 import {
     getGenerationFailureHttpStatus,
@@ -1252,6 +1252,8 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
         let sessionId = crypto.randomUUID();
         let liveState = createLiveProgressAccumulatorState();
         let transportOpened = false;
+        let lastChunk: any = null;
+        let lastGroundingChunk: any = null;
 
         try {
             const ai = getAIClient();
@@ -1298,8 +1300,6 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
 
             const prepared = buildPreparedGenerateRequest(validated.model, body, resolvedDir);
             const stream = await executeStreamingGenerateRequest(ai, prepared, requestAbortState.signal);
-            let lastChunk: any = null;
-            let lastGroundingChunk: any = null;
 
             if (!requestAbortState.isWritable()) {
                 return;
@@ -1334,6 +1334,9 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
 
                 applied.newParts.forEach((part) => {
                     throwIfAborted(requestAbortState.signal);
+                    if (!requestAbortState.isWritable()) {
+                        return;
+                    }
                     writeNdjsonEvent<StreamResultPartEvent>(res, {
                         type: 'result-part',
                         sessionId,
@@ -1342,7 +1345,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 });
 
                 const thoughts = liveState.aggregatedParts
-                    .filter((p) => p.kind === 'thought-text')
+                    .filter((p): p is ExtractedTextResultPart => p.kind === 'thought-text')
                     .map((p) => p.text || '')
                     .join('');
 

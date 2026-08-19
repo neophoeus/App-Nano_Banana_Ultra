@@ -1,5 +1,16 @@
 # Changelog
 
+## v4.0.0 - 2026-08-19
+
+- Release title: Nano Banana Ultra 4.0.0 - Unified Dual-Engine Architecture (Local API & AI Studio Direct)
+- Release summary:
+    - **Unified Dual-Engine Architecture**: Merged the standalone Nano Banana Ultra (Local Node.js backend) and Ultra Lite (Browser Direct `@google/genai` client / AI Studio) into a single cohesive codebase. The standalone Ultra Lite repository is now merged and retired into this project.
+    - **Seamless Engine Switching**: Added automatic environment detection (`auto`) that probes `window.aistudio` or `/api/health`, alongside explicit manual override options (`local` for Ultra and `direct` for Lite / AI Studio) accessible via the top-header engine mode selector.
+    - **Dual Storage Persistence**: Integrated adaptive persistence that transparently saves to local filesystem with `.json` sidecars in Local mode and browser IndexedDB in Direct mode, while supporting cross-mode asset resolution and fallback.
+    - **Execution Mode UI & Health Diagnostics**: Added a dedicated top-header `ExecutionModeSelector` pill and modernized `WorkspaceHealthPanel` that dynamically monitors the active engine state.
+    - **Multilingual Support**: Added localized engine mode labels, tooltips, and diagnostics across all 9 supported languages (`zh_TW`, `en`, `zh_CN`, `ja`, `ko`, `es`, `de`, `fr`, `ru`).
+    - **Comprehensive Test Verification**: 100% green test suite across 111 test files and 910 unit/integration tests with zero regressions.
+
 ## v3.16.1 - 2026-08-18
 
 - Release title: Nano Banana Ultra 3.16.1 - Localized Prompt Thinking Level Options

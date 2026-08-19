@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Language, getTranslation } from '../utils/translations';
+import { useWorkspaceExecutionMode } from '../hooks/useWorkspaceExecutionMode';
+import { hasConfiguredGeminiApiKey } from '../utils/geminiCredentials';
 
 interface WorkspaceHealthPanelProps {
     currentLanguage?: Language;
@@ -14,7 +16,9 @@ type HealthPayload = {
 const REFRESH_INTERVAL_MS = 30000;
 
 const WorkspaceHealthPanel: React.FC<WorkspaceHealthPanelProps> = ({ currentLanguage = 'en', refreshToken = 0 }) => {
+    const { resolvedMode } = useWorkspaceExecutionMode();
     const [health, setHealth] = useState<HealthPayload | null>(null);
+    const [directKeyAvailable, setDirectKeyAvailable] = useState<boolean>(false);
     const [healthError, setHealthError] = useState<string | null>(null);
     const t = (key: string) => getTranslation(currentLanguage as Language, key);
 
@@ -22,6 +26,23 @@ const WorkspaceHealthPanel: React.FC<WorkspaceHealthPanelProps> = ({ currentLang
         let isDisposed = false;
 
         const loadHealth = async () => {
+            if (resolvedMode === 'direct') {
+                try {
+                    const hasKey = await hasConfiguredGeminiApiKey();
+                    if (!isDisposed) {
+                        setDirectKeyAvailable(hasKey);
+                        setHealth({ ok: true, hasApiKey: hasKey });
+                        setHealthError(null);
+                    }
+                } catch {
+                    if (!isDisposed) {
+                        setDirectKeyAvailable(false);
+                        setHealth({ ok: true, hasApiKey: false });
+                    }
+                }
+                return;
+            }
+
             try {
                 const response = await fetch('/api/health');
                 const payload = await response.json().catch(() => null);
@@ -48,22 +69,38 @@ const WorkspaceHealthPanel: React.FC<WorkspaceHealthPanelProps> = ({ currentLang
             isDisposed = true;
             window.clearInterval(intervalId);
         };
-    }, [currentLanguage, refreshToken]);
+    }, [currentLanguage, refreshToken, resolvedMode]);
 
-    const headerStatusItems = [
-        {
-            key: 'local-api',
-            testId: 'global-health-local-api',
-            label: t('statusPanelLocalApi'),
-            tone: healthError || health?.ok === false ? 'bg-red-500' : 'bg-emerald-500',
-        },
-        {
-            key: 'gemini-key',
-            testId: 'global-health-gemini-key',
-            label: t('statusPanelGeminiKey'),
-            tone: health && !health.hasApiKey ? 'bg-red-500' : 'bg-emerald-500',
-        },
-    ];
+    const headerStatusItems =
+        resolvedMode === 'direct'
+            ? [
+                  {
+                      key: 'direct-mode',
+                      testId: 'global-health-direct-mode',
+                      label: t('statusPanelDirectMode') || 'AI Studio',
+                      tone: 'bg-indigo-500',
+                  },
+                  {
+                      key: 'gemini-key',
+                      testId: 'global-health-gemini-key',
+                      label: t('statusPanelGeminiKey'),
+                      tone: !directKeyAvailable ? 'bg-amber-500' : 'bg-emerald-500',
+                  },
+              ]
+            : [
+                  {
+                      key: 'local-api',
+                      testId: 'global-health-local-api',
+                      label: t('statusPanelLocalApi'),
+                      tone: healthError || health?.ok === false ? 'bg-red-500' : 'bg-emerald-500',
+                  },
+                  {
+                      key: 'gemini-key',
+                      testId: 'global-health-gemini-key',
+                      label: t('statusPanelGeminiKey'),
+                      tone: health && !health.hasApiKey ? 'bg-red-500' : 'bg-emerald-500',
+                  },
+              ];
 
     return (
         <div data-testid="global-health-summary" className="flex items-center gap-1.5 sm:gap-2">

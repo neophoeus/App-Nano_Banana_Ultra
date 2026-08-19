@@ -6,7 +6,7 @@ Nano Banana Ultra is a Gemini-powered image workspace for creation, guided editi
 
 Instead of treating image generation as a disposable one-shot action, Nano Banana Ultra keeps prompting, references, history, editing, reuse, and restore inside one connected workspace flow.
 
-This repository is the local API edition of Nano Banana Ultra. If you already subscribe to Google AI Pro or Google AI Ultra, you can also use [App-Nano_Banana_Ultra_lite](https://github.com/neophoeus/App-Nano_Banana_Ultra_lite) by uploading it into Google AI Studio and running it there. That AI Studio path gives a similar day-to-day experience while usually being more quota-efficient for Google AI Pro and Google AI Ultra subscribers.
+Starting from v4.0.0, Nano Banana Ultra features a unified dual-engine architecture that combines both the Local API (Node backend) and AI Studio Direct mode (formerly the separate Ultra Lite project) into a single cohesive codebase. You can run it locally with your local dev server, or run directly within Google AI Studio to take advantage of Google AI Pro/Ultra subscription quotas. The workspace automatically detects the environment and provides an on-the-fly engine selector in the top bar (`Auto Detect`, `Local API`, and `AI Studio Direct`).
 
 ## At a Glance
 
@@ -111,19 +111,17 @@ Nano Banana Ultra currently supports four Gemini image-model paths. The UI expos
 
 ## Version Overview
 
-### Latest Release: 3.16.1
+### Latest Release: 4.0.0
 
-Latest release: 3.16.1. Localized Prompt Thinking Level segment options and tooltips across all 9 supported languages (e.g. `低` / `中` / `高` in Chinese/Japanese), and upgraded text LLM services to `gemini-3.7-flash` with Google GenAI SDK parameter conformance. See [CHANGELOG.md](CHANGELOG.md) for details.
+Latest release: 4.0.0. Unified Dual-Engine Architecture integrating both the Local API (Node backend) and AI Studio Direct mode (Lite client engine) into a single cohesive codebase with automatic environment detection, manual engine switching, and dual-mode storage persistence (local disk sidecars vs. browser IndexedDB). The standalone Ultra Lite repository has been retired and consolidated into this codebase. See [CHANGELOG.md](CHANGELOG.md) for details.
 
-### 3.5.x
+### 4.x
 
-Version 3.5.x is where Nano Banana Ultra's 3.x workspace model becomes clearly selection-first and easier to read. History selection now directly defines the next working source, staged-image continuation uses one stateful primary action, and Versions reflects the same state through direct badges instead of a separate open-versus-continue split.
+Version 4.x introduces the unified dual-engine architecture, merging the local backend engine and AI Studio direct client engine into one seamless workspace. It features auto-detection of runtime environments, an on-the-fly execution mode selector, adaptive local disk and IndexedDB persistence, and full multilingual diagnostic capabilities.
 
-In short, 3.5.x is the current practical baseline for the product.
+### 3.5.x+ (3.x Series)
 
-### 3.x
-
-Version 3.x includes everything from 2.x and represents the current Nano Banana Ultra product state: a selection-first Gemini image workspace with a summary-first shell, detail-on-demand surfaces, persistent history and restore/import flows, provenance review, queued-batch workflows, official-conversation continuity, and safer file-backed recovery behavior.
+Version 3.5.x established the practical selection-first baseline for Nano Banana Ultra 3.x, and all subsequent releases in the 3.x series build upon this foundation. History selection directly defines the next working source, staged-image continuation uses a stateful primary action, and Versions reflects source state through direct badges. The 3.x series delivers a summary-first shell with detail-on-demand surfaces, persistent history/restore flows, provenance review, queued-batch workflows, official-conversation continuity, and safer file-backed recovery.
 
 ### 2.x
 
