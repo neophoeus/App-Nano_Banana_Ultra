@@ -1,0 +1,6 @@
+{
+    "name": "Nano Banana Ultra",
+    "description": "A Gemini-powered image workspace for creation, guided editing, and multi-pass iteration with dual-engine execution.",
+    "requestFramePermissions": [],
+    "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
