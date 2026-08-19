@@ -591,24 +591,29 @@ const App: React.FC = () => {
         hydratedSidecarHistoryIdRef.current = currentViewedCompletedHistoryItem.id;
 
         if (!currentViewedCompletedHistoryItem.savedFilename) {
-            setSelectedMetadata(createImageSidecarMetadataState('missing'));
+            setSelectedMetadata(currentViewedCompletedHistoryMetadata || createImageSidecarMetadataState('missing'));
             return;
         }
 
-        setSelectedMetadata(createImageSidecarMetadataState('loading'));
+        if (currentViewedCompletedHistoryMetadata) {
+            setSelectedMetadata(currentViewedCompletedHistoryMetadata);
+        } else {
+            setSelectedMetadata(createImageSidecarMetadataState('loading'));
+        }
 
         void loadImageMetadata(currentViewedCompletedHistoryItem.savedFilename).then((metadata) => {
             if (isDisposed || hydratedSidecarHistoryIdRef.current !== currentViewedCompletedHistoryItem.id) {
                 return;
             }
 
-            const mergedMetadata = metadata
-                ? normalizeImageSidecarMetadata(
-                      currentViewedCompletedHistoryMetadata
-                          ? { ...currentViewedCompletedHistoryMetadata, ...metadata }
-                          : metadata,
-                  )
-                : null;
+            const mergedMetadata = normalizeImageSidecarMetadata(
+                currentViewedCompletedHistoryMetadata || metadata
+                    ? {
+                          ...(currentViewedCompletedHistoryMetadata || {}),
+                          ...(metadata || {}),
+                      }
+                    : null,
+            );
 
             setSelectedMetadata(mergedMetadata || createImageSidecarMetadataState('missing'));
         });

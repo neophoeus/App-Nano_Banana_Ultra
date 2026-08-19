@@ -255,7 +255,9 @@ export const normalizeImageSidecarMetadata = (value: unknown): ImageSidecarMetad
     }
 
     const groundingMode =
-        typeof googleSearch === 'boolean' || typeof imageSearch === 'boolean' || isGroundingModeValue(value.groundingMode)
+        typeof googleSearch === 'boolean' ||
+        typeof imageSearch === 'boolean' ||
+        isGroundingModeValue(value.groundingMode)
             ? deriveGroundingMode(Boolean(googleSearch), Boolean(imageSearch))
             : undefined;
 
@@ -279,6 +281,10 @@ export const isPersistedImageSidecarMetadata = (
     const normalizedMetadata = normalizeImageSidecarMetadata(metadata);
     return Boolean(
         normalizedMetadata &&
-        (typeof normalizedMetadata.filename === 'string' || typeof normalizedMetadata.timestamp === 'string'),
+        (typeof normalizedMetadata.filename === 'string' ||
+            typeof normalizedMetadata.timestamp === 'string' ||
+            typeof normalizedMetadata.model === 'string' ||
+            typeof normalizedMetadata.prompt === 'string' ||
+            typeof normalizedMetadata.aspectRatio === 'string'),
     );
 };

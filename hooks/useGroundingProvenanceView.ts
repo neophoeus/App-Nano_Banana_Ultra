@@ -277,10 +277,12 @@ export function useGroundingProvenanceView({
             },
             {
                 label: t('groundingProvenanceInsightRequestedSize'),
-                value: resolveMetadataInsightValue(
-                    metadataRequestedImageSize,
-                    requestedImageSize || fallbackRequestedImageSize || t('groundingProvenanceNone'),
-                ),
+                value: !requestedSizeModelSupportsSizeControl
+                    ? t('groundingProvenanceNone')
+                    : resolveMetadataInsightValue(
+                          metadataRequestedImageSize,
+                          requestedImageSize || fallbackRequestedImageSize || t('groundingProvenanceNone'),
+                      ),
             },
             {
                 label: t('groundingProvenanceInsightActualOutput'),

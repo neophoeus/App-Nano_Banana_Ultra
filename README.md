@@ -112,7 +112,7 @@ Nano Banana Ultra currently supports four Gemini image-model paths. The UI expos
 
 ## Version Overview
 
-### Latest Release: 4.1.2
+### Latest Release: 4.1.3
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
 

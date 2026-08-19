@@ -182,7 +182,9 @@ export function useWorkspaceViewerProvenanceState({
     }, []);
 
     const viewerMetadataSidecarState = getImageSidecarMetadataState(selectedMetadata);
-    const viewerHasPersistedSidecarMetadata = isPersistedImageSidecarMetadata(selectedMetadata);
+    const viewerHasPersistedSidecarMetadata =
+        isPersistedImageSidecarMetadata(selectedMetadata) ||
+        isPersistedImageSidecarMetadata(currentViewedCompletedHistoryMetadata);
     const viewerSettingsMetadata = useMemo(() => {
         if (!currentViewedCompletedHistoryMetadata && !viewerHasPersistedSidecarMetadata) {
             return null;
@@ -190,15 +192,36 @@ export function useWorkspaceViewerProvenanceState({
 
         return normalizeImageSidecarMetadata({
             ...(currentViewedCompletedHistoryMetadata || {}),
-            ...(viewerHasPersistedSidecarMetadata ? (selectedMetadata as Record<string, unknown>) : {}),
+            ...(selectedMetadata && !viewerMetadataSidecarState ? (selectedMetadata as Record<string, unknown>) : {}),
         });
-    }, [currentViewedCompletedHistoryMetadata, selectedMetadata, viewerHasPersistedSidecarMetadata]);
+    }, [
+        currentViewedCompletedHistoryMetadata,
+        selectedMetadata,
+        viewerHasPersistedSidecarMetadata,
+        viewerMetadataSidecarState,
+    ]);
     const viewerSettingsSnapshot = useMemo(
         () => buildViewerComposerSettingsSnapshot(currentViewedCompletedHistoryItem, viewerSettingsMetadata),
         [currentViewedCompletedHistoryItem, viewerSettingsMetadata],
     );
+    const effectiveViewerMetadata = useMemo(() => {
+        if (viewerSettingsMetadata) {
+            return viewerSettingsMetadata;
+        }
+        if (selectedMetadata && !viewerMetadataSidecarState) {
+            return normalizeImageSidecarMetadata(selectedMetadata);
+        }
+        if (currentViewedCompletedHistoryMetadata) {
+            return currentViewedCompletedHistoryMetadata;
+        }
+        return null;
+    }, [currentViewedCompletedHistoryMetadata, selectedMetadata, viewerMetadataSidecarState, viewerSettingsMetadata]);
     const viewerMetadataStatus = useMemo(() => {
         if (!currentViewedCompletedHistoryItem) {
+            return 'ready' as const;
+        }
+
+        if (viewerHasPersistedSidecarMetadata || effectiveViewerMetadata) {
             return 'ready' as const;
         }
 
@@ -206,12 +229,13 @@ export function useWorkspaceViewerProvenanceState({
             return viewerMetadataSidecarState;
         }
 
-        if (viewerHasPersistedSidecarMetadata) {
-            return 'ready' as const;
-        }
-
         return currentViewedCompletedHistoryItem.savedFilename ? ('loading' as const) : ('missing' as const);
-    }, [currentViewedCompletedHistoryItem, viewerHasPersistedSidecarMetadata, viewerMetadataSidecarState]);
+    }, [
+        currentViewedCompletedHistoryItem,
+        effectiveViewerMetadata,
+        viewerHasPersistedSidecarMetadata,
+        viewerMetadataSidecarState,
+    ]);
     const viewerMetadataLoadingLabel = t('workspaceViewerMetadataLoading');
     const viewerMetadataUnavailableLabel = t('workspaceViewerMetadataUnavailable');
     const viewerMetadataStateMessage =
@@ -230,13 +254,14 @@ export function useWorkspaceViewerProvenanceState({
                 return viewerMetadataUnavailableLabel;
             }
 
-            if (viewerHasPersistedSidecarMetadata) {
+            if (viewerHasPersistedSidecarMetadata || effectiveViewerMetadata) {
                 return sidecarValue || viewerMetadataUnavailableLabel;
             }
 
             return sidecarValue || fallbackValue;
         },
         [
+            effectiveViewerMetadata,
             viewerHasPersistedSidecarMetadata,
             viewerMetadataLoadingLabel,
             viewerMetadataStatus,
@@ -245,56 +270,72 @@ export function useWorkspaceViewerProvenanceState({
     );
 
     const viewerMetadataAspectRatio = resolveViewerMetadataValue(
-        typeof selectedMetadata?.aspectRatio === 'string' ? selectedMetadata.aspectRatio : null,
+        typeof effectiveViewerMetadata?.aspectRatio === 'string'
+            ? effectiveViewerMetadata.aspectRatio
+            : typeof currentViewedCompletedHistoryItem?.aspectRatio === 'string'
+              ? currentViewedCompletedHistoryItem.aspectRatio
+              : null,
         viewSettings.aspectRatio,
     );
-    const viewerMetadataModel = isKnownImageModel(viewerSettingsMetadata?.model)
-        ? viewerSettingsMetadata.model
+    const viewerMetadataModel = isKnownImageModel(effectiveViewerMetadata?.model)
+        ? effectiveViewerMetadata.model
         : currentViewedCompletedHistoryItem?.model || viewSettings.model;
     const viewerMetadataModelSupportsSizeControl = MODEL_CAPABILITIES[viewerMetadataModel].supportedSizes.length > 0;
     const viewerMetadataSize = resolveViewerMetadataValue(
-        typeof viewerSettingsMetadata?.size === 'string'
-            ? viewerSettingsMetadata.size
-            : viewerMetadataModelSupportsSizeControl && typeof viewerSettingsMetadata?.requestedImageSize === 'string'
-              ? viewerSettingsMetadata.requestedImageSize
-              : null,
+        typeof effectiveViewerMetadata?.size === 'string'
+            ? effectiveViewerMetadata.size
+            : viewerMetadataModelSupportsSizeControl && typeof effectiveViewerMetadata?.requestedImageSize === 'string'
+              ? effectiveViewerMetadata.requestedImageSize
+              : typeof currentViewedCompletedHistoryItem?.size === 'string'
+                ? currentViewedCompletedHistoryItem.size
+                : null,
         viewerMetadataModelSupportsSizeControl ? viewSettings.size : viewerMetadataUnavailableLabel,
     );
     const viewerMetadataStyleLabel = resolveViewerMetadataValue(
-        typeof selectedMetadata?.style === 'string' ? getStyleLabel(selectedMetadata.style as ImageStyle) : null,
+        typeof effectiveViewerMetadata?.style === 'string'
+            ? getStyleLabel(effectiveViewerMetadata.style as ImageStyle)
+            : typeof currentViewedCompletedHistoryItem?.style === 'string'
+              ? getStyleLabel(currentViewedCompletedHistoryItem.style as ImageStyle)
+              : null,
         getStyleLabel(viewSettings.style),
     );
     const viewerMetadataModelLabel = resolveViewerMetadataValue(
-        isKnownImageModel(selectedMetadata?.model)
-            ? getModelLabel(selectedMetadata.model)
-            : typeof selectedMetadata?.model === 'string'
-              ? selectedMetadata.model
-              : null,
+        isKnownImageModel(effectiveViewerMetadata?.model)
+            ? getModelLabel(effectiveViewerMetadata.model)
+            : typeof effectiveViewerMetadata?.model === 'string'
+              ? effectiveViewerMetadata.model
+              : currentViewedCompletedHistoryItem?.model
+                ? isKnownImageModel(currentViewedCompletedHistoryItem.model)
+                    ? getModelLabel(currentViewedCompletedHistoryItem.model)
+                    : currentViewedCompletedHistoryItem.model
+                : null,
         getModelLabel(viewSettings.model),
     );
     const viewerMetadataTemperature = resolveViewerMetadataValue(
-        typeof selectedMetadata?.temperature === 'number' ? formatTemperature(selectedMetadata.temperature) : null,
+        typeof effectiveViewerMetadata?.temperature === 'number'
+            ? formatTemperature(effectiveViewerMetadata.temperature)
+            : null,
         formatTemperature(viewSettings.temperature),
     );
     const viewerMetadataOutputFormat = resolveViewerMetadataValue(
-        typeof selectedMetadata?.outputFormat === 'string'
-            ? getOutputFormatSummaryLabel(selectedMetadata.outputFormat)
+        typeof effectiveViewerMetadata?.outputFormat === 'string'
+            ? getOutputFormatSummaryLabel(effectiveViewerMetadata.outputFormat)
             : null,
         getOutputFormatSummaryLabel(viewSettings.outputFormat),
     );
     const viewerMetadataThinkingLevel = resolveViewerMetadataValue(
-        typeof selectedMetadata?.thinkingLevel === 'string'
-            ? getThinkingLevelSummaryLabel(selectedMetadata.thinkingLevel)
+        typeof effectiveViewerMetadata?.thinkingLevel === 'string'
+            ? getThinkingLevelSummaryLabel(effectiveViewerMetadata.thinkingLevel)
             : null,
         getThinkingLevelSummaryLabel(viewSettings.thinkingLevel),
     );
     const viewerMetadataGrounding = resolveViewerMetadataValue(
-        getMetadataGroundingModeLabel(selectedMetadata),
+        getMetadataGroundingModeLabel(effectiveViewerMetadata),
         t(getGroundingModeTranslationKey(deriveGroundingMode(viewSettings.googleSearch, viewSettings.imageSearch))),
     );
     const viewerMetadataReturnThoughts = resolveViewerMetadataValue(
-        typeof selectedMetadata?.includeThoughts === 'boolean'
-            ? getThoughtVisibilitySummaryLabel(selectedMetadata.includeThoughts)
+        typeof effectiveViewerMetadata?.includeThoughts === 'boolean'
+            ? getThoughtVisibilitySummaryLabel(effectiveViewerMetadata.includeThoughts)
             : null,
         getThoughtVisibilitySummaryLabel(viewSettings.includeThoughts),
     );

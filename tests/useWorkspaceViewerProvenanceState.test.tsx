@@ -187,4 +187,68 @@ describe('useWorkspaceViewerProvenanceState', () => {
         expect(getMetadataValue('Size')).toBe('Loading metadata');
         expect(getMetadataValue('Model')).toBe('Loading metadata');
     });
+
+    it('renders metadata immediately for AI Studio mode history items without filename or timestamp', () => {
+        const aiStudioMetadata = {
+            model: 'gemini-3.1-flash-image',
+            style: 'Anime',
+            aspectRatio: '16:9',
+            requestedImageSize: '2K',
+            size: '2K',
+            outputFormat: 'images-only',
+            temperature: 0.8,
+            thinkingLevel: 'minimal',
+            includeThoughts: true,
+            googleSearch: false,
+            imageSearch: false,
+        };
+
+        renderHook({
+            selectedMetadata: aiStudioMetadata,
+            currentViewedCompletedHistoryMetadata: aiStudioMetadata,
+            currentViewedCompletedHistoryItem: {
+                id: 'turn-aistudio-1',
+                prompt: 'AI Studio prompt',
+                model: 'gemini-3.1-flash-image',
+                savedFilename: 'turn-aistudio-1.png',
+            },
+        });
+
+        expect(latestHook?.viewerMetadataStateMessage).toBeNull();
+        expect(getMetadataValue('Size')).toBe('2K');
+        expect(getMetadataValue('Ratio')).toBe('16:9');
+        expect(getMetadataValue('Temperature')).toBe('0.8');
+        expect(getMetadataValue('Model')).toBe('label:gemini-3.1-flash-image');
+        expect(latestHook?.viewerSettingsSnapshot?.aspectRatio).toBe('16:9');
+    });
+
+    it('uses currentViewedCompletedHistoryMetadata when selectedMetadata is null', () => {
+        const historyMetadata = {
+            model: 'gemini-3.1-flash-image',
+            style: 'Cinematic',
+            aspectRatio: '4:3',
+            requestedImageSize: '1K',
+            size: '1K',
+            outputFormat: 'images-only',
+            temperature: 1,
+            thinkingLevel: 'minimal',
+            includeThoughts: false,
+        };
+
+        renderHook({
+            selectedMetadata: null,
+            currentViewedCompletedHistoryMetadata: historyMetadata,
+            currentViewedCompletedHistoryItem: {
+                id: 'turn-history-only',
+                prompt: 'History prompt',
+                model: 'gemini-3.1-flash-image',
+                savedFilename: 'turn-history-only.png',
+            },
+        });
+
+        expect(latestHook?.viewerMetadataStateMessage).toBeNull();
+        expect(getMetadataValue('Size')).toBe('1K');
+        expect(getMetadataValue('Ratio')).toBe('4:3');
+        expect(getMetadataValue('Model')).toBe('label:gemini-3.1-flash-image');
+    });
 });

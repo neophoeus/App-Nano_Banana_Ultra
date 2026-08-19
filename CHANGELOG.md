@@ -1,5 +1,16 @@
 # Changelog
 
+## v4.1.3 - 2026-08-19
+
+- Release title: Nano Banana Ultra 4.1.3 - AI Studio Fullscreen Viewer Metadata Loading Fix & Sidecar Hydration Resilience
+- Release summary:
+    - **Fixed AI Studio Fullscreen Image Viewer Metadata Loading Stalemate**: Resolved an issue in Direct / AI Studio mode where the right-side Generation Metadata panel in the fullscreen image viewer (`WorkspaceViewerOverlay`) remained perpetually stuck in the "Loading..." (`workspaceViewerMetadataLoading`) state.
+    - **Expanded Sidecar Persistence Validation (`isPersistedImageSidecarMetadata`)**: Relaxed the strict validation in `utils/imageSidecarMetadata.ts` that previously required disk-based `filename` or `timestamp` properties. Valid generation metadata records containing core attributes (such as `model`, `prompt`, `aspectRatio`, or `style`) from AI Studio memory sessions or restored history items are now recognized immediately as valid sidecars.
+    - **Unified Viewer Effective Metadata Resolution (`useWorkspaceViewerProvenanceState`)**: Introduced `effectiveViewerMetadata` to seamlessly combine `viewerSettingsMetadata`, `currentViewedCompletedHistoryMetadata`, `selectedMetadata`, and top-level item fallbacks. Updated `viewerMetadataStatus` to transition immediately to `'ready'` whenever valid metadata is present, preventing viewer metadata fields from getting trapped in loading status.
+    - **App-Level Sidecar Hydration Preservation (`App.tsx`)**: Optimized sidecar metadata hydration in `App.tsx` to immediately initialize with existing history item metadata without flashing a loading state, and gracefully preserve existing history metadata if background sidecar file retrieval returns `null`.
+    - **Capability-Aware Insight Row Fallbacks (`useGroundingProvenanceView`)**: Refined the `Requested size` insight row in `useGroundingProvenanceView.ts` to return localized `None` (`groundingProvenanceNone`) for models that do not support size control (e.g. `gemini-2.5-flash-image`), rather than incorrectly indicating metadata unavailability.
+    - **Comprehensive Unit Testing**: Added targeted test cases in `useWorkspaceViewerProvenanceState.test.tsx` verifying AI Studio in-memory metadata display and history turn fallback flows. 100% test pass rate across all 113 test suites (930 tests).
+
 ## v4.1.2 - 2026-08-19
 
 - Release title: Nano Banana Ultra 4.1.2 - Execution Engine Mode Localization, Dynamic Header Badges & Dark Mode Diagnostics Toggle Ergonomics
