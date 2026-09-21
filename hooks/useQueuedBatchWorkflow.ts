@@ -282,6 +282,7 @@ type UseQueuedBatchWorkflowArgs = {
 type QueuedBatchJobGenerationDraft = {
     finalPrompt: string;
     editingInput?: string;
+    sourceImageInput?: string;
     generationMode: string;
     lineageContext: GenerationLineageContext;
     finalObjectInputs: string[];
@@ -303,6 +304,7 @@ type QueuedBatchJobGenerationDraft = {
 type EditorQueuedBatchJobSubmission = {
     prompt: string;
     editingInput: string;
+    sourceImageInput?: string;
     batchSize: number;
     imageSize: QueuedBatchJob['imageSize'];
     aspectRatio: QueuedBatchJob['aspectRatio'];
@@ -773,6 +775,7 @@ export function useQueuedBatchWorkflow({
                         style: queuedDraft.style,
                         model: queuedDraft.model,
                         editingInput: queuedDraft.editingInput,
+                        sourceImageInput: queuedDraft.sourceImageInput,
                         objectImageInputs: queuedDraft.finalObjectInputs,
                         characterImageInputs: queuedDraft.finalCharacterInputs,
                         outputFormat: queuedDraft.outputFormat,
@@ -888,6 +891,7 @@ export function useQueuedBatchWorkflow({
         async ({
             prompt: editorPrompt,
             editingInput,
+            sourceImageInput,
             batchSize: editorBatchSize,
             imageSize: editorImageSize,
             aspectRatio: editorAspectRatio,
@@ -915,6 +919,7 @@ export function useQueuedBatchWorkflow({
             await submitQueuedBatchDraft({
                 finalPrompt: editorPrompt,
                 editingInput,
+                sourceImageInput,
                 generationMode,
                 lineageContext,
                 finalObjectInputs: objectImageInputs,

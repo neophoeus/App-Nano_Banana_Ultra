@@ -119,6 +119,7 @@ type PreparedBrowserGenerateRequest = {
         aspectRatio: GenerateOptions['aspectRatio'];
         imageSize: GenerateOptions['imageSize'] | undefined;
         editingInput: GenerateOptions['editingInput'];
+        sourceImageInput: GenerateOptions['sourceImageInput'];
         objectImageInputs: GenerateOptions['objectImageInputs'];
         characterImageInputs: GenerateOptions['characterImageInputs'];
         outputFormat: GenerateOptions['outputFormat'];
@@ -521,6 +522,7 @@ const prepareBrowserGenerateRequest = async (
         aspectRatio: options.aspectRatio,
         imageSize: options.model === 'gemini-2.5-flash-image' ? undefined : options.imageSize,
         editingInput: options.editingInput,
+        sourceImageInput: options.sourceImageInput,
         objectImageInputs: options.objectImageInputs,
         characterImageInputs: options.characterImageInputs,
         outputFormat: options.outputFormat,
@@ -912,7 +914,8 @@ export const extractPacingWorkloadContext = (options: Partial<GenerateOptions>):
     hasReferenceImages: Boolean(
         (options.characterImageInputs && options.characterImageInputs.length > 0) ||
         (options.objectImageInputs && options.objectImageInputs.length > 0) ||
-        options.editingInput,
+        options.editingInput ||
+        options.sourceImageInput,
     ),
     includeThoughts: Boolean(options.includeThoughts || options.thinkingLevel === 'high'),
 });

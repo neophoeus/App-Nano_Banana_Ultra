@@ -539,6 +539,7 @@ describe('useWorkspaceEditorActions', () => {
                 sourceHistoryId: null,
                 sourceLineageAction: null,
             },
+            undefined,
         );
     });
 

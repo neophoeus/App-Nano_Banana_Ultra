@@ -58,6 +58,7 @@ type ImageGenerateRequestBody = {
     aspectRatio: GenerateOptions['aspectRatio'];
     imageSize: GenerateOptions['imageSize'] | undefined;
     editingInput: GenerateOptions['editingInput'];
+    sourceImageInput: GenerateOptions['sourceImageInput'];
     objectImageInputs: GenerateOptions['objectImageInputs'];
     characterImageInputs: GenerateOptions['characterImageInputs'];
     outputFormat: GenerateOptions['outputFormat'];
@@ -193,6 +194,7 @@ const buildImageGenerateRequestBody = (options: GenerateOptions, finalPrompt: st
     aspectRatio: options.aspectRatio,
     imageSize: options.model === 'gemini-2.5-flash-image' ? undefined : options.imageSize,
     editingInput: options.editingInput,
+    sourceImageInput: options.sourceImageInput,
     objectImageInputs: options.objectImageInputs,
     characterImageInputs: options.characterImageInputs,
     outputFormat: options.outputFormat,

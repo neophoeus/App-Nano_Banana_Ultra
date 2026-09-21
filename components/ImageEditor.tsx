@@ -69,6 +69,7 @@ interface ImageEditorProps {
         objectImages?: string[],
         characterImages?: string[],
         targetRatio?: AspectRatio,
+        sourceImageInput?: string,
     ) => void;
     onQueueBatch?: (
         prompt: string,
@@ -79,6 +80,7 @@ interface ImageEditorProps {
         objectImages?: string[],
         characterImages?: string[],
         targetRatio?: AspectRatio,
+        sourceImageInput?: string,
     ) => void | Promise<void>;
     supportsQueuedBatch?: boolean;
     queueBatchDisabledReason?: string | null;
@@ -931,8 +933,21 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        canvas.width = frameDims.w;
-        canvas.height = frameDims.h;
+        // When mode === 'revolve', bound max canvas dimension to 1536px to prevent 429 TPM exhaustion
+        let subW = frameDims.w;
+        let subH = frameDims.h;
+        if (mode === 'revolve') {
+            const MAX_REVOLVE_DIM = 1536;
+            const maxDim = Math.max(subW, subH);
+            if (maxDim > MAX_REVOLVE_DIM) {
+                const factor = MAX_REVOLVE_DIM / maxDim;
+                subW = Math.max(1, Math.round(subW * factor));
+                subH = Math.max(1, Math.round(subH * factor));
+            }
+        }
+
+        canvas.width = subW;
+        canvas.height = subH;
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
@@ -982,22 +997,39 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                 });
             }
         } else if (mode === 'revolve') {
-            // Revolve: Render 3D Gaussian Splatting guidance with green mask
-            if (pointCloudRef.current && pointCloudRef.current.splats.length > 0) {
-                renderGaussianSplatsToCanvas(ctx, pointCloudRef.current, revolveTransform, frameDims.w, frameDims.h, {
+            // Revolve: Render high-density smooth 3D Gaussian guidance with green mask
+            const panScale = frameDims.w > 0 ? subW / frameDims.w : 1;
+            const submissionRevolveTransform = {
+                ...revolveTransform,
+                panX: (revolveTransform.panX ?? 0) * panScale,
+                panY: (revolveTransform.panY ?? 0) * panScale,
+            };
+
+            let submissionCloud = pointCloudRef.current;
+            try {
+                submissionCloud = createGaussianPointCloudFromImage(imgElement, subW, subH, {
+                    sampleDensity: 'submission',
+                });
+            } catch (e) {
+                console.warn('Failed to build high-density submission point cloud, falling back to draft:', e);
+            }
+
+            if (submissionCloud && submissionCloud.splats.length > 0) {
+                renderGaussianSplatsToCanvas(ctx, submissionCloud, submissionRevolveTransform, subW, subH, {
                     clearColor: '#00ff00',
-                    splatScaleMultiplier: 1.3,
+                    splatScaleMultiplier: 1.35,
+                    renderMode: 'smooth',
                 });
             } else {
                 ctx.fillStyle = '#00ff00';
-                ctx.fillRect(0, 0, frameDims.w, frameDims.h);
+                ctx.fillRect(0, 0, subW, subH);
                 ctx.save();
                 ctx.translate(
-                    frameDims.w / 2 + (revolveTransform.panX ?? 0),
-                    frameDims.h / 2 + (revolveTransform.panY ?? 0),
+                    subW / 2 + (submissionRevolveTransform.panX ?? 0),
+                    subH / 2 + (submissionRevolveTransform.panY ?? 0),
                 );
-                ctx.scale(revolveTransform.zoom ?? 1, revolveTransform.zoom ?? 1);
-                ctx.drawImage(imgElement, -frameDims.w / 2, -frameDims.h / 2, frameDims.w, frameDims.h);
+                ctx.scale(submissionRevolveTransform.zoom ?? 1, submissionRevolveTransform.zoom ?? 1);
+                ctx.drawImage(imgElement, -subW / 2, -subH / 2, subW, subH);
                 ctx.restore();
             }
         } else {
@@ -1027,6 +1059,9 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         const submission = buildEditorSubmissionPayload();
         if (!submission) return;
 
+        const sourceImageInput =
+            mode === 'revolve' ? resolvedInitialImageUrl || initialImageUrl || undefined : undefined;
+
         onGenerate(
             submission.finalPrompt,
             submission.base64,
@@ -1036,6 +1071,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
             objectImages,
             characterImages,
             ratio,
+            sourceImageInput,
         );
     };
 
@@ -1044,6 +1080,9 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
 
         const submission = buildEditorSubmissionPayload();
         if (!submission) return;
+
+        const sourceImageInput =
+            mode === 'revolve' ? resolvedInitialImageUrl || initialImageUrl || undefined : undefined;
 
         onQueueBatch(
             submission.finalPrompt,
@@ -1054,6 +1093,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
             objectImages,
             characterImages,
             ratio,
+            sourceImageInput,
         );
     };
 

@@ -22,6 +22,7 @@ type ImageGenerateBody = {
     aspectRatio?: string;
     imageSize?: string;
     editingInput?: string;
+    sourceImageInput?: string;
     objectImageInputs?: string[];
     characterImageInputs?: string[];
     outputFormat?: 'images-only' | 'images-and-text';
@@ -302,7 +303,10 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
 
             const { objectImageInputs, characterImageInputs } = normalizeReferenceImages(body);
             const totalReferenceImages =
-                objectImageInputs.length + characterImageInputs.length + (body.editingInput ? 1 : 0);
+                objectImageInputs.length +
+                characterImageInputs.length +
+                (body.editingInput ? 1 : 0) +
+                (body.sourceImageInput ? 1 : 0);
             if (model === 'gemini-2.5-flash-image' && totalReferenceImages > 3) {
                 sendJson(
                     res,

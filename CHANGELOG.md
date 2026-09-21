@@ -1,5 +1,18 @@
 # Changelog
 
+## v4.6.1 - 2026-09-21
+
+- Release title: Nano Banana Ultra 4.6.1 - Revolve Independent Source Image Channel [Src_1], Universal Multi-Style Prompt & Reference Image Preservation
+- Release summary:
+    - **Revolve Independent Source Image Channel Decoupling (`types.ts`, `utils/browserGeminiParts.ts`, `plugins/utils/imageReferences.ts`, `plugins/routes/generateRoutes.ts`, `plugins/routes/batchRoutes.ts`, `services/geminiService.ts`, `services/providers/browserDirectProvider.ts`, `services/providers/localBackendProvider.ts`, `hooks/usePerformGeneration.ts`, `components/ImageEditor.tsx`)**: Decoupled Revolve's original source image from `objectImages` (`[Obj_1]`/`[Obj_2]`) into an independent first-class parameter `sourceImageInput`, tagged distinctly as `[Src_1]`. Completely eliminates interference between the Revolve base image and user-uploaded reference images, ensuring user reference images always remain pristine and numbered predictably as `[Obj_1]`, `[Obj_2]`, etc. Gemini receives distinct tokens for the 3D viewpoint canvas (`[Edit_1]`) and the clean source reference (`[Src_1]`).
+    - **Universal Style-Agnostic & Subject-Neutral 2-Sentence Revolve Prompt (`utils/editorPromptBuilder.ts`)**: Overhauled the Revolve generation prompt into a concise, 2-sentence contract:
+        1. Camera viewpoint specification: `Render [Src_1] from the 3D camera viewpoint in [Edit_1] (yaw=${yaw}°, pitch=${pitch}°${framingText}).`
+        2. Scene inpainting and fidelity preservation: `Inpaint the green background areas to complete the scene, preserving the subject, style, lighting, and details from [Src_1].`
+           Eliminates all portrait-specific assumptions and photographic biases, making Revolve universally effective across any subject (people, characters, vehicles, architecture, landscapes, products, 3D models) and any artistic style (photographs, anime/manga, digital painting, watercolor, oil painting, CGI).
+    - **Removal of Texture-Restricting Negative Constraints (`utils/editorPromptBuilder.ts`)**: Removed negative phrases ("no dots, mosaics, or splatter artifacts") that previously restricted legitimate artistic textures (such as polka-dot dresses, freckles, mosaic tiles, stone grain, or paint splatter art). Circular bubble artifacts were already eliminated by the 240-step continuous micro-quad rendering pipeline introduced in `gaussianSplatting.ts`.
+    - **Queued Batch & Editor Action Alignment (`hooks/useQueuedBatchWorkflow.ts`, `hooks/useWorkspaceEditorActions.ts`)**: Forwarded `sourceImageInput` across all immediate generation and queued batch workflows, maintaining full lineage, session snapshot, and state fidelity.
+    - **Comprehensive Automated Test Coverage (`tests/editorPromptBuilder.test.ts`, `tests/ImageEditor.revolve.test.tsx`, `tests/useWorkspaceEditorActions.test.tsx`)**: Updated tests to assert independent `[Src_1]` and `[Edit_1]` channels, unpolluted user reference images, and exact argument forwarding. All 122 test files and 1,014 tests pass at 100%.
+
 ## v4.6.0 - 2026-09-21
 
 - Release title: Nano Banana Ultra 4.6.0 - Revolve 3D Gaussian Splatting Spatial Perspective, Pan/Zoom Controls & Reframe Geometry Precision

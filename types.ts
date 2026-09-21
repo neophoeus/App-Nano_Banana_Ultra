@@ -602,6 +602,7 @@ export interface GenerateOptions {
     style: ImageStyle;
     model: ImageModel;
     editingInput?: string;
+    sourceImageInput?: string;
     objectImageInputs?: string[];
     characterImageInputs?: string[];
     outputFormat?: OutputFormat;

@@ -190,39 +190,20 @@ export const buildEditorPrompt = ({
         const panX = revolveContext?.panX ?? 0;
         const panY = revolveContext?.panY ?? 0;
         const zoom = revolveContext?.zoom ?? 1;
-        const yawDesc =
-            yaw > 0
-                ? `rotated ${Math.abs(yaw)}° to the right`
-                : yaw < 0
-                  ? `rotated ${Math.abs(yaw)}° to the left`
-                  : 'centered horizontally';
-        const pitchDesc =
-            pitch > 0
-                ? `elevated ${Math.abs(pitch)}° upwards (high angle)`
-                : pitch < 0
-                  ? `lowered ${Math.abs(pitch)}° downwards (low angle)`
-                  : 'eye-level';
 
         const framingSegments: string[] = [];
         if (Math.abs(zoom - 1.0) > 0.05) {
-            framingSegments.push(
-                zoom > 1
-                    ? `Camera zoom-in framing factor ${zoom.toFixed(2)}x (closer view).`
-                    : `Camera zoom-out framing factor ${zoom.toFixed(2)}x (wider field).`,
-            );
+            framingSegments.push(`zoom ${zoom.toFixed(2)}x`);
         }
         if (Math.abs(panX) > 2 || Math.abs(panY) > 2) {
-            framingSegments.push(`Camera spatial offset / translation applied for reframing.`);
+            framingSegments.push('pan offset applied');
         }
+        const framingText = framingSegments.length ? `, ${framingSegments.join(', ')}` : '';
 
         return {
             finalPrompt: joinPromptSegments(prompt, [
-                `Synthesize a novel 3D spatial viewpoint of the scene with camera rotation: yaw=${yaw}° (${yawDesc}), pitch=${pitch}° (${pitchDesc}).`,
-                ...framingSegments,
-                'The input image provides 3D Gaussian splatting spatial guidance with 3D parallax perspective.',
-                'The bright green (R:0, G:255, B:0) background areas represent disocclusion gaps created by the viewpoint change that must be photorealistically inpainted and completed with natural scene environment, geometry, consistent lighting, and perspective.',
-                'Preserve the identity, textures, structure, and artistic style of the subject and scene from the original image.',
-                'Blend repainted disocclusion areas seamlessly and ensure no green pixels remain.',
+                `Render [Src_1] from the 3D camera viewpoint in [Edit_1] (yaw=${yaw}°, pitch=${pitch}°${framingText}).`,
+                'Inpaint the green background areas to complete the scene, preserving the subject, style, lighting, and details from [Src_1].',
             ]),
             finalModeLabel,
         };

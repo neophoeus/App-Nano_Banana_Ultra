@@ -520,6 +520,7 @@ export function useWorkspaceEditorActions({
             extraObjectImages?: string[],
             extraCharacterImages?: string[],
             targetRatio?: AspectRatio,
+            sourceImageInput?: string,
         ) => {
             const sourceOverride = editorContextSnapshot
                 ? {
@@ -548,6 +549,7 @@ export function useWorkspaceEditorActions({
                 extraObjectImages,
                 extraCharacterImages,
                 sourceOverride,
+                sourceImageInput,
             );
         },
         [
@@ -570,6 +572,7 @@ export function useWorkspaceEditorActions({
             extraObjectImages?: string[],
             extraCharacterImages?: string[],
             targetRatio?: AspectRatio,
+            sourceImageInput?: string,
         ) => {
             const sourceOverride = editorContextSnapshot
                 ? {
@@ -582,6 +585,7 @@ export function useWorkspaceEditorActions({
             await queueBatchJobFromEditor({
                 prompt: editPrompt,
                 editingInput: imageBase64,
+                sourceImageInput,
                 batchSize: editBatchSize,
                 imageSize: editSize,
                 aspectRatio: targetRatio || aspectRatio,

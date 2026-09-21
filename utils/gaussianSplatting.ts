@@ -152,8 +152,8 @@ export const estimatePixelDepth = (normX: number, normY: number, r: number, g: n
 };
 
 export interface PointCloudGenerationOptions {
-    /** Target sample resolution along the longest axis (e.g. 96 for draft, 160 for high) */
-    sampleDensity?: 'draft' | 'high' | number;
+    /** Target sample resolution along the longest axis (e.g. 96 for draft, 160 for high, 240 for submission) */
+    sampleDensity?: 'draft' | 'high' | 'submission' | number;
 }
 
 /**
@@ -166,7 +166,8 @@ export const createGaussianPointCloudFromImage = (
     options: PointCloudGenerationOptions = {},
 ): GaussianPointCloud => {
     const density = options.sampleDensity ?? 'draft';
-    const targetSteps = typeof density === 'number' ? density : density === 'high' ? 160 : 96;
+    const targetSteps =
+        typeof density === 'number' ? density : density === 'submission' ? 240 : density === 'high' ? 160 : 96;
 
     const aspect = width / Math.max(1, height);
     let sampleW: number;
@@ -297,10 +298,12 @@ export const renderGaussianSplatsToCanvas = (
     options?: {
         clearColor?: string;
         splatScaleMultiplier?: number;
+        renderMode?: 'splat' | 'smooth';
     },
 ): void => {
     const clearColor = options?.clearColor ?? '#00ff00';
     const scaleMul = options?.splatScaleMultiplier ?? 1.25;
+    const renderMode = options?.renderMode ?? 'smooth';
 
     // Fill background with bright green mask (represents disoccluded areas for Gemini)
     ctx.fillStyle = clearColor;
@@ -308,13 +311,23 @@ export const renderGaussianSplatsToCanvas = (
 
     const projected = projectAndSortSplats(cloud, camera, width, height);
 
-    for (let i = 0; i < projected.length; i++) {
-        const p = projected[i];
-        const r = p.screenRadius * scaleMul;
+    if (renderMode === 'smooth') {
+        // Continuous micro-quads prevent circular bubble disc artifacts and render significantly faster
+        for (let i = 0; i < projected.length; i++) {
+            const p = projected[i];
+            const r = p.screenRadius * scaleMul;
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.screenX - r, p.screenY - r, r * 2, r * 2);
+        }
+    } else {
+        for (let i = 0; i < projected.length; i++) {
+            const p = projected[i];
+            const r = p.screenRadius * scaleMul;
 
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.screenX, p.screenY, r, 0, Math.PI * 2);
-        ctx.fill();
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.screenX, p.screenY, r, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 };

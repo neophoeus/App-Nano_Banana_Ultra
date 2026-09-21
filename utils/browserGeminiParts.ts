@@ -19,6 +19,7 @@ export type BrowserGeneratePart = {
 type BrowserGenerateBodyLike = {
     prompt?: string;
     editingInput?: string;
+    sourceImageInput?: string;
     objectImageInputs?: string[];
     characterImageInputs?: string[];
 };
@@ -127,6 +128,7 @@ export const buildBrowserGenerateParts = async (body: BrowserGenerateBodyLike): 
     const prompt = String(body.prompt || 'A creative image.');
 
     await pushImagesToParts(parts, body.editingInput ? [body.editingInput] : [], 'Edit');
+    await pushImagesToParts(parts, body.sourceImageInput ? [body.sourceImageInput] : [], 'Src');
     await pushImagesToParts(parts, Array.isArray(body.objectImageInputs) ? body.objectImageInputs : [], 'Obj');
     await pushImagesToParts(parts, Array.isArray(body.characterImageInputs) ? body.characterImageInputs : [], 'Char');
     parts.push({ text: prompt });

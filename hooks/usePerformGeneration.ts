@@ -288,6 +288,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
             extraObjectImages?: string[],
             extraCharacterImages?: string[],
             sourceOverride?: GenerationSourceOverride | null,
+            sourceImageInput?: string,
         ) => {
             const isStyleTransfer =
                 (objectImages.length > 0 || characterImages.length > 0) && targetStyle !== 'None' && !editingInput;
@@ -329,9 +330,10 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
             let finalCharacterInputs: string[] = [];
 
             if (editingInput) {
-                finalObjectInputs = [editingInput];
+                // When editingInput is present, extraObjectImages contains the user's actual reference objects
+                // and editingInput is sent as its own independent parameter (becoming [Edit_1]).
                 if (extraObjectImages && extraObjectImages.length > 0) {
-                    finalObjectInputs = [...finalObjectInputs, ...extraObjectImages];
+                    finalObjectInputs = [...extraObjectImages];
                 }
                 if (extraCharacterImages && extraCharacterImages.length > 0) {
                     finalCharacterInputs = [...extraCharacterImages];
@@ -732,6 +734,8 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                             aspectRatio: effectiveAspectRatio,
                             imageSize: currentImageSize,
                             style: targetStyle,
+                            editingInput,
+                            sourceImageInput,
                             objectImageInputs: finalObjectInputs,
                             characterImageInputs: finalCharacterInputs,
                             model: targetModel,

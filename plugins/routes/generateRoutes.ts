@@ -41,6 +41,7 @@ type ImageGenerateBody = {
     aspectRatio?: string;
     imageSize?: string;
     editingInput?: string;
+    sourceImageInput?: string;
     objectImageInputs?: string[];
     characterImageInputs?: string[];
     outputFormat?: 'images-only' | 'images-and-text';

@@ -32,7 +32,7 @@ The workspace features a dual-engine architecture combining both the Local API (
 - built-in SketchPad workflow for rough ideation before generation
 - editor workflow for inpainting, doodling, outpainting, and follow-up refinement
 - Reframe mode with exact rotated bounding-box Fit/Fill view preservation and 45° horseshoe magnetic angle snap
-- Revolve mode with 3D Gaussian Splatting (3DGS) spatial perspective control, Orbit/Pan tools, vertical Zoom slider (20%~300%), wheel zoom, and right-click drag pan shortcut
+- Revolve mode with 3D Gaussian Splatting (3DGS) spatial perspective control, Orbit/Pan tools, vertical Zoom slider (20%~300%), wheel zoom, right-click drag pan shortcut, independent [Src_1] source image channel protecting user references, and universal multi-style prompt conditioning
 - direct Versions and stage-source visibility so it stays clear what the next pass is built from
 
 ### Review
@@ -114,9 +114,13 @@ Nano Banana Ultra currently supports four Gemini image-model paths. The UI expos
 
 ## Version Overview
 
-### Latest Release: 4.5.0
+### Latest Release: 4.6.1
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
+
+### 4.6.x+ (4.x Series)
+
+Version 4.6.x introduces full 3D interactive spatial camera manipulation in Revolve mode (Orbit/Pan tools, 20%~300% zoom, right-click pan shortcut) powered by continuous micro-quad 3D Gaussian Splatting (3DGS). It completely decouples the Revolve source image into an independent first-class channel (`[Src_1]`) alongside the 3D viewpoint guidance (`[Edit_1]`), fully preserving user-uploaded reference images (`[Obj_1]`, `[Obj_2]`) while adopting a universal, style-agnostic 2-sentence prompt contract suitable for any subject and art style.
 
 ### 4.5.x+ (4.x Series)
 

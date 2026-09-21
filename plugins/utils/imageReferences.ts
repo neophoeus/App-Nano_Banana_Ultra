@@ -40,6 +40,7 @@ type ReferenceImage = {
 type GenerateImageBodyLike = {
     prompt?: string;
     editingInput?: string;
+    sourceImageInput?: string;
     objectImageInputs?: string[];
     characterImageInputs?: string[];
 };
@@ -278,6 +279,7 @@ export function buildGenerateParts(
     const prompt = String(body.prompt || 'A creative image.');
 
     pushImagesToParts(parts, body.editingInput ? [body.editingInput] : [], 'Edit', resolvedDir);
+    pushImagesToParts(parts, body.sourceImageInput ? [body.sourceImageInput] : [], 'Src', resolvedDir);
     pushImagesToParts(parts, objectImageInputs, 'Obj', resolvedDir);
     pushImagesToParts(parts, characterImageInputs, 'Char', resolvedDir);
     parts.push({
@@ -296,6 +298,7 @@ export async function buildGenerateFileParts(
     const prompt = String(body.prompt || 'A creative image.');
 
     await pushFileImagesToParts(parts, body.editingInput ? [body.editingInput] : [], 'Edit', resolveFileImage);
+    await pushFileImagesToParts(parts, body.sourceImageInput ? [body.sourceImageInput] : [], 'Src', resolveFileImage);
     await pushFileImagesToParts(parts, objectImageInputs, 'Obj', resolveFileImage);
     await pushFileImagesToParts(parts, characterImageInputs, 'Char', resolveFileImage);
     parts.push({ text: prompt });

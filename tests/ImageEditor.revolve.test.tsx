@@ -389,12 +389,20 @@ describe('ImageEditor revolve mode (3D Gaussian Splatting perspective, pan, and 
             });
 
             expect(onGenerate).toHaveBeenCalledTimes(1);
-            const [submittedPrompt, , , , modeLabel] = onGenerate.mock.calls[0];
+            const [submittedPrompt, , , , modeLabel, submittedObjectImages, , , submittedSourceImage] =
+                onGenerate.mock.calls[0];
 
             expect(modeLabel).toBe('Revolving');
-            expect(submittedPrompt).toContain('yaw=30°');
-            expect(submittedPrompt).toContain('Camera zoom-in framing factor 1.40x');
-            expect(submittedPrompt).toContain('3D Gaussian splatting spatial guidance');
+            expect(submittedPrompt).toContain(
+                'Render [Src_1] from the 3D camera viewpoint in [Edit_1] (yaw=30°, pitch=0°, zoom 1.40x).',
+            );
+            expect(submittedPrompt).toContain(
+                'Inpaint the green background areas to complete the scene, preserving the subject, style, lighting, and details from [Src_1].',
+            );
+            expect(submittedPrompt).not.toContain('[Obj_1]');
+            expect(submittedPrompt).not.toContain('[Obj_2]');
+            expect(submittedSourceImage).toBe('https://example.com/source.png');
+            expect(submittedObjectImages).toEqual([]);
         } finally {
             window.Image = originalImage;
             vi.restoreAllMocks();
@@ -445,5 +453,92 @@ describe('ImageEditor revolve mode (3D Gaussian Splatting perspective, pan, and 
         });
 
         expect(onModeChange).toHaveBeenCalledWith('revolve');
+    });
+
+    it('queues batch submission payload in revolve mode with independent source image input', async () => {
+        const onQueueBatch = vi.fn();
+        const originalImage = window.Image;
+        const originalCreateElement = document.createElement.bind(document);
+
+        const mockCtx = {
+            fillStyle: '',
+            fillRect: vi.fn(),
+            beginPath: vi.fn(),
+            arc: vi.fn(),
+            fill: vi.fn(),
+            save: vi.fn(),
+            restore: vi.fn(),
+            translate: vi.fn(),
+            rotate: vi.fn(),
+            scale: vi.fn(),
+            clearRect: vi.fn(),
+            drawImage: vi.fn(),
+            getImageData: vi.fn(() => ({
+                data: new Uint8ClampedArray(400),
+                width: 10,
+                height: 10,
+            })),
+        };
+
+        vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
+            if (tagName === 'canvas') {
+                const canvas = originalCreateElement('canvas');
+                vi.spyOn(canvas, 'getContext').mockImplementation((type: string) => {
+                    if (type === '2d') return mockCtx as any;
+                    return null;
+                });
+                vi.spyOn(canvas, 'toDataURL').mockReturnValue('data:image/png;base64,mockRevolveData');
+                return canvas;
+            }
+            return originalCreateElement(tagName);
+        });
+
+        class MockImage {
+            width = 800;
+            height = 600;
+            onload: (() => void) | null = null;
+            set src(_value: string) {
+                queueMicrotask(() => {
+                    this.onload?.();
+                });
+            }
+        }
+        window.Image = MockImage as any;
+
+        try {
+            renderRevolveEditor({
+                initialPreparedSource: { width: 800, height: 600, wasResized: false },
+                supportsQueuedBatch: true,
+                onQueueBatch,
+                objectImages: ['https://example.com/extra-ref.png'],
+            });
+
+            await act(async () => {
+                await new Promise((r) => setTimeout(r, 60));
+            });
+
+            const queueBtn = container.querySelector('[data-testid="editor-queue-batch"]') as HTMLButtonElement;
+            expect(queueBtn).not.toBeNull();
+            act(() => {
+                queueBtn.click();
+            });
+
+            expect(onQueueBatch).toHaveBeenCalledTimes(1);
+            const [submittedPrompt, , , , modeLabel, submittedObjectImages, , , submittedSourceImage] =
+                onQueueBatch.mock.calls[0];
+
+            expect(modeLabel).toBe('Revolving');
+            expect(submittedPrompt).toContain('Render [Src_1] from the 3D camera viewpoint in [Edit_1]');
+            expect(submittedPrompt).toContain(
+                'Inpaint the green background areas to complete the scene, preserving the subject, style, lighting, and details from [Src_1].',
+            );
+            expect(submittedPrompt).not.toContain('[Obj_1]');
+            expect(submittedPrompt).not.toContain('[Obj_2]');
+            expect(submittedSourceImage).toBe('https://example.com/source.png');
+            expect(submittedObjectImages).toEqual(['https://example.com/extra-ref.png']);
+        } finally {
+            window.Image = originalImage;
+            vi.restoreAllMocks();
+        }
     });
 });

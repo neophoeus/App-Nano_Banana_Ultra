@@ -113,7 +113,7 @@ describe('editorPromptBuilder', () => {
         expect(result.finalPrompt).not.toContain('The frame is already fully covered');
     });
 
-    it('builds revolve prompt with camera rotation, zoom framing, and pan offset instructions', () => {
+    it('builds revolve prompt with camera rotation, zoom framing, pan offset instructions, and independent [Src_1]/[Edit_1] conditioning', () => {
         const result = buildEditorPrompt({
             mode: 'revolve',
             prompt: 'Cinematic city street',
@@ -126,11 +126,17 @@ describe('editorPromptBuilder', () => {
             },
         });
 
-        expect(result.finalPrompt).toContain('yaw=25° (rotated 25° to the right)');
-        expect(result.finalPrompt).toContain('pitch=-15° (lowered 15° downwards (low angle))');
-        expect(result.finalPrompt).toContain('Camera zoom-in framing factor 1.50x (closer view).');
-        expect(result.finalPrompt).toContain('Camera spatial offset / translation applied for reframing.');
-        expect(result.finalPrompt).toContain('3D Gaussian splatting spatial guidance with 3D parallax perspective');
+        expect(result.finalPrompt).toContain(
+            'Render [Src_1] from the 3D camera viewpoint in [Edit_1] (yaw=25°, pitch=-15°, zoom 1.50x, pan offset applied).',
+        );
+        expect(result.finalPrompt).toContain(
+            'Inpaint the green background areas to complete the scene, preserving the subject, style, lighting, and details from [Src_1].',
+        );
+        expect(result.finalPrompt).not.toContain('[Obj_1]');
+        expect(result.finalPrompt).not.toContain('[Obj_2]');
+        expect(result.finalPrompt).not.toContain('photorealistic');
+        expect(result.finalPrompt).not.toContain('dots');
+        expect(result.finalPrompt).not.toContain('splatters');
         expect(result.finalModeLabel).toBe('Revolving');
     });
 });
