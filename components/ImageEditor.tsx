@@ -424,12 +424,12 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     useEffect(() => {
         if (mode !== 'revolve' || !revolveCanvasRef.current) return;
         const canvas = revolveCanvasRef.current;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
 
         if (pointCloudRef.current && pointCloudRef.current.splats.length > 0) {
-            renderGaussianSplatsToCanvas(ctx, pointCloudRef.current, revolveTransform, canvas.width, canvas.height);
+            renderGaussianSplatsToCanvas(canvas, pointCloudRef.current, revolveTransform, canvas.width, canvas.height);
         } else if (imgElement && originalDims.w > 0) {
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
             ctx.fillStyle = '#00ff00';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.save();
