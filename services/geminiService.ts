@@ -1689,7 +1689,7 @@ export const submitQueuedBatchJob = async (options: SubmitQueuedBatchOptions): P
     const requestPayload = {
         ...buildImageGenerateRequestBody(options, finalPrompt),
         executionMode: 'queued-batch-job' as const,
-        requestCount: 1,
+        requestCount: Math.max(1, Math.min(10, Math.floor(options.requestCount || 1))),
         displayName: options.displayName,
     };
 
@@ -1770,6 +1770,60 @@ export const cancelQueuedBatchJob = async (name: string): Promise<RemoteQueuedBa
     );
 
     return response.job;
+};
+
+export const listQueuedBatchJobs = async (pageSize = 20): Promise<RemoteQueuedBatchJob[]> => {
+    const requestPayload = { pageSize };
+    const response = await fetchJson<{ jobs: RemoteQueuedBatchJob[] }>(
+        '/api/batches/list',
+        {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify(requestPayload),
+        },
+        {
+            source: 'batch',
+            route: '/api/batches/list',
+            method: 'POST',
+            operation: 'Batch list',
+            requestLabel: 'Batch list request',
+            requestSummary: `Page size: ${pageSize}`,
+            requestPayload,
+            responseLabel: 'Batch list response',
+            responseSummary: (result: { jobs: RemoteQueuedBatchJob[] }) => `${result.jobs.length} remote job(s) found`,
+            responsePayload: (result: { jobs: RemoteQueuedBatchJob[] }) => ({ count: result.jobs.length }),
+            errorLabel: 'Batch list request failed',
+        },
+    );
+
+    return response.jobs;
+};
+
+export const deleteQueuedBatchJob = async (name: string): Promise<{ ok: boolean; name: string }> => {
+    const requestPayload = { name };
+    const response = await fetchJson<{ ok: boolean; name: string }>(
+        '/api/batches/delete',
+        {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify(requestPayload),
+        },
+        {
+            source: 'batch',
+            route: '/api/batches/delete',
+            method: 'POST',
+            operation: 'Batch delete',
+            requestLabel: 'Batch delete request',
+            requestSummary: name,
+            requestPayload,
+            responseLabel: 'Batch delete response',
+            responseSummary: (result: { ok: boolean; name: string }) => `Deleted ${result.name}`,
+            responsePayload: (result: { ok: boolean; name: string }) => result,
+            errorLabel: 'Batch delete failed',
+        },
+    );
+
+    return response;
 };
 
 export const importQueuedBatchJobResults = async (

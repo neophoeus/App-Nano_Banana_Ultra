@@ -13,15 +13,13 @@ import ComposerSettingsPanel from './components/ComposerSettingsPanel';
 import DebugTerminalPanel, { DebugTerminalToggleIcon } from './components/DebugTerminalPanel';
 import PanelLoadingFallback from './components/PanelLoadingFallback';
 import SurfaceLoadingFallback from './components/SurfaceLoadingFallback';
-import WorkspaceDetailModal from './components/WorkspaceDetailModal';
-import WorkspaceModalFrame from './components/WorkspaceModalFrame';
 import WorkspaceOverlayStack from './components/WorkspaceOverlayStack';
 import WorkspaceSideToolPanel from './components/WorkspaceSideToolPanel';
-import WorkspaceSupportDetailSurface from './components/WorkspaceSupportDetailSurface';
 import WorkspaceBottomFooter from './components/WorkspaceBottomFooter';
 import WorkspaceTopHeader from './components/WorkspaceTopHeader';
 import WorkspaceUnifiedHistoryPanel from './components/WorkspaceUnifiedHistoryPanel';
-import WorkspaceProgressCard from './components/WorkspaceProgressCard';
+import WorkspaceDetailOverlays from './components/WorkspaceDetailOverlays';
+import WorkspaceSupportRail, { renderWorkspaceSupportRail } from './components/WorkspaceSupportRail';
 import type { WorkspaceProgressThoughtImageDownloadRequest } from './components/WorkspaceProgressDetailPanel';
 import { WorkspaceFloatingLayerContext } from './components/WorkspaceFloatingLayerContext';
 import { resolveStyleLabel } from './utils/styleRegistry';
@@ -35,10 +33,6 @@ import {
 } from './utils/translations';
 import { IMAGE_MODELS, MODEL_CAPABILITIES } from './constants';
 import { buildStageErrorState } from './utils/generationFailure';
-import {
-    topLauncherCompactButtonClassName,
-    topLauncherCompactLabelClassName,
-} from './utils/workspaceTopLauncherStyles';
 import {
     clearSharedWorkspaceSnapshot,
     clearStoredWorkspaceSnapshot,
@@ -103,57 +97,18 @@ import { useRateLimitNotice } from './utils/rateLimitNotice';
 import { resolveCurrentStageSelectionFirstSourceOverride } from './utils/generationSourceOverride';
 import { buildSavedImageLoadUrl, loadImageMetadata } from './utils/imageSaveUtils';
 import {
-    buildImageSidecarMetadata,
     createImageSidecarMetadataState,
     normalizeImageSidecarMetadata,
 } from './utils/imageSidecarMetadata';
-import { buildResultPartFilenameStem, buildSavedImageFilenameStem } from './utils/savedImageFilename';
-import { downloadImageSource, downloadJsonDocument, stripFilenameExtension } from './utils/browserDownload';
-import { WORKSPACE_OVERLAY_Z_INDEX } from './constants/workspaceOverlays';
+import { useStageImageDownloadActions } from './hooks/useStageImageDownloadActions';
+import { useBatchPreviewSession } from './hooks/useBatchPreviewSession';
 
 const ImageEditor = lazy(() => import('./components/ImageEditor'));
 const GeneratedImage = lazy(() => import('./components/GeneratedImage'));
 const WorkspaceHealthPanel = lazy(() => import('./components/WorkspaceHealthPanel'));
 const GroundingProvenancePanel = lazy(() => import('./components/GroundingProvenancePanel'));
-const WorkspaceProgressDetailPanel = lazy(() => import('./components/WorkspaceProgressDetailPanel'));
-const WorkspaceEvidenceDetailPanel = lazy(() => import('./components/WorkspaceEvidenceDetailPanel'));
-const WorkspaceVersionsDetailPanel = lazy(() => import('./components/WorkspaceVersionsDetailPanel'));
-const QueuedBatchJobsPanel = lazy(() => import('./components/QueuedBatchJobsPanel'));
 const SketchPad = lazy(() => import('./components/SketchPad'));
 const getShortTurnId = (historyId?: string | null) => (historyId ? historyId.slice(0, 8) : '--------');
-
-const buildResultPartIdentityKey = (part: ResultPart) =>
-    'text' in part
-        ? `${part.kind}:${part.sequence}:${part.text}`
-        : `${part.kind}:${part.sequence}:${part.mimeType}:${part.imageUrl}`;
-
-const TopLauncherSignal = ({ active, dataTestId }: { active: boolean; dataTestId: string }) => {
-    const activeOuterClassName =
-        'bg-amber-300/60 shadow-[0_0_18px_rgba(251,191,36,0.52)] dark:bg-amber-300/40 dark:shadow-[0_0_20px_rgba(251,191,36,0.36)]';
-    const activeInnerClassName = 'bg-amber-400 ring-2 ring-amber-100/90 dark:bg-amber-300 dark:ring-amber-400/30';
-    const inactiveOuterClassName =
-        'bg-slate-200/65 ring-1 ring-slate-500/15 shadow-inner shadow-slate-400/20 opacity-95 dark:bg-slate-700/40 dark:ring-slate-400/20 dark:shadow-black/20';
-    const inactiveInnerClassName = 'bg-slate-500/70 dark:bg-slate-400/70';
-
-    return (
-        <span
-            data-testid={dataTestId}
-            aria-hidden="true"
-            className="relative inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center"
-        >
-            <span
-                className={`absolute inset-0 rounded-full transition-all duration-300 ${
-                    active ? `${activeOuterClassName} animate-pulse opacity-100` : inactiveOuterClassName
-                }`}
-            />
-            <span
-                className={`relative h-1.5 w-1.5 rounded-full transition-all duration-300 ${
-                    active ? activeInnerClassName : inactiveInnerClassName
-                }`}
-            />
-        </span>
-    );
-};
 
 const App: React.FC = () => {
     const [initialWorkspaceSnapshot] = useState(() => loadWorkspaceSnapshot());
@@ -236,7 +191,6 @@ const App: React.FC = () => {
     const languageChangeRequestRef = useRef(0);
     const lastPromotedHistoryIdRef = useRef<string | null>(null);
     const queuedBatchHistorySelectRef = useRef<((item: import('./types').GeneratedImage) => void) | null>(null);
-    const activeBatchPreviewSessionRef = useRef<BatchPreviewSession | null>(null);
 
     const {
         generatedImageUrls,
@@ -452,9 +406,6 @@ const App: React.FC = () => {
         },
         [t],
     );
-    useEffect(() => {
-        activeBatchPreviewSessionRef.current = activeBatchPreviewSession;
-    }, [activeBatchPreviewSession]);
 
     const markHistoryItemOpened = useCallback(
         (historyId: string) => {
@@ -629,231 +580,29 @@ const App: React.FC = () => {
         };
     }, [currentViewedCompletedHistoryItem, currentViewedCompletedHistoryMetadata, setSelectedMetadata]);
 
-    const handleBatchPreviewStart = useCallback(
-        ({ sessionId, batchSize }: { sessionId: string; batchSize: number }) => {
-            setActiveBatchPreviewSession({
-                id: sessionId,
-                batchSize,
-                didUserInspectExistingImage: false,
-                selectedPreviewSlotIndex: null,
-                tiles: Array.from({ length: batchSize }, (_, slotIndex) => ({
-                    id: `${sessionId}-${slotIndex}`,
-                    slotIndex,
-                    status: 'waiting',
-                    previewUrl: null,
-                    stagePreviewUrl: null,
-                    error: null,
-                })),
-            });
-        },
-        [],
-    );
-
-    useEffect(() => {
-        activeBatchPreviewSessionRef.current = activeBatchPreviewSession;
-    }, [activeBatchPreviewSession]);
-
-    const handleBatchPreviewTileUpdate = useCallback(
-        ({ sessionId, tile }: { sessionId: string; tile: BatchPreviewSession['tiles'][number] }) => {
-            setActiveBatchPreviewSession((previousSession) => {
-                if (!previousSession || previousSession.id !== sessionId) {
-                    return previousSession;
-                }
-
-                const nextSession = {
-                    ...previousSession,
-                    tiles: previousSession.tiles.map((candidateTile) =>
-                        candidateTile.slotIndex === tile.slotIndex ? { ...candidateTile, ...tile } : candidateTile,
-                    ),
-                };
-                activeBatchPreviewSessionRef.current = nextSession;
-                return nextSession;
-            });
-
-            if (tile.status === 'ready') {
-                const stagePreviewUrl = tile.stagePreviewUrl || tile.previewUrl;
-                const currentSession = activeBatchPreviewSessionRef.current;
-                if (stagePreviewUrl && currentSession?.id === sessionId && !currentSession.didUserInspectExistingImage) {
-                    setGeneratedImageUrls([stagePreviewUrl]);
-                    setSelectedImageIndex(0);
-                }
-            }
-        },
-        [setGeneratedImageUrls, setSelectedImageIndex],
-    );
-
-    const handleBatchPreviewComplete = useCallback(
-        ({ sessionId, historyItems }: { sessionId: string; historyItems: GeneratedImageType[] }) => {
-            const currentPreviewSession = activeBatchPreviewSessionRef.current;
-            if (!currentPreviewSession || currentPreviewSession.id !== sessionId) {
-                return;
-            }
-
-            setActiveBatchPreviewSession(null);
-
-            if (currentPreviewSession.didUserInspectExistingImage) {
-                const selectedPreviewSlotIndex = currentPreviewSession.selectedPreviewSlotIndex;
-                if (typeof selectedPreviewSlotIndex === 'number') {
-                    const selectedCommittedItem = historyItems.find(
-                        (historyItem) =>
-                            historyItem.status === 'success' &&
-                            getBatchVisualSlotIndex(historyItem) === selectedPreviewSlotIndex &&
-                            (historyItem.savedFilename || historyItem.url),
-                    );
-
-                    if (selectedCommittedItem) {
-                        silentlyShowHistoryItemOnStage(selectedCommittedItem);
-                    }
-                }
-
-                return;
-            }
-
-            const orderedBatchHistoryItems = [...historyItems].sort(
-                (leftItem, rightItem) => getBatchVisualSlotIndex(rightItem) - getBatchVisualSlotIndex(leftItem),
-            );
-            const autoOpenHistoryItem =
-                orderedBatchHistoryItems.find(
-                    (historyItem) => historyItem.status === 'success' && (historyItem.savedFilename || historyItem.url),
-                ) || orderedBatchHistoryItems[0];
-
-            if (autoOpenHistoryItem) {
-                if (autoOpenHistoryItem.status === 'failed') {
-                    silentlyShowFailedHistoryItemOnStage(autoOpenHistoryItem);
-                } else {
-                    silentlyShowHistoryItemOnStage(autoOpenHistoryItem);
-                }
-            }
-        },
-        [getBatchVisualSlotIndex, silentlyShowFailedHistoryItemOnStage, silentlyShowHistoryItemOnStage],
-    );
-
-    const handleBatchPreviewClear = useCallback(({ sessionId }: { sessionId: string }) => {
-        setActiveBatchPreviewSession((previousSession) => (previousSession?.id === sessionId ? null : previousSession));
-    }, []);
-
-    const handleBatchPreviewTileSelect = useCallback(
-        (tile: BatchPreviewSession['tiles'][number]) => {
-            if (tile.status !== 'ready') {
-                return;
-            }
-
-            const stagePreviewUrl = tile.stagePreviewUrl || tile.previewUrl;
-            if (!stagePreviewUrl) {
-                return;
-            }
-
-            setActiveBatchPreviewSession((previousSession) =>
-                previousSession
-                    ? {
-                          ...previousSession,
-                          didUserInspectExistingImage: true,
-                          selectedPreviewSlotIndex: tile.slotIndex,
-                      }
-                    : previousSession,
-            );
-            setGeneratedImageUrls([stagePreviewUrl]);
-            setSelectedImageIndex(0);
-            clearAssetRoles(['stage-source']);
-            resetSelectedOutputState();
-            setError(null);
-        },
-        [clearAssetRoles, resetSelectedOutputState, setError, setGeneratedImageUrls, setSelectedImageIndex],
-    );
-
-    const handleLiveProgressReset = useCallback(() => {
-        setActiveLiveProgressSession(null);
-    }, []);
-
-    const handleLiveProgressEvent = useCallback((event: GenerationLiveProgressEvent) => {
-        const batchSessionId = event.batchSessionId || event.sessionId;
-        const slotIndex = event.slotIndex ?? 0;
-
-        setActiveLiveProgressSession((previousSession) => {
-            const nextSession =
-                previousSession && previousSession.batchSessionId === batchSessionId
-                    ? previousSession
-                    : {
-                          batchSessionId,
-                          startedAtMs: Date.now(),
-                          slots: {},
-                      };
-
-            if (event.type === 'start') {
-                return {
-                    ...nextSession,
-                    slots: {
-                        ...nextSession.slots,
-                        [slotIndex]: {
-                            slotIndex,
-                            sessionId: event.sessionId,
-                            startedAtMs: Date.now(),
-                            resultParts: [],
-                            summary: null,
-                        },
-                    },
-                };
-            }
-
-            const previousSlot = nextSession.slots[slotIndex];
-            const nextSlot =
-                previousSlot && previousSlot.sessionId === event.sessionId
-                    ? previousSlot
-                    : {
-                          slotIndex,
-                          sessionId: event.sessionId,
-                          startedAtMs: previousSlot?.startedAtMs ?? Date.now(),
-                          resultParts: previousSlot?.resultParts || [],
-                          summary: previousSlot?.summary || null,
-                      };
-
-            if (event.type === 'summary') {
-                return {
-                    ...nextSession,
-                    slots: {
-                        ...nextSession.slots,
-                        [slotIndex]: {
-                            ...nextSlot,
-                            summary: event.summary,
-                        },
-                    },
-                };
-            }
-            const partKey = buildResultPartIdentityKey(event.part);
-            const alreadyIncluded = nextSlot.resultParts.some(
-                (candidate) => buildResultPartIdentityKey(candidate) === partKey,
-            );
-
-            if (alreadyIncluded) {
-                return nextSession;
-            }
-
-            return {
-                ...nextSession,
-                slots: {
-                    ...nextSession.slots,
-                    [slotIndex]: {
-                        ...nextSlot,
-                        resultParts: [...nextSlot.resultParts, event.part].sort(
-                            (left, right) => left.sequence - right.sequence,
-                        ),
-                    },
-                },
-            };
-        });
-    }, []);
-
-    const handleHistorySelectionDuringGeneration = useCallback(() => {
-        setActiveBatchPreviewSession((previousSession) =>
-            previousSession
-                ? {
-                      ...previousSession,
-                      didUserInspectExistingImage: true,
-                      selectedPreviewSlotIndex: null,
-                  }
-                : previousSession,
-        );
-    }, []);
+    const {
+        handleBatchPreviewStart,
+        handleBatchPreviewTileUpdate,
+        handleBatchPreviewComplete,
+        handleBatchPreviewClear,
+        handleBatchPreviewTileSelect,
+        handleLiveProgressReset,
+        handleLiveProgressEvent,
+        handleHistorySelectionDuringGeneration,
+    } = useBatchPreviewSession({
+        activeBatchPreviewSession,
+        setActiveBatchPreviewSession,
+        activeLiveProgressSession,
+        setActiveLiveProgressSession,
+        setGeneratedImageUrls,
+        setSelectedImageIndex,
+        clearAssetRoles,
+        resetSelectedOutputState,
+        setError,
+        getBatchVisualSlotIndex,
+        silentlyShowHistoryItemOnStage,
+        silentlyShowFailedHistoryItemOnStage,
+    });
 
     const getModelLabel = useCallback(
         (model: ImageModel) => {
@@ -1294,6 +1043,7 @@ const App: React.FC = () => {
         handleClearIssueQueuedJobs,
         handleClearImportedQueuedJobs,
         handleRemoveQueuedJob,
+        handleRecoverRecentQueuedJobs,
     } = useQueuedBatchWorkflow({
         initialQueuedJobs: initialQueuedBatchSpaceSnapshot.queuedJobs,
         history,
@@ -2121,120 +1871,25 @@ const App: React.FC = () => {
         },
         [getHistoryTurnById, handleHistorySelect],
     );
-    const handleDownloadStageImage = useCallback(
-        async (imageUrl: string) => {
-            try {
-                const matchedHistoryItem =
-                    history.find(
-                        (item) =>
-                            item.status === 'success' &&
-                            (item.savedFilename ? buildSavedImageLoadUrl(item.savedFilename) : item.url) === imageUrl,
-                    ) || null;
-                const preferredMetadata =
-                    matchedHistoryItem?.id === currentViewedCompletedHistoryItem?.id
-                        ? normalizeImageSidecarMetadata(selectedMetadata)
-                        : null;
-                const persistedHistoryMetadata = normalizeImageSidecarMetadata(matchedHistoryItem?.metadata);
-                const fallbackMetadata = buildImageSidecarMetadata({
-                    prompt: matchedHistoryItem?.prompt || viewSettings.prompt,
-                    model: matchedHistoryItem?.model || stageViewerSettings.model,
-                    style: matchedHistoryItem?.style || stageViewerSettings.imageStyle,
-                    aspectRatio: matchedHistoryItem?.aspectRatio || stageViewerSettings.aspectRatio,
-                    requestedImageSize: matchedHistoryItem?.size || stageViewerSettings.imageSize,
-                    outputFormat,
-                    temperature,
-                    thinkingLevel,
-                    includeThoughts,
-                    googleSearch,
-                    imageSearch,
-                    generationMode: matchedHistoryItem?.mode || generationMode,
-                    executionMode: matchedHistoryItem?.executionMode || executionMode,
-                    batchSize: stageViewerSettings.batchSize,
-                });
-                const baseMetadata = preferredMetadata || persistedHistoryMetadata || fallbackMetadata;
-                const imageFilename = await downloadImageSource(imageUrl, {
-                    filename: matchedHistoryItem?.savedFilename,
-                    filenameStem: buildSavedImageFilenameStem({
-                        model: matchedHistoryItem?.model || stageViewerSettings.model,
-                        mode: matchedHistoryItem?.mode || generationMode,
-                        slotIndex: selectedImageIndex,
-                        createdAt: matchedHistoryItem ? new Date(matchedHistoryItem.createdAt) : new Date(),
-                        requestId: matchedHistoryItem?.id || crypto.randomUUID(),
-                    }),
-                });
-                const metadataFilename = `${stripFilenameExtension(imageFilename)}.json`;
-                downloadJsonDocument(
-                    {
-                        ...baseMetadata,
-                        filename: baseMetadata.filename || imageFilename,
-                        timestamp:
-                            typeof baseMetadata.timestamp === 'string' && baseMetadata.timestamp.trim()
-                                ? baseMetadata.timestamp
-                                : new Date(matchedHistoryItem?.createdAt || Date.now()).toISOString(),
-                    },
-                    metadataFilename,
-                );
-                showNotification(t('stageDownloadCompleteNotice'), 'info');
-            } catch (error) {
-                console.error('Failed to download stage image', error);
-                showNotification(t('stageDownloadFailedNotice'), 'error');
-            }
-        },
-        [
-            currentViewedCompletedHistoryItem?.id,
-            executionMode,
-            generationMode,
-            googleSearch,
-            history,
-            imageSearch,
-            includeThoughts,
-            outputFormat,
-            selectedImageIndex,
-            selectedMetadata,
-            showNotification,
-            stageViewerSettings.aspectRatio,
-            stageViewerSettings.batchSize,
-            stageViewerSettings.imageSize,
-            stageViewerSettings.imageStyle,
-            stageViewerSettings.model,
-            t,
-            temperature,
-            thinkingLevel,
-            viewSettings.prompt,
-        ],
-    );
-    const handleDownloadThoughtImage = useCallback(
-        async ({
-            imageUrl,
-            mimeType,
-            savedFilename,
-            entryId,
-            slotIndex,
-            sequence,
-        }: WorkspaceProgressThoughtImageDownloadRequest) => {
-            try {
-                const historyItem = getHistoryTurnById(entryId);
-                await downloadImageSource(imageUrl, {
-                    filename: savedFilename,
-                    filenameStem: buildResultPartFilenameStem({
-                        model: historyItem?.model || stageViewerSettings.model,
-                        mode: historyItem?.mode || generationMode,
-                        slotIndex: typeof slotIndex === 'number' ? slotIndex : selectedImageIndex,
-                        createdAt: historyItem ? new Date(historyItem.createdAt) : new Date(),
-                        requestId: historyItem?.id || entryId || crypto.randomUUID(),
-                        sequence,
-                        sourceSavedFilename: historyItem?.savedFilename,
-                    }),
-                    mimeType,
-                });
-                showNotification(t('thoughtImageDownloadCompleteNotice'), 'info');
-            } catch (error) {
-                console.error('Failed to download thought image', error);
-                showNotification(t('thoughtImageDownloadFailedNotice'), 'error');
-            }
-        },
-        [generationMode, getHistoryTurnById, selectedImageIndex, showNotification, stageViewerSettings.model, t],
-    );
+    const { handleDownloadStageImage, handleDownloadThoughtImage } = useStageImageDownloadActions({
+        history,
+        currentViewedCompletedHistoryItem,
+        selectedMetadata,
+        viewPrompt: viewSettings.prompt,
+        stageViewerSettings,
+        outputFormat,
+        temperature,
+        thinkingLevel,
+        includeThoughts,
+        googleSearch,
+        imageSearch,
+        generationMode,
+        executionMode,
+        selectedImageIndex,
+        getHistoryTurnById,
+        showNotification,
+        t,
+    });
     const stableHandleGenerateRef = useRef(handleGenerate);
     stableHandleGenerateRef.current = handleGenerate;
     const stableHandleGenerate = useCallback(() => {
@@ -2432,40 +2087,18 @@ const App: React.FC = () => {
             effectiveSessionHints,
             t,
         });
-    const supportRail = (
-        <>
-            <WorkspaceProgressCard
-                currentLanguage={currentLang}
-                thoughtsText={progressThoughtsSummaryText}
-                hasThoughtArtifacts={hasProgressActivity}
-                onOpenDetails={handleOpenProgressDetails}
-            />
-            <button
-                type="button"
-                data-testid="workspace-sources-open-details"
-                onClick={handleOpenSourcesDetails}
-                className={`${topLauncherCompactButtonClassName} nbu-shell-surface-context-rail hover:border-sky-300 dark:hover:border-sky-500/30`}
-            >
-                <span className="flex min-w-0 items-center gap-2">
-                    <TopLauncherSignal active={hasSourceTrailInfo} dataTestId="workspace-sources-signal" />
-                    <span className={topLauncherCompactLabelClassName}>{t('workspaceSupportSources')}</span>
-                </span>
-            </button>
-            {executionModeCapabilities.supportsQueuedBatch ? (
-                <button
-                    type="button"
-                    data-testid="workspace-queue-open-details"
-                    onClick={handleOpenQueuedBatchJobs}
-                    className={`${topLauncherCompactButtonClassName} nbu-shell-surface-context-rail hover:border-emerald-300 dark:hover:border-emerald-500/30`}
-                >
-                    <span className="flex min-w-0 items-center gap-2">
-                        <TopLauncherSignal active={hasQueuedBatchActivity} dataTestId="workspace-queue-signal" />
-                        <span className={topLauncherCompactLabelClassName}>{t('workspaceQueueLauncher')}</span>
-                    </span>
-                </button>
-            ) : null}
-        </>
-    );
+    const supportRail = renderWorkspaceSupportRail({
+        currentLanguage: currentLang,
+        progressThoughtsSummaryText,
+        hasProgressActivity,
+        hasSourceTrailInfo,
+        hasQueuedBatchActivity,
+        supportsQueuedBatch: executionModeCapabilities.supportsQueuedBatch,
+        onOpenProgressDetails: handleOpenProgressDetails,
+        onOpenSourcesDetails: handleOpenSourcesDetails,
+        onOpenQueuedBatchJobs: handleOpenQueuedBatchJobs,
+        t,
+    });
     const workspaceTopHeaderProps = useWorkspaceTopHeaderProps({
         headerConsole,
         currentLanguage: currentLang,
@@ -2571,255 +2204,60 @@ const App: React.FC = () => {
             workspaceSession.sourceHistoryId,
         ],
     );
-    const workspaceDetailOverlays =
-        activeWorkspaceDetailModal === 'progress' || activeWorkspaceDetailModal === 'sources' ? (
-            (() => {
-                if (activeWorkspaceDetailModal === 'progress') {
-                    return (
-                        <WorkspaceSupportDetailSurface
-                            dataTestId="workspace-progress-detail-modal"
-                            title={t('workspaceSupportProgress')}
-                            closeLabel={t('workspaceViewerClose')}
-                            onClose={handleCloseWorkspaceDetailModal}
-                            compact={true}
-                            desktopWidthClass="max-w-[1120px]"
-                        >
-                            <Suspense
-                                fallback={
-                                    <PanelLoadingFallback
-                                        label={t('workspaceSupportProgress')}
-                                        className="nbu-dashed-panel min-h-[220px] rounded-[20px] px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400"
-                                    />
-                                }
-                            >
-                                <WorkspaceProgressDetailPanel
-                                    currentLanguage={currentLang}
-                                    thoughtEntries={progressThoughtEntries}
-                                    onDownloadThoughtImage={handleDownloadThoughtImage}
-                                    latestWorkflowEntry={latestWorkflowEntry}
-                                    isGenerating={isGenerating}
-                                    batchProgress={batchProgress}
-                                    queuedJobs={queuedJobs}
-                                    getImportedQueuedResultCount={getImportedQueuedResultCount}
-                                    resultStatusSummary={groundingResolutionStatusSummary}
-                                    resultStatusTone={groundingResolutionStatusTone}
-                                    thoughtsText={progressThoughtsSummaryText}
-                                    thoughtsPlaceholder={thoughtStateMessage}
-                                />
-                            </Suspense>
-                        </WorkspaceSupportDetailSurface>
-                    );
-                }
-
-                return (
-                    <WorkspaceSupportDetailSurface
-                        dataTestId="workspace-sources-detail-modal"
-                        title={t('workspaceSupportSources')}
-                        closeLabel={t('workspaceViewerClose')}
-                        onClose={handleCloseWorkspaceDetailModal}
-                    >
-                        <Suspense
-                            fallback={
-                                <PanelLoadingFallback
-                                    label={t('workspaceSupportSources')}
-                                    className="nbu-dashed-panel min-h-[220px] rounded-[20px] px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400"
-                                />
-                            }
-                        >
-                            <WorkspaceEvidenceDetailPanel
-                                currentLanguage={currentLang}
-                                provenanceSummaryRows={provenanceSummaryRows}
-                                provenanceContinuityMessage={provenanceContinuityMessage}
-                                groundingStateMessage={groundingStateMessage}
-                                groundingSupportMessage={groundingSupportMessage}
-                                totalSourceCount={selectedSources.length}
-                                totalSupportBundleCount={selectedSupportBundles.length}
-                            >
-                                {contextProvenanceDetailPanel}
-                            </WorkspaceEvidenceDetailPanel>
-                        </Suspense>
-                    </WorkspaceSupportDetailSurface>
-                );
-            })()
-        ) : activeWorkspaceDetailModal === 'versions' ? (
-            <WorkspaceDetailModal
-                dataTestId="workspace-versions-detail-modal"
-                title={t('workspaceInsightsVersions')}
-                closeLabel={t('workspaceViewerClose')}
-                onClose={handleCloseWorkspaceDetailModal}
-            >
-                <Suspense
-                    fallback={
-                        <PanelLoadingFallback
-                            label={t('workspaceInsightsVersions')}
-                            className="nbu-dashed-panel min-h-[220px] rounded-[20px] px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400"
-                        />
-                    }
-                >
-                    <WorkspaceVersionsDetailPanel {...versionsDetailPanelProps} showHeader={false} />
-                </Suspense>
-            </WorkspaceDetailModal>
-        ) : isQueuedBatchSpaceOpen ? (
-            <WorkspaceSupportDetailSurface
-                dataTestId="workspace-queued-batch-space-modal"
-                title={t('queuedBatchJobsTitle')}
-                closeLabel={t('workspaceViewerClose')}
-                onClose={handleCloseWorkspaceDetailModal}
-                description={t('queuedBatchJobsDesc')}
-                desktopWidthClass="max-w-[980px]"
-            >
-                <Suspense
-                    fallback={
-                        <PanelLoadingFallback
-                            label={t('queuedBatchJobsTitle')}
-                            className="nbu-dashed-panel min-h-[220px] rounded-[20px] px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400"
-                        />
-                    }
-                >
-                    <QueuedBatchJobsPanel
-                        currentLanguage={currentLang}
-                        queuedJobs={queuedJobs}
-                        surface="embedded"
-                        queueBatchConversationNotice={queueBatchConversationNotice}
-                        getLineageActionLabel={getLineageActionLabel}
-                        getImportedQueuedResultCount={getImportedQueuedResultCount}
-                        getImportedQueuedHistoryItems={getImportedQueuedHistoryItems}
-                        activeImportedQueuedHistoryId={currentStageSourceHistoryId}
-                        onImportAllQueuedJobs={handleImportAllQueuedJobs}
-                        onPollAllQueuedJobs={handlePollAllQueuedJobs}
-                        onPollQueuedJob={handlePollQueuedJob}
-                        onCancelQueuedJob={handleCancelQueuedJob}
-                        onImportQueuedJob={handleImportQueuedJob}
-                        onOpenImportedQueuedJob={handleOpenImportedQueuedJob}
-                        onOpenLatestImportedQueuedJob={handleOpenLatestImportedQueuedJob}
-                        onOpenImportedQueuedHistoryItem={handleOpenImportedQueuedHistoryItem}
-                        onClearIssueQueuedJobs={handleClearIssueQueuedJobs}
-                        onClearImportedQueuedJobs={handleClearImportedQueuedJobs}
-                        onRemoveQueuedJob={handleRemoveQueuedJob}
-                    />
-                </Suspense>
-            </WorkspaceSupportDetailSurface>
-        ) : null;
-    const workspaceClearConfirmOverlay = showClearWorkspaceConfirm ? (
-        <WorkspaceModalFrame
-            dataTestId="workspace-unified-history-clear-confirm"
-            zIndex={WORKSPACE_OVERLAY_Z_INDEX.historyConfirm}
-            maxWidthClass="max-w-sm"
-            onClose={handleCloseClearWorkspaceConfirm}
-            closeLabel={t('clearHistoryCancel')}
-            title={t('clearHistoryTitle')}
-            description={t('clearHistoryMsg')}
-            hideCloseButton
-            panelClassName="nbu-modal-shell"
-            headerClassName="justify-center border-b-0 px-6 pt-6 pb-4 text-center"
-            headerExtra={
-                <div className="mt-4 flex justify-center">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                        </svg>
-                    </div>
-                </div>
-            }
-        >
-            <div className="flex gap-2 border-t border-gray-100 bg-gray-50 p-2 dark:border-gray-800 dark:bg-gray-900/50">
-                <button
-                    type="button"
-                    data-testid="workspace-unified-history-clear-cancel"
-                    onClick={handleCloseClearWorkspaceConfirm}
-                    className="flex-1 rounded-xl border border-transparent px-4 py-2.5 text-sm font-bold text-gray-600 transition-all hover:border-gray-200 hover:bg-white dark:text-gray-300 dark:hover:border-gray-700 dark:hover:bg-gray-800"
-                >
-                    {t('clearHistoryCancel')}
-                </button>
-                <button
-                    type="button"
-                    data-testid="workspace-unified-history-clear-confirm-action"
-                    onClick={handleConfirmClearWorkspace}
-                    className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-500/30 transition-all hover:bg-red-600"
-                >
-                    {t('clearHistoryConfirm')}
-                </button>
-            </div>
-        </WorkspaceModalFrame>
-    ) : null;
     const handleCloseStorageWarningModal = useCallback(() => {
         setShowStorageWarningModal(false);
     }, []);
-    const workspaceStorageWarningOverlay = showStorageWarningModal ? (
-        <WorkspaceModalFrame
-            dataTestId="workspace-storage-warning-modal"
-            zIndex={WORKSPACE_OVERLAY_Z_INDEX.historyConfirm}
-            maxWidthClass="max-w-sm"
-            onClose={handleCloseStorageWarningModal}
-            closeLabel={t('clearHistoryCancel')}
-            title={t('workspaceStorageWarningTitle') || 'Storage Capacity Alert'}
-            description={t('workspaceStorageWarningNotice').replace('{0}', String(storageWarningSizeMb))}
-            hideCloseButton
-            panelClassName="nbu-modal-shell"
-            headerClassName="justify-center border-b-0 px-6 pt-6 pb-4 text-center"
-            headerExtra={
-                <div className="mt-4 flex justify-center">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                            />
-                        </svg>
-                    </div>
-                </div>
-            }
-        >
-            <div className="flex gap-2 border-t border-gray-100 bg-gray-50 p-2 dark:border-gray-800 dark:bg-gray-900/50">
-                <button
-                    type="button"
-                    data-testid="workspace-storage-warning-close"
-                    onClick={handleCloseStorageWarningModal}
-                    className="flex-1 rounded-xl border border-transparent px-4 py-2.5 text-sm font-bold text-gray-600 transition-all hover:border-gray-200 hover:bg-white dark:text-gray-300 dark:hover:border-gray-700 dark:hover:bg-gray-800"
-                >
-                    {t('clearHistoryCancel')}
-                </button>
-                <button
-                    type="button"
-                    data-testid="workspace-storage-warning-export"
-                    onClick={async () => {
-                        handleCloseStorageWarningModal();
-                        await handleExportWorkspaceSnapshot();
-                    }}
-                    className="flex-1 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-amber-500/30 transition-all hover:bg-amber-600"
-                >
-                    {t('composerToolbarExportWorkspace')}
-                </button>
-            </div>
-        </WorkspaceModalFrame>
-    ) : null;
-    const workspaceOverlayContent =
-        workspaceDetailOverlays || workspaceClearConfirmOverlay || workspaceStorageWarningOverlay ? (
-            <>
-                {workspaceDetailOverlays}
-                {workspaceClearConfirmOverlay}
-                {workspaceStorageWarningOverlay}
-            </>
-        ) : null;
+    const workspaceOverlayContent = (
+        <WorkspaceDetailOverlays
+            activeWorkspaceDetailModal={activeWorkspaceDetailModal}
+            isQueuedBatchSpaceOpen={isQueuedBatchSpaceOpen}
+            showClearWorkspaceConfirm={showClearWorkspaceConfirm}
+            showStorageWarningModal={showStorageWarningModal}
+            storageWarningSizeMb={storageWarningSizeMb}
+            currentLang={currentLang}
+            t={t}
+            onCloseDetailModal={handleCloseWorkspaceDetailModal}
+            onCloseClearConfirm={handleCloseClearWorkspaceConfirm}
+            onConfirmClearWorkspace={handleConfirmClearWorkspace}
+            onCloseStorageWarningModal={handleCloseStorageWarningModal}
+            onExportWorkspaceSnapshot={handleExportWorkspaceSnapshot}
+            progressThoughtEntries={progressThoughtEntries}
+            onDownloadThoughtImage={handleDownloadThoughtImage}
+            latestWorkflowEntry={latestWorkflowEntry}
+            isGenerating={isGenerating}
+            batchProgress={batchProgress}
+            queuedJobs={queuedJobs}
+            getImportedQueuedResultCount={getImportedQueuedResultCount}
+            groundingResolutionStatusSummary={groundingResolutionStatusSummary}
+            groundingResolutionStatusTone={groundingResolutionStatusTone}
+            thoughtsText={progressThoughtsSummaryText}
+            thoughtStateMessage={thoughtStateMessage}
+            provenanceSummaryRows={provenanceSummaryRows}
+            provenanceContinuityMessage={provenanceContinuityMessage}
+            groundingStateMessage={groundingStateMessage}
+            groundingSupportMessage={groundingSupportMessage}
+            selectedSourcesCount={selectedSources.length}
+            selectedSupportBundlesCount={selectedSupportBundles.length}
+            contextProvenanceDetailPanel={contextProvenanceDetailPanel}
+            versionsDetailPanelProps={versionsDetailPanelProps}
+            queueBatchConversationNotice={queueBatchConversationNotice}
+            getLineageActionLabel={getLineageActionLabel}
+            getImportedQueuedHistoryItems={getImportedQueuedHistoryItems}
+            currentStageSourceHistoryId={currentStageSourceHistoryId}
+            onImportAllQueuedJobs={handleImportAllQueuedJobs}
+            onPollAllQueuedJobs={handlePollAllQueuedJobs}
+            onPollQueuedJob={handlePollQueuedJob}
+            onCancelQueuedJob={handleCancelQueuedJob}
+            onImportQueuedJob={handleImportQueuedJob}
+            onOpenImportedQueuedJob={handleOpenImportedQueuedJob}
+            onOpenLatestImportedQueuedJob={handleOpenLatestImportedQueuedJob}
+            onOpenImportedQueuedHistoryItem={handleOpenImportedQueuedHistoryItem}
+            onClearIssueQueuedJobs={handleClearIssueQueuedJobs}
+            onClearImportedQueuedJobs={handleClearImportedQueuedJobs}
+            onRemoveQueuedJob={handleRemoveQueuedJob}
+            onRecoverRecentQueuedJobs={handleRecoverRecentQueuedJobs}
+        />
+    );
     const focusSurface = useMemo(
         () => (
             <div className={stagePanelClassName}>

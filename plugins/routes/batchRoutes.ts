@@ -197,26 +197,34 @@ function buildBatchJsonlRequests(
     displayName: string,
 ): Array<{ key: string; request: Record<string, unknown> }> {
     const batchBuilder = ai.batches as unknown as BatchRequestBuilder;
-    if (typeof batchBuilder.createInlinedGenerateContentRequest !== 'function') {
-        throw new Error('Installed Google GenAI SDK does not expose the queued batch JSONL request builder.');
+    if (typeof batchBuilder?.createInlinedGenerateContentRequest === 'function') {
+        try {
+            const builtRequest = batchBuilder.createInlinedGenerateContentRequest({
+                model,
+                src: inlineRequests,
+                config: { displayName },
+            });
+            const transformedRequests = builtRequest?.body?.batch?.inputConfig?.requests?.requests;
+            if (Array.isArray(transformedRequests) && transformedRequests.length === inlineRequests.length) {
+                return transformedRequests.map((entry, index) => ({
+                    key: `request-${index + 1}`,
+                    request:
+                        entry && typeof entry.request === 'object' && entry.request
+                            ? entry.request
+                            : (entry as Record<string, unknown>),
+                }));
+            }
+        } catch {
+            // Fall back to standard schema formatting below
+        }
     }
 
-    const builtRequest = batchBuilder.createInlinedGenerateContentRequest({
-        model,
-        src: inlineRequests,
-        config: { displayName },
-    });
-    const transformedRequests = builtRequest?.body?.batch?.inputConfig?.requests?.requests;
-    if (!Array.isArray(transformedRequests) || transformedRequests.length !== inlineRequests.length) {
-        throw new Error('Failed to prepare queued batch JSONL payload.');
-    }
-
-    return transformedRequests.map((entry, index) => ({
+    return inlineRequests.map((entry, index) => ({
         key: `request-${index + 1}`,
-        request:
-            entry && typeof entry.request === 'object' && entry.request
-                ? entry.request
-                : (entry as Record<string, unknown>),
+        request: {
+            contents: entry.contents,
+            generationConfig: entry.config,
+        },
     }));
 }
 
@@ -561,6 +569,91 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
                 details: {
                     source: 'batch',
                 },
+            });
+        }
+    });
+
+    server.use('/api/batches/list', async (req: any, res: any) => {
+        const requestContext = createApiRequestContext(req, '/api/batches/list');
+
+        if (req.method !== 'GET' && req.method !== 'POST') {
+            sendJson(res, 405, { error: 'Method not allowed' }, { requestContext, summary: 'Method not allowed' });
+            return;
+        }
+
+        try {
+            const ai = getAIClient();
+            const body: { pageSize?: number } = req.method === 'POST' ? await readJsonBody<{ pageSize?: number }>(req).catch(() => ({})) : {};
+            const pageSize = Math.max(1, Math.min(50, Number(body.pageSize || 20)));
+            logApiRequest(requestContext, {
+                source: 'batch',
+                operation: 'list',
+                pageSize,
+            });
+
+            const pager = await ai.batches.list({ config: { pageSize } });
+            const rawJobs: any[] = [];
+            for await (const batchJob of pager) {
+                rawJobs.push(batchJob);
+                if (rawJobs.length >= pageSize) {
+                    break;
+                }
+            }
+
+            const jobs = rawJobs
+                .map((batchJob) => serializeBatchJob(batchJob))
+                .filter((job) => VALID_IMAGE_MODELS.has(job.model as ImageModel));
+
+            sendJson(res, 200, { jobs }, {
+                requestContext,
+                summary: `Listed ${jobs.length} batch job(s)`,
+                details: { source: 'batch', jobCount: jobs.length },
+            });
+        } catch (error: any) {
+            sendClassifiedApiError(res, '/api/batches/list', error, 'Failed to list batch jobs', {
+                defaultStatus: 502,
+                requestContext,
+                details: { source: 'batch' },
+            });
+        }
+    });
+
+    server.use('/api/batches/delete', async (req: any, res: any) => {
+        const requestContext = createApiRequestContext(req, '/api/batches/delete');
+
+        if (req.method !== 'POST') {
+            sendJson(res, 405, { error: 'Method not allowed' }, { requestContext, summary: 'Method not allowed' });
+            return;
+        }
+
+        try {
+            const ai = getAIClient();
+            const body = await readJsonBody<{ name?: string }>(req);
+            logApiRequest(requestContext, {
+                source: 'batch',
+                operation: 'delete',
+                jobName: body.name || null,
+            });
+            if (!body.name) {
+                sendJson(res, 400, { error: 'Missing batch job name.' }, {
+                    requestContext,
+                    summary: 'Missing batch job name',
+                    details: { source: 'batch' },
+                });
+                return;
+            }
+
+            await ai.batches.delete({ name: body.name });
+            sendJson(res, 200, { ok: true, name: body.name }, {
+                requestContext,
+                summary: `Deleted batch ${body.name}`,
+                details: { source: 'batch', jobName: body.name },
+            });
+        } catch (error: any) {
+            sendClassifiedApiError(res, '/api/batches/delete', error, 'Failed to delete batch job', {
+                defaultStatus: 502,
+                requestContext,
+                details: { source: 'batch' },
             });
         }
     });

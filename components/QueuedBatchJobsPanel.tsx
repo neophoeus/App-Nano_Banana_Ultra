@@ -36,6 +36,7 @@ type QueuedBatchJobsPanelProps = {
     onClearIssueQueuedJobs?: () => void;
     onClearImportedQueuedJobs?: () => void;
     onRemoveQueuedJob: (localId: string) => void;
+    onRecoverRecentQueuedJobs?: () => void;
 };
 
 type JobTimelineEvent = {
@@ -279,6 +280,7 @@ export default function QueuedBatchJobsPanel({
     onClearIssueQueuedJobs = () => undefined,
     onClearImportedQueuedJobs = () => undefined,
     onRemoveQueuedJob,
+    onRecoverRecentQueuedJobs,
 }: QueuedBatchJobsPanelProps) {
     const t = (key: string) => getTranslation(currentLanguage, key);
     const isEmbedded = surface === 'embedded';
@@ -942,6 +944,15 @@ export default function QueuedBatchJobsPanel({
                             >
                                 {t('queuedBatchJobsRefreshAll')}
                             </button>
+                            {onRecoverRecentQueuedJobs && (
+                                <button
+                                    data-testid="queued-batch-recover-recent"
+                                    onClick={onRecoverRecentQueuedJobs}
+                                    className={neutralActionButtonClassName}
+                                >
+                                    {t('queuedBatchJobsRecoverRecent') || 'Recover Recent'}
+                                </button>
+                            )}
                             <span data-testid="queued-batch-tracked-count" className="nbu-quiet-pill px-3 py-1 text-xs">
                                 {t('queuedBatchJobsTrackedCount').replace('{0}', queuedJobs.length.toString())}
                             </span>

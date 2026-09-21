@@ -114,9 +114,13 @@ Nano Banana Ultra currently supports four Gemini image-model paths. The UI expos
 
 ## Version Overview
 
-### Latest Release: 4.6.2
+### Latest Release: 4.7.0
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
+
+### 4.7.x+ (4.x Series)
+
+Version 4.7.x standardizes the remote Gemini Batch Queue architecture to strict `@google/genai` v1.31.0+ official API schemas (providing `{ contents, generationConfig }` fallbacks, paginated `/api/batches/list`, remote `/api/batches/delete`, and workspace remote batch recovery). It executes a major architectural modularization of the application shell, decomposing `App.tsx` from 3,044 lines down to 2,482 lines (~562 lines reduced) by cleanly decoupling the top header support rail (`WorkspaceSupportRail.tsx`), stage download and Sidecar JSON metadata construction (`useStageImageDownloadActions.ts`), batch preview session streaming (`useBatchPreviewSession.ts`), and unified detail modal overlays (`WorkspaceDetailOverlays.tsx`) with zero regression in Phase B render stability and 100% automated test pass rate.
 
 ### 4.6.x+ (4.x Series)
 

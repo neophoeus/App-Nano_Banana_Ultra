@@ -2,8 +2,10 @@ import { Dispatch, MutableRefObject, SetStateAction, useCallback, useEffect, use
 import {
     cancelQueuedBatchJob,
     checkApiKey,
+    deleteQueuedBatchJob,
     getQueuedBatchJob,
     importQueuedBatchJobResults,
+    listQueuedBatchJobs,
     submitQueuedBatchJob,
 } from '../services/geminiService';
 import {
@@ -346,6 +348,7 @@ type UseQueuedBatchWorkflowReturn = {
     handleClearIssueQueuedJobs: () => void;
     handleClearImportedQueuedJobs: () => void;
     handleRemoveQueuedJob: (localId: string) => void;
+    handleRecoverRecentQueuedJobs: () => Promise<void>;
 };
 
 export function useQueuedBatchWorkflow({
@@ -748,84 +751,66 @@ export function useQueuedBatchWorkflow({
             }
 
             const queuedDraft = normalizeQueuedBatchDraft(draft);
-            const submissionItemCount = normalizeQueuedSubmissionItemCount(queuedDraft.batchSize);
+            const requestedBatchSize = Math.max(1, queuedDraft.batchSize || 1);
             const submissionGroupId = crypto.randomUUID();
-            let submittedCount = 0;
-            let failedCount = 0;
-            let lastFailureMessage: string | null = null;
-
-            for (let submissionItemIndex = 0; submissionItemIndex < submissionItemCount; submissionItemIndex += 1) {
-                const localId = crypto.randomUUID();
-                const createdAt = Date.now();
-                const seed = buildQueuedJobSeed({
+            const localId = crypto.randomUUID();
+            const createdAt = Date.now();
+            const seed = {
+                ...buildQueuedJobSeed({
                     localId,
                     draft: queuedDraft,
                     submissionGroupId,
-                    submissionItemIndex,
-                    submissionItemCount,
+                    submissionItemIndex: 0,
+                    submissionItemCount: 1,
+                }),
+                batchSize: requestedBatchSize,
+            };
+
+            upsertQueuedJob({
+                ...buildPendingQueuedJob({ draft: queuedDraft, seed, createdAt }),
+                batchSize: requestedBatchSize,
+            });
+
+            try {
+                const remoteJob = await submitQueuedBatchJob({
+                    prompt: queuedDraft.finalPrompt,
+                    aspectRatio: queuedDraft.aspectRatio,
+                    imageSize: queuedDraft.imageSize,
+                    style: queuedDraft.style,
+                    model: queuedDraft.model,
+                    editingInput: queuedDraft.editingInput,
+                    sourceImageInput: queuedDraft.sourceImageInput,
+                    objectImageInputs: queuedDraft.finalObjectInputs,
+                    characterImageInputs: queuedDraft.finalCharacterInputs,
+                    outputFormat: queuedDraft.outputFormat,
+                    temperature: queuedDraft.temperature,
+                    thinkingLevel: queuedDraft.thinkingLevel,
+                    includeThoughts: queuedDraft.includeThoughts,
+                    googleSearch: queuedDraft.googleSearch,
+                    imageSearch: queuedDraft.imageSearch,
+                    requestCount: requestedBatchSize,
+                    displayName: queuedDraft.displayName,
                 });
 
-                upsertQueuedJob(buildPendingQueuedJob({ draft: queuedDraft, seed, createdAt }));
-
-                try {
-                    const remoteJob = await submitQueuedBatchJob({
-                        prompt: queuedDraft.finalPrompt,
-                        aspectRatio: queuedDraft.aspectRatio,
-                        imageSize: queuedDraft.imageSize,
-                        style: queuedDraft.style,
-                        model: queuedDraft.model,
-                        editingInput: queuedDraft.editingInput,
-                        sourceImageInput: queuedDraft.sourceImageInput,
-                        objectImageInputs: queuedDraft.finalObjectInputs,
-                        characterImageInputs: queuedDraft.finalCharacterInputs,
-                        outputFormat: queuedDraft.outputFormat,
-                        temperature: queuedDraft.temperature,
-                        thinkingLevel: queuedDraft.thinkingLevel,
-                        includeThoughts: queuedDraft.includeThoughts,
-                        googleSearch: queuedDraft.googleSearch,
-                        imageSearch: queuedDraft.imageSearch,
-                        requestCount: 1,
-                        displayName: queuedDraft.displayName,
-                    });
-
-                    upsertQueuedJob(mapRemoteQueuedJobToLocal(remoteJob as any, seed));
-                    addLog(formatMessage('queuedBatchSubmittedLog', remoteJob.name));
-                    submittedCount += 1;
-                } catch (error: any) {
-                    const message = error?.message || 'Queued batch job submission failed.';
-                    lastFailureMessage = message;
-                    failedCount += 1;
-                    upsertQueuedJob(
-                        buildFailedSubmissionQueuedJob({ draft: queuedDraft, seed, createdAt, error: message }),
-                    );
-                    addLog(formatMessage('queuedBatchSubmissionFailedLog', message));
-                }
-            }
-
-            if (submittedCount === submissionItemCount) {
+                upsertQueuedJob({
+                    ...mapRemoteQueuedJobToLocal(remoteJob as any, seed),
+                    batchSize: requestedBatchSize,
+                });
+                addLog(formatMessage('queuedBatchSubmittedLog', remoteJob.name));
                 showNotification(
-                    submissionItemCount > 1
-                        ? formatMessage('queuedBatchSubmittedManyNotice', submittedCount)
+                    requestedBatchSize > 1
+                        ? formatMessage('queuedBatchSubmittedManyNotice', requestedBatchSize)
                         : t('queuedBatchSubmittedNotice'),
                     'info',
                 );
-                return;
-            }
-
-            if (submittedCount > 0) {
-                showNotification(
-                    formatMessage(
-                        'queuedBatchSubmittedPartialNotice',
-                        submittedCount,
-                        submissionItemCount,
-                        failedCount,
-                    ),
-                    'error',
+            } catch (error: any) {
+                const message = error?.message || 'Queued batch job submission failed.';
+                upsertQueuedJob(
+                    buildFailedSubmissionQueuedJob({ draft: queuedDraft, seed, createdAt, error: message }),
                 );
-                return;
+                addLog(formatMessage('queuedBatchSubmissionFailedLog', message));
+                showNotification(message, 'error');
             }
-
-            showNotification(lastFailureMessage || t('queuedBatchSubmissionFailedLog').replace('{0}', ''), 'error');
         },
         [
             addLog,
@@ -1141,7 +1126,7 @@ export function useQueuedBatchWorkflow({
                 const failedResults = results.filter((result) => result.status !== 'success' || !result.imageUrl);
                 const importCreatedAt = new Date();
                 const importRequestId = crypto.randomUUID();
-                const resolvedBatchSize = 1;
+                const resolvedBatchSize = Math.max(1, job.batchSize || successfulResults.length || 1);
                 const resolvedJobSeed = {
                     ...job,
                     batchSize: resolvedBatchSize,
@@ -1425,10 +1410,77 @@ export function useQueuedBatchWorkflow({
 
     const handleRemoveQueuedJob = useCallback(
         (localId: string) => {
+            const target = queuedJobs.find((j) => j.localId === localId);
             removeQueuedJob(localId);
+            if (target && !target.submissionPending && target.name.startsWith('batches/')) {
+                void deleteQueuedBatchJob(target.name).catch(() => {
+                    // Ignore background remote deletion failure
+                });
+            }
         },
-        [removeQueuedJob],
+        [queuedJobs, removeQueuedJob],
     );
+
+    const handleRecoverRecentQueuedJobs = useCallback(async () => {
+        try {
+            const remoteJobs = await listQueuedBatchJobs(20);
+            if (remoteJobs.length === 0) {
+                showNotification(t('noRecentRemoteBatchJobs') || 'No additional recent remote batch jobs were found.', 'info');
+                return;
+            }
+
+            let recoveredCount = 0;
+            remoteJobs.forEach((remoteJob) => {
+                const alreadyTracked = queuedJobs.some((j) => j.name === remoteJob.name);
+                if (!alreadyTracked) {
+                    const localId = crypto.randomUUID();
+                    const restoredSeed: RemoteQueuedJobSeed = {
+                        localId,
+                        prompt: remoteJob.displayName,
+                        submissionGroupId: crypto.randomUUID(),
+                        submissionItemIndex: 0,
+                        submissionItemCount: 1,
+                        restoredFromSnapshot: true,
+                        generationMode: 'Queued Batch Job',
+                        aspectRatio: '1:1',
+                        imageSize: '1K',
+                        style: 'None',
+                        outputFormat: 'images-only',
+                        temperature: 1,
+                        thinkingLevel: 'disabled',
+                        includeThoughts: false,
+                        googleSearch: false,
+                        imageSearch: false,
+                        batchSize: 1,
+                        objectImageCount: 0,
+                        characterImageCount: 0,
+                        hasImportablePayload: remoteJob.hasImportablePayload,
+                        submissionPending: false,
+                        importDiagnostic: null,
+                        importIssues: null,
+                        error: remoteJob.error || null,
+                        parentHistoryId: null,
+                        rootHistoryId: null,
+                        sourceHistoryId: null,
+                        lineageAction: 'root',
+                        lineageDepth: 0,
+                    };
+                    upsertQueuedJob(mapRemoteQueuedJobToLocal(remoteJob as any, restoredSeed));
+                    recoveredCount += 1;
+                }
+            });
+
+            if (recoveredCount > 0) {
+                showNotification(`Recovered ${recoveredCount} recent batch job(s).`, 'info');
+                addLog(`Recovered ${recoveredCount} recent batch job(s) from Gemini Batch API.`);
+            } else {
+                showNotification(t('allRemoteBatchJobsAlreadyTracked') || 'All recent batch jobs are already tracked.', 'info');
+            }
+        } catch (error: any) {
+            const message = error?.message || 'Failed to recover recent batch jobs.';
+            showNotification(message, 'error');
+        }
+    }, [addLog, mapRemoteQueuedJobToLocal, queuedJobs, showNotification, t, upsertQueuedJob]);
 
     useEffect(() => {
         const refreshableJobs = queuedJobs.filter(isQueuedBatchJobRefreshable);
@@ -1473,5 +1525,6 @@ export function useQueuedBatchWorkflow({
         handleClearIssueQueuedJobs,
         handleClearImportedQueuedJobs,
         handleRemoveQueuedJob,
+        handleRecoverRecentQueuedJobs,
     };
 }

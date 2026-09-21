@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.7.0 - 2026-09-21
+
+- Release title: Nano Banana Ultra 4.7.0 - Gemini Batch Queue Official Standardization & App Shell Modularization
+- Release summary:
+    - **Batch Queue Architecture Official Standardization (`plugins/routes/batchRoutes.ts`, `services/geminiService.ts`, `hooks/useQueuedBatchWorkflow.ts`, `components/QueuedBatchJobsPanel.tsx`)**: Aligned remote batch generation manifests with official Gemini SDK schemas (`@google/genai` v1.31.0+). Removed strict dependency on undocumented SDK methods and added robust schema fallback support for standard `generateContent` requests `{ contents, generationConfig }`. Added standard REST endpoints `/api/batches/list` with pagination, status mapping, and model filtering, and `/api/batches/delete` allowing clean remote resource lifecycle management. Integrated a "Recover Recent Jobs" button in `QueuedBatchJobsPanel` and `useQueuedBatchWorkflow` to reconcile client workspaces with remote Gemini batch jobs on demand.
+    - **App Shell Modularization & Line Count Reduction (`App.tsx`, `components/WorkspaceSupportRail.tsx`, `components/WorkspaceDetailOverlays.tsx`, `hooks/useBatchPreviewSession.ts`, `hooks/useStageImageDownloadActions.ts`)**: Decoupled monolithic orchestration in `App.tsx`, reducing overall file size from 3,044 lines down to 2,482 lines (~562 lines reduced) without changing any user-facing workflows:
+        - `WorkspaceSupportRail.tsx`: Extracted top-level header support buttons (Progress, Sources, Versions) with `renderWorkspaceSupportRail` returning a direct `<React.Fragment>` to preserve `WorkspaceTopHeader`'s CSS Grid 3-child layout detection.
+        - `useStageImageDownloadActions.ts`: Encapsulated stage image and thought image downloads, filename sanitization, and sidecar JSON metadata persistence.
+        - `useBatchPreviewSession.ts`: Extracted interactive batch preview session, tile slot mapping, and real-time live streaming progress updates.
+        - `WorkspaceDetailOverlays.tsx`: Consolidated 4 workspace detail modals (Progress, Sources/Evidence, Versions, Queued Batch Space) and 2 confirmation dialogs into a unified lazy-loaded overlay container.
+    - **Zero-Regression Render Stability & Test Expansion (`tests/phaseBRenderStability.test.tsx`, `tests/WorkspaceDetailOverlays.test.tsx`, `tests/useBatchPreviewSession.test.tsx`, `tests/useStageImageDownloadActions.test.tsx`)**: Verified strict render isolation with zero extraneous re-renders on stage or history surfaces during advanced settings toggling. Added 3 new unit test suites covering the decoupled modules. Expanded automated test suite from 122 files (1,018 tests) to 125 files and 1,033 tests passing at 100%, with clean production Vite bundle compilation.
+
 ## v4.6.2 - 2026-09-21
 
 - Release title: Nano Banana Ultra 4.6.2 - 3DGS Solution A+B: Edge-Aware Disparity Fields, Surface Normal Geometry & WebGL2 GPU Acceleration
