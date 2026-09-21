@@ -40,6 +40,8 @@ export const getSavedImageWorkflowSlug = (mode?: string | null): string => {
             return 'editor-retouch';
         case 'reframe':
             return 'editor-reframe';
+        case 'revolve':
+            return 'editor-revolve';
         default:
             return slugifyMode(mode);
     }

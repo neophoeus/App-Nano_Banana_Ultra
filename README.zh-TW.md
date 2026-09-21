@@ -30,7 +30,9 @@ Nano Banana Ultra 是一個以 Google Gemini 影像模型為核心的影像創�
 
 - 選到最新 turn 會直接接續，選到較早 turn 會自動開新分支
 - 內建 SketchPad 工作流，適合先做草圖與視覺構想
-- 內建 editor 工作流，支援 inpainting、outpainting、reframe 與後續細修
+- 內建 editor 工作流，支援 inpainting、doodling、outpainting 與後續細修
+- Reframe 構圖模式支援旋轉狀態下精確保留角度之包圍盒 Fit/Fill 幾何計算，與 45° 經典馬蹄鐵磁吸對齊
+- Revolve 模式支援 3D 高斯波濺（3DGS）空間視角調整，提供 Orbit/Pan 工具、垂直 Zoom 滑桿（20%~300%）、滾輪縮放與滑鼠右鍵直接平移快捷鍵
 - Versions 與 stage source 會直接顯示目前下一輪是從哪個來源延伸
 
 ### 檢視

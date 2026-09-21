@@ -30,7 +30,9 @@ The workspace features a dual-engine architecture combining both the Local API (
 
 - selection-first continuation where the latest turn continues and older turns branch automatically
 - built-in SketchPad workflow for rough ideation before generation
-- editor workflow for inpainting, outpainting, reframing, and follow-up refinement
+- editor workflow for inpainting, doodling, outpainting, and follow-up refinement
+- Reframe mode with exact rotated bounding-box Fit/Fill view preservation and 45° horseshoe magnetic angle snap
+- Revolve mode with 3D Gaussian Splatting (3DGS) spatial perspective control, Orbit/Pan tools, vertical Zoom slider (20%~300%), wheel zoom, and right-click drag pan shortcut
 - direct Versions and stage-source visibility so it stays clear what the next pass is built from
 
 ### Review

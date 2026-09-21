@@ -4,7 +4,7 @@ import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PickerSheet } from '../components/WorkspacePickerSheet';
-import { type StageErrorState } from '../types';
+import { type StageErrorState, type EditorMode } from '../types';
 
 const {
     constrainImageDimensionsMock,
@@ -138,7 +138,7 @@ describe('useWorkspaceEditorActions', () => {
             setError: createStateSetter<StageErrorState | null>(),
             setIsSketchPadOpen: createStateSetter<boolean>(),
             setShowSketchReplaceConfirm: createStateSetter<boolean>(),
-            setEditorMode: createStateSetter<'inpaint' | 'outpaint'>(),
+            setEditorMode: createStateSetter<EditorMode>(),
             setEditorRetouchLockedRatio: createStateSetter<
                 '1:1' | '16:9' | '9:16' | '4:3' | '3:4' | '3:2' | '2:3' | '21:9' | null
             >() as any,

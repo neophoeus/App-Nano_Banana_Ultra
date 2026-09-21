@@ -20,6 +20,8 @@ describe('generationMode helpers', () => {
         expect(normalizeGenerationModeKind('Editor Edit')).toBe('editor-edit');
         expect(normalizeGenerationModeKind('Inpainting')).toBe('retouch');
         expect(normalizeGenerationModeKind('Outpaint')).toBe('reframe');
+        expect(normalizeGenerationModeKind('Revolve')).toBe('revolve');
+        expect(normalizeGenerationModeKind('Camera Angle 3D Orbit')).toBe('revolve');
     });
 
     it('maps generation modes to translation keys for precise workflow labels', () => {
@@ -27,6 +29,7 @@ describe('generationMode helpers', () => {
         expect(getGenerationModeTranslationKey('Image to Image/Mixing')).toBe('generationModeReferenceImage');
         expect(getGenerationModeTranslationKey('Editor Edit')).toBe('generationModeEditorEdit');
         expect(getGenerationModeTranslationKey('Follow-up Edit')).toBe('workspaceViewerFollowUpEdit');
+        expect(getGenerationModeTranslationKey('Revolve')).toBe('modeRevolve');
     });
 
     it('returns localized labels for precise workflow display surfaces', () => {
@@ -35,6 +38,7 @@ describe('generationMode helpers', () => {
             '參考圖生成',
         );
         expect(resolveGenerationModeLabel('Editor Edit', (key) => getTranslation('ja', key))).toBe('エディタ再描画');
+        expect(resolveGenerationModeLabel('Revolve', (key) => getTranslation('zh_TW', key))).toBe('重新環視');
     });
 
     it('defines the new workflow translation keys across every supported locale', () => {
@@ -42,12 +46,14 @@ describe('generationMode helpers', () => {
             expect(translations[value]).toHaveProperty('generationModeTextToImage');
             expect(translations[value]).toHaveProperty('generationModeReferenceImage');
             expect(translations[value]).toHaveProperty('generationModeEditorEdit');
+            expect(translations[value]).toHaveProperty('modeRevolve');
         }
     });
 
     it('recognizes editing requests without depending on ad hoc string includes in callers', () => {
         expect(isEditingGenerationMode('Editor Edit')).toBe(true);
         expect(isEditingGenerationMode('Inpainting')).toBe(true);
+        expect(isEditingGenerationMode('Revolve')).toBe(true);
         expect(isEditingGenerationMode('Text to Image')).toBe(false);
         expect(isEditingGenerationMode('Follow-up Edit', 'data:image/png;base64,AAA')).toBe(true);
     });

@@ -5,6 +5,7 @@ export type GenerationModeKind =
     | 'editor-edit'
     | 'retouch'
     | 'reframe'
+    | 'revolve'
     | 'unknown';
 
 const normalizeModeValue = (mode?: string | null): string => mode?.trim().toLowerCase() || '';
@@ -43,6 +44,10 @@ export const normalizeGenerationModeKind = (mode?: string | null): GenerationMod
         return 'reframe';
     }
 
+    if (includesAny(normalizedMode, ['revolve', 'orbit', '3d', 'novel-view', 'camera-angle', 'gaussian'])) {
+        return 'revolve';
+    }
+
     return 'unknown';
 };
 
@@ -60,6 +65,8 @@ export const getGenerationModeTranslationKey = (mode?: string | null): string | 
             return 'modeInpaint';
         case 'reframe':
             return 'modeOutpaint';
+        case 'revolve':
+            return 'modeRevolve';
         default:
             return null;
     }
@@ -79,5 +86,5 @@ export const isEditingGenerationMode = (mode?: string | null, editingInput?: str
     }
 
     const kind = normalizeGenerationModeKind(mode);
-    return kind === 'editor-edit' || kind === 'retouch' || kind === 'reframe';
+    return kind === 'editor-edit' || kind === 'retouch' || kind === 'reframe' || kind === 'revolve';
 };

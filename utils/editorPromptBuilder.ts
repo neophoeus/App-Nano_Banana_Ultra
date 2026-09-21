@@ -13,6 +13,7 @@ type OutpaintTransform = {
     x: number;
     y: number;
     scale: number;
+    rotation?: number;
 };
 
 export interface OutpaintGeometryAnalysis {
@@ -34,6 +35,13 @@ interface BuildEditorPromptInput {
         frameDims: DimensionSize;
         originalDims: DimensionSize;
         imgTransform: OutpaintTransform;
+    };
+    revolveContext?: {
+        yaw: number;
+        pitch: number;
+        panX?: number;
+        panY?: number;
+        zoom?: number;
     };
 }
 
@@ -129,7 +137,11 @@ export const analyzeOutpaintGeometry = ({
         .filter(([, margin]) => margin > BLANK_MARGIN_THRESHOLD)
         .map(([side]) => side);
 
-    const coversCanvas = blankSides.length === 0;
+    const rotation = imgTransform.rotation ?? 0;
+    const normalizedRot = ((rotation % 360) + 360) % 360;
+    const isOrthogonal =
+        normalizedRot === 0 || normalizedRot === 180 || (normalizedRot % 90 === 0 && originalDims.w === originalDims.h);
+    const coversCanvas = blankSides.length === 0 && isOrthogonal;
     const zoomedBeyondFit = imgTransform.scale > containScale * ZOOM_INTENT_MULTIPLIER;
     const offCenter =
         Math.abs(imgTransform.x) > POSITION_TOLERANCE ||
@@ -168,8 +180,53 @@ export const buildEditorPrompt = ({
     prompt,
     visibleTextLabels = [],
     outpaintContext,
+    revolveContext,
 }: BuildEditorPromptInput): BuildEditorPromptResult => {
-    const finalModeLabel = mode === 'inpaint' ? 'Inpainting' : 'Outpainting';
+    const finalModeLabel = mode === 'inpaint' ? 'Inpainting' : mode === 'revolve' ? 'Revolving' : 'Outpainting';
+
+    if (mode === 'revolve') {
+        const yaw = revolveContext?.yaw ?? 0;
+        const pitch = revolveContext?.pitch ?? 0;
+        const panX = revolveContext?.panX ?? 0;
+        const panY = revolveContext?.panY ?? 0;
+        const zoom = revolveContext?.zoom ?? 1;
+        const yawDesc =
+            yaw > 0
+                ? `rotated ${Math.abs(yaw)}° to the right`
+                : yaw < 0
+                  ? `rotated ${Math.abs(yaw)}° to the left`
+                  : 'centered horizontally';
+        const pitchDesc =
+            pitch > 0
+                ? `elevated ${Math.abs(pitch)}° upwards (high angle)`
+                : pitch < 0
+                  ? `lowered ${Math.abs(pitch)}° downwards (low angle)`
+                  : 'eye-level';
+
+        const framingSegments: string[] = [];
+        if (Math.abs(zoom - 1.0) > 0.05) {
+            framingSegments.push(
+                zoom > 1
+                    ? `Camera zoom-in framing factor ${zoom.toFixed(2)}x (closer view).`
+                    : `Camera zoom-out framing factor ${zoom.toFixed(2)}x (wider field).`,
+            );
+        }
+        if (Math.abs(panX) > 2 || Math.abs(panY) > 2) {
+            framingSegments.push(`Camera spatial offset / translation applied for reframing.`);
+        }
+
+        return {
+            finalPrompt: joinPromptSegments(prompt, [
+                `Synthesize a novel 3D spatial viewpoint of the scene with camera rotation: yaw=${yaw}° (${yawDesc}), pitch=${pitch}° (${pitchDesc}).`,
+                ...framingSegments,
+                'The input image provides 3D Gaussian splatting spatial guidance with 3D parallax perspective.',
+                'The bright green (R:0, G:255, B:0) background areas represent disocclusion gaps created by the viewpoint change that must be photorealistically inpainted and completed with natural scene environment, geometry, consistent lighting, and perspective.',
+                'Preserve the identity, textures, structure, and artistic style of the subject and scene from the original image.',
+                'Blend repainted disocclusion areas seamlessly and ensure no green pixels remain.',
+            ]),
+            finalModeLabel,
+        };
+    }
 
     if (mode === 'inpaint') {
         if (retouchMode === 'mask') {

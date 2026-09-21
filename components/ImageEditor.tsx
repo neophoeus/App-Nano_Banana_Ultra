@@ -25,6 +25,12 @@ import {
     undoHistoryState,
     type WorkspaceHistoryState,
 } from '../utils/canvasWorkspace';
+import {
+    createGaussianPointCloudFromImage,
+    renderGaussianSplatsToCanvas,
+    clampAngle,
+    type GaussianPointCloud,
+} from '../utils/gaussianSplatting';
 
 interface ImageEditorProps {
     initialImageUrl: string;
@@ -87,7 +93,14 @@ interface ImageEditorProps {
 
 type EditMode = EditorMode;
 type RetouchMode = 'mask' | 'doodle'; // Distinguish between Masking (Inpaint) and Doodling (Sketch)
-type InteractionType = 'idle' | 'panning_viewport' | 'drawing' | 'moving_image';
+type InteractionType =
+    | 'idle'
+    | 'panning_viewport'
+    | 'drawing'
+    | 'moving_image'
+    | 'rotating_image'
+    | 'orbiting_revolve'
+    | 'panning_revolve';
 
 interface DrawPath {
     points: { x: number; y: number }[];
@@ -223,12 +236,75 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     const textInputRef = useRef<HTMLInputElement>(null);
 
     // --- Outpaint State ---
-    const [imgTransform, setImgTransform] = useState({ x: 0, y: 0, scale: 1 });
+    const [imgTransform, setImgTransform] = useState({ x: 0, y: 0, scale: 1, rotation: 0 });
+    const [isMagnetActive, setIsMagnetActive] = useState(false); // Default to off per user request
+    const [isOverRotationHandle, setIsOverRotationHandle] = useState(false);
+
+    // --- Angle & Magnet Snap Helpers ---
+    const normalizeAngle = (angle: number): number => {
+        let a = angle % 360;
+        if (a > 180) a -= 360;
+        if (a <= -180) a += 360;
+        return a === 0 ? 0 : a;
+    };
+
+    const snapAngle = (angle: number, snap: boolean): number => {
+        if (!snap) return Math.round(angle);
+        const snapped = Math.round(angle / 45) * 45;
+        return normalizeAngle(snapped);
+    };
+
+    const handleRotateStep = (delta: number) => {
+        setImgTransform((prev) => {
+            const targetAngle = prev.rotation + delta;
+            return {
+                ...prev,
+                rotation: normalizeAngle(snapAngle(targetAngle, isMagnetActive)),
+            };
+        });
+    };
+
+    const toggleMagnet = () => {
+        setIsMagnetActive((prev) => {
+            const next = !prev;
+            if (next) {
+                setImgTransform((curr) => ({
+                    ...curr,
+                    rotation: snapAngle(curr.rotation, true),
+                }));
+            }
+            return next;
+        });
+    };
+
+    const handleRotationChange = (newAngle: number) => {
+        setImgTransform((prev) => ({
+            ...prev,
+            rotation: snapAngle(newAngle, isMagnetActive),
+        }));
+    };
+
+    // --- Revolve (3D Gaussian Splatting) State ---
+    const [revolveTransform, setRevolveTransform] = useState({
+        yaw: 0,
+        pitch: 0,
+        panX: 0,
+        panY: 0,
+        zoom: 1,
+    });
+    const [revolveTool, setRevolveTool] = useState<'orbit' | 'pan'>('orbit');
+    const pointCloudRef = useRef<GaussianPointCloud | null>(null);
+    const revolveCanvasRef = useRef<HTMLCanvasElement>(null);
 
     // --- Interaction State ---
     const [interactionState, setInteractionState] = useState<InteractionType>('idle');
     const [pointerStart, setPointerStart] = useState({ x: 0, y: 0 });
-    const [stateStart, setStateStart] = useState<ViewportState | { x: number; y: number; scale: number } | null>(null); // Snapshot of state at drag start
+    const [stateStart, setStateStart] = useState<
+        | ViewportState
+        | { x: number; y: number; scale: number; rotation?: number }
+        | { yaw: number; pitch: number; panX?: number; panY?: number; zoom?: number }
+        | null
+    >(null); // Snapshot of state at drag start
     const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
     const [isHovering, setIsHovering] = useState(false);
     const [isSpacePressed, setIsSpacePressed] = useState(false);
@@ -325,9 +401,49 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         };
     }, []);
 
+    // --- 3D Gaussian Point Cloud Generation ---
+    useEffect(() => {
+        if (!imgElement || originalDims.w === 0 || originalDims.h === 0) {
+            pointCloudRef.current = null;
+            return;
+        }
+
+        try {
+            pointCloudRef.current = createGaussianPointCloudFromImage(imgElement, originalDims.w, originalDims.h, {
+                sampleDensity: 'draft',
+            });
+        } catch (e) {
+            console.warn('Failed to build 3DGS point cloud:', e);
+            pointCloudRef.current = null;
+        }
+    }, [imgElement, originalDims.w, originalDims.h]);
+
+    // --- Revolve 3DGS Canvas Rendering ---
+    useEffect(() => {
+        if (mode !== 'revolve' || !revolveCanvasRef.current) return;
+        const canvas = revolveCanvasRef.current;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        if (pointCloudRef.current && pointCloudRef.current.splats.length > 0) {
+            renderGaussianSplatsToCanvas(ctx, pointCloudRef.current, revolveTransform, canvas.width, canvas.height);
+        } else if (imgElement && originalDims.w > 0) {
+            ctx.fillStyle = '#00ff00';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(
+                canvas.width / 2 + (revolveTransform.panX ?? 0),
+                canvas.height / 2 + (revolveTransform.panY ?? 0),
+            );
+            ctx.scale(revolveTransform.zoom ?? 1, revolveTransform.zoom ?? 1);
+            ctx.drawImage(imgElement, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
+            ctx.restore();
+        }
+    }, [mode, revolveTransform, originalDims, imgElement]);
+
     // --- Geometry Helpers ---
     const getFrameDims = useCallback(() => {
-        if (mode === 'inpaint') return { w: originalDims.w, h: originalDims.h };
+        if (mode === 'inpaint' || mode === 'revolve') return { w: originalDims.w, h: originalDims.h };
 
         try {
             const ratioStr = ratio || '1:1';
@@ -348,15 +464,27 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     const fitImageToFrame = (type: 'contain' | 'cover') => {
         if (originalDims.w === 0) return;
         const frame = getFrameDims();
-
-        const scaleW = frame.w / originalDims.w;
-        const scaleH = frame.h / originalDims.h;
+        const rad = ((imgTransform.rotation ?? 0) * Math.PI) / 180;
+        const cos = Math.abs(Math.cos(rad));
+        const sin = Math.abs(Math.sin(rad));
 
         let scale = 1;
-        if (type === 'contain') scale = Math.min(scaleW, scaleH);
-        if (type === 'cover') scale = Math.max(scaleW, scaleH);
+        if (type === 'contain') {
+            const rotatedW = originalDims.w * cos + originalDims.h * sin;
+            const rotatedH = originalDims.w * sin + originalDims.h * cos;
+            scale = Math.min(frame.w / Math.max(1, rotatedW), frame.h / Math.max(1, rotatedH));
+        } else if (type === 'cover') {
+            const scaleW = (frame.w * cos + frame.h * sin) / originalDims.w;
+            const scaleH = (frame.w * sin + frame.h * cos) / originalDims.h;
+            scale = Math.max(scaleW, scaleH);
+        }
 
-        setImgTransform({ x: 0, y: 0, scale: scale });
+        setImgTransform((prev) => ({
+            x: 0,
+            y: 0,
+            scale,
+            rotation: prev.rotation ?? 0,
+        }));
     };
 
     const alignImage = (alignment: 'top' | 'bottom' | 'left' | 'right') => {
@@ -403,7 +531,25 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         // If Text Input is open, close it (unless clicking inside it which is handled by stopProp)
         if (showTextInput) setShowTextInput(null);
 
-        // Pan Logic
+        // Revolve 3D interaction (orbit or pan)
+        if (mode === 'revolve') {
+            if (
+                e.button === 1 ||
+                e.buttons === 4 ||
+                e.button === 2 ||
+                (e.buttons & 2) === 2 ||
+                isSpacePressed ||
+                revolveTool === 'pan'
+            ) {
+                setInteractionState('panning_revolve');
+            } else {
+                setInteractionState('orbiting_revolve');
+            }
+            setStateStart({ ...revolveTransform });
+            return;
+        }
+
+        // Pan Logic (inpaint / outpaint)
         if (e.button === 1 || e.buttons === 4 || isSpacePressed || activeTool === 'pan') {
             setInteractionState('panning_viewport');
             setStateStart({ ...viewport });
@@ -461,6 +607,10 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                     }
                 }
             } else {
+                if (isOverRotationHandle) {
+                    setInteractionState('rotating_image');
+                    return;
+                }
                 setInteractionState('moving_image');
                 setStateStart({ ...imgTransform });
             }
@@ -471,19 +621,51 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         const { clientX, clientY } = e;
         setCursorPos({ x: clientX, y: clientY });
 
-        if (interactionState === 'idle') return;
+        if (interactionState === 'idle') {
+            if (mode === 'outpaint' && originalDims.h > 0) {
+                const { x, y } = screenToContent(clientX, clientY);
+                const halfH = (originalDims.h / 2) * imgTransform.scale;
+                const handleDist = halfH + 28 / viewport.zoom;
+                const rotRad = ((imgTransform.rotation - 90) * Math.PI) / 180;
+                const handleX = imgTransform.x + handleDist * Math.cos(rotRad);
+                const handleY = imgTransform.y + handleDist * Math.sin(rotRad);
+                const dist = Math.hypot(x - handleX, y - handleY);
+                setIsOverRotationHandle(dist <= 22 / viewport.zoom);
+            }
+            return;
+        }
 
         const dx = clientX - pointerStart.x;
         const dy = clientY - pointerStart.y;
 
         if (interactionState === 'panning_viewport' && stateStart && 'zoom' in stateStart) {
             setViewport(applyPanDelta(stateStart, dx, dy));
+        } else if (interactionState === 'orbiting_revolve' && stateStart && 'yaw' in stateStart) {
+            const sensitivity = 0.35;
+            const newYaw = clampAngle(Math.round(stateStart.yaw + dx * sensitivity), -90, 90);
+            const newPitch = clampAngle(Math.round(stateStart.pitch - dy * sensitivity), -45, 45);
+            setRevolveTransform((prev) => ({ ...prev, yaw: newYaw, pitch: newPitch }));
+        } else if (interactionState === 'panning_revolve' && stateStart && 'panX' in stateStart) {
+            setRevolveTransform((prev) => ({
+                ...prev,
+                panX: Math.round((stateStart.panX ?? 0) + dx),
+                panY: Math.round((stateStart.panY ?? 0) + dy),
+            }));
         } else if (interactionState === 'moving_image' && stateStart && 'scale' in stateStart) {
             setImgTransform({
                 ...stateStart,
                 x: stateStart.x + dx / viewport.zoom,
                 y: stateStart.y + dy / viewport.zoom,
             });
+        } else if (interactionState === 'rotating_image') {
+            const { x, y } = screenToContent(clientX, clientY);
+            const relX = x - imgTransform.x;
+            const relY = y - imgTransform.y;
+            const angleRad = Math.atan2(relY, relX);
+            let rawDeg = (angleRad * 180) / Math.PI + 90;
+            rawDeg = normalizeAngle(rawDeg);
+            const finalDeg = snapAngle(rawDeg, isMagnetActive);
+            setImgTransform((prev) => ({ ...prev, rotation: finalDeg }));
         } else if (interactionState === 'drawing') {
             const { x, y } = screenToContent(clientX, clientY);
             const canvasX = x + originalDims.w / 2;
@@ -544,7 +726,35 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         if (isGenerating) return;
 
         if (mode === 'outpaint') {
-            setImgTransform((prev) => ({ ...prev, scale: applyWheelZoomDelta(prev.scale, e.deltaY, 0.001, 0.1, 5) }));
+            if (e.shiftKey || e.altKey) {
+                const step = isMagnetActive ? 45 : e.deltaY > 0 ? 5 : -5;
+                const delta = e.deltaY > 0 ? step : -step;
+                handleRotateStep(delta);
+            } else {
+                setImgTransform((prev) => ({
+                    ...prev,
+                    scale: applyWheelZoomDelta(prev.scale, e.deltaY, 0.001, 0.1, 5),
+                }));
+            }
+        } else if (mode === 'revolve') {
+            if (e.altKey) {
+                const delta = e.deltaY > 0 ? 5 : -5;
+                setRevolveTransform((prev) => ({
+                    ...prev,
+                    yaw: clampAngle(prev.yaw + delta, -90, 90),
+                }));
+            } else if (e.shiftKey) {
+                const delta = e.deltaY > 0 ? -5 : 5;
+                setRevolveTransform((prev) => ({
+                    ...prev,
+                    pitch: clampAngle(prev.pitch + delta, -45, 45),
+                }));
+            } else {
+                setRevolveTransform((prev) => ({
+                    ...prev,
+                    zoom: applyWheelZoomDelta(prev.zoom ?? 1, e.deltaY, 0.001, 0.2, 3.0),
+                }));
+            }
         } else {
             setViewport((prev) => ({ ...prev, zoom: applyWheelZoomDelta(prev.zoom, e.deltaY) }));
         }
@@ -588,7 +798,17 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                     textLabels.length > 0 ||
                     canRedoHistoryState(maskHistory) ||
                     canRedoHistoryState(doodleHistory))) ||
-            (mode === 'outpaint' && (imgTransform.x !== 0 || imgTransform.y !== 0 || imgTransform.scale !== 1));
+            (mode === 'outpaint' &&
+                (imgTransform.x !== 0 ||
+                    imgTransform.y !== 0 ||
+                    imgTransform.scale !== 1 ||
+                    imgTransform.rotation !== 0)) ||
+            (mode === 'revolve' &&
+                (revolveTransform.yaw !== 0 ||
+                    revolveTransform.pitch !== 0 ||
+                    (revolveTransform.panX ?? 0) !== 0 ||
+                    (revolveTransform.panY ?? 0) !== 0 ||
+                    (revolveTransform.zoom ?? 1) !== 1));
 
         if (hasChanges) {
             setShowModeSwitchConfirm({ target });
@@ -637,7 +857,9 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     const resetTools = (keepPrompt: boolean = false) => {
         setMaskHistory(resetHistoryState([]));
         setDoodleHistory(resetHistoryState({ paths: [], texts: [] }));
-        setImgTransform({ x: 0, y: 0, scale: 1 });
+        setImgTransform({ x: 0, y: 0, scale: 1, rotation: 0 });
+        setRevolveTransform({ yaw: 0, pitch: 0, panX: 0, panY: 0, zoom: 1 });
+        setRevolveTool('orbit');
 
         // Maintain current retouch mode, reset tool appropriate for that mode
         if (retouchMode === 'doodle') {
@@ -682,7 +904,17 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
             textLabels.length > 0 ||
             canRedoHistoryState(maskHistory) ||
             canRedoHistoryState(doodleHistory) ||
-            (mode === 'outpaint' && (imgTransform.x !== 0 || imgTransform.y !== 0 || imgTransform.scale !== 1));
+            (mode === 'outpaint' &&
+                (imgTransform.x !== 0 ||
+                    imgTransform.y !== 0 ||
+                    imgTransform.scale !== 1 ||
+                    imgTransform.rotation !== 0)) ||
+            (mode === 'revolve' &&
+                (revolveTransform.yaw !== 0 ||
+                    revolveTransform.pitch !== 0 ||
+                    (revolveTransform.panX ?? 0) !== 0 ||
+                    (revolveTransform.panY ?? 0) !== 0 ||
+                    (revolveTransform.zoom ?? 1) !== 1));
 
         if (hasChanges) {
             setShowExitConfirm(true);
@@ -717,6 +949,16 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                           imgTransform,
                       }
                     : undefined,
+            revolveContext:
+                mode === 'revolve'
+                    ? {
+                          yaw: revolveTransform.yaw,
+                          pitch: revolveTransform.pitch,
+                          panX: revolveTransform.panX,
+                          panY: revolveTransform.panY,
+                          zoom: revolveTransform.zoom,
+                      }
+                    : undefined,
         });
         let finalPrompt = promptResult.finalPrompt;
         const finalModeLabel = promptResult.finalModeLabel;
@@ -739,6 +981,25 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                     textBaseline: 'middle',
                 });
             }
+        } else if (mode === 'revolve') {
+            // Revolve: Render 3D Gaussian Splatting guidance with green mask
+            if (pointCloudRef.current && pointCloudRef.current.splats.length > 0) {
+                renderGaussianSplatsToCanvas(ctx, pointCloudRef.current, revolveTransform, frameDims.w, frameDims.h, {
+                    clearColor: '#00ff00',
+                    splatScaleMultiplier: 1.3,
+                });
+            } else {
+                ctx.fillStyle = '#00ff00';
+                ctx.fillRect(0, 0, frameDims.w, frameDims.h);
+                ctx.save();
+                ctx.translate(
+                    frameDims.w / 2 + (revolveTransform.panX ?? 0),
+                    frameDims.h / 2 + (revolveTransform.panY ?? 0),
+                );
+                ctx.scale(revolveTransform.zoom ?? 1, revolveTransform.zoom ?? 1);
+                ctx.drawImage(imgElement, -frameDims.w / 2, -frameDims.h / 2, frameDims.w, frameDims.h);
+                ctx.restore();
+            }
         } else {
             // Outpaint Logic (Pre-fill canvas with bright green mask color)
             ctx.fillStyle = '#00ff00';
@@ -748,6 +1009,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
             ctx.save();
             ctx.translate(frameDims.w / 2, frameDims.h / 2);
             ctx.translate(imgTransform.x, imgTransform.y);
+            ctx.rotate((imgTransform.rotation * Math.PI) / 180);
             ctx.scale(imgTransform.scale, imgTransform.scale);
             ctx.drawImage(imgElement, -originalDims.w / 2, -originalDims.h / 2);
             ctx.restore();
@@ -935,7 +1197,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                     <div className="relative z-10 flex justify-between items-start">
                         {/* Top Actions */}
                         <div className="nbu-toolbar-shell pointer-events-auto flex gap-2 p-1.5 transition-colors">
-                            <div className="nbu-toolbar-segment grid grid-cols-2 gap-1 p-1">
+                            <div className="nbu-toolbar-segment grid grid-cols-3 gap-1 p-1">
                                 <button
                                     onClick={() => handleSwitchMode('inpaint')}
                                     className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-bold transition-all ${mode === 'inpaint' ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
@@ -975,6 +1237,27 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                         />
                                     </svg>
                                     <span>{t('modeOutpaint')}</span>
+                                </button>
+                                <button
+                                    data-testid="editor-mode-revolve"
+                                    onClick={() => handleSwitchMode('revolve')}
+                                    className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-bold transition-all ${mode === 'revolve' ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-4 w-4"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                                        />
+                                    </svg>
+                                    <span>{t('modeRevolve')}</span>
                                 </button>
                             </div>
 
@@ -1044,9 +1327,143 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                         {t('btnReset')}
                                     </button>
                                 </>
+                            ) : mode === 'revolve' ? (
+                                <>
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            data-testid="editor-revolve-preset-front"
+                                            onClick={() => setRevolveTransform({ yaw: 0, pitch: 0 })}
+                                            disabled={isGenerating}
+                                            className={`px-2 py-1 text-xs font-bold rounded transition-colors ${revolveTransform.yaw === 0 && revolveTransform.pitch === 0 ? 'bg-amber-500 text-black shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                                            title={t('revolvePresetFront')}
+                                        >
+                                            {t('revolvePresetFront')}
+                                        </button>
+                                        <button
+                                            data-testid="editor-revolve-preset-left"
+                                            onClick={() => setRevolveTransform((p) => ({ ...p, yaw: -30 }))}
+                                            disabled={isGenerating}
+                                            className="px-2 py-1 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+                                            title={t('revolvePresetLeft')}
+                                        >
+                                            {t('revolvePresetLeft')}
+                                        </button>
+                                        <button
+                                            data-testid="editor-revolve-preset-right"
+                                            onClick={() => setRevolveTransform((p) => ({ ...p, yaw: 30 }))}
+                                            disabled={isGenerating}
+                                            className="px-2 py-1 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+                                            title={t('revolvePresetRight')}
+                                        >
+                                            {t('revolvePresetRight')}
+                                        </button>
+                                        <button
+                                            data-testid="editor-revolve-preset-high"
+                                            onClick={() => setRevolveTransform((p) => ({ ...p, pitch: 20 }))}
+                                            disabled={isGenerating}
+                                            className="px-2 py-1 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+                                            title={t('revolvePresetHigh')}
+                                        >
+                                            {t('revolvePresetHigh')}
+                                        </button>
+                                        <button
+                                            data-testid="editor-revolve-preset-low"
+                                            onClick={() => setRevolveTransform((p) => ({ ...p, pitch: -20 }))}
+                                            disabled={isGenerating}
+                                            className="px-2 py-1 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+                                            title={t('revolvePresetLow')}
+                                        >
+                                            {t('revolvePresetLow')}
+                                        </button>
+                                    </div>
+
+                                    <div className="w-px bg-gray-300 dark:bg-gray-700 mx-1"></div>
+
+                                    {/* Yaw & Pitch & Zoom Badges */}
+                                    <div className="flex items-center gap-1.5">
+                                        <button
+                                            data-testid="editor-revolve-yaw-badge"
+                                            onClick={() => setRevolveTransform((p) => ({ ...p, yaw: 0 }))}
+                                            disabled={isGenerating || revolveTransform.yaw === 0}
+                                            className={`px-1.5 py-0.5 rounded text-[11px] font-mono font-bold transition-colors ${
+                                                revolveTransform.yaw !== 0
+                                                    ? 'text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20'
+                                                    : 'text-gray-400 dark:text-gray-500 cursor-default'
+                                            }`}
+                                            title={`Yaw: ${revolveTransform.yaw}° (Click to reset 0°)`}
+                                        >
+                                            Y:{' '}
+                                            {revolveTransform.yaw > 0
+                                                ? `+${revolveTransform.yaw}`
+                                                : revolveTransform.yaw}
+                                            °
+                                        </button>
+                                        <button
+                                            data-testid="editor-revolve-pitch-badge"
+                                            onClick={() => setRevolveTransform((p) => ({ ...p, pitch: 0 }))}
+                                            disabled={isGenerating || revolveTransform.pitch === 0}
+                                            className={`px-1.5 py-0.5 rounded text-[11px] font-mono font-bold transition-colors ${
+                                                revolveTransform.pitch !== 0
+                                                    ? 'text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20'
+                                                    : 'text-gray-400 dark:text-gray-500 cursor-default'
+                                            }`}
+                                            title={`Pitch: ${revolveTransform.pitch}° (Click to reset 0°)`}
+                                        >
+                                            P:{' '}
+                                            {revolveTransform.pitch > 0
+                                                ? `+${revolveTransform.pitch}`
+                                                : revolveTransform.pitch}
+                                            °
+                                        </button>
+                                        <button
+                                            data-testid="editor-revolve-zoom-badge"
+                                            onClick={() => setRevolveTransform((p) => ({ ...p, zoom: 1 }))}
+                                            disabled={isGenerating || (revolveTransform.zoom ?? 1) === 1}
+                                            className={`px-1.5 py-0.5 rounded text-[11px] font-mono font-bold transition-colors ${
+                                                (revolveTransform.zoom ?? 1) !== 1
+                                                    ? 'text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20'
+                                                    : 'text-gray-400 dark:text-gray-500 cursor-default'
+                                            }`}
+                                            title={`Zoom: ${Math.round((revolveTransform.zoom ?? 1) * 100)}% (Click to reset 100%)`}
+                                        >
+                                            Z: {Math.round((revolveTransform.zoom ?? 1) * 100)}%
+                                        </button>
+                                        {((revolveTransform.panX ?? 0) !== 0 || (revolveTransform.panY ?? 0) !== 0) && (
+                                            <button
+                                                data-testid="editor-revolve-pan-badge"
+                                                onClick={() => setRevolveTransform((p) => ({ ...p, panX: 0, panY: 0 }))}
+                                                disabled={isGenerating}
+                                                className="px-1.5 py-0.5 rounded text-[11px] font-mono font-bold transition-colors text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                                                title="Pan (Click to reset center)"
+                                            >
+                                                Pan: {revolveTransform.panX ?? 0}, {revolveTransform.panY ?? 0}
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="w-px bg-gray-300 dark:bg-gray-700 mx-1"></div>
+                                    <button
+                                        data-testid="editor-revolve-reset"
+                                        onClick={() =>
+                                            setRevolveTransform({ yaw: 0, pitch: 0, panX: 0, panY: 0, zoom: 1 })
+                                        }
+                                        disabled={
+                                            isGenerating ||
+                                            (revolveTransform.yaw === 0 &&
+                                                revolveTransform.pitch === 0 &&
+                                                (revolveTransform.panX ?? 0) === 0 &&
+                                                (revolveTransform.panY ?? 0) === 0 &&
+                                                (revolveTransform.zoom ?? 1) === 1)
+                                        }
+                                        className="px-3 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded uppercase transition-colors disabled:opacity-50"
+                                    >
+                                        {t('btnReset')}
+                                    </button>
+                                </>
                             ) : (
                                 <>
                                     <button
+                                        data-testid="editor-fit-view"
                                         onClick={() => fitImageToFrame('contain')}
                                         disabled={isGenerating}
                                         className="px-2 py-1.5 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
@@ -1055,6 +1472,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                         {t('btnFit')}
                                     </button>
                                     <button
+                                        data-testid="editor-fill-view"
                                         onClick={() => fitImageToFrame('cover')}
                                         disabled={isGenerating}
                                         className="px-2 py-1.5 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
@@ -1151,6 +1569,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
 
                                     <div className="w-px bg-gray-300 dark:bg-gray-700 mx-1"></div>
                                     <button
+                                        data-testid="editor-reset"
                                         onClick={() => resetTools(false)}
                                         disabled={isGenerating}
                                         className="px-3 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded uppercase transition-colors disabled:opacity-50"
@@ -1231,6 +1650,59 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                             strokeLinejoin="round"
                                             strokeWidth={2}
                                             d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Left Tools (Revolve: Orbit & Pan) */}
+                        {mode === 'revolve' && leftDockTopOffset !== null && (
+                            <div
+                                data-testid="editor-revolve-toolbar"
+                                className="nbu-toolbar-shell fixed left-4 flex flex-col gap-2 p-1.5 pointer-events-auto transition-all md:left-5"
+                                style={{ top: leftDockTopOffset }}
+                            >
+                                {/* Orbit Tool */}
+                                <button
+                                    data-testid="editor-revolve-orbit-tool"
+                                    onClick={() => setRevolveTool('orbit')}
+                                    disabled={isGenerating}
+                                    className={`p-3 rounded-lg transition-colors disabled:opacity-50 ${
+                                        revolveTool === 'orbit'
+                                            ? 'bg-amber-500 text-black shadow-md'
+                                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                                    }`}
+                                    title={t('revolveToolOrbit')}
+                                >
+                                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                        />
+                                    </svg>
+                                </button>
+
+                                {/* Pan Tool */}
+                                <button
+                                    data-testid="editor-revolve-pan-tool"
+                                    onClick={() => setRevolveTool('pan')}
+                                    disabled={isGenerating}
+                                    className={`p-3 rounded-lg transition-colors disabled:opacity-50 ${
+                                        revolveTool === 'pan'
+                                            ? 'bg-amber-500 text-black shadow-md'
+                                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                                    }`}
+                                    title={t('revolveToolPan')}
+                                >
+                                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"
                                         />
                                     </svg>
                                 </button>
@@ -1324,6 +1796,171 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                 </div>
                             )}
 
+                            {/* Rotation Slider (Outpaint mode) */}
+                            {mode === 'outpaint' && (
+                                <div className="nbu-toolbar-shell flex flex-col items-center gap-2 rounded-full px-1.5 py-3 transition-colors">
+                                    <button
+                                        data-testid="editor-rotation-badge"
+                                        onClick={() => handleRotationChange(0)}
+                                        disabled={isGenerating || imgTransform.rotation === 0}
+                                        className={`text-[10px] font-mono font-bold transition-colors ${
+                                            imgTransform.rotation !== 0
+                                                ? 'text-amber-600 dark:text-amber-400 hover:underline cursor-pointer'
+                                                : 'text-gray-500 dark:text-gray-400 cursor-default'
+                                        }`}
+                                        title={`${t('toolRotation')}: ${Math.round(imgTransform.rotation)}° (Click to reset 0°)`}
+                                    >
+                                        {Math.round(imgTransform.rotation)}°
+                                    </button>
+                                    <div className="h-32 w-2 relative flex justify-center">
+                                        <input
+                                            data-testid="editor-rotation-slider"
+                                            type="range"
+                                            min="-180"
+                                            max="180"
+                                            step={isMagnetActive ? 45 : 1}
+                                            value={Math.round(imgTransform.rotation)}
+                                            onChange={(e) => handleRotationChange(Number(e.target.value))}
+                                            disabled={isGenerating}
+                                            className="absolute top-0 left-1/2 -translate-x-1/2 h-full w-32 -rotate-90 origin-center bg-transparent appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-amber-500 [&::-webkit-slider-thumb]:rounded-full disabled:opacity-50"
+                                            style={{ width: '128px' }}
+                                            title={t('toolRotation')}
+                                        />
+                                    </div>
+                                    <button
+                                        data-testid="editor-magnet-snap"
+                                        onClick={toggleMagnet}
+                                        disabled={isGenerating}
+                                        aria-pressed={isMagnetActive}
+                                        className={`flex flex-col items-center justify-center p-1.5 rounded-lg text-xs transition-colors ${
+                                            isMagnetActive
+                                                ? 'bg-amber-500 text-black font-bold shadow-sm ring-1 ring-amber-400'
+                                                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                                        }`}
+                                        title={`${t('toolMagnetSnap')}: ${isMagnetActive ? 'ON' : 'OFF'}`}
+                                    >
+                                        <svg
+                                            className="w-4 h-4"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth={2}
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        >
+                                            <path
+                                                d="M4 4v7a8 8 0 0 0 16 0V4h-4v7a4 4 0 0 1-8 0V4H4z"
+                                                fill={isMagnetActive ? 'currentColor' : 'none'}
+                                                fillOpacity={isMagnetActive ? 0.25 : 0}
+                                            />
+                                            <line x1="4" y1="8" x2="8" y2="8" strokeWidth={1.5} />
+                                            <line x1="16" y1="8" x2="20" y2="8" strokeWidth={1.5} />
+                                        </svg>
+                                        <span className="text-[9px] font-mono font-bold leading-none mt-0.5">45°</span>
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Revolve Dual Sliders (Yaw & Pitch & Zoom) */}
+                            {mode === 'revolve' && (
+                                <div className="nbu-toolbar-shell flex flex-col items-center gap-3 rounded-2xl px-2 py-3 transition-colors">
+                                    {/* Yaw Slider */}
+                                    <div className="flex flex-col items-center gap-1">
+                                        <div className="text-[10px] font-mono font-bold text-gray-500 dark:text-gray-400">
+                                            Y: {revolveTransform.yaw}°
+                                        </div>
+                                        <div className="h-28 w-2 relative flex justify-center">
+                                            <input
+                                                data-testid="editor-revolve-yaw-slider"
+                                                type="range"
+                                                min="-90"
+                                                max="90"
+                                                step="1"
+                                                value={revolveTransform.yaw}
+                                                onChange={(e) =>
+                                                    setRevolveTransform((p) => ({
+                                                        ...p,
+                                                        yaw: Number(e.target.value),
+                                                    }))
+                                                }
+                                                disabled={isGenerating}
+                                                className="absolute top-0 left-1/2 -translate-x-1/2 h-full w-28 -rotate-90 origin-center bg-transparent appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-amber-500 [&::-webkit-slider-thumb]:rounded-full disabled:opacity-50"
+                                                style={{ width: '112px' }}
+                                                title={t('revolveYaw')}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="w-full h-px bg-gray-200 dark:bg-gray-700" />
+
+                                    {/* Pitch Slider */}
+                                    <div className="flex flex-col items-center gap-1">
+                                        <div className="text-[10px] font-mono font-bold text-gray-500 dark:text-gray-400">
+                                            P: {revolveTransform.pitch}°
+                                        </div>
+                                        <div className="h-28 w-2 relative flex justify-center">
+                                            <input
+                                                data-testid="editor-revolve-pitch-slider"
+                                                type="range"
+                                                min="-45"
+                                                max="45"
+                                                step="1"
+                                                value={revolveTransform.pitch}
+                                                onChange={(e) =>
+                                                    setRevolveTransform((p) => ({
+                                                        ...p,
+                                                        pitch: Number(e.target.value),
+                                                    }))
+                                                }
+                                                disabled={isGenerating}
+                                                className="absolute top-0 left-1/2 -translate-x-1/2 h-full w-28 -rotate-90 origin-center bg-transparent appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-amber-500 [&::-webkit-slider-thumb]:rounded-full disabled:opacity-50"
+                                                style={{ width: '112px' }}
+                                                title={t('revolvePitch')}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="w-full h-px bg-gray-200 dark:bg-gray-700" />
+
+                                    {/* Zoom Slider */}
+                                    <div className="flex flex-col items-center gap-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => setRevolveTransform((p) => ({ ...p, zoom: 1 }))}
+                                            disabled={isGenerating || (revolveTransform.zoom ?? 1) === 1}
+                                            className={`text-[10px] font-mono font-bold transition-colors ${
+                                                (revolveTransform.zoom ?? 1) !== 1
+                                                    ? 'text-amber-600 dark:text-amber-400 hover:underline cursor-pointer'
+                                                    : 'text-gray-500 dark:text-gray-400 cursor-default'
+                                            }`}
+                                            title="Zoom (Click to reset 100%)"
+                                        >
+                                            Z: {Math.round((revolveTransform.zoom ?? 1) * 100)}%
+                                        </button>
+                                        <div className="h-28 w-2 relative flex justify-center">
+                                            <input
+                                                data-testid="editor-revolve-zoom-slider"
+                                                type="range"
+                                                min="20"
+                                                max="300"
+                                                step="5"
+                                                value={Math.round((revolveTransform.zoom ?? 1) * 100)}
+                                                onChange={(e) =>
+                                                    setRevolveTransform((p) => ({
+                                                        ...p,
+                                                        zoom: Math.round(Number(e.target.value)) / 100,
+                                                    }))
+                                                }
+                                                disabled={isGenerating}
+                                                className="absolute top-0 left-1/2 -translate-x-1/2 h-full w-28 -rotate-90 origin-center bg-transparent appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-amber-500 [&::-webkit-slider-thumb]:rounded-full disabled:opacity-50"
+                                                style={{ width: '112px' }}
+                                                title={t('revolveZoom')}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Zoom Slider */}
                             <div className="nbu-toolbar-shell flex flex-col items-center gap-2 rounded-full px-1.5 py-3 transition-colors">
                                 <div className="text-gray-500 dark:text-gray-400 mb-1">
@@ -1342,11 +1979,11 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                         min="0.1"
                                         max="5"
                                         step="0.05"
-                                        value={mode === 'inpaint' ? viewport.zoom : imgTransform.scale}
+                                        value={mode === 'outpaint' ? imgTransform.scale : viewport.zoom}
                                         onChange={(e) => {
                                             const v = Number(e.target.value);
-                                            if (mode === 'inpaint') setViewport((p) => ({ ...p, zoom: v }));
-                                            else setImgTransform((p) => ({ ...p, scale: v }));
+                                            if (mode === 'outpaint') setImgTransform((p) => ({ ...p, scale: v }));
+                                            else setViewport((p) => ({ ...p, zoom: v }));
                                         }}
                                         disabled={isGenerating}
                                         className="absolute top-0 left-1/2 -translate-x-1/2 h-full w-32 -rotate-90 origin-center bg-transparent appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:rounded-full disabled:opacity-50"
@@ -1396,7 +2033,8 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                     ${mode === 'inpaint' && activeTool === 'brush' ? 'cursor-none' : ''}
                     ${mode === 'inpaint' && activeTool === 'pen' ? 'cursor-crosshair' : ''}
                     ${mode === 'inpaint' && activeTool === 'text' ? 'cursor-text' : ''}
-                    ${mode === 'outpaint' ? 'cursor-move' : ''}
+                    ${mode === 'revolve' ? (interactionState === 'orbiting_revolve' || interactionState === 'panning_revolve' ? 'cursor-grabbing' : 'cursor-grab') : ''}
+                    ${mode === 'outpaint' ? (interactionState === 'rotating_image' ? 'cursor-grabbing' : isOverRotationHandle ? 'cursor-grab' : 'cursor-move') : ''}
                 `}
                     onPointerDown={handlePointerDown}
                     onPointerMove={handlePointerMove}
@@ -1407,6 +2045,11 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                     }}
                     onPointerEnter={() => setIsHovering(true)}
                     onWheel={handleWheel}
+                    onContextMenu={(e) => {
+                        if (mode === 'revolve') {
+                            e.preventDefault();
+                        }
+                    }}
                 />
 
                 {/* CONTENT LAYER */}
@@ -1435,6 +2078,31 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                 />
                                 <div className="absolute inset-0 border border-white/20 pointer-events-none transition-colors duration-500" />
                             </div>
+                        ) : mode === 'revolve' ? (
+                            <div
+                                className="relative overflow-hidden border border-gray-400 bg-checkerboard shadow-2xl transition-colors duration-500 dark:border-gray-700"
+                                style={{ width: frameDims.w, height: frameDims.h }}
+                            >
+                                <canvas
+                                    data-testid="editor-revolve-canvas"
+                                    ref={revolveCanvasRef}
+                                    width={frameDims.w}
+                                    height={frameDims.h}
+                                    className="w-full h-full block"
+                                />
+                                <div className="absolute top-2 left-2 pointer-events-none flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/70 text-[11px] font-mono font-medium text-emerald-300 backdrop-blur-sm border border-emerald-500/30 shadow-lg">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                    <span>
+                                        3DGS{' '}
+                                        {revolveTransform.yaw > 0 ? `+${revolveTransform.yaw}` : revolveTransform.yaw}°
+                                        /{' '}
+                                        {revolveTransform.pitch > 0
+                                            ? `+${revolveTransform.pitch}`
+                                            : revolveTransform.pitch}
+                                        °
+                                    </span>
+                                </div>
+                            </div>
                         ) : (
                             <div
                                 className="relative overflow-hidden border border-gray-400 bg-checkerboard shadow-2xl transition-colors duration-500 dark:border-gray-700"
@@ -1445,7 +2113,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                     style={{
                                         width: originalDims.w,
                                         height: originalDims.h,
-                                        transform: `translate(-50%, -50%) translate(${imgTransform.x}px, ${imgTransform.y}px) scale(${imgTransform.scale})`,
+                                        transform: `translate(-50%, -50%) translate(${imgTransform.x}px, ${imgTransform.y}px) rotate(${imgTransform.rotation}deg) scale(${imgTransform.scale})`,
                                     }}
                                 >
                                     <img
@@ -1454,6 +2122,22 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                         alt="Source"
                                     />
                                     <div className="absolute inset-0 border-2 border-blue-500/50 transition-colors" />
+
+                                    {/* Rotation Handle Widget */}
+                                    <div
+                                        data-testid="editor-rotation-handle"
+                                        className="absolute left-1/2 -top-7 flex -translate-x-1/2 flex-col items-center pointer-events-none"
+                                        style={{ transformOrigin: 'bottom center' }}
+                                    >
+                                        <div
+                                            className={`w-3.5 h-3.5 rounded-full border-2 bg-white shadow-md transition-all ${
+                                                isOverRotationHandle || interactionState === 'rotating_image'
+                                                    ? 'border-amber-500 bg-amber-100 scale-125'
+                                                    : 'border-blue-500'
+                                            }`}
+                                        />
+                                        <div className="w-0.5 h-3.5 bg-blue-500/80" />
+                                    </div>
                                 </div>
                             </div>
                         )}

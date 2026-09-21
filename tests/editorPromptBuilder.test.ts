@@ -30,7 +30,9 @@ describe('editorPromptBuilder', () => {
         expect(result.finalPrompt).toContain('Turn the sign into neon.');
         expect(result.finalPrompt).toContain('Use the doodles as spatial guidance for the edit.');
         expect(result.finalPrompt).toContain('Preserve content outside the edited areas exactly as shown.');
-        expect(result.finalPrompt).toContain('Integrate changes naturally with consistent lighting, perspective, and texture.');
+        expect(result.finalPrompt).toContain(
+            'Integrate changes naturally with consistent lighting, perspective, and texture.',
+        );
         expect(result.finalPrompt).toContain('"Open Late"');
     });
 
@@ -92,5 +94,43 @@ describe('editorPromptBuilder', () => {
         );
         expect(result.finalPrompt).not.toContain('Keep the existing crop anchored');
         expect(result.finalPrompt).not.toContain('Keep the existing crop locked');
+    });
+
+    it('instructs green area repainting when the frame is rotated even if position and scale fill bounds', () => {
+        const result = buildEditorPrompt({
+            mode: 'outpaint',
+            prompt: '',
+            outpaintContext: {
+                frameDims: { w: 1000, h: 1000 },
+                originalDims: { w: 1000, h: 1000 },
+                imgTransform: { x: 0, y: 0, scale: 1, rotation: 45 },
+            },
+        });
+
+        expect(result.finalPrompt).toContain(
+            'The bright green (R:0, G:255, B:0) areas represent the region to repaint based on the prompt. Preserve everything outside the green areas exactly as shown. Blend the repainted regions seamlessly and ensure no green pixels remain.',
+        );
+        expect(result.finalPrompt).not.toContain('The frame is already fully covered');
+    });
+
+    it('builds revolve prompt with camera rotation, zoom framing, and pan offset instructions', () => {
+        const result = buildEditorPrompt({
+            mode: 'revolve',
+            prompt: 'Cinematic city street',
+            revolveContext: {
+                yaw: 25,
+                pitch: -15,
+                zoom: 1.5,
+                panX: 40,
+                panY: -20,
+            },
+        });
+
+        expect(result.finalPrompt).toContain('yaw=25° (rotated 25° to the right)');
+        expect(result.finalPrompt).toContain('pitch=-15° (lowered 15° downwards (low angle))');
+        expect(result.finalPrompt).toContain('Camera zoom-in framing factor 1.50x (closer view).');
+        expect(result.finalPrompt).toContain('Camera spatial offset / translation applied for reframing.');
+        expect(result.finalPrompt).toContain('3D Gaussian splatting spatial guidance with 3D parallax perspective');
+        expect(result.finalModeLabel).toBe('Revolving');
     });
 });

@@ -8,9 +8,7 @@ import {
 
 describe('savedImageFilename helpers', () => {
     it('normalizes remote model resource names before building stems', () => {
-        expect(normalizeSavedImageModelId('models/gemini-3.1-flash-image')).toBe(
-            'gemini-3.1-flash-image',
-        );
+        expect(normalizeSavedImageModelId('models/gemini-3.1-flash-image')).toBe('gemini-3.1-flash-image');
     });
 
     it('maps workflow modes to stable ASCII slugs', () => {
@@ -20,6 +18,7 @@ describe('savedImageFilename helpers', () => {
         expect(getSavedImageWorkflowSlug('Editor Edit')).toBe('editor-edit');
         expect(getSavedImageWorkflowSlug('Inpainting')).toBe('editor-retouch');
         expect(getSavedImageWorkflowSlug('Outpaint')).toBe('editor-reframe');
+        expect(getSavedImageWorkflowSlug('Revolve')).toBe('editor-revolve');
     });
 
     it('builds deterministic saved image stems from model, timestamp, slot, and workflow', () => {
