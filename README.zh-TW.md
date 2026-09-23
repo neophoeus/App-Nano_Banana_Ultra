@@ -112,6 +112,22 @@ Nano Banana Ultra 目前支援四條 Gemini 影像模型路徑。介面會依模
 - 在可用時查看 provenance 與 grounding 脈絡
 - 把有價值的結果直接回灌到下一輪，而不是手動重複複製整理
 
+## 工作區快照匯出與成品提取工具 (Workspace Extractor Companion)
+
+當你在 **Google AI Studio 運行模式**（或純瀏覽器端 Client 模式）下使用本專案時，產出的成品圖片、變體圖、思考過程圖與歷史紀錄會內嵌保存在匯出的 `.json` 工作區快照檔案中（檔名預設為 `nano-banana-workspace-*.json`）。
+
+如果你希望從匯出的工作區快照中批次提取出高解析度的純淨成品圖片（PNG / JPEG），並完整保留無損提示詞與生成中繼資料（Metadata），可以搭配使用專屬開源提取工具：
+
+👉 **[App-Nano_Banana_Workspace_Extractor](https://github.com/neophoeus/App-Nano_Banana_Workspace_Extractor)**
+
+- **純原生零依賴**：100% 原生 Node.js 實作，免去複雜的 `npm install`，並支援 Windows 桌面一鍵拖曳（`.bat`）與 CLI 批次解析。
+- **無損中繼資料內嵌（極致無雜訊）**：
+  - **PNG 格式**：將提示詞、模型、風格、尺寸等生成參數與思考過程完整內嵌至圖片的 `iTXt` 區塊。
+  - **JPEG 格式**：針對 Gemini 模型產出之原生 JPEG，直接將結構化資料與標準參數注入標準 COM (`0xFF 0xFE`) 註解區塊，**不重新編碼或壓縮像素，100% 保持原圖無損畫質**。
+  - 輸出目錄只保留乾淨的 `.png` 與 `.jpg` 圖片，不產生多餘的 `.txt` 檔案。
+- **智慧過濾**：自動排除縮圖（Thumbnail）與舞台參考素材（Staged Assets），只萃取實際生成的成品圖、變體圖（Variant）與思考過程圖（Thought Image）。
+- **專屬離線視覺化檢視器**：附帶輕量單檔 `viewer.html`，雙擊即可在瀏覽器中離線拖入圖片，提供高品質大圖預覽、底片切換條、結構化參數清單與**一鍵複製提示詞**功能。
+
 ## 版本總覽
 
 ### 最新版本：4.7.1

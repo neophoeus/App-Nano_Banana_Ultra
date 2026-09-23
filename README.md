@@ -112,6 +112,22 @@ Nano Banana Ultra currently supports four Gemini image-model paths. The UI expos
 - inspect provenance and grounding context when available
 - push useful results back into the next generation pass instead of copying everything by hand
 
+## Workspace Export & Image Extraction Companion
+
+When running in **Google AI Studio Mode** (or client-side browser mode), all generated images, variant outputs, thought images, and session histories are embedded directly inside exported `.json` workspace snapshots (default filename pattern: `nano-banana-workspace-*.json`).
+
+If you want to extract raw high-resolution images (PNG / JPEG) directly from these workspace files while embedding complete generation prompts and metadata into the images themselves, you can use the companion tool:
+
+👉 **[App-Nano_Banana_Workspace_Extractor](https://github.com/neophoeus/App-Nano_Banana_Workspace_Extractor)**
+
+- **Zero Dependencies**: 100% native Node.js implementation without `npm install`, supporting Windows desktop drag-and-drop batch scripts (`.bat`) and CLI batch extraction.
+- **Lossless Metadata Injection (Zero Clutter)**:
+  - **PNG Format**: Embeds generation prompts, models, styles, aspect ratios, and thinking logs directly into PNG `iTXt` chunks.
+  - **JPEG Format**: For native JPEG outputs from Gemini models, injects structured metadata and standard parameters into COM (`0xFF 0xFE`) comment markers **without re-encoding or compressing pixels, maintaining 100% lossless image quality**.
+  - Keeps output folders neat and tidy with pure `.png` and `.jpg` files without redundant `.txt` sidecars.
+- **Intelligent Filtering**: Automatically isolates finished artworks, variants, and thought images while completely excluding low-res thumbnails and staged references.
+- **Offline Visual HTML Viewer**: Includes a standalone single-file `viewer.html` for offline parameter inspection, filmstrip browsing, and one-click prompt copying.
+
 ## Version Overview
 
 ### Latest Release: 4.7.1
