@@ -30,14 +30,8 @@ playwright.local.config.ts
 .env*.local
 e2e-global-log-focus.txt
 
-# Track repo-owned VS Code project metadata, ignore everything else in .vscode/
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/extensions.json
-!.vscode/launch.json
-
 # Editor directories and files
+.vscode/
 .idea/
 .DS_Store
 *.suo
