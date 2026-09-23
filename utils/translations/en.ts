@@ -50,6 +50,9 @@ export const en = {
         'Auto-backup: successfully generated {0} images or reached {1}MB size limit. Snapshot has been saved to your Downloads folder.',
     logAutoExportSuccess: 'Auto-exported workspace snapshot containing {0} history items.',
     cancelWithCountdown: 'Cancel (Round {0}/{1} • {2} left)',
+    windowCloseWarningTitle: 'Workspace will be lost',
+    windowCloseWarningMsg:
+        'Closing this app will discard the current workspace. Cancel and return first if you want to export the workspace.',
     objectRefs: 'Object References',
     characterRefs: 'Character References',
     unsupportedModel: 'Not supported by model',

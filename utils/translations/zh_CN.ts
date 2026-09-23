@@ -50,6 +50,9 @@ export const zh_CN = {
         '自动备份提示：已成功生成 {0} 张图片，或工作区容量增加了 {1}MB。已自动为您导出当前的工作区备份文件（.json）至下载文件夹，以防进度丢失。',
     logAutoExportSuccess: '已自动导出包含 {0} 笔历史记录的工作区备份。',
     cancelWithCountdown: '取消 (第 {0}/{1} 回合 • 剩 {2} 张)',
+    windowCloseWarningTitle: '关闭后将失去工作区',
+    windowCloseWarningMsg:
+        '关闭这个 App 会失去当前工作区。若要保留历史、舞台、提示词与会话上下文，请取消并先返回导出工作区。',
     objectRefs: '物件参考',
     characterRefs: '角色参考',
     unsupportedModel: '当前模型不支持',

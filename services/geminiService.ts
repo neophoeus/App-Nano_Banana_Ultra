@@ -1368,6 +1368,11 @@ export const enhancePromptWithGemini = async (
     safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
     thinkingLevel: PromptThinkingLevel = 'low',
 ): Promise<string> => {
+    const testOverride = getBrowserOnlyTestGeminiServiceOverrides()?.enhancePromptWithGemini;
+    if (testOverride) {
+        return await testOverride(currentPrompt, lang, safetyThresholds, thinkingLevel);
+    }
+
     if (getResolvedExecutionMode() === 'direct') {
         return await browserDirectProvider.enhancePrompt(currentPrompt, lang, safetyThresholds, thinkingLevel);
     }
@@ -1437,6 +1442,11 @@ export const generateRandomPrompt = async (
     safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
     thinkingLevel: PromptThinkingLevel = 'low',
 ): Promise<string> => {
+    const testOverride = getBrowserOnlyTestGeminiServiceOverrides()?.generateRandomPrompt;
+    if (testOverride) {
+        return await testOverride(lang, safetyThresholds, thinkingLevel);
+    }
+
     if (getResolvedExecutionMode() === 'direct') {
         return await browserDirectProvider.generateRandomPrompt(lang, safetyThresholds, thinkingLevel);
     }
@@ -1507,6 +1517,11 @@ export const generatePromptFromImage = async (
     safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
     thinkingLevel: PromptThinkingLevel = 'low',
 ): Promise<string> => {
+    const testOverride = getBrowserOnlyTestGeminiServiceOverrides()?.generatePromptFromImage;
+    if (testOverride) {
+        return await testOverride(imageDataUrl, lang, safetyThresholds, thinkingLevel);
+    }
+
     if (getResolvedExecutionMode() === 'direct') {
         return await browserDirectProvider.generatePromptFromImage(imageDataUrl, lang, safetyThresholds, thinkingLevel);
     }
@@ -1651,6 +1666,57 @@ export type GenerationResult = {
     grounding?: GenerateResponse['grounding'];
     sessionHints?: GenerateResponse['sessionHints'];
     conversation?: GenerateResponse['conversation'];
+};
+
+export type BrowserOnlyTestGenerateImageContext = {
+    batchSize: number;
+    abortSignal?: AbortSignal;
+    onProgress?: (current: number, total: number) => void;
+    onResult?: (result: GenerationResult) => void;
+    onImageReceived?: (
+        url: string,
+        slotIndex: number,
+    ) => Promise<ImageReceivedResult | undefined> | ImageReceivedResult | undefined;
+    onLog?: (message: string) => void;
+    onLiveProgressEvent?: (event: GenerationLiveProgressEvent) => void;
+    onSlotStart?: (slotIndex: number) => void;
+};
+
+export type BrowserOnlyTestGeminiServiceOverrides = {
+    enhancePromptWithGemini?: (
+        currentPrompt: string,
+        lang?: Language,
+        safetyThresholds?: Partial<SafetyThresholds>,
+        thinkingLevel?: PromptThinkingLevel,
+    ) => Promise<string> | string;
+    generateRandomPrompt?: (
+        lang?: Language,
+        safetyThresholds?: Partial<SafetyThresholds>,
+        thinkingLevel?: PromptThinkingLevel,
+    ) => Promise<string> | string;
+    generatePromptFromImage?: (
+        imageDataUrl: string,
+        lang?: Language,
+        safetyThresholds?: Partial<SafetyThresholds>,
+        thinkingLevel?: PromptThinkingLevel,
+    ) => Promise<string> | string;
+    generateImageWithGemini?: (
+        options: GenerateOptions,
+        context: BrowserOnlyTestGenerateImageContext,
+    ) => Promise<GenerationResult[]> | GenerationResult[];
+};
+
+export const getBrowserOnlyTestGeminiServiceOverrides = (): BrowserOnlyTestGeminiServiceOverrides | null => {
+    if (typeof window === 'undefined') {
+        return null;
+    }
+
+    const globalWindow = window as typeof window & {
+        __NBU_TEST_SERVICE_OVERRIDES__?: BrowserOnlyTestGeminiServiceOverrides;
+        __NBU_LITE_TEST_SERVICE_OVERRIDES__?: BrowserOnlyTestGeminiServiceOverrides;
+    };
+
+    return globalWindow.__NBU_TEST_SERVICE_OVERRIDES__ || globalWindow.__NBU_LITE_TEST_SERVICE_OVERRIDES__ || null;
 };
 
 export type RemoteQueuedBatchJob = {
@@ -2030,6 +2096,20 @@ export const generateImageWithGemini = async (
     onLiveProgressEvent?: (event: GenerationLiveProgressEvent) => void,
     onSlotStart?: (slotIndex: number) => void,
 ): Promise<GenerationResult[]> => {
+    const testOverride = getBrowserOnlyTestGeminiServiceOverrides()?.generateImageWithGemini;
+    if (testOverride) {
+        return await testOverride(options, {
+            batchSize,
+            abortSignal,
+            onProgress,
+            onResult,
+            onImageReceived,
+            onLog: (msg: string) => onLog?.(msg),
+            onLiveProgressEvent,
+            onSlotStart,
+        });
+    }
+
     if (getResolvedExecutionMode() === 'direct') {
         return await browserDirectProvider.generateImages(options, batchSize, {
             onImageReceived,

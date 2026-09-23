@@ -1,5 +1,18 @@
 # Changelog
 
+## v4.7.1 - 2026-09-23
+
+- Release title: Nano Banana Ultra 4.7.1 - Lite Edition Parity: Multilingual Window Confirmation, Extended Lifecycle Test Coverage & Browser-Only Test Service Overrides
+- Release summary:
+    - **9-Language Window Close Warning Localization (`utils/translations/*.ts`)**: Added `windowCloseWarningTitle` and `windowCloseWarningMsg` across all 9 supported languages (`en`, `zh_TW`, `zh_CN`, `ja`, `ko`, `de`, `es`, `fr`, `ru`). Confirmed complete localization parity between Ultra and the standalone Lite edition with zero remaining translation key differences.
+    - **Expanded Workspace Lifecycle Unit Test Coverage (`tests/useWorkspaceAppLifecycle.test.tsx`)**: Ported 4 missing lifecycle unit test suites from Lite, expanding the suite from 4 to 8 passing tests (100% pass rate):
+        - Intercepting and registering beforeunload confirmation warnings while actively generating (`isGenerating: true`) and verifying event listener cleanup on unmount.
+        - API key readiness polling (250ms interval) and verifying cleanup of the 10-second background heartbeat timer.
+        - Direct-mode IndexedDB storage warning notifications when browser storage exceeds the 300MB warning threshold.
+        - Workspace snapshot auto-export suppression when image count and file size are strictly beneath configured thresholds (`count < 20` and `size < 100MB`).
+    - **Browser-Only Test Service Overrides & Playwright Smoke Suite (`services/geminiService.ts`, `e2e/workspace-generation.smoke.spec.ts`)**: Integrated `BrowserOnlyTestGeminiServiceOverrides` and `BrowserOnlyTestGenerateImageContext` supporting `window.__NBU_TEST_SERVICE_OVERRIDES__` and backward-compatible `window.__NBU_LITE_TEST_SERVICE_OVERRIDES__` hooks for deterministic client-side generation mocking across prompt tools and image workflows. Introduced dedicated Playwright E2E smoke tests validating browser batch generation cancellation flows (cancel early before preview, and preview stays stage-only until cancel commits the completed turn).
+    - **Zero-Regression Full Suite Verification**: Verified complete passing status across all 125 Vitest test suites (1,037 tests), all Playwright smoke tests, clean Prettier style formatting, and successful Vite production bundle compilation.
+
 ## v4.7.0 - 2026-09-21
 
 - Release title: Nano Banana Ultra 4.7.0 - Gemini Batch Queue Official Standardization & App Shell Modularization

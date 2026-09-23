@@ -50,6 +50,9 @@ export const de = {
         'Automatische Sicherung: {0} Bilder erfolgreich generiert oder Kapazitätsgrenze von {1}MB erreicht. Die Sicherungsdatei wurde in Downloads gespeichert.',
     logAutoExportSuccess: 'Es wurde automatisch eine Kopie des Arbeitsbereichs mit {0} Verlaufseinträgen exportiert.',
     cancelWithCountdown: 'Abbrechen (Runde {0}/{1} • {2} übrig)',
+    windowCloseWarningTitle: 'Arbeitsbereich geht verloren',
+    windowCloseWarningMsg:
+        'Wenn du diese App schließt, wird der aktuelle Arbeitsbereich verworfen. Brich ab und kehre zuerst zurück, wenn du den Arbeitsbereich exportieren möchtest.',
     objectRefs: 'Objektreferenzen',
     characterRefs: 'Charakterreferenzen',
     unsupportedModel: 'Wird von diesem Modell nicht unterstützt',

@@ -50,6 +50,9 @@ export const ko = {
         '자동 백업 알림: {0}개의 이미지를 정상적으로 생성했거나 작업 공간 용량이 {1}MB 증가했습니다. 진행 상황의 손실을 방지하기 위해 현재 작업 공간의 스냅샷(.json)을 다운로드 폴더에 자동으로 내보냈습니다.',
     logAutoExportSuccess: '{0}개의 내역 항목을 포함하는 작업 공간 스냅샷을 자동으로 내보냈습니다.',
     cancelWithCountdown: '취소 (라운드 {0}/{1} • {2}장 남음)',
+    windowCloseWarningTitle: '작업공간이 사라집니다',
+    windowCloseWarningMsg:
+        '이 앱을 닫으면 현재 작업공간이 삭제됩니다. 보관하려면 먼저 취소하고 돌아가 작업공간을 내보내세요.',
     objectRefs: '오브젝트 참조',
     characterRefs: '캐릭터 참조',
     unsupportedModel: '해당 모델에서는 지원하지 않습니다',

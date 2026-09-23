@@ -114,13 +114,13 @@ Nano Banana Ultra 目前支援四條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：4.7.0
+### 最新版本：4.7.1
 
 版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 4.7.x+（4.x 系列）
 
-4.7.x 正式將遠端 Gemini 批次佇列（Batch Queue）標準化至 `@google/genai` v1.31.0+ 官方 API 規範（包含提供 `{ contents, generationConfig }` 標準 Schema 退避、分頁列舉端點 `/api/batches/list`、遠端清理端點 `/api/batches/delete`，以及工作區遠端批次任務隨選同步恢復）。同時針對主應用程式外殼執行重要模組化重構，將 `App.tsx` 自 3,044 行精簡至 2,482 行（減少 ~562 行），抽離頂部導航支援軌（`WorkspaceSupportRail.tsx`）、舞台下載與 Sidecar JSON 構建（`useStageImageDownloadActions.ts`）、批次預覽與即時串流 Session（`useBatchPreviewSession.ts`），以及統一的細節彈窗覆蓋容器（`WorkspaceDetailOverlays.tsx`），保持 Phase B 渲染穩定性零多餘 re-render，自動化測試套件 100% 通過。
+4.7.x 正式將遠端 Gemini 批次佇列（Batch Queue）標準化至 `@google/genai` v1.31.0+ 官方 API 規範（包含提供 `{ contents, generationConfig }` 標準 Schema 退避、分頁列舉端點 `/api/batches/list`、遠端清理端點 `/api/batches/delete`，以及工作區遠端批次任務隨選同步恢復），並完整收斂獨立 Lite 版的 9 國語言視窗關閉確認鍵、擴充生命週期單元測試覆蓋率，以及支援客戶端測試服務覆寫 Hook 與 Playwright 煙霧測試。同時針對主應用程式外殼執行重要模組化重構，將 `App.tsx` 自 3,044 行精簡至 2,482 行（減少 ~562 行），抽離頂部導航支援軌（`WorkspaceSupportRail.tsx`）、舞台下載與 Sidecar JSON 構建（`useStageImageDownloadActions.ts`）、批次預覽與即時串流 Session（`useBatchPreviewSession.ts`），以及統一的細節彈窗覆蓋容器（`WorkspaceDetailOverlays.tsx`），保持 Phase B 渲染穩定性零多餘 re-render，自動化測試套件 100% 通過。
 
 ### 4.6.x+（4.x 系列）
 

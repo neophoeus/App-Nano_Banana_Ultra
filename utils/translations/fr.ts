@@ -51,6 +51,9 @@ export const fr = {
     logAutoExportSuccess:
         "Une copie de sauvegarde de l'espace de travail contenant {0} éléments d'historique a été exportée automatiquement.",
     cancelWithCountdown: 'Annuler (Tour {0}/{1} • {2} rest.)',
+    windowCloseWarningTitle: "L'espace de travail sera perdu",
+    windowCloseWarningMsg:
+        "Fermer cette app supprimera l'espace de travail actuel. Annulez et revenez d'abord si vous voulez exporter l'espace de travail.",
     objectRefs: "Références d'objets",
     characterRefs: 'Références de personnages',
     unsupportedModel: 'Non pris en charge par ce modèle',

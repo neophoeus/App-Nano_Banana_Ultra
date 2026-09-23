@@ -51,6 +51,9 @@ export const es = {
     logAutoExportSuccess:
         'Se ha exportado automáticamente una copia del espacio de trabajo con {0} elementos de historial.',
     cancelWithCountdown: 'Cancelar (Ronda {0}/{1} • {2} rest.)',
+    windowCloseWarningTitle: 'Se perderá el espacio de trabajo',
+    windowCloseWarningMsg:
+        'Cerrar esta app descartará el espacio de trabajo actual. Cancela y vuelve primero si quieres exportar el espacio de trabajo.',
     objectRefs: 'Referencias de objetos',
     characterRefs: 'Referencias de personajes',
     unsupportedModel: 'No compatible con este modelo',
