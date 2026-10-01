@@ -25,10 +25,7 @@ const baseProps = {
     stickySendIntent: 'independent' as const,
     currentStageAsset: null,
     availableGroundingModes: ['off', 'google-search', 'image-search', 'google-search-plus-image-search'] as (
-        | 'off'
-        | 'google-search'
-        | 'image-search'
-        | 'google-search-plus-image-search'
+        'off' | 'google-search' | 'image-search' | 'google-search-plus-image-search'
     )[],
     temperature: 1,
     isAdvancedSettingsOpen: true,
@@ -68,10 +65,7 @@ const baseAdvancedSettingsDialogProps = {
     imageModel: 'gemini-3.1-flash-image' as const,
     capability: MODEL_CAPABILITIES['gemini-3.1-flash-image'],
     availableGroundingModes: ['off', 'google-search', 'image-search', 'google-search-plus-image-search'] as (
-        | 'off'
-        | 'google-search'
-        | 'image-search'
-        | 'google-search-plus-image-search'
+        'off' | 'google-search' | 'image-search' | 'google-search-plus-image-search'
     )[],
     temperature: 1,
     onOutputFormatChange: vi.fn(),
@@ -349,5 +343,25 @@ describe('ComposerAdvancedSettingsDialog grounding warning', () => {
         expect(markup).not.toContain('>Advanced settings<');
         expect(markup).not.toContain('>Close<');
         expect(markup).not.toContain('>閉じる<');
+    });
+
+    it('renders reference tag chips and prompt referenced badges when reference images are attached', () => {
+        const markup = renderToStaticMarkup(
+            <ComposerSettingsPanel
+                {...baseProps}
+                prompt="Generating a scene with [Obj_1] and [Char_1]"
+                objectImages={['data:image/png;base64,mockObj']}
+                characterImages={['data:image/png;base64,mockChar']}
+                groundingMode="off"
+                capability={MODEL_CAPABILITIES['gemini-3.1-flash-image']}
+            />,
+        );
+
+        expect(markup).toContain('composer-reference-chips');
+        expect(markup).toContain('composer-reference-chip-[Obj_1]');
+        expect(markup).toContain('composer-reference-chip-[Char_1]');
+        expect(markup).toContain('composer-referenced-badges-bar');
+        expect(markup).toContain('composer-cited-badge-[Obj_1]');
+        expect(markup).toContain('composer-cited-badge-[Char_1]');
     });
 });

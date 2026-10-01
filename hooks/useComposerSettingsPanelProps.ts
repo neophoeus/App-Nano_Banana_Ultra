@@ -88,6 +88,8 @@ type UseComposerSettingsPanelPropsArgs = {
     showNotification?: (message: string, type?: 'info' | 'error') => void;
     promptThinkingLevel?: PromptThinkingLevel;
     onPromptThinkingLevelChange?: (level: PromptThinkingLevel) => void;
+    objectImages?: string[];
+    characterImages?: string[];
 };
 
 type ComposerSettingsPanelHandlers = {
@@ -179,6 +181,8 @@ export function useComposerSettingsPanelProps({
     showNotification,
     promptThinkingLevel,
     onPromptThinkingLevelChange,
+    objectImages,
+    characterImages,
 }: UseComposerSettingsPanelPropsArgs): ComposerSettingsPanelProps {
     const getModelLabel = useCallback(
         (model: ImageModel) => {
@@ -332,6 +336,8 @@ export function useComposerSettingsPanelProps({
             supportsQueuedBatch,
             promptThinkingLevel,
             onPromptThinkingLevelChange,
+            objectImages,
+            characterImages,
         }),
         [
             prompt,
@@ -380,6 +386,8 @@ export function useComposerSettingsPanelProps({
             showNotification,
             promptThinkingLevel,
             onPromptThinkingLevelChange,
+            objectImages,
+            characterImages,
         ],
     );
 }

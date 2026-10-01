@@ -20,6 +20,7 @@ import {
     ThinkingLevel,
     TurnLineageAction,
 } from '../types';
+import { PromptReferenceChips, PromptReferencedBadges } from './PromptReferenceChips';
 
 const PROMPT_FONT_SIZE_STORAGE_KEY = 'nbu_prompt_font_size';
 const DEFAULT_PROMPT_FONT_SIZE = 14;
@@ -80,6 +81,8 @@ export type ComposerSettingsPanelProps = {
     promptTextareaRef?: React.RefObject<HTMLTextAreaElement | null>;
     onClearStyle?: () => void;
     imageToolsPanel?: React.ReactNode;
+    objectImages?: string[];
+    characterImages?: string[];
     roundCount?: number;
     onRoundCountChange?: (rounds: number) => void;
     autoExportTrigger?: 'off' | 'count' | 'size' | 'both';
@@ -202,6 +205,8 @@ function ComposerSettingsPanel({
     promptTextareaRef,
     onClearStyle,
     imageToolsPanel,
+    objectImages = [],
+    characterImages = [],
     roundCount = 1,
     onRoundCountChange,
     autoExportTrigger = 'off',
@@ -787,6 +792,59 @@ function ComposerSettingsPanel({
         onPromptChange('');
         resolvedPromptTextareaRef.current?.focus();
     };
+
+    const handleInsertReferenceTag = React.useCallback(
+        (tag: string) => {
+            const textarea = resolvedPromptTextareaRef.current;
+            if (!textarea) {
+                const next = prompt.trim() ? `${prompt} ${tag}` : tag;
+                onPromptChange(next);
+                return;
+            }
+
+            const start = textarea.selectionStart ?? prompt.length;
+            const end = textarea.selectionEnd ?? prompt.length;
+            const before = prompt.slice(0, start);
+            const after = prompt.slice(end);
+
+            const needsLeadingSpace = start > 0 && !/\s$/.test(before);
+            const needsTrailingSpace = after.length > 0 && !/^\s/.test(after);
+
+            const insertion = `${needsLeadingSpace ? ' ' : ''}${tag}${needsTrailingSpace ? ' ' : ' '}`;
+            const nextPrompt = `${before}${insertion}${after}`;
+            onPromptChange(nextPrompt);
+
+            requestAnimationFrame(() => {
+                textarea.focus();
+                const nextPos = start + insertion.length;
+                textarea.setSelectionRange(nextPos, nextPos);
+            });
+        },
+        [onPromptChange, prompt, resolvedPromptTextareaRef],
+    );
+
+    const handleRemoveReferenceTagFromPrompt = React.useCallback(
+        (tagToRemove: string) => {
+            const escaped = tagToRemove.replace(/[[\]]/g, '\\$&');
+            const regex = new RegExp(`(^|\\s)${escaped}(?=\\s|$)`, 'g');
+            const nextPrompt = prompt.replace(regex, ' ').replace(/\s+/g, ' ').trim();
+            onPromptChange(nextPrompt);
+        },
+        [onPromptChange, prompt],
+    );
+
+    const handleSelectTagInTextarea = React.useCallback(
+        (tag: string) => {
+            const textarea = resolvedPromptTextareaRef.current;
+            if (!textarea) return;
+            const pos = prompt.indexOf(tag);
+            if (pos !== -1) {
+                textarea.focus();
+                textarea.setSelectionRange(pos, pos + tag.length);
+            }
+        },
+        [prompt, resolvedPromptTextareaRef],
+    );
     const advancedSettingsButton = (
         <button
             type="button"
@@ -1103,6 +1161,13 @@ function ComposerSettingsPanel({
                         />
 
                         <div className="mt-1.5 min-w-0 space-y-1.5 xl:flex xl:flex-1 xl:flex-col xl:min-h-0">
+                            <PromptReferenceChips
+                                objectImages={objectImages}
+                                characterImages={characterImages}
+                                onInsertTag={handleInsertReferenceTag}
+                                currentLanguage={currentLanguage}
+                                disabled={isActionLocked}
+                            />
                             <div
                                 className="relative overflow-hidden rounded-[26px] border nbu-composer-dock-textarea transition-all focus-within:border-amber-400/90 focus-within:ring-4 focus-within:ring-amber-100/70 dark:focus-within:border-amber-400/50 dark:focus-within:ring-amber-500/10 xl:flex xl:flex-1 xl:flex-col xl:min-h-[220px]"
                                 style={promptOverlaySpacingStyle}
@@ -1258,6 +1323,15 @@ function ComposerSettingsPanel({
                                     </button>
                                 </div>
                             </div>
+                            <PromptReferencedBadges
+                                prompt={prompt}
+                                objectImages={objectImages}
+                                characterImages={characterImages}
+                                onRemoveTag={handleRemoveReferenceTagFromPrompt}
+                                onSelectTagInTextarea={handleSelectTagInTextarea}
+                                currentLanguage={currentLanguage}
+                                disabled={isActionLocked}
+                            />
                             <div className="space-y-1.5">{advancedSettingsButton}</div>
                         </div>
                     </div>

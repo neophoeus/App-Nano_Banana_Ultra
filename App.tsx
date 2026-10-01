@@ -1663,6 +1663,8 @@ const App: React.FC = () => {
         showNotification,
         promptThinkingLevel,
         onPromptThinkingLevelChange: handlePromptThinkingLevelChange,
+        objectImages: surfaceObjectImages,
+        characterImages: surfaceCharacterImages,
     });
     const advancedSettingsDialogProps: React.ComponentProps<typeof ComposerAdvancedSettingsDialog> | null =
         isAdvancedSettingsOpen
