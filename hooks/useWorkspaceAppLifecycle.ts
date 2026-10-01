@@ -60,10 +60,7 @@ export function useWorkspaceAppLifecycle({
 
     useEffect(() => {
         hasDataRef.current =
-            historyCount > 0 ||
-            generatedImageCount > 0 ||
-            orderedReferenceAssets.length > 0 ||
-            hasDraftPrompt;
+            historyCount > 0 || generatedImageCount > 0 || orderedReferenceAssets.length > 0 || hasDraftPrompt;
     }, [generatedImageCount, hasDraftPrompt, historyCount, orderedReferenceAssets.length]);
 
     useEffect(() => {

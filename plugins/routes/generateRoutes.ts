@@ -1,5 +1,13 @@
 import { GoogleGenAI } from '@google/genai/node';
-import type { ConversationRequestContext, ResultPart, ResultTextPart, GroundingMetadata, ImageModel, ImageSize, ResultImagePart } from '../../types';
+import type {
+    ConversationRequestContext,
+    ResultPart,
+    ResultTextPart,
+    GroundingMetadata,
+    ImageModel,
+    ImageSize,
+    ResultImagePart,
+} from '../../types';
 import { deriveGroundingMode } from '../../utils/groundingMode';
 import {
     getGenerationFailureHttpStatus,
@@ -722,20 +730,30 @@ function validateInteractiveGenerateRequest(
     }
 
     if (body.imageSize && !VALID_IMAGE_SIZES.has(body.imageSize as ImageSize)) {
-        logApiError(routePath, new Error('Unsupported image size'), {
-            imageSize: body.imageSize,
-            model,
-        }, requestContext);
+        logApiError(
+            routePath,
+            new Error('Unsupported image size'),
+            {
+                imageSize: body.imageSize,
+                model,
+            },
+            requestContext,
+        );
         return { status: 400, error: `Unsupported image size: ${body.imageSize}` };
     }
 
     const capabilityError = validateCapabilityRequest(model, body);
     if (capabilityError) {
-        logApiError(routePath, new Error('Unsupported capability request'), {
-            model,
-            capabilityError,
-            body,
-        }, requestContext);
+        logApiError(
+            routePath,
+            new Error('Unsupported capability request'),
+            {
+                model,
+                capabilityError,
+                body,
+            },
+            requestContext,
+        );
         return { status: 400, error: capabilityError };
     }
 
@@ -749,9 +767,14 @@ function validateInteractiveGenerateRequest(
     const { objectImageInputs, characterImageInputs } = normalizeReferenceImages(body);
     const totalReferenceImages = objectImageInputs.length + characterImageInputs.length;
     if (model === 'gemini-2.5-flash-image' && totalReferenceImages > 3) {
-        logApiError(routePath, new Error('Too many reference images for gemini-2.5-flash-image'), {
-            totalReferenceImages,
-        }, requestContext);
+        logApiError(
+            routePath,
+            new Error('Too many reference images for gemini-2.5-flash-image'),
+            {
+                totalReferenceImages,
+            },
+            requestContext,
+        );
         return {
             status: 400,
             error: 'gemini-2.5-flash-image works best with up to 3 input images according to current docs.',
@@ -967,18 +990,23 @@ async function buildFailureResponse(
         };
     }
 
-    logApiError(routePath, new Error('Model returned no image data'), {
-        model,
-        finishReason: extracted.finishReason || 'UNKNOWN',
-        responseModalitiesActual: prepared.resolvedResponseModalities,
-        candidateCount: extracted.candidateCount ?? 0,
-        partCount: extracted.partCount ?? 0,
-        imagePartCount: extracted.imagePartCount ?? 0,
-        textReturned: Boolean(extracted.text),
-        textLength: extracted.text?.length ?? 0,
-        thoughtsReturned: Boolean(extracted.thoughts),
-        extractionIssue: extracted.extractionIssue || null,
-    }, requestContext);
+    logApiError(
+        routePath,
+        new Error('Model returned no image data'),
+        {
+            model,
+            finishReason: extracted.finishReason || 'UNKNOWN',
+            responseModalitiesActual: prepared.resolvedResponseModalities,
+            candidateCount: extracted.candidateCount ?? 0,
+            partCount: extracted.partCount ?? 0,
+            imagePartCount: extracted.imagePartCount ?? 0,
+            textReturned: Boolean(extracted.text),
+            textLength: extracted.text?.length ?? 0,
+            thoughtsReturned: Boolean(extracted.thoughts),
+            extractionIssue: extracted.extractionIssue || null,
+        },
+        requestContext,
+    );
 
     return {
         error: failure.message,
@@ -1120,11 +1148,16 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
             });
             const validated = validateInteractiveGenerateRequest('/api/images/generate', body, requestContext);
             if ('status' in validated) {
-                sendJson(res, validated.status, { error: validated.error }, {
-                    requestContext,
-                    summary: validated.error,
-                    details: { source: 'generation' },
-                });
+                sendJson(
+                    res,
+                    validated.status,
+                    { error: validated.error },
+                    {
+                        requestContext,
+                        summary: validated.error,
+                        details: { source: 'generation' },
+                    },
+                );
                 return;
             }
 
@@ -1138,10 +1171,15 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
             const blockReason = response.promptFeedback?.blockReason as string | undefined;
             if (blockReason && blockReason !== 'BLOCK_REASON_UNSPECIFIED' && blockReason !== 'NONE') {
                 const failure = resolveGenerationFailureInfo({ promptBlockReason: blockReason });
-                logApiError('/api/images/generate', new Error('Prompt rejected by policy'), {
-                    blockReason,
-                    model: validated.model,
-                }, requestContext);
+                logApiError(
+                    '/api/images/generate',
+                    new Error('Prompt rejected by policy'),
+                    {
+                        blockReason,
+                        model: validated.model,
+                    },
+                    requestContext,
+                );
                 if (!requestAbortState.isWritable()) {
                     return;
                 }
@@ -1272,11 +1310,16 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
             });
             const validated = validateInteractiveGenerateRequest('/api/images/generate-stream', body, requestContext);
             if ('status' in validated) {
-                sendJson(res, validated.status, { error: validated.error }, {
-                    requestContext,
-                    summary: validated.error,
-                    details: { source: 'generation' },
-                });
+                sendJson(
+                    res,
+                    validated.status,
+                    { error: validated.error },
+                    {
+                        requestContext,
+                        summary: validated.error,
+                        details: { source: 'generation' },
+                    },
+                );
                 return;
             }
 
@@ -1285,17 +1328,21 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 executionMode: body.executionMode || 'single-turn',
                 outputFormat: body.outputFormat || 'images-only',
                 thinkingLevel:
-                    body.thinkingLevel ||
-                    (validated.model === 'gemini-3.1-flash-image' ? 'minimal' : 'disabled'),
+                    body.thinkingLevel || (validated.model === 'gemini-3.1-flash-image' ? 'minimal' : 'disabled'),
                 includeThoughts: Boolean(body.includeThoughts),
                 batchSize: 1,
             });
             if (liveProgressError) {
-                sendJson(res, 400, { error: liveProgressError }, {
-                    requestContext,
-                    summary: liveProgressError,
-                    details: { source: 'generation', model: validated.model },
-                });
+                sendJson(
+                    res,
+                    400,
+                    { error: liveProgressError },
+                    {
+                        requestContext,
+                        summary: liveProgressError,
+                        details: { source: 'generation', model: validated.model },
+                    },
+                );
                 return;
             }
 
@@ -1360,7 +1407,9 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                     throw new Error('Thinking loop detected: reasoning character limit exceeded 12000 characters.');
                 }
                 if (duration > 180000 && !hasImage) {
-                    throw new Error('Thinking loop detected: stream ran for over 180 seconds without generating an image.');
+                    throw new Error(
+                        'Thinking loop detected: stream ran for over 180 seconds without generating an image.',
+                    );
                 }
             }
 

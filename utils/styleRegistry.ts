@@ -24,7 +24,11 @@ export type StyleRegistryItem = {
 
 const sanitizeTranslationKeyPart = (value: string) => value.replace(/[^a-zA-Z0-9]/g, '');
 
-const createIconId = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const createIconId = (value: string) =>
+    value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
 
 const createCategory = (id: ImageStyleCategory, defaultLabel: string, order: number): StyleCategoryRegistryItem => ({
     id,
@@ -604,7 +608,10 @@ export const getStylePromptDirective = (style: ImageStyle): string => {
     }
 
     const registryItem = getStyleRegistryItem(style);
-    return registryItem?.promptDirective ?? `Render with a ${getStyleDefaultLabel(style).toLowerCase()}-led visual treatment.`;
+    return (
+        registryItem?.promptDirective ??
+        `Render with a ${getStyleDefaultLabel(style).toLowerCase()}-led visual treatment.`
+    );
 };
 
 export const getStylePromptDescriptor = (style: ImageStyle): string => {

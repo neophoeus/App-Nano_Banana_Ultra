@@ -268,19 +268,29 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
             });
 
             if (!VALID_IMAGE_MODELS.has(model as ImageModel)) {
-                sendJson(res, 400, { error: `Unsupported model: ${model}` }, {
-                    requestContext,
-                    summary: `Unsupported model: ${model}`,
-                    details: { source: 'batch', model },
-                });
+                sendJson(
+                    res,
+                    400,
+                    { error: `Unsupported model: ${model}` },
+                    {
+                        requestContext,
+                        summary: `Unsupported model: ${model}`,
+                        details: { source: 'batch', model },
+                    },
+                );
                 return;
             }
             if (body.imageSize && !VALID_IMAGE_SIZES.has(body.imageSize as ImageSize)) {
-                sendJson(res, 400, { error: `Unsupported image size: ${body.imageSize}` }, {
-                    requestContext,
-                    summary: `Unsupported image size: ${body.imageSize}`,
-                    details: { source: 'batch', model, imageSize: body.imageSize },
-                });
+                sendJson(
+                    res,
+                    400,
+                    { error: `Unsupported image size: ${body.imageSize}` },
+                    {
+                        requestContext,
+                        summary: `Unsupported image size: ${body.imageSize}`,
+                        details: { source: 'batch', model, imageSize: body.imageSize },
+                    },
+                );
                 return;
             }
             if (body.conversationContext) {
@@ -301,11 +311,16 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
 
             const capabilityError = validateCapabilityRequest(model, body);
             if (capabilityError) {
-                sendJson(res, 400, { error: capabilityError }, {
-                    requestContext,
-                    summary: capabilityError,
-                    details: { source: 'batch', model },
-                });
+                sendJson(
+                    res,
+                    400,
+                    { error: capabilityError },
+                    {
+                        requestContext,
+                        summary: capabilityError,
+                        details: { source: 'batch', model },
+                    },
+                );
                 return;
             }
 
@@ -420,21 +435,31 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
                 jobName: body.name || null,
             });
             if (!body.name) {
-                sendJson(res, 400, { error: 'Missing batch job name.' }, {
-                    requestContext,
-                    summary: 'Missing batch job name',
-                    details: { source: 'batch' },
-                });
+                sendJson(
+                    res,
+                    400,
+                    { error: 'Missing batch job name.' },
+                    {
+                        requestContext,
+                        summary: 'Missing batch job name',
+                        details: { source: 'batch' },
+                    },
+                );
                 return;
             }
 
             const batchJob = await ai.batches.get({ name: body.name });
             const job = serializeBatchJob(batchJob);
-            sendJson(res, 200, { job }, {
-                requestContext,
-                summary: `${job.name} (${job.state})`,
-                details: { source: 'batch', jobName: job.name, state: job.state },
-            });
+            sendJson(
+                res,
+                200,
+                { job },
+                {
+                    requestContext,
+                    summary: `${job.name} (${job.state})`,
+                    details: { source: 'batch', jobName: job.name, state: job.state },
+                },
+            );
         } catch (error: any) {
             sendClassifiedApiError(res, '/api/batches/get', error, 'Failed to load batch job status', {
                 defaultStatus: 502,
@@ -462,22 +487,32 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
                 jobName: body.name || null,
             });
             if (!body.name) {
-                sendJson(res, 400, { error: 'Missing batch job name.' }, {
-                    requestContext,
-                    summary: 'Missing batch job name',
-                    details: { source: 'batch' },
-                });
+                sendJson(
+                    res,
+                    400,
+                    { error: 'Missing batch job name.' },
+                    {
+                        requestContext,
+                        summary: 'Missing batch job name',
+                        details: { source: 'batch' },
+                    },
+                );
                 return;
             }
 
             await ai.batches.cancel({ name: body.name });
             const batchJob = await ai.batches.get({ name: body.name });
             const job = serializeBatchJob(batchJob);
-            sendJson(res, 200, { job }, {
-                requestContext,
-                summary: `${job.name} (${job.state})`,
-                details: { source: 'batch', jobName: job.name, state: job.state },
-            });
+            sendJson(
+                res,
+                200,
+                { job },
+                {
+                    requestContext,
+                    summary: `${job.name} (${job.state})`,
+                    details: { source: 'batch', jobName: job.name, state: job.state },
+                },
+            );
         } catch (error: any) {
             sendClassifiedApiError(res, '/api/batches/cancel', error, 'Failed to cancel batch job', {
                 defaultStatus: 502,
@@ -505,11 +540,16 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
                 jobName: body.name || null,
             });
             if (!body.name) {
-                sendJson(res, 400, { error: 'Missing batch job name.' }, {
-                    requestContext,
-                    summary: 'Missing batch job name',
-                    details: { source: 'batch' },
-                });
+                sendJson(
+                    res,
+                    400,
+                    { error: 'Missing batch job name.' },
+                    {
+                        requestContext,
+                        summary: 'Missing batch job name',
+                        details: { source: 'batch' },
+                    },
+                );
                 return;
             }
 
@@ -583,7 +623,8 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
 
         try {
             const ai = getAIClient();
-            const body: { pageSize?: number } = req.method === 'POST' ? await readJsonBody<{ pageSize?: number }>(req).catch(() => ({})) : {};
+            const body: { pageSize?: number } =
+                req.method === 'POST' ? await readJsonBody<{ pageSize?: number }>(req).catch(() => ({})) : {};
             const pageSize = Math.max(1, Math.min(50, Number(body.pageSize || 20)));
             logApiRequest(requestContext, {
                 source: 'batch',
@@ -604,11 +645,16 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
                 .map((batchJob) => serializeBatchJob(batchJob))
                 .filter((job) => VALID_IMAGE_MODELS.has(job.model as ImageModel));
 
-            sendJson(res, 200, { jobs }, {
-                requestContext,
-                summary: `Listed ${jobs.length} batch job(s)`,
-                details: { source: 'batch', jobCount: jobs.length },
-            });
+            sendJson(
+                res,
+                200,
+                { jobs },
+                {
+                    requestContext,
+                    summary: `Listed ${jobs.length} batch job(s)`,
+                    details: { source: 'batch', jobCount: jobs.length },
+                },
+            );
         } catch (error: any) {
             sendClassifiedApiError(res, '/api/batches/list', error, 'Failed to list batch jobs', {
                 defaultStatus: 502,
@@ -635,20 +681,30 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
                 jobName: body.name || null,
             });
             if (!body.name) {
-                sendJson(res, 400, { error: 'Missing batch job name.' }, {
-                    requestContext,
-                    summary: 'Missing batch job name',
-                    details: { source: 'batch' },
-                });
+                sendJson(
+                    res,
+                    400,
+                    { error: 'Missing batch job name.' },
+                    {
+                        requestContext,
+                        summary: 'Missing batch job name',
+                        details: { source: 'batch' },
+                    },
+                );
                 return;
             }
 
             await ai.batches.delete({ name: body.name });
-            sendJson(res, 200, { ok: true, name: body.name }, {
-                requestContext,
-                summary: `Deleted batch ${body.name}`,
-                details: { source: 'batch', jobName: body.name },
-            });
+            sendJson(
+                res,
+                200,
+                { ok: true, name: body.name },
+                {
+                    requestContext,
+                    summary: `Deleted batch ${body.name}`,
+                    details: { source: 'batch', jobName: body.name },
+                },
+            );
         } catch (error: any) {
             sendClassifiedApiError(res, '/api/batches/delete', error, 'Failed to delete batch job', {
                 defaultStatus: 502,

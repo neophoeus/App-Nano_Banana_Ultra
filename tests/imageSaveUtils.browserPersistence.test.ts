@@ -1,7 +1,11 @@
 /** @vitest-environment jsdom */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { clearBrowserSavedImageRecords, getBrowserSavedImageStorageKey, loadBrowserSavedImageDataUrl } from '../utils/browserImageStore';
+import {
+    clearBrowserSavedImageRecords,
+    getBrowserSavedImageStorageKey,
+    loadBrowserSavedImageDataUrl,
+} from '../utils/browserImageStore';
 import { buildSavedImageLoadUrl, loadFullImage, loadImageMetadata, saveImageToLocal } from '../utils/imageSaveUtils';
 import { setExecutionModeSetting } from '../utils/workspaceExecutionMode';
 
@@ -54,6 +58,8 @@ describe('imageSaveUtils browser persistence', () => {
         );
 
         expect(buildSavedImageLoadUrl('restored-image.png')).toBe('/lite/session-images/restored-image.png');
-        await expect(loadBrowserSavedImageDataUrl('restored-image.png')).resolves.toBe('data:image/png;base64,RESTORED');
+        await expect(loadBrowserSavedImageDataUrl('restored-image.png')).resolves.toBe(
+            'data:image/png;base64,RESTORED',
+        );
     });
 });

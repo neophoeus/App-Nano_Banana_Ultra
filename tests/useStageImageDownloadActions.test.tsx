@@ -55,11 +55,7 @@ describe('useStageImageDownloadActions', () => {
         container.remove();
     });
 
-    function Harness({
-        options = {},
-    }: {
-        options?: Partial<Parameters<typeof useStageImageDownloadActions>[0]>;
-    }) {
+    function Harness({ options = {} }: { options?: Partial<Parameters<typeof useStageImageDownloadActions>[0]> }) {
         const hook = useStageImageDownloadActions({
             history: [mockHistoryItem],
             currentViewedCompletedHistoryItem: mockHistoryItem,

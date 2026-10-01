@@ -82,11 +82,7 @@ export const sanitizeSessionHintsForStorage = (
     return Object.keys(nextValue).length > 0 ? nextValue : null;
 };
 
-export const sanitizeInlineImageDisplayValue = (
-    value: unknown,
-    depth = 0,
-    seen = new WeakSet<object>(),
-): unknown => {
+export const sanitizeInlineImageDisplayValue = (value: unknown, depth = 0, seen = new WeakSet<object>()): unknown => {
     if (typeof value === 'string') {
         return sanitizeSensitiveDisplayText(value);
     }

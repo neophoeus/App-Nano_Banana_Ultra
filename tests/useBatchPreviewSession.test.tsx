@@ -97,9 +97,30 @@ describe('useBatchPreviewSession', () => {
             didUserInspectExistingImage: false,
             selectedPreviewSlotIndex: null,
             tiles: [
-                { id: 'batch-1-0', slotIndex: 0, status: 'waiting', previewUrl: null, stagePreviewUrl: null, error: null },
-                { id: 'batch-1-1', slotIndex: 1, status: 'waiting', previewUrl: null, stagePreviewUrl: null, error: null },
-                { id: 'batch-1-2', slotIndex: 2, status: 'waiting', previewUrl: null, stagePreviewUrl: null, error: null },
+                {
+                    id: 'batch-1-0',
+                    slotIndex: 0,
+                    status: 'waiting',
+                    previewUrl: null,
+                    stagePreviewUrl: null,
+                    error: null,
+                },
+                {
+                    id: 'batch-1-1',
+                    slotIndex: 1,
+                    status: 'waiting',
+                    previewUrl: null,
+                    stagePreviewUrl: null,
+                    error: null,
+                },
+                {
+                    id: 'batch-1-2',
+                    slotIndex: 2,
+                    status: 'waiting',
+                    previewUrl: null,
+                    stagePreviewUrl: null,
+                    error: null,
+                },
             ],
         });
     });
@@ -199,5 +220,100 @@ describe('useBatchPreviewSession', () => {
         });
 
         expect(latestHook?.activeLiveProgressSession).toBeNull();
+    });
+
+    it('progressively switches stage preview synchronously in the same tick and on committed slots', () => {
+        act(() => {
+            root.render(<Harness />);
+        });
+
+        // Trigger start and ready update synchronously without waiting for separate renders
+        act(() => {
+            latestHook?.handleBatchPreviewStart({ sessionId: 'batch-sync-1', batchSize: 2 });
+            latestHook?.handleBatchPreviewTileUpdate({
+                sessionId: 'batch-sync-1',
+                tile: {
+                    id: 'batch-sync-1-0',
+                    slotIndex: 0,
+                    status: 'ready',
+                    previewUrl: 'data:image/png;base64,sync0',
+                    stagePreviewUrl: 'data:image/png;base64,sync0',
+                    error: null,
+                },
+            });
+        });
+
+        expect(setGeneratedImageUrlsMock).toHaveBeenCalledWith(['data:image/png;base64,sync0']);
+        expect(setSelectedImageIndexMock).toHaveBeenCalledWith(0);
+
+        // Subsequent committed tile update preserves stage preview
+        act(() => {
+            latestHook?.handleBatchPreviewTileUpdate({
+                sessionId: 'batch-sync-1',
+                tile: {
+                    id: 'batch-sync-1-0',
+                    slotIndex: 0,
+                    status: 'committed',
+                    previewUrl: 'data:image/png;base64,sync0-committed',
+                    stagePreviewUrl: 'data:image/png;base64,sync0-committed',
+                    error: null,
+                },
+            });
+        });
+
+        expect(setGeneratedImageUrlsMock).toHaveBeenCalledWith(['data:image/png;base64,sync0-committed']);
+
+        // Next slot completing immediately updates stage preview to slot 1
+        act(() => {
+            latestHook?.handleBatchPreviewTileUpdate({
+                sessionId: 'batch-sync-1',
+                tile: {
+                    id: 'batch-sync-1-1',
+                    slotIndex: 1,
+                    status: 'ready',
+                    previewUrl: 'data:image/png;base64,sync1',
+                    stagePreviewUrl: 'data:image/png;base64,sync1',
+                    error: null,
+                },
+            });
+        });
+
+        expect(setGeneratedImageUrlsMock).toHaveBeenCalledWith(['data:image/png;base64,sync1']);
+    });
+
+    it('allows inspecting committed tiles on handleBatchPreviewTileSelect', () => {
+        act(() => {
+            root.render(<Harness />);
+        });
+
+        act(() => {
+            latestHook?.handleBatchPreviewStart({ sessionId: 'batch-commit-select', batchSize: 2 });
+            latestHook?.handleBatchPreviewTileUpdate({
+                sessionId: 'batch-commit-select',
+                tile: {
+                    id: 'batch-commit-select-0',
+                    slotIndex: 0,
+                    status: 'committed',
+                    previewUrl: 'data:image/png;base64,committed0',
+                    stagePreviewUrl: 'data:image/png;base64,committed0',
+                    error: null,
+                },
+            });
+        });
+
+        act(() => {
+            latestHook?.handleBatchPreviewTileSelect({
+                id: 'batch-commit-select-0',
+                slotIndex: 0,
+                status: 'committed',
+                previewUrl: 'data:image/png;base64,committed0',
+                stagePreviewUrl: 'data:image/png;base64,committed0',
+                error: null,
+            });
+        });
+
+        expect(latestHook?.activeBatchPreviewSession?.didUserInspectExistingImage).toBe(true);
+        expect(latestHook?.activeBatchPreviewSession?.selectedPreviewSlotIndex).toBe(0);
+        expect(setGeneratedImageUrlsMock).toHaveBeenCalledWith(['data:image/png;base64,committed0']);
     });
 });

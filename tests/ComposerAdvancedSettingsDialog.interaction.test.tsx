@@ -119,7 +119,9 @@ describe('ComposerAdvancedSettingsDialog draft flow', () => {
             root.render(<AdvancedSettingsHarness />);
         });
 
-        const toggleButton = container.querySelector('[data-testid="composer-advanced-safety-toggle"]') as HTMLButtonElement;
+        const toggleButton = container.querySelector(
+            '[data-testid="composer-advanced-safety-toggle"]',
+        ) as HTMLButtonElement;
         act(() => {
             toggleButton.click();
         });
@@ -143,21 +145,45 @@ describe('ComposerAdvancedSettingsDialog draft flow', () => {
             root.render(<AdvancedSettingsHarness />);
         });
 
-        const toggleButton = container.querySelector('[data-testid="composer-advanced-safety-toggle"]') as HTMLButtonElement;
+        const toggleButton = container.querySelector(
+            '[data-testid="composer-advanced-safety-toggle"]',
+        ) as HTMLButtonElement;
         act(() => {
             toggleButton.click();
         });
 
         setInputValue('[data-testid="composer-advanced-safety-sync-slider"]', '5');
 
-        expect((container.querySelector('[data-testid="composer-advanced-safety-slider-harassment"]') as HTMLInputElement).value).toBe('5');
-        expect((container.querySelector('[data-testid="composer-advanced-safety-slider-hate-speech"]') as HTMLInputElement).value).toBe('5');
-        expect((container.querySelector('[data-testid="composer-advanced-safety-slider-sexually-explicit"]') as HTMLInputElement).value).toBe('5');
-        expect((container.querySelector('[data-testid="composer-advanced-safety-slider-dangerous-content"]') as HTMLInputElement).value).toBe('5');
+        expect(
+            (container.querySelector('[data-testid="composer-advanced-safety-slider-harassment"]') as HTMLInputElement)
+                .value,
+        ).toBe('5');
+        expect(
+            (container.querySelector('[data-testid="composer-advanced-safety-slider-hate-speech"]') as HTMLInputElement)
+                .value,
+        ).toBe('5');
+        expect(
+            (
+                container.querySelector(
+                    '[data-testid="composer-advanced-safety-slider-sexually-explicit"]',
+                ) as HTMLInputElement
+            ).value,
+        ).toBe('5');
+        expect(
+            (
+                container.querySelector(
+                    '[data-testid="composer-advanced-safety-slider-dangerous-content"]',
+                ) as HTMLInputElement
+            ).value,
+        ).toBe('5');
         expect(container.querySelector('[data-testid="committed-safety-harassment"]')?.textContent).toBe('block-none');
         expect(container.querySelector('[data-testid="committed-safety-hate-speech"]')?.textContent).toBe('block-none');
-        expect(container.querySelector('[data-testid="committed-safety-sexually-explicit"]')?.textContent).toBe('block-none');
-        expect(container.querySelector('[data-testid="committed-safety-dangerous-content"]')?.textContent).toBe('block-none');
+        expect(container.querySelector('[data-testid="committed-safety-sexually-explicit"]')?.textContent).toBe(
+            'block-none',
+        );
+        expect(container.querySelector('[data-testid="committed-safety-dangerous-content"]')?.textContent).toBe(
+            'block-none',
+        );
 
         setInputValue('[data-testid="composer-advanced-safety-slider-harassment"]', '0');
 
@@ -268,7 +294,9 @@ describe('ComposerAdvancedSettingsDialog draft flow', () => {
         const secondaryColumn = container.querySelector(
             '[data-testid="composer-advanced-secondary-column"]',
         ) as HTMLDivElement;
-        const groundingCard = container.querySelector('[data-testid="composer-advanced-grounding-card"]') as HTMLElement;
+        const groundingCard = container.querySelector(
+            '[data-testid="composer-advanced-grounding-card"]',
+        ) as HTMLElement;
         const safetyCard = container.querySelector('[data-testid="composer-advanced-safety-card"]') as HTMLElement;
 
         expect(secondaryColumn.contains(groundingCard)).toBe(true);
@@ -319,18 +347,14 @@ describe('ComposerAdvancedSettingsDialog draft flow', () => {
                     onSafetyThresholdsChange={() => {}}
                     isOpen={true}
                     onClose={() => {}}
-                />
+                />,
             );
         });
 
         // Check that warning appears
-        let warning = container.querySelector(
-            '[data-testid="composer-advanced-thinking-temp-warning"]',
-        );
+        let warning = container.querySelector('[data-testid="composer-advanced-thinking-temp-warning"]');
         expect(warning).toBeTruthy();
-        expect(warning?.textContent).toContain(
-            getTranslation('en', 'composerAdvancedHighThinkingHighTempWarning'),
-        );
+        expect(warning?.textContent).toContain(getTranslation('en', 'composerAdvancedHighThinkingHighTempWarning'));
 
         // Re-render with temperature 1.0
         act(() => {
@@ -352,14 +376,12 @@ describe('ComposerAdvancedSettingsDialog draft flow', () => {
                     onSafetyThresholdsChange={() => {}}
                     isOpen={true}
                     onClose={() => {}}
-                />
+                />,
             );
         });
 
         // Warning should disappear
-        warning = container.querySelector(
-            '[data-testid="composer-advanced-thinking-temp-warning"]',
-        );
+        warning = container.querySelector('[data-testid="composer-advanced-thinking-temp-warning"]');
         expect(warning).toBeFalsy();
     });
 });

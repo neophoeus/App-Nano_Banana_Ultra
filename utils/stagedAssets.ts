@@ -78,8 +78,18 @@ export const replaceStageAssetRoleUrls = (
 };
 
 export const addStageAsset = (assets: StageAsset[], options: AddStageAssetOptions): StageAsset[] => {
-    const { role, origin, url, savedFilename, isSketch, aspectRatio, sourceHistoryId, lineageAction, maxAssets, preferFront } =
-        options;
+    const {
+        role,
+        origin,
+        url,
+        savedFilename,
+        isSketch,
+        aspectRatio,
+        sourceHistoryId,
+        lineageAction,
+        maxAssets,
+        preferFront,
+    } = options;
 
     if (role === 'stage-source') {
         const existingSingletonAsset = assets.find((asset) => asset.role === role);
@@ -106,12 +116,30 @@ export const addStageAsset = (assets: StageAsset[], options: AddStageAssetOption
     const dedupedRoleAssets = existingRoleAssets.filter((asset) => asset.url !== url && !(isSketch && asset.isSketch));
     const nextRoleAssets = preferFront
         ? [
-              createStageAsset({ role, origin, url, savedFilename, isSketch, aspectRatio, sourceHistoryId, lineageAction }),
+              createStageAsset({
+                  role,
+                  origin,
+                  url,
+                  savedFilename,
+                  isSketch,
+                  aspectRatio,
+                  sourceHistoryId,
+                  lineageAction,
+              }),
               ...dedupedRoleAssets,
           ]
         : [
               ...dedupedRoleAssets,
-              createStageAsset({ role, origin, url, savedFilename, isSketch, aspectRatio, sourceHistoryId, lineageAction }),
+              createStageAsset({
+                  role,
+                  origin,
+                  url,
+                  savedFilename,
+                  isSketch,
+                  aspectRatio,
+                  sourceHistoryId,
+                  lineageAction,
+              }),
           ];
     const trimmedRoleAssets =
         typeof maxAssets === 'number'

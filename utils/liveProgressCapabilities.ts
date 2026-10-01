@@ -2,7 +2,12 @@ import { ExecutionMode, ImageModel, OutputFormat, ThinkingLevel } from '../types
 import { IMAGE_MODELS, MODEL_CAPABILITIES } from './modelCapabilities';
 
 export type LiveProgressExecutionMode = Extract<ExecutionMode, 'single-turn' | 'chat-continuation'>;
-export type LiveProgressArtifactKind = 'thought-text' | 'thought-image' | 'output-text' | 'output-image' | 'thought-signature';
+export type LiveProgressArtifactKind =
+    | 'thought-text'
+    | 'thought-image'
+    | 'output-text'
+    | 'output-image'
+    | 'thought-signature';
 export type LiveProgressTruthfulnessOutcome =
     | 'live-progress'
     | 'hidden-signature-only'
@@ -49,9 +54,7 @@ const LIVE_PROGRESS_EXECUTION_MODES: LiveProgressExecutionMode[] = ['single-turn
 const LIVE_PROGRESS_OUTPUT_FORMATS: OutputFormat[] = ['images-only', 'images-and-text'];
 
 const getProbeThinkingLevels = (model: ImageModel): ThinkingLevel[] =>
-    model === 'gemini-3.1-flash-image' || model === 'gemini-3.1-flash-lite-image'
-        ? ['minimal', 'high']
-        : ['disabled'];
+    model === 'gemini-3.1-flash-image' || model === 'gemini-3.1-flash-lite-image' ? ['minimal', 'high'] : ['disabled'];
 
 export const buildLiveProgressCellId = ({
     model,
@@ -142,7 +145,9 @@ export const describeLiveProgressFanOutIneligibility = ({
 export const isLiveProgressFanOutEligibleRequest = (request: LiveProgressFanOutRequest): boolean =>
     !describeLiveProgressFanOutIneligibility(request);
 
-export const getLiveProgressCapabilityMatrix = (options?: { includeExcluded?: boolean }): LiveProgressCapabilityCell[] => {
+export const getLiveProgressCapabilityMatrix = (options?: {
+    includeExcluded?: boolean;
+}): LiveProgressCapabilityCell[] => {
     const includeExcluded = options?.includeExcluded ?? true;
     const cells = IMAGE_MODELS.flatMap((model) =>
         LIVE_PROGRESS_EXECUTION_MODES.flatMap((executionMode) =>

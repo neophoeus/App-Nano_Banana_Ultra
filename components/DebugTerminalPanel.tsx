@@ -54,7 +54,12 @@ const SOURCE_LABEL_KEY: Record<DebugTerminalSource, string> = {
 };
 
 const formatTime = (timestamp: number): string =>
-    new Date(timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    new Date(timestamp).toLocaleTimeString([], {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+    });
 
 const formatDuration = (durationMs?: number): string | null => {
     if (typeof durationMs !== 'number') {
@@ -66,7 +71,14 @@ const formatDuration = (durationMs?: number): string | null => {
 
 function DebugTerminalIcon() {
     return (
-        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
+        <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            className="h-4 w-4"
+        >
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16v12H4z" />
             <path strokeLinecap="round" strokeLinejoin="round" d="m7 10 2 2-2 2M12 15h5" />
         </svg>
@@ -287,7 +299,9 @@ export default function DebugTerminalPanel({
                                             }`}
                                         >
                                             <div className="flex flex-wrap items-center gap-2">
-                                                <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase ${EVENT_KIND_TONE[event.kind]}`}>
+                                                <span
+                                                    className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase ${EVENT_KIND_TONE[event.kind]}`}
+                                                >
                                                     {event.kind}
                                                 </span>
                                                 {event.source ? (
@@ -303,15 +317,27 @@ export default function DebugTerminalPanel({
                                                 {durationLabel ? (
                                                     <span className="text-[11px] text-slate-500">{durationLabel}</span>
                                                 ) : null}
-                                                <span className="text-[11px] text-slate-500">{formatTime(event.timestamp)}</span>
+                                                <span className="text-[11px] text-slate-500">
+                                                    {formatTime(event.timestamp)}
+                                                </span>
                                                 {typeof event.slotIndex === 'number' ? (
-                                                    <span className="text-[11px] text-slate-500">#{event.slotIndex + 1}</span>
+                                                    <span className="text-[11px] text-slate-500">
+                                                        #{event.slotIndex + 1}
+                                                    </span>
                                                 ) : null}
                                             </div>
-                                            <div className="mt-2 truncate text-[12px] font-bold text-slate-100">{event.label}</div>
-                                            {eventRoute ? <div className="mt-1 truncate text-[11px] text-cyan-200/65">{eventRoute}</div> : null}
+                                            <div className="mt-2 truncate text-[12px] font-bold text-slate-100">
+                                                {event.label}
+                                            </div>
+                                            {eventRoute ? (
+                                                <div className="mt-1 truncate text-[11px] text-cyan-200/65">
+                                                    {eventRoute}
+                                                </div>
+                                            ) : null}
                                             {event.summary ? (
-                                                <div className="mt-1 line-clamp-2 text-[11px] leading-4 text-slate-400">{event.summary}</div>
+                                                <div className="mt-1 line-clamp-2 text-[11px] leading-4 text-slate-400">
+                                                    {event.summary}
+                                                </div>
                                             ) : null}
                                             {eventCorrelationId ? (
                                                 <div className="mt-2 flex items-center gap-2 text-[10px] text-slate-500">
@@ -361,7 +387,10 @@ export default function DebugTerminalPanel({
                                     {selectedEvent.operation ? <span>{selectedEvent.operation}</span> : null}
                                     {selectedEvent.phase ? <span>{selectedEvent.phase}</span> : null}
                                 </div>
-                                <pre data-testid="debug-terminal-selected-json" className="whitespace-pre-wrap break-words text-[11px] leading-5 text-cyan-50/90">
+                                <pre
+                                    data-testid="debug-terminal-selected-json"
+                                    className="whitespace-pre-wrap break-words text-[11px] leading-5 text-cyan-50/90"
+                                >
                                     {selectedEventJson}
                                 </pre>
                             </>

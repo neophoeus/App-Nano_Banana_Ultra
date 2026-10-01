@@ -4,7 +4,14 @@ import WorkspaceModalFrame from './WorkspaceModalFrame';
 import ComposerAdvancedSettingsContent from './ComposerAdvancedSettingsContent';
 import { MODEL_CAPABILITIES } from '../constants';
 import { WORKSPACE_OVERLAY_Z_INDEX } from '../constants/workspaceOverlays';
-import { SAFETY_CATEGORY_KEYS, type GroundingMode, type ImageModel, type OutputFormat, type SafetyThresholds, type ThinkingLevel } from '../types';
+import {
+    SAFETY_CATEGORY_KEYS,
+    type GroundingMode,
+    type ImageModel,
+    type OutputFormat,
+    type SafetyThresholds,
+    type ThinkingLevel,
+} from '../types';
 import { getTranslation, type Language } from '../utils/translations';
 
 type ComposerAdvancedSettingsDialogProps = {

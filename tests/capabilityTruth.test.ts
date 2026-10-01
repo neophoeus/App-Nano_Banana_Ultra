@@ -65,9 +65,6 @@ describe('capability truth', () => {
             'image-search',
             'google-search-plus-image-search',
         ]);
-        expect(getAvailableGroundingModes(MODEL_CAPABILITIES['gemini-3-pro-image'])).toEqual([
-            'off',
-            'google-search',
-        ]);
+        expect(getAvailableGroundingModes(MODEL_CAPABILITIES['gemini-3-pro-image'])).toEqual(['off', 'google-search']);
     });
 });

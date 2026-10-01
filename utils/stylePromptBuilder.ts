@@ -1,5 +1,10 @@
 import { GenerateOptions } from '../types';
-import { buildStyleTransferPrompt, getStyleDefaultLabel, getStylePromptDescriptor, getStylePromptDirective } from './styleRegistry';
+import {
+    buildStyleTransferPrompt,
+    getStyleDefaultLabel,
+    getStylePromptDescriptor,
+    getStylePromptDirective,
+} from './styleRegistry';
 
 type StylePromptBuilderOptions = Pick<
     GenerateOptions,

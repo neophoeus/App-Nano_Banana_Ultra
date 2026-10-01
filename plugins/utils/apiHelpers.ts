@@ -255,8 +255,8 @@ export function sendClassifiedApiError(
         res,
         status,
         {
-        ...(options?.basePayload || {}),
-        error: getApiErrorMessage(error, fallbackMessage),
+            ...(options?.basePayload || {}),
+            error: getApiErrorMessage(error, fallbackMessage),
         },
         {
             requestContext: options?.requestContext,

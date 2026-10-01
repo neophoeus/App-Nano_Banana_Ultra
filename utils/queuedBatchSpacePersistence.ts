@@ -71,7 +71,10 @@ const emitQueuedBatchSpaceDebugEvent = ({
     });
 };
 
-const withQueuedBatchSpaceDebugHeaders = (headers: Record<string, string>, correlationId: string): Record<string, string> => ({
+const withQueuedBatchSpaceDebugHeaders = (
+    headers: Record<string, string>,
+    correlationId: string,
+): Record<string, string> => ({
     ...headers,
     [DEBUG_TERMINAL_REQUEST_ID_HEADER]: correlationId,
 });
@@ -171,9 +174,12 @@ export const loadSharedQueuedBatchSpaceSnapshot = async (): Promise<SharedQueued
     try {
         const response = await fetch(SHARED_QUEUED_BATCH_SPACE_ENDPOINT, {
             method: 'GET',
-            headers: withQueuedBatchSpaceDebugHeaders({
-                Accept: 'application/json',
-            }, correlationId),
+            headers: withQueuedBatchSpaceDebugHeaders(
+                {
+                    Accept: 'application/json',
+                },
+                correlationId,
+            ),
         });
 
         if (!response.ok) {
@@ -317,9 +323,12 @@ export const saveSharedQueuedBatchSpaceSnapshot = async (
     try {
         const response = await fetch(SHARED_QUEUED_BATCH_SPACE_ENDPOINT, {
             method: 'POST',
-            headers: withQueuedBatchSpaceDebugHeaders({
-                'Content-Type': 'application/json',
-            }, correlationId),
+            headers: withQueuedBatchSpaceDebugHeaders(
+                {
+                    'Content-Type': 'application/json',
+                },
+                correlationId,
+            ),
             body: JSON.stringify(normalized),
             keepalive: true,
         });

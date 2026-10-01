@@ -19,7 +19,9 @@ describe('playwrightPaths', () => {
     });
 
     it('resolves app-local Playwright files from file location instead of shell cwd', () => {
-        expect(resolvePlaywrightAppPath('playwright.config.ts')).toBe(path.join(PLAYWRIGHT_APP_ROOT, 'playwright.config.ts'));
+        expect(resolvePlaywrightAppPath('playwright.config.ts')).toBe(
+            path.join(PLAYWRIGHT_APP_ROOT, 'playwright.config.ts'),
+        );
         expect(resolvePlaywrightE2ePath('utils')).toBe(path.join(PLAYWRIGHT_E2E_ROOT, 'utils'));
         expect(fs.existsSync(resolvePlaywrightAppPath('playwright.config.ts'))).toBe(true);
     });

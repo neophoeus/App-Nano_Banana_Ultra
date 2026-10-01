@@ -49,11 +49,7 @@ export interface WorkspaceExecutionProvider {
     checkApiKey(): Promise<boolean>;
     promptForApiKey(): Promise<void>;
 
-    generateImages(
-        options: GenerateOptions,
-        batchSize: number,
-        callbacks: ProgressCallbacks,
-    ): Promise<any[]>;
+    generateImages(options: GenerateOptions, batchSize: number, callbacks: ProgressCallbacks): Promise<any[]>;
 
     enhancePrompt(
         currentPrompt: string,

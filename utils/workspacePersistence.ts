@@ -698,11 +698,12 @@ const buildPersistableWorkspaceSnapshot = (
         history: options?.aggressive
             ? historyWithLinkedAssets.map((item, index) => {
                   const isOldTurn = index > 15;
-                  const prunedResultParts = isOldTurn && item.resultParts
-                      ? item.resultParts.map((part) =>
-                            part.kind === 'thought-text' ? { ...part, text: '' } : part,
-                        )
-                      : item.resultParts;
+                  const prunedResultParts =
+                      isOldTurn && item.resultParts
+                          ? item.resultParts.map((part) =>
+                                part.kind === 'thought-text' ? { ...part, text: '' } : part,
+                            )
+                          : item.resultParts;
 
                   return {
                       ...item,
@@ -712,9 +713,7 @@ const buildPersistableWorkspaceSnapshot = (
                   };
               })
             : historyWithLinkedAssets,
-        workflowLogs: options?.aggressive
-            ? normalized.workflowLogs.slice(-100)
-            : normalized.workflowLogs,
+        workflowLogs: options?.aggressive ? normalized.workflowLogs.slice(-100) : normalized.workflowLogs,
         stagedAssets: options?.aggressive
             ? stagedAssetsWithLinkedAssets.map((asset) =>
                   isInlineAssetUrl(asset.url)
@@ -754,12 +753,14 @@ const sanitizeHistory = (value: unknown): GeneratedImage[] => {
     }
 
     return value.flatMap((item): GeneratedImage[] => {
-        if (!(
-            isRecord(item) &&
-            typeof item.id === 'string' &&
-            typeof item.url === 'string' &&
-            typeof item.prompt === 'string'
-        )) {
+        if (
+            !(
+                isRecord(item) &&
+                typeof item.id === 'string' &&
+                typeof item.url === 'string' &&
+                typeof item.prompt === 'string'
+            )
+        ) {
             return [];
         }
 
@@ -870,15 +871,17 @@ const sanitizeStagedAssets = (value: unknown): StageAsset[] => {
     }
 
     return value.flatMap((item): StageAsset[] => {
-        if (!(
-            isRecord(item) &&
-            typeof item.id === 'string' &&
-            typeof item.url === 'string' &&
-            isStageAssetRole(item.role) &&
-            isStageAssetOrigin(item.origin) &&
-            typeof item.createdAt === 'number' &&
-            Number.isFinite(item.createdAt)
-        )) {
+        if (
+            !(
+                isRecord(item) &&
+                typeof item.id === 'string' &&
+                typeof item.url === 'string' &&
+                isStageAssetRole(item.role) &&
+                isStageAssetOrigin(item.origin) &&
+                typeof item.createdAt === 'number' &&
+                Number.isFinite(item.createdAt)
+            )
+        ) {
             return [];
         }
 
@@ -918,12 +921,14 @@ const sanitizeQueuedBatchJobImportIssues = (value: unknown): QueuedBatchJobImpor
     }
 
     return value.flatMap((item): QueuedBatchJobImportIssue[] => {
-        if (!(
-            isRecord(item) &&
-            typeof item.index === 'number' &&
-            Number.isFinite(item.index) &&
-            typeof item.error === 'string'
-        )) {
+        if (
+            !(
+                isRecord(item) &&
+                typeof item.index === 'number' &&
+                Number.isFinite(item.index) &&
+                typeof item.error === 'string'
+            )
+        ) {
             return [];
         }
 
@@ -968,32 +973,34 @@ export const sanitizeQueuedBatchJobs = (value: unknown): QueuedBatchJob[] => {
     }
 
     return value.flatMap((item): QueuedBatchJob[] => {
-        if (!(
-            isRecord(item) &&
-            typeof item.localId === 'string' &&
-            typeof item.name === 'string' &&
-            typeof item.displayName === 'string' &&
-            typeof item.submissionGroupId === 'string' &&
-            typeof item.submissionItemIndex === 'number' &&
-            typeof item.submissionItemCount === 'number' &&
-            isQueuedBatchJobState(item.state) &&
-            typeof item.model === 'string' &&
-            typeof item.prompt === 'string' &&
-            typeof item.aspectRatio === 'string' &&
-            typeof item.imageSize === 'string' &&
-            typeof item.style === 'string' &&
-            typeof item.outputFormat === 'string' &&
-            typeof item.temperature === 'number' &&
-            typeof item.thinkingLevel === 'string' &&
-            typeof item.includeThoughts === 'boolean' &&
-            typeof item.googleSearch === 'boolean' &&
-            typeof item.imageSearch === 'boolean' &&
-            typeof item.batchSize === 'number' &&
-            typeof item.objectImageCount === 'number' &&
-            typeof item.characterImageCount === 'number' &&
-            typeof item.createdAt === 'number' &&
-            typeof item.updatedAt === 'number'
-        )) {
+        if (
+            !(
+                isRecord(item) &&
+                typeof item.localId === 'string' &&
+                typeof item.name === 'string' &&
+                typeof item.displayName === 'string' &&
+                typeof item.submissionGroupId === 'string' &&
+                typeof item.submissionItemIndex === 'number' &&
+                typeof item.submissionItemCount === 'number' &&
+                isQueuedBatchJobState(item.state) &&
+                typeof item.model === 'string' &&
+                typeof item.prompt === 'string' &&
+                typeof item.aspectRatio === 'string' &&
+                typeof item.imageSize === 'string' &&
+                typeof item.style === 'string' &&
+                typeof item.outputFormat === 'string' &&
+                typeof item.temperature === 'number' &&
+                typeof item.thinkingLevel === 'string' &&
+                typeof item.includeThoughts === 'boolean' &&
+                typeof item.googleSearch === 'boolean' &&
+                typeof item.imageSearch === 'boolean' &&
+                typeof item.batchSize === 'number' &&
+                typeof item.objectImageCount === 'number' &&
+                typeof item.characterImageCount === 'number' &&
+                typeof item.createdAt === 'number' &&
+                typeof item.updatedAt === 'number'
+            )
+        ) {
             return [];
         }
 
@@ -1547,7 +1554,10 @@ export const saveWorkspaceSnapshot = (snapshot: WorkspacePersistenceSnapshot): v
             correlationId,
             phase: 'compact-fallback',
         });
-        console.warn('[workspacePersistence] Failed to persist compact workspace snapshot to localStorage, backed up to IndexedDB.', error);
+        console.warn(
+            '[workspacePersistence] Failed to persist compact workspace snapshot to localStorage, backed up to IndexedDB.',
+            error,
+        );
     }
 };
 
@@ -1592,9 +1602,7 @@ export const preloadWorkspaceImagesToMemory = async (
     });
 
     // 非同步載入所有圖片至記憶體快取
-    await Promise.all(
-        Array.from(filenames).map((name) => loadBrowserSavedImageRecord(name).catch(() => null)),
-    );
+    await Promise.all(Array.from(filenames).map((name) => loadBrowserSavedImageRecord(name).catch(() => null)));
 };
 
 export const clearStoredWorkspaceSnapshot = (): void => {

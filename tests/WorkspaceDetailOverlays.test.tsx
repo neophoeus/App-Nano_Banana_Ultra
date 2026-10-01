@@ -174,9 +174,7 @@ describe('WorkspaceDetailOverlays', () => {
         const storageModal = container.querySelector('[data-testid="workspace-storage-warning-modal"]');
         expect(storageModal).not.toBeNull();
 
-        const closeBtn = container.querySelector<HTMLButtonElement>(
-            '[data-testid="workspace-storage-warning-close"]',
-        );
+        const closeBtn = container.querySelector<HTMLButtonElement>('[data-testid="workspace-storage-warning-close"]');
         act(() => {
             closeBtn?.click();
         });

@@ -83,13 +83,6 @@ describe('LocalBackendProvider', () => {
         );
 
         expect(results).toHaveLength(2);
-        expect(events).toEqual([
-            'start-0',
-            'progress-1/2',
-            'result-0',
-            'start-1',
-            'progress-2/2',
-            'result-1',
-        ]);
+        expect(events).toEqual(['start-0', 'progress-1/2', 'result-0', 'start-1', 'progress-2/2', 'result-1']);
     });
 });

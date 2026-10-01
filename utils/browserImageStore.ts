@@ -380,7 +380,10 @@ export const collectBrowserSavedImageRecords = async (
     const resolvedEntries = await Promise.all(
         uniqueSavedFilenames.map(
             async (savedFilename) =>
-                [savedFilename, await loadBrowserSavedImageRecord(savedFilename)] as [string, BrowserSavedImageRecord | null],
+                [savedFilename, await loadBrowserSavedImageRecord(savedFilename)] as [
+                    string,
+                    BrowserSavedImageRecord | null,
+                ],
         ),
     );
 
@@ -586,4 +589,3 @@ export const calculateBrowserSavedImageDbSize = async (forceFresh = false): Prom
         }
     });
 };
-

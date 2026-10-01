@@ -6,10 +6,7 @@ import {
 } from '../utils/workspaceTopLauncherStyles';
 import type { Language } from '../utils/translations';
 
-export const TopLauncherSignal: React.FC<{ active: boolean; dataTestId: string }> = ({
-    active,
-    dataTestId,
-}) => {
+export const TopLauncherSignal: React.FC<{ active: boolean; dataTestId: string }> = ({ active, dataTestId }) => {
     const activeOuterClassName =
         'bg-amber-300/60 shadow-[0_0_18px_rgba(251,191,36,0.52)] dark:bg-amber-300/40 dark:shadow-[0_0_20px_rgba(251,191,36,0.36)]';
     const activeInnerClassName = 'bg-amber-400 ring-2 ring-amber-100/90 dark:bg-amber-300 dark:ring-amber-400/30';

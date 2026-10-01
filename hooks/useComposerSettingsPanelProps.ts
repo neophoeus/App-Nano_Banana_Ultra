@@ -321,11 +321,9 @@ export function useComposerSettingsPanelProps({
             onAutoExportTriggerChange: (trigger: 'off' | 'count' | 'size' | 'both') =>
                 latestHandlersRef.current.setAutoExportTrigger?.(trigger),
             autoExportImageCount: autoExportImageCount ?? 20,
-            onAutoExportImageCountChange: (count: number) =>
-                latestHandlersRef.current.setAutoExportImageCount?.(count),
+            onAutoExportImageCountChange: (count: number) => latestHandlersRef.current.setAutoExportImageCount?.(count),
             autoExportFileSizeMb: autoExportFileSizeMb ?? 100,
-            onAutoExportFileSizeMbChange: (size: number) =>
-                latestHandlersRef.current.setAutoExportFileSizeMb?.(size),
+            onAutoExportFileSizeMbChange: (size: number) => latestHandlersRef.current.setAutoExportFileSizeMb?.(size),
             batchProgress: batchProgress || { completed: 0, total: 0 },
             supportsAutoBackup: Boolean(supportsAutoBackup),
             settingsLocked,

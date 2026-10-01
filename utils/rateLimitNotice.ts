@@ -50,9 +50,7 @@ export const clearRateLimitNotice = (): void => {
     setRateLimitNotice(null);
 };
 
-export const subscribeRateLimitNotice = (
-    listener: (notice: RateLimitNoticeSession | null) => void,
-): (() => void) => {
+export const subscribeRateLimitNotice = (listener: (notice: RateLimitNoticeSession | null) => void): (() => void) => {
     listeners.add(listener);
     return () => {
         listeners.delete(listener);

@@ -1,6 +1,9 @@
 import React from 'react';
 import { getTranslation, Language } from '../utils/translations';
-import { topLauncherCompactButtonClassName, topLauncherCompactLabelClassName } from '../utils/workspaceTopLauncherStyles';
+import {
+    topLauncherCompactButtonClassName,
+    topLauncherCompactLabelClassName,
+} from '../utils/workspaceTopLauncherStyles';
 
 type WorkspaceProgressCardProps = {
     currentLanguage: Language;
@@ -9,7 +12,12 @@ type WorkspaceProgressCardProps = {
     onOpenDetails: () => void;
 };
 
-function WorkspaceProgressCard({ currentLanguage, thoughtsText, hasThoughtArtifacts, onOpenDetails }: WorkspaceProgressCardProps) {
+function WorkspaceProgressCard({
+    currentLanguage,
+    thoughtsText,
+    hasThoughtArtifacts,
+    onOpenDetails,
+}: WorkspaceProgressCardProps) {
     const t = (key: string) => getTranslation(currentLanguage, key);
     const hasThoughts = hasThoughtArtifacts ?? Boolean(thoughtsText?.trim());
     const inactiveOuterClassName =

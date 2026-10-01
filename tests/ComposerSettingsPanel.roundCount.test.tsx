@@ -131,13 +131,7 @@ describe('ComposerSettingsPanel round count controls', () => {
 
     it('disables decrease button when roundCount is 1', () => {
         act(() => {
-            root.render(
-                <ComposerSettingsPanel
-                    {...baseProps}
-                    roundCount={1}
-                    settingsLocked={false}
-                />,
-            );
+            root.render(<ComposerSettingsPanel {...baseProps} roundCount={1} settingsLocked={false} />);
         });
 
         const decreaseBtn = container.querySelector(
@@ -148,13 +142,7 @@ describe('ComposerSettingsPanel round count controls', () => {
 
     it('disables increase button when roundCount reaches 10', () => {
         act(() => {
-            root.render(
-                <ComposerSettingsPanel
-                    {...baseProps}
-                    roundCount={10}
-                    settingsLocked={false}
-                />,
-            );
+            root.render(<ComposerSettingsPanel {...baseProps} roundCount={10} settingsLocked={false} />);
         });
 
         const increaseBtn = container.querySelector(
@@ -187,9 +175,7 @@ describe('ComposerSettingsPanel round count controls', () => {
             trigger.click();
         });
 
-        const option5 = container.querySelector(
-            '[data-testid="composer-round-count-option-5"]',
-        ) as HTMLButtonElement;
+        const option5 = container.querySelector('[data-testid="composer-round-count-option-5"]') as HTMLButtonElement;
         expect(option5).toBeTruthy();
 
         act(() => {
@@ -240,9 +226,7 @@ describe('ComposerSettingsPanel round count controls', () => {
         act(() => {
             trigger.click();
         });
-        const option7 = container.querySelector(
-            '[data-testid="composer-round-count-option-7"]',
-        ) as HTMLButtonElement;
+        const option7 = container.querySelector('[data-testid="composer-round-count-option-7"]') as HTMLButtonElement;
         expect(option7).toBeTruthy();
 
         act(() => {

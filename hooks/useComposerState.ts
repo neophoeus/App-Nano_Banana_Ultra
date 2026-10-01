@@ -128,9 +128,7 @@ export function useComposerState({
     const [stickySendIntent, setStickySendIntent] = useState<StickySendIntent>(
         initialComposerState.stickySendIntent ?? 'independent',
     );
-    const [roundCount, setRoundCount] = useState<number>(
-        initialComposerState.roundCount ?? 1,
-    );
+    const [roundCount, setRoundCount] = useState<number>(initialComposerState.roundCount ?? 1);
     const [autoExportTrigger, setAutoExportTrigger] = useState<'off' | 'count' | 'size' | 'both'>(
         initialComposerState.autoExportTrigger ?? 'both',
     );
@@ -141,65 +139,103 @@ export function useComposerState({
         initialComposerState.autoExportFileSizeMb ?? 100,
     );
 
-    const setAspectRatio = useCallback((value: SetStateAction<AspectRatio>) => {
-        if (settingsLocked) return;
-        setAspectRatioState(value);
-    }, [settingsLocked]);
+    const setAspectRatio = useCallback(
+        (value: SetStateAction<AspectRatio>) => {
+            if (settingsLocked) return;
+            setAspectRatioState(value);
+        },
+        [settingsLocked],
+    );
 
-    const setImageSize = useCallback((value: SetStateAction<ImageSize>) => {
-        if (settingsLocked) return;
-        setImageSizeState(value);
-    }, [settingsLocked]);
+    const setImageSize = useCallback(
+        (value: SetStateAction<ImageSize>) => {
+            if (settingsLocked) return;
+            setImageSizeState(value);
+        },
+        [settingsLocked],
+    );
 
-    const setImageStyle = useCallback((value: SetStateAction<ImageStyle>) => {
-        if (settingsLocked) return;
-        setImageStyleState(value);
-    }, [settingsLocked]);
+    const setImageStyle = useCallback(
+        (value: SetStateAction<ImageStyle>) => {
+            if (settingsLocked) return;
+            setImageStyleState(value);
+        },
+        [settingsLocked],
+    );
 
-    const setImageModel = useCallback((value: SetStateAction<ImageModel>) => {
-        if (settingsLocked) return;
-        setImageModelState(value);
-    }, [settingsLocked]);
+    const setImageModel = useCallback(
+        (value: SetStateAction<ImageModel>) => {
+            if (settingsLocked) return;
+            setImageModelState(value);
+        },
+        [settingsLocked],
+    );
 
-    const setBatchSize = useCallback((value: SetStateAction<number>) => {
-        if (settingsLocked) return;
-        setBatchSizeState(value);
-    }, [settingsLocked]);
+    const setBatchSize = useCallback(
+        (value: SetStateAction<number>) => {
+            if (settingsLocked) return;
+            setBatchSizeState(value);
+        },
+        [settingsLocked],
+    );
 
-    const setOutputFormat = useCallback((value: SetStateAction<OutputFormat>) => {
-        if (settingsLocked) return;
-        setOutputFormatState(value);
-    }, [settingsLocked]);
+    const setOutputFormat = useCallback(
+        (value: SetStateAction<OutputFormat>) => {
+            if (settingsLocked) return;
+            setOutputFormatState(value);
+        },
+        [settingsLocked],
+    );
 
-    const setTemperature: Dispatch<SetStateAction<number>> = useCallback((value) => {
-        if (settingsLocked) return;
-        setTemperatureState((previous) => normalizeTemperature(typeof value === 'function' ? value(previous) : value));
-    }, [settingsLocked]);
+    const setTemperature: Dispatch<SetStateAction<number>> = useCallback(
+        (value) => {
+            if (settingsLocked) return;
+            setTemperatureState((previous) =>
+                normalizeTemperature(typeof value === 'function' ? value(previous) : value),
+            );
+        },
+        [settingsLocked],
+    );
 
-    const setThinkingLevel = useCallback((value: SetStateAction<ThinkingLevel>) => {
-        if (settingsLocked) return;
-        setThinkingLevelState(value);
-    }, [settingsLocked]);
+    const setThinkingLevel = useCallback(
+        (value: SetStateAction<ThinkingLevel>) => {
+            if (settingsLocked) return;
+            setThinkingLevelState(value);
+        },
+        [settingsLocked],
+    );
 
-    const setIncludeThoughts = useCallback((value: SetStateAction<boolean>) => {
-        if (settingsLocked) return;
-        setIncludeThoughtsState(value);
-    }, [settingsLocked]);
+    const setIncludeThoughts = useCallback(
+        (value: SetStateAction<boolean>) => {
+            if (settingsLocked) return;
+            setIncludeThoughtsState(value);
+        },
+        [settingsLocked],
+    );
 
-    const setGoogleSearch = useCallback((value: SetStateAction<boolean>) => {
-        if (settingsLocked) return;
-        setGoogleSearchState(value);
-    }, [settingsLocked]);
+    const setGoogleSearch = useCallback(
+        (value: SetStateAction<boolean>) => {
+            if (settingsLocked) return;
+            setGoogleSearchState(value);
+        },
+        [settingsLocked],
+    );
 
-    const setImageSearch = useCallback((value: SetStateAction<boolean>) => {
-        if (settingsLocked) return;
-        setImageSearchState(value);
-    }, [settingsLocked]);
+    const setImageSearch = useCallback(
+        (value: SetStateAction<boolean>) => {
+            if (settingsLocked) return;
+            setImageSearchState(value);
+        },
+        [settingsLocked],
+    );
 
-    const setSafetyThresholds = useCallback((value: SetStateAction<SafetyThresholds>) => {
-        if (settingsLocked) return;
-        setSafetyThresholdsState(value);
-    }, [settingsLocked]);
+    const setSafetyThresholds = useCallback(
+        (value: SetStateAction<SafetyThresholds>) => {
+            if (settingsLocked) return;
+            setSafetyThresholdsState(value);
+        },
+        [settingsLocked],
+    );
 
     const composerState = useMemo<WorkspaceComposerState>(
         () => ({
@@ -282,21 +318,23 @@ export function useComposerState({
             setAutoExportTrigger(nextComposerState.autoExportTrigger ?? 'both');
             setAutoExportImageCount(nextComposerState.autoExportImageCount ?? 20);
             setAutoExportFileSizeMb(nextComposerState.autoExportFileSizeMb ?? 100);
-            const mergedComposerState = settingsLocked ? {
-                ...nextComposerState,
-                aspectRatio,
-                imageSize,
-                imageStyle,
-                imageModel,
-                batchSize,
-                outputFormat,
-                temperature,
-                thinkingLevel,
-                includeThoughts,
-                googleSearch,
-                imageSearch,
-                safetyThresholds,
-            } : nextComposerState;
+            const mergedComposerState = settingsLocked
+                ? {
+                      ...nextComposerState,
+                      aspectRatio,
+                      imageSize,
+                      imageStyle,
+                      imageModel,
+                      batchSize,
+                      outputFormat,
+                      temperature,
+                      thinkingLevel,
+                      includeThoughts,
+                      googleSearch,
+                      imageSearch,
+                      safetyThresholds,
+                  }
+                : nextComposerState;
             syncPresentationState(mergedComposerState);
         },
         [
@@ -342,12 +380,15 @@ export function useComposerState({
         [composerState, setDisplaySettings, settingsLocked],
     );
 
-    const setGroundingMode = useCallback((mode: GroundingMode) => {
-        if (settingsLocked) return;
-        const nextFlags = getGroundingFlagsFromMode(mode);
-        setGoogleSearchState(nextFlags.googleSearch);
-        setImageSearchState(nextFlags.imageSearch);
-    }, [settingsLocked]);
+    const setGroundingMode = useCallback(
+        (mode: GroundingMode) => {
+            if (settingsLocked) return;
+            const nextFlags = getGroundingFlagsFromMode(mode);
+            setGoogleSearchState(nextFlags.googleSearch);
+            setImageSearchState(nextFlags.imageSearch);
+        },
+        [settingsLocked],
+    );
 
     const restoreEditorComposerState = useCallback(
         (

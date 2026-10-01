@@ -596,7 +596,10 @@ type StreamRouteFailureEvent = {
 };
 
 type StreamRouteEvent =
-    StreamRouteStartEvent | StreamRouteResultPartEvent | StreamRouteCompleteEvent | StreamRouteFailureEvent;
+    | StreamRouteStartEvent
+    | StreamRouteResultPartEvent
+    | StreamRouteCompleteEvent
+    | StreamRouteFailureEvent;
 
 export type GenerationLiveProgressEvent =
     | {

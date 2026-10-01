@@ -30,7 +30,8 @@ describe('useResolvedImageSource & resolveDisplayImageSource', () => {
     });
 
     it('returns standard data URLs and http URLs synchronously without mutation', () => {
-        const dataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+        const dataUrl =
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
         expect(resolveDisplayImageSource(dataUrl)).toBe(dataUrl);
 
         const httpUrl = 'https://example.com/image.png';
@@ -72,4 +73,3 @@ describe('useResolvedImageSource & resolveDisplayImageSource', () => {
         expect(asyncResolved).toBe(sampleDataUrl);
     });
 });
-

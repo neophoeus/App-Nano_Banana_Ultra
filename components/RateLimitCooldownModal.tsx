@@ -59,7 +59,10 @@ export default function RateLimitCooldownModal({
             onClose={handleWaitClick}
             closeLabel={t('rateLimitActionWait') || '繼續等待'}
             title={t('rateLimitModalTitle') || 'API 調用頻率已達上限'}
-            description={t('rateLimitModalDesc') || '目前每分鐘請求頻率（IPM / RPM 429）已達 Google AI 配額上限。系統已自動開啟保護性暫緩，將在冷卻結束後自動重試。'}
+            description={
+                t('rateLimitModalDesc') ||
+                '目前每分鐘請求頻率（IPM / RPM 429）已達 Google AI 配額上限。系統已自動開啟保護性暫緩，將在冷卻結束後自動重試。'
+            }
             backdropClassName="bg-black/75 backdrop-blur-md"
             panelClassName="nbu-overlay-panel-warm p-5 border border-amber-500/30 shadow-2xl"
             headerClassName="border-b border-amber-500/20 px-0 pb-4"

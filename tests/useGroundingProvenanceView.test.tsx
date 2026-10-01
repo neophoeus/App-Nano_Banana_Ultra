@@ -52,10 +52,7 @@ describe('useGroundingProvenanceView', () => {
         imageSize = '1K',
         workspaceSessionOverrides: Record<string, unknown> = {},
         selectedGrounding: any = null,
-        model:
-            | 'gemini-3.1-flash-image'
-            | 'gemini-3-pro-image'
-            | 'gemini-2.5-flash-image' = 'gemini-3.1-flash-image',
+        model: 'gemini-3.1-flash-image' | 'gemini-3-pro-image' | 'gemini-2.5-flash-image' = 'gemini-3.1-flash-image',
     ) => {
         function TestComponent() {
             latestHook = useGroundingProvenanceView({

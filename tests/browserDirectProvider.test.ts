@@ -394,10 +394,7 @@ describe('BrowserDirectProvider and AI Studio Subscription Tier Pacing', () => {
 
         it('self-heals and ignores corrupted distant-future backoff timestamps (>120s)', () => {
             const corruptedFutureTime = Date.now() + 500000; // > 120s
-            localStorage.setItem(
-                'nbu_model_rate_limit_backoff_until_gemini-3-pro-image',
-                String(corruptedFutureTime),
-            );
+            localStorage.setItem('nbu_model_rate_limit_backoff_until_gemini-3-pro-image', String(corruptedFutureTime));
 
             // Memory is cleared in beforeEach, so it queries localStorage and should self-heal
             expect(getModelRateLimitBackoffUntil('gemini-3-pro-image')).toBe(0);

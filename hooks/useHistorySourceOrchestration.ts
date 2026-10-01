@@ -118,9 +118,10 @@ export const resolveViewerStageSourceSyncArgs = ({
     }
 
     const selectedHistoryItem = selectedHistoryId ? getHistoryTurnById(selectedHistoryId) : null;
-    const expectedStageUrl = (selectedHistoryItem && selectedHistoryItem.savedFilename)
-        ? buildSavedImageLoadUrl(selectedHistoryItem.savedFilename)
-        : (selectedHistoryItem?.url || null);
+    const expectedStageUrl =
+        selectedHistoryItem && selectedHistoryItem.savedFilename
+            ? buildSavedImageLoadUrl(selectedHistoryItem.savedFilename)
+            : selectedHistoryItem?.url || null;
 
     const shouldUseSelectedHistory = Boolean(
         selectedHistoryId &&

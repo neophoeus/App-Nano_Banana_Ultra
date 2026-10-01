@@ -122,21 +122,21 @@ If you want to extract raw high-resolution images (PNG / JPEG) directly from the
 
 - **Zero Dependencies**: 100% native Node.js implementation without `npm install`, supporting Windows desktop drag-and-drop batch scripts (`.bat`) and CLI batch extraction.
 - **Lossless Metadata Injection (Zero Clutter)**:
-  - **PNG Format**: Embeds generation prompts, models, styles, aspect ratios, and thinking logs directly into PNG `iTXt` chunks.
-  - **JPEG Format**: For native JPEG outputs from Gemini models, injects structured metadata and standard parameters into COM (`0xFF 0xFE`) comment markers **without re-encoding or compressing pixels, maintaining 100% lossless image quality**.
-  - Keeps output folders neat and tidy with pure `.png` and `.jpg` files without redundant `.txt` sidecars.
+    - **PNG Format**: Embeds generation prompts, models, styles, aspect ratios, and thinking logs directly into PNG `iTXt` chunks.
+    - **JPEG Format**: For native JPEG outputs from Gemini models, injects structured metadata and standard parameters into COM (`0xFF 0xFE`) comment markers **without re-encoding or compressing pixels, maintaining 100% lossless image quality**.
+    - Keeps output folders neat and tidy with pure `.png` and `.jpg` files without redundant `.txt` sidecars.
 - **Intelligent Filtering**: Automatically isolates finished artworks, variants, and thought images while completely excluding low-res thumbnails and staged references.
 - **Offline Visual HTML Viewer**: Includes a standalone single-file `viewer.html` for offline parameter inspection, filmstrip browsing, and one-click prompt copying.
 
 ## Version Overview
 
-### Latest Release: 4.7.1
+### Latest Release: 4.7.2
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ### 4.7.x+ (4.x Series)
 
-Version 4.7.x standardizes the remote Gemini Batch Queue architecture to strict `@google/genai` v1.31.0+ official API schemas (providing `{ contents, generationConfig }` fallbacks, paginated `/api/batches/list`, remote `/api/batches/delete`, and workspace remote batch recovery), and delivers full parity with the standalone Lite edition by porting 9-language window-close warning confirmations, expanding workspace app lifecycle unit test coverage, and supporting client test service override hooks with Playwright smoke tests. It executes a major architectural modularization of the application shell, decomposing `App.tsx` from 3,044 lines down to 2,482 lines (~562 lines reduced) by cleanly decoupling the top header support rail (`WorkspaceSupportRail.tsx`), stage download and Sidecar JSON metadata construction (`useStageImageDownloadActions.ts`), batch preview session streaming (`useBatchPreviewSession.ts`), and unified detail modal overlays (`WorkspaceDetailOverlays.tsx`) with zero regression in Phase B render stability and 100% automated test pass rate.
+Version 4.7.x restores progressive multi-image generation previews and real-time gallery synchronization (eliminating full-screen wait spinners so newly generated images preview immediately on the main stage and synchronize to the gallery without waiting for the entire batch to finish, shared identically across Local API and Google AI Studio direct modes). It standardizes the remote Gemini Batch Queue architecture to strict `@google/genai` v1.31.0+ official API schemas (providing `{ contents, generationConfig }` fallbacks, paginated `/api/batches/list`, remote `/api/batches/delete`, and workspace remote batch recovery), and delivers full parity with the standalone Lite edition by porting 9-language window-close warning confirmations, expanding workspace app lifecycle unit test coverage, and supporting client test service override hooks with Playwright smoke tests. It executes a major architectural modularization of the application shell, decomposing `App.tsx` from 3,044 lines down to 2,482 lines (~562 lines reduced) by cleanly decoupling the top header support rail (`WorkspaceSupportRail.tsx`), stage download and Sidecar JSON metadata construction (`useStageImageDownloadActions.ts`), batch preview session streaming (`useBatchPreviewSession.ts`), and unified detail modal overlays (`WorkspaceDetailOverlays.tsx`) with zero regression in Phase B render stability and 100% automated test pass rate.
 
 ### 4.6.x+ (4.x Series)
 

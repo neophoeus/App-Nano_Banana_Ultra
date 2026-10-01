@@ -5,7 +5,8 @@ import {
     SelectedItemSummaryStripChip,
     SelectedItemSummaryStripProps,
     TurnLineageAction,
-} from '../types';import { BranchSummary } from '../utils/lineage';
+} from '../types';
+import { BranchSummary } from '../utils/lineage';
 
 type HistoryActionButtonVariant = 'primary' | 'secondary' | 'compactPrimary' | 'compactSecondary';
 

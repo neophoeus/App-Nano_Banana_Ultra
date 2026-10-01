@@ -122,21 +122,21 @@ Nano Banana Ultra 目前支援四條 Gemini 影像模型路徑。介面會依模
 
 - **純原生零依賴**：100% 原生 Node.js 實作，免去複雜的 `npm install`，並支援 Windows 桌面一鍵拖曳（`.bat`）與 CLI 批次解析。
 - **無損中繼資料內嵌（極致無雜訊）**：
-  - **PNG 格式**：將提示詞、模型、風格、尺寸等生成參數與思考過程完整內嵌至圖片的 `iTXt` 區塊。
-  - **JPEG 格式**：針對 Gemini 模型產出之原生 JPEG，直接將結構化資料與標準參數注入標準 COM (`0xFF 0xFE`) 註解區塊，**不重新編碼或壓縮像素，100% 保持原圖無損畫質**。
-  - 輸出目錄只保留乾淨的 `.png` 與 `.jpg` 圖片，不產生多餘的 `.txt` 檔案。
+    - **PNG 格式**：將提示詞、模型、風格、尺寸等生成參數與思考過程完整內嵌至圖片的 `iTXt` 區塊。
+    - **JPEG 格式**：針對 Gemini 模型產出之原生 JPEG，直接將結構化資料與標準參數注入標準 COM (`0xFF 0xFE`) 註解區塊，**不重新編碼或壓縮像素，100% 保持原圖無損畫質**。
+    - 輸出目錄只保留乾淨的 `.png` 與 `.jpg` 圖片，不產生多餘的 `.txt` 檔案。
 - **智慧過濾**：自動排除縮圖（Thumbnail）與舞台參考素材（Staged Assets），只萃取實際生成的成品圖、變體圖（Variant）與思考過程圖（Thought Image）。
 - **專屬離線視覺化檢視器**：附帶輕量單檔 `viewer.html`，雙擊即可在瀏覽器中離線拖入圖片，提供高品質大圖預覽、底片切換條、結構化參數清單與**一鍵複製提示詞**功能。
 
 ## 版本總覽
 
-### 最新版本：4.7.1
+### 最新版本：4.7.2
 
 版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 4.7.x+（4.x 系列）
 
-4.7.x 正式將遠端 Gemini 批次佇列（Batch Queue）標準化至 `@google/genai` v1.31.0+ 官方 API 規範（包含提供 `{ contents, generationConfig }` 標準 Schema 退避、分頁列舉端點 `/api/batches/list`、遠端清理端點 `/api/batches/delete`，以及工作區遠端批次任務隨選同步恢復），並完整收斂獨立 Lite 版的 9 國語言視窗關閉確認鍵、擴充生命週期單元測試覆蓋率，以及支援客戶端測試服務覆寫 Hook 與 Playwright 煙霧測試。同時針對主應用程式外殼執行重要模組化重構，將 `App.tsx` 自 3,044 行精簡至 2,482 行（減少 ~562 行），抽離頂部導航支援軌（`WorkspaceSupportRail.tsx`）、舞台下載與 Sidecar JSON 構建（`useStageImageDownloadActions.ts`）、批次預覽與即時串流 Session（`useBatchPreviewSession.ts`），以及統一的細節彈窗覆蓋容器（`WorkspaceDetailOverlays.tsx`），保持 Phase B 渲染穩定性零多餘 re-render，自動化測試套件 100% 通過。
+4.7.x 修復並恢復多圖回合生成時的漸進式即時預覽與藝廊即時同步（消除了需等待整回合全部完成才一次上傳藝廊的問題，完成一張即於主舞台即時呈現預覽並同步進藝廊，本機 Local API 與 Google AI Studio 直連模式完全共用一致體驗）。4.7.x 正式將遠端 Gemini 批次佇列（Batch Queue）標準化至 `@google/genai` v1.31.0+ 官方 API 規範（包含提供 `{ contents, generationConfig }` 標準 Schema 退避、分頁列舉端點 `/api/batches/list`、遠端清理端點 `/api/batches/delete`，以及工作區遠端批次任務隨選同步恢復），並完整收斂獨立 Lite 版的 9 國語言視窗關閉確認鍵、擴充生命週期單元測試覆蓋率，以及支援客戶端測試服務覆寫 Hook 與 Playwright 煙霧測試。同時針對主應用程式外殼執行重要模組化重構，將 `App.tsx` 自 3,044 行精簡至 2,482 行（減少 ~562 行），抽離頂部導航支援軌（`WorkspaceSupportRail.tsx`）、舞台下載與 Sidecar JSON 構建（`useStageImageDownloadActions.ts`）、批次預覽與即時串流 Session（`useBatchPreviewSession.ts`），以及統一的細節彈窗覆蓋容器（`WorkspaceDetailOverlays.tsx`），保持 Phase B 渲染穩定性零多餘 re-render，自動化測試套件 100% 通過。
 
 ### 4.6.x+（4.x 系列）
 

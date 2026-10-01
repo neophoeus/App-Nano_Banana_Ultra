@@ -175,15 +175,20 @@ export function registerWorkspaceRoutes(server: any, { geminiApiKey, resolvedDir
                 try {
                     const snapshot = loadSnapshotBackup();
                     if (!snapshot) {
-                        sendJson(res, 200, { snapshot: null }, {
-                            requestContext,
-                            summary: 'No snapshot backup found',
-                            details: {
-                                source: 'workspace',
-                                snapshotPath,
-                                phase: 'load',
+                        sendJson(
+                            res,
+                            200,
+                            { snapshot: null },
+                            {
+                                requestContext,
+                                summary: 'No snapshot backup found',
+                                details: {
+                                    source: 'workspace',
+                                    snapshotPath,
+                                    phase: 'load',
+                                },
                             },
-                        });
+                        );
                         return;
                     }
 
@@ -203,16 +208,21 @@ export function registerWorkspaceRoutes(server: any, { geminiApiKey, resolvedDir
                     } catch {
                         // Best-effort cleanup of a corrupt or half-written backup file.
                     }
-                    sendJson(res, 200, { snapshot: null, recoveredFromError: true }, {
-                        requestContext,
-                        summary: 'Recovered from corrupt snapshot backup',
-                        details: {
-                            source: 'workspace',
-                            snapshotPath,
-                            phase: 'load',
-                            recoveredFromError: true,
+                    sendJson(
+                        res,
+                        200,
+                        { snapshot: null, recoveredFromError: true },
+                        {
+                            requestContext,
+                            summary: 'Recovered from corrupt snapshot backup',
+                            details: {
+                                source: 'workspace',
+                                snapshotPath,
+                                phase: 'load',
+                                recoveredFromError: true,
+                            },
                         },
-                    });
+                    );
                 }
                 return;
             }
@@ -234,29 +244,39 @@ export function registerWorkspaceRoutes(server: any, { geminiApiKey, resolvedDir
 
                 if (!hasContent(normalizedSnapshot)) {
                     clearSnapshotFiles();
-                    sendJson(res, 200, { success: true, path: snapshotPath, cleared: true }, {
-                        requestContext,
-                        summary: 'Snapshot backup cleared',
-                        details: {
-                            source: 'workspace',
-                            snapshotPath,
-                            phase: 'save',
-                            cleared: true,
+                    sendJson(
+                        res,
+                        200,
+                        { success: true, path: snapshotPath, cleared: true },
+                        {
+                            requestContext,
+                            summary: 'Snapshot backup cleared',
+                            details: {
+                                source: 'workspace',
+                                snapshotPath,
+                                phase: 'save',
+                                cleared: true,
+                            },
                         },
-                    });
+                    );
                     return;
                 }
 
                 writeSnapshotWithRetry(normalizedSnapshot);
-                sendJson(res, 200, { success: true, path: snapshotPath }, {
-                    requestContext,
-                    summary: 'Snapshot backup saved',
-                    details: {
-                        source: 'workspace',
-                        snapshotPath,
-                        phase: 'save',
+                sendJson(
+                    res,
+                    200,
+                    { success: true, path: snapshotPath },
+                    {
+                        requestContext,
+                        summary: 'Snapshot backup saved',
+                        details: {
+                            source: 'workspace',
+                            snapshotPath,
+                            phase: 'save',
+                        },
                     },
-                });
+                );
             } catch (error: any) {
                 logApiError(route, error, { method: 'POST', snapshotPath, phase: 'save' }, requestContext);
                 sendJson(

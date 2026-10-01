@@ -152,7 +152,8 @@ describe('browserImageStore', () => {
 
     it('persists and retrieves image record in IndexedDB', async () => {
         const filename = 'test-image.png';
-        const dataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+        const dataUrl =
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
         const savedPath = await persistBrowserSavedImageRecord(filename, dataUrl, {
             model: 'gemini-3.1-flash-image',
@@ -171,7 +172,8 @@ describe('browserImageStore', () => {
     });
 
     it('does not evict full-resolution images when multiple thought process images are cached', async () => {
-        const dataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+        const dataUrl =
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
         // Persist 10 full-resolution images
         for (let i = 0; i < 10; i++) {
@@ -204,7 +206,8 @@ describe('browserImageStore', () => {
     });
 
     it('calculates DB size and reuses cached value within TTL', async () => {
-        const dataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+        const dataUrl =
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
         await persistBrowserSavedImageRecord('size-test.png', dataUrl);
 
         const initialSize = await calculateBrowserSavedImageDbSize(true);

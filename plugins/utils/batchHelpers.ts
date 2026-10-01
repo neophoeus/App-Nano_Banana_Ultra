@@ -184,16 +184,16 @@ function resolveBatchResultIndexFromRequestKey(key: unknown, fallbackIndex: numb
 function looksLikeGenerateContentResponse(value: unknown): boolean {
     return Boolean(
         value &&
-            typeof value === 'object' &&
-            ('candidates' in value || 'promptFeedback' in value || 'usageMetadata' in value || 'responseId' in value),
+        typeof value === 'object' &&
+        ('candidates' in value || 'promptFeedback' in value || 'usageMetadata' in value || 'responseId' in value),
     );
 }
 
 function looksLikeBatchStatusObject(value: unknown): boolean {
     return Boolean(
         value &&
-            typeof value === 'object' &&
-            ('error' in value || 'message' in value || 'code' in value || 'details' in value),
+        typeof value === 'object' &&
+        ('error' in value || 'message' in value || 'code' in value || 'details' in value),
     );
 }
 

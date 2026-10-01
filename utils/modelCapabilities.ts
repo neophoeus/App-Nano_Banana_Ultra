@@ -152,4 +152,3 @@ export const getModelQuotaSpec = (model?: string | null): ModelQuotaSpec => {
 (MODEL_CAPABILITIES as any)['gemini-3.1-flash-image-preview'] = MODEL_CAPABILITIES['gemini-3.1-flash-image'];
 (MODEL_CAPABILITIES as any)['gemini-3.1-flash-lite-image-preview'] = MODEL_CAPABILITIES['gemini-3.1-flash-lite-image'];
 (MODEL_CAPABILITIES as any)['gemini-3-pro-image-preview'] = MODEL_CAPABILITIES['gemini-3-pro-image'];
-

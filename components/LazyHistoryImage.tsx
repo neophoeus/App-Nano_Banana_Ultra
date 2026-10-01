@@ -44,14 +44,12 @@ function LazyHistoryImage({
     const isDataUrl = Boolean(src && src.startsWith('data:'));
     const isVirtual = Boolean(
         src &&
-            (src.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX) ||
-                src.startsWith('browser-img://') ||
-                src.includes('filename=')),
+        (src.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX) ||
+            src.startsWith('browser-img://') ||
+            src.includes('filename=')),
     );
     const isVirtualScheme = Boolean(
-        src &&
-            (src.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX) ||
-                src.startsWith('browser-img://')),
+        src && (src.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX) || src.startsWith('browser-img://')),
     );
     const isLocalResolutionNeeded = !isDataUrl && (isVirtual || Boolean(savedFilename));
     const displaySrc = resolvedSrc || (isVirtualScheme ? '' : src);

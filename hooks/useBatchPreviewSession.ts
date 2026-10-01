@@ -1,9 +1,5 @@
 import { useCallback, useEffect, useRef, type Dispatch, type SetStateAction } from 'react';
-import type {
-    BatchPreviewSession,
-    GeneratedImage as GeneratedImageType,
-    ResultPart,
-} from '../types';
+import type { BatchPreviewSession, GeneratedImage as GeneratedImageType, ResultPart } from '../types';
 import type { ActiveLiveProgressSession } from './useWorkspaceShellOwnerState';
 import type { GenerationLiveProgressEvent } from '../services/geminiService';
 
@@ -50,7 +46,7 @@ export function useBatchPreviewSession(options: UseBatchPreviewSessionOptions) {
 
     const handleBatchPreviewStart = useCallback(
         ({ sessionId, batchSize }: { sessionId: string; batchSize: number }) => {
-            setActiveBatchPreviewSession({
+            const nextSession: BatchPreviewSession = {
                 id: sessionId,
                 batchSize,
                 didUserInspectExistingImage: false,
@@ -63,35 +59,112 @@ export function useBatchPreviewSession(options: UseBatchPreviewSessionOptions) {
                     stagePreviewUrl: null,
                     error: null,
                 })),
-            });
+            };
+            activeBatchPreviewSessionRef.current = nextSession;
+            setActiveBatchPreviewSession(nextSession);
         },
         [setActiveBatchPreviewSession],
     );
 
     const handleBatchPreviewTileUpdate = useCallback(
         ({ sessionId, tile }: { sessionId: string; tile: BatchPreviewSession['tiles'][number] }) => {
+            let stageUrlToPreview: string | null = null;
+
             setActiveBatchPreviewSession((previousSession) => {
-                if (!previousSession || previousSession.id !== sessionId) {
+                const baseSession =
+                    previousSession && previousSession.id === sessionId
+                        ? previousSession
+                        : activeBatchPreviewSessionRef.current?.id === sessionId
+                          ? activeBatchPreviewSessionRef.current
+                          : null;
+
+                if (!baseSession) {
                     return previousSession;
                 }
 
-                const nextSession = {
-                    ...previousSession,
-                    tiles: previousSession.tiles.map((candidateTile) =>
-                        candidateTile.slotIndex === tile.slotIndex ? { ...candidateTile, ...tile } : candidateTile,
-                    ),
+                const nextTiles = baseSession.tiles.map((candidateTile) => {
+                    if (candidateTile.slotIndex !== tile.slotIndex) {
+                        return candidateTile;
+                    }
+                    const mergedPreviewUrl = tile.previewUrl ?? candidateTile.previewUrl;
+                    const mergedStagePreviewUrl =
+                        tile.stagePreviewUrl ??
+                        candidateTile.stagePreviewUrl ??
+                        tile.previewUrl ??
+                        candidateTile.previewUrl;
+
+                    return {
+                        ...candidateTile,
+                        ...tile,
+                        previewUrl: mergedPreviewUrl,
+                        stagePreviewUrl: mergedStagePreviewUrl,
+                    };
+                });
+
+                const updatedTile = nextTiles.find((candidateTile) => candidateTile.slotIndex === tile.slotIndex);
+                if (
+                    updatedTile &&
+                    (tile.status === 'ready' || tile.status === 'committed') &&
+                    !baseSession.didUserInspectExistingImage
+                ) {
+                    const resolvedStageUrl = updatedTile.stagePreviewUrl || updatedTile.previewUrl;
+                    if (resolvedStageUrl) {
+                        stageUrlToPreview = resolvedStageUrl;
+                    }
+                }
+
+                const nextSession: BatchPreviewSession = {
+                    ...baseSession,
+                    tiles: nextTiles,
                 };
                 activeBatchPreviewSessionRef.current = nextSession;
                 return nextSession;
             });
 
-            if (tile.status === 'ready') {
-                const stagePreviewUrl = tile.stagePreviewUrl || tile.previewUrl;
-                const currentSession = activeBatchPreviewSessionRef.current;
-                if (stagePreviewUrl && currentSession?.id === sessionId && !currentSession.didUserInspectExistingImage) {
-                    setGeneratedImageUrls([stagePreviewUrl]);
-                    setSelectedImageIndex(0);
+            // Synchronously update activeBatchPreviewSessionRef.current for non-batched/immediate readers
+            const currentSession = activeBatchPreviewSessionRef.current;
+            if (currentSession && currentSession.id === sessionId) {
+                const nextTiles = currentSession.tiles.map((candidateTile) => {
+                    if (candidateTile.slotIndex !== tile.slotIndex) {
+                        return candidateTile;
+                    }
+                    const mergedPreviewUrl = tile.previewUrl ?? candidateTile.previewUrl;
+                    const mergedStagePreviewUrl =
+                        tile.stagePreviewUrl ??
+                        candidateTile.stagePreviewUrl ??
+                        tile.previewUrl ??
+                        candidateTile.previewUrl;
+
+                    return {
+                        ...candidateTile,
+                        ...tile,
+                        previewUrl: mergedPreviewUrl,
+                        stagePreviewUrl: mergedStagePreviewUrl,
+                    };
+                });
+                const nextSession: BatchPreviewSession = {
+                    ...currentSession,
+                    tiles: nextTiles,
+                };
+                activeBatchPreviewSessionRef.current = nextSession;
+
+                if (
+                    (tile.status === 'ready' || tile.status === 'committed') &&
+                    !currentSession.didUserInspectExistingImage
+                ) {
+                    const candidateStageUrl =
+                        tile.stagePreviewUrl ||
+                        tile.previewUrl ||
+                        nextTiles.find((t) => t.slotIndex === tile.slotIndex)?.stagePreviewUrl;
+                    if (candidateStageUrl) {
+                        stageUrlToPreview = candidateStageUrl;
+                    }
                 }
+            }
+
+            if (stageUrlToPreview) {
+                setGeneratedImageUrls([stageUrlToPreview]);
+                setSelectedImageIndex(0);
             }
         },
         [setActiveBatchPreviewSession, setGeneratedImageUrls, setSelectedImageIndex],
@@ -104,6 +177,7 @@ export function useBatchPreviewSession(options: UseBatchPreviewSessionOptions) {
                 return;
             }
 
+            activeBatchPreviewSessionRef.current = null;
             setActiveBatchPreviewSession(null);
 
             if (currentPreviewSession.didUserInspectExistingImage) {
@@ -150,20 +224,33 @@ export function useBatchPreviewSession(options: UseBatchPreviewSessionOptions) {
 
     const handleBatchPreviewClear = useCallback(
         ({ sessionId }: { sessionId: string }) => {
-            setActiveBatchPreviewSession((previousSession) => (previousSession?.id === sessionId ? null : previousSession));
+            if (activeBatchPreviewSessionRef.current?.id === sessionId) {
+                activeBatchPreviewSessionRef.current = null;
+            }
+            setActiveBatchPreviewSession((previousSession) =>
+                previousSession?.id === sessionId ? null : previousSession,
+            );
         },
         [setActiveBatchPreviewSession],
     );
 
     const handleBatchPreviewTileSelect = useCallback(
         (tile: BatchPreviewSession['tiles'][number]) => {
-            if (tile.status !== 'ready') {
+            if (tile.status !== 'ready' && tile.status !== 'committed') {
                 return;
             }
 
             const stagePreviewUrl = tile.stagePreviewUrl || tile.previewUrl;
             if (!stagePreviewUrl) {
                 return;
+            }
+
+            if (activeBatchPreviewSessionRef.current) {
+                activeBatchPreviewSessionRef.current = {
+                    ...activeBatchPreviewSessionRef.current,
+                    didUserInspectExistingImage: true,
+                    selectedPreviewSlotIndex: tile.slotIndex,
+                };
             }
 
             setActiveBatchPreviewSession((previousSession) =>
@@ -277,6 +364,13 @@ export function useBatchPreviewSession(options: UseBatchPreviewSessionOptions) {
     );
 
     const handleHistorySelectionDuringGeneration = useCallback(() => {
+        if (activeBatchPreviewSessionRef.current) {
+            activeBatchPreviewSessionRef.current = {
+                ...activeBatchPreviewSessionRef.current,
+                didUserInspectExistingImage: true,
+                selectedPreviewSlotIndex: null,
+            };
+        }
         setActiveBatchPreviewSession((previousSession) =>
             previousSession
                 ? {

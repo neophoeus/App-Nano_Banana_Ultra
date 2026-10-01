@@ -52,8 +52,8 @@ export function useQueuedBatchPresentation({
         () =>
             Boolean(
                 workspaceSession.conversationId ||
-                    workspaceSession.conversationBranchOriginId ||
-                    workspaceSession.conversationActiveSourceHistoryId,
+                workspaceSession.conversationBranchOriginId ||
+                workspaceSession.conversationActiveSourceHistoryId,
             ) || hasConversationRecords,
         [
             hasConversationRecords,
@@ -63,10 +63,7 @@ export function useQueuedBatchPresentation({
         ],
     );
 
-    const isFreshMemoryQueueSession = useMemo(
-        () => !hasOfficialConversationContext,
-        [hasOfficialConversationContext],
-    );
+    const isFreshMemoryQueueSession = useMemo(() => !hasOfficialConversationContext, [hasOfficialConversationContext]);
 
     const canQueueComposerBatch = useMemo(
         () => stickySendIntent === 'independent' || isFreshMemoryQueueSession,

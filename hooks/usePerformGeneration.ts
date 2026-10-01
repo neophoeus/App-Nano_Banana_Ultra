@@ -418,7 +418,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                     const notificationMsg = t('autoExportNotificationText')
                         .replace('{0}', String(countSinceExport))
                         .replace('{1}', sizeGrowthMb.toFixed(1));
-                    showNotification(notificationMsg, 'info', 8000);
+                    showNotification(notificationMsg, 'info');
 
                     if (handleExportWorkspaceSnapshot) {
                         setTimeout(() => {
@@ -702,13 +702,15 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
 
                         setHistory((prev: GeneratedImageType[]) => [historyItem, ...prev]);
 
+                        const committedDisplayUrl = res.displayUrl || res.url;
                         onBatchPreviewTileUpdate?.({
                             sessionId: roundBatchSessionId,
                             tile: {
                                 id: `${roundBatchSessionId}-${batchResultIndex}`,
                                 slotIndex: batchResultIndex,
                                 status: 'committed',
-                                previewUrl: null,
+                                previewUrl: committedDisplayUrl || null,
+                                stagePreviewUrl: committedDisplayUrl || null,
                                 error: null,
                             },
                         });

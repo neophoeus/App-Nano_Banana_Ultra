@@ -163,13 +163,14 @@ export function useDebugTerminal(): UseDebugTerminalReturn {
     );
 
     const sourceOptions = useMemo(
-        () =>
-            Array.from(new Set(events.map((event) => event.source).filter(Boolean) as DebugTerminalSource[])).sort(),
+        () => Array.from(new Set(events.map((event) => event.source).filter(Boolean) as DebugTerminalSource[])).sort(),
         [events],
     );
     const routeOptions = useMemo(
         () =>
-            Array.from(new Set(events.map((event) => event.route || event.endpoint).filter(Boolean) as string[])).sort(),
+            Array.from(
+                new Set(events.map((event) => event.route || event.endpoint).filter(Boolean) as string[]),
+            ).sort(),
         [events],
     );
 
@@ -188,7 +189,11 @@ export function useDebugTerminal(): UseDebugTerminalReturn {
                     return false;
                 }
 
-                if (activeCorrelationId && event.correlationId !== activeCorrelationId && event.requestId !== activeCorrelationId) {
+                if (
+                    activeCorrelationId &&
+                    event.correlationId !== activeCorrelationId &&
+                    event.requestId !== activeCorrelationId
+                ) {
                     return false;
                 }
 

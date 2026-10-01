@@ -266,4 +266,4 @@ export const clearDebugTerminalEvents = () => {
         }
         window.dispatchEvent(new Event('nbu_clear_debug_terminal'));
     }
-};
+};

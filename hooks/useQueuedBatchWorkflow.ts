@@ -1270,7 +1270,10 @@ export function useQueuedBatchWorkflow({
                 }
                 addLog(formatMessage('queuedBatchImportedLog', String(importedHistoryItems.length), job.name));
                 if (!options?.silent) {
-                    showNotification(formatMessage('queuedBatchImportedNotice', String(importedHistoryItems.length)), 'info');
+                    showNotification(
+                        formatMessage('queuedBatchImportedNotice', String(importedHistoryItems.length)),
+                        'info',
+                    );
                 }
                 return importedHistoryItems.length;
             } catch (error: any) {
@@ -1425,7 +1428,10 @@ export function useQueuedBatchWorkflow({
         try {
             const remoteJobs = await listQueuedBatchJobs(20);
             if (remoteJobs.length === 0) {
-                showNotification(t('noRecentRemoteBatchJobs') || 'No additional recent remote batch jobs were found.', 'info');
+                showNotification(
+                    t('noRecentRemoteBatchJobs') || 'No additional recent remote batch jobs were found.',
+                    'info',
+                );
                 return;
             }
 
@@ -1474,7 +1480,10 @@ export function useQueuedBatchWorkflow({
                 showNotification(`Recovered ${recoveredCount} recent batch job(s).`, 'info');
                 addLog(`Recovered ${recoveredCount} recent batch job(s) from Gemini Batch API.`);
             } else {
-                showNotification(t('allRemoteBatchJobsAlreadyTracked') || 'All recent batch jobs are already tracked.', 'info');
+                showNotification(
+                    t('allRemoteBatchJobsAlreadyTracked') || 'All recent batch jobs are already tracked.',
+                    'info',
+                );
             }
         } catch (error: any) {
             const message = error?.message || 'Failed to recover recent batch jobs.';

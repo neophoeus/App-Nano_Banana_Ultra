@@ -194,11 +194,7 @@ export function resolveLocalImageInputFile(
     const dataUrlMatch = trimmedImage.match(/^data:([^;]+);base64,(.+)$/i);
 
     if (dataUrlMatch?.[2]) {
-        return writeTempImageFile(
-            Buffer.from(dataUrlMatch[2], 'base64'),
-            dataUrlMatch[1] || 'image/png',
-            tempDir,
-        );
+        return writeTempImageFile(Buffer.from(dataUrlMatch[2], 'base64'), dataUrlMatch[1] || 'image/png', tempDir);
     }
 
     const savedFilename = extractSavedFilenameFromLoadImageUrl(trimmedImage);
@@ -270,10 +266,7 @@ export function normalizeReferenceImages(body: GenerateImageBodyLike): {
     };
 }
 
-export function buildGenerateParts(
-    body: GenerateImageBodyLike,
-    resolvedDir: string,
-): InlineGeneratePart[] {
+export function buildGenerateParts(body: GenerateImageBodyLike, resolvedDir: string): InlineGeneratePart[] {
     const { objectImageInputs, characterImageInputs } = normalizeReferenceImages(body);
     const parts: InlineGeneratePart[] = [];
     const prompt = String(body.prompt || 'A creative image.');

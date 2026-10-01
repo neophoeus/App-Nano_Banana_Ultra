@@ -130,7 +130,8 @@ function RecentHistoryFilmstrip({
                                 const isCurrentSource = currentSourceHistoryId === item.id;
                                 const previewFilename = item.thumbnailSavedFilename || item.savedFilename;
                                 const hasPreviewImage = Boolean(item.url || previewFilename);
-                                const previewSrc = item.url || (previewFilename ? buildSavedImageLoadUrl(previewFilename) : '');
+                                const previewSrc =
+                                    item.url || (previewFilename ? buildSavedImageLoadUrl(previewFilename) : '');
 
                                 return (
                                     <div

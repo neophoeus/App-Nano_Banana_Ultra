@@ -271,11 +271,7 @@ const normalizeSafetyCategory = (value: unknown): string | null => {
         return null;
     }
 
-    return trimmedValue
-        .replace('HARM_CATEGORY_', '')
-        .replace(/_/g, ' ')
-        .replace(/\s+/g, ' ')
-        .toLowerCase();
+    return trimmedValue.replace('HARM_CATEGORY_', '').replace(/_/g, ' ').replace(/\s+/g, ' ').toLowerCase();
 };
 
 const dedupeStrings = (values: string[]) => values.filter((value, index) => values.indexOf(value) === index);
@@ -559,8 +555,8 @@ const localizeFinishReason = (t: TranslationGetter, finishReason?: string | null
 
 const localizeSafetyCategories = (t: TranslationGetter, categories?: string[] | null): string | null => {
     const localizedCategories = dedupeStrings(
-        normalizeBlockedSafetyCategories(categories).map(
-            (category) => t(safetyCategoryTranslationKeys[category] || 'generationFailureValueSafetyCategoryOther'),
+        normalizeBlockedSafetyCategories(categories).map((category) =>
+            t(safetyCategoryTranslationKeys[category] || 'generationFailureValueSafetyCategoryOther'),
         ),
     );
 
@@ -630,7 +626,9 @@ export function normalizeGenerationFailureInfo(value: unknown): GenerationFailur
     };
 }
 
-export function resolveDisplayGenerationFailureInfo(source: GenerationFailureDisplaySource): GenerationFailureInfo | null {
+export function resolveDisplayGenerationFailureInfo(
+    source: GenerationFailureDisplaySource,
+): GenerationFailureInfo | null {
     const normalizedFailure = normalizeGenerationFailureInfo(source.failure);
     if (normalizedFailure) {
         return normalizedFailure;
@@ -985,6 +983,12 @@ export function formatGenerationFailureDisplayMessage(
     source: GenerationFailureDisplaySource,
     options?: StageErrorBuildOptions,
 ): string | null {
-    const stageError = buildStageErrorState(t, resolveDisplayGenerationFailureInfo(source), source.error, null, options);
+    const stageError = buildStageErrorState(
+        t,
+        resolveDisplayGenerationFailureInfo(source),
+        source.error,
+        null,
+        options,
+    );
     return joinDisplayDetails([stageError.summary, stageError.detail]);
 }

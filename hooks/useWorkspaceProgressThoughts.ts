@@ -66,7 +66,9 @@ const formatTimeLabel = (timestampMs: number) =>
     });
 
 const dedupeEntriesById = (entries: WorkspaceProgressThoughtEntry[]) =>
-    entries.filter((entry, index, allEntries) => allEntries.findIndex((candidate) => candidate.id === entry.id) === index);
+    entries.filter(
+        (entry, index, allEntries) => allEntries.findIndex((candidate) => candidate.id === entry.id) === index,
+    );
 
 export function useWorkspaceProgressThoughts({
     selectedHistoryId,
@@ -228,18 +230,18 @@ export function useWorkspaceProgressThoughts({
     ]);
     const hasProgressActivity = Boolean(
         liveProgressThoughtEntries.length > 0 ||
-            selectedProgressEntry ||
-            progressHistoryThoughtTurns.length > 0 ||
-            effectiveProgressThoughtsText ||
-            effectiveThoughtParts.length > 0,
+        selectedProgressEntry ||
+        progressHistoryThoughtTurns.length > 0 ||
+        effectiveProgressThoughtsText ||
+        effectiveThoughtParts.length > 0,
     );
     const hasSourceTrailInfo = Boolean(
         groundingQueries.length > 0 ||
-            selectedSourcesCount > 0 ||
-            selectedSupportBundlesCount > 0 ||
-            Boolean(searchEntryPointRenderedContent?.trim()) ||
-            effectiveSessionHints?.groundingMetadataReturned ||
-            effectiveSessionHints?.groundingSupportsReturned,
+        selectedSourcesCount > 0 ||
+        selectedSupportBundlesCount > 0 ||
+        Boolean(searchEntryPointRenderedContent?.trim()) ||
+        effectiveSessionHints?.groundingMetadataReturned ||
+        effectiveSessionHints?.groundingSupportsReturned,
     );
     const progressThoughtEntries = useMemo<WorkspaceProgressThoughtEntry[]>(() => {
         const mapTurnToThoughtEntry = (turn: GeneratedImageType): WorkspaceProgressThoughtEntry => {
@@ -249,7 +251,9 @@ export function useWorkspaceProgressThoughts({
                 id: turn.id,
                 shortId: getShortTurnId(turn.id),
                 prompt: turn.prompt || null,
-                thoughts: turn.thoughts?.trim() || buildThoughtSummaryFromParts(turnThoughtParts, t('workspaceViewerThoughts')),
+                thoughts:
+                    turn.thoughts?.trim() ||
+                    buildThoughtSummaryFromParts(turnThoughtParts, t('workspaceViewerThoughts')),
                 resultParts: turnThoughtParts,
                 createdAtMs: turn.createdAt,
                 createdAtLabel: formatTimeLabel(turn.createdAt),

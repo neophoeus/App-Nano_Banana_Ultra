@@ -28,7 +28,10 @@ type UseSelectedResultStateReturn = {
     focusLinkedGroundingItems: boolean;
     setFocusLinkedGroundingItems: Dispatch<SetStateAction<boolean>>;
     buildResultArtifacts: (
-        item: Pick<GeneratedImage, 'text' | 'thoughts' | 'resultParts' | 'grounding' | 'metadata' | 'sessionHints' | 'id'>,
+        item: Pick<
+            GeneratedImage,
+            'text' | 'thoughts' | 'resultParts' | 'grounding' | 'metadata' | 'sessionHints' | 'id'
+        >,
     ) => ResultArtifacts;
     applySelectedResultArtifacts: (artifacts: ResultArtifacts | null) => void;
     resetSelectedOutputState: () => void;
@@ -64,7 +67,10 @@ export function useSelectedResultState({
 
     const buildResultArtifacts = useCallback(
         (
-            item: Pick<GeneratedImage, 'text' | 'thoughts' | 'resultParts' | 'grounding' | 'metadata' | 'sessionHints' | 'id'>,
+            item: Pick<
+                GeneratedImage,
+                'text' | 'thoughts' | 'resultParts' | 'grounding' | 'metadata' | 'sessionHints' | 'id'
+            >,
         ): ResultArtifacts => ({
             text: item.text || null,
             thoughts: item.thoughts || null,

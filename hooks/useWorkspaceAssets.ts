@@ -51,7 +51,9 @@ const sanitizeStagedAssets = (assets: StageAsset[]) =>
     assets.filter((asset) => asset.role === 'object' || asset.role === 'character' || asset.role === 'stage-source');
 
 export function useWorkspaceAssets({ initialStagedAssets }: UseWorkspaceAssetsArgs): UseWorkspaceAssetsReturn {
-    const [stagedAssets, setStagedAssetsState] = useState<StageAsset[]>(() => sanitizeStagedAssets(initialStagedAssets));
+    const [stagedAssets, setStagedAssetsState] = useState<StageAsset[]>(() =>
+        sanitizeStagedAssets(initialStagedAssets),
+    );
 
     const setStagedAssets = useCallback((nextState: SetStateAction<StageAsset[]>) => {
         setStagedAssetsState((previous) => {

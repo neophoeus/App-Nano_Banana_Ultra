@@ -62,7 +62,12 @@ export function usePromptTools({
         setActivePromptTool('rewrite');
         setIsEnhancingPrompt(true);
         try {
-            const enhanced = await enhancePromptWithGemini(prompt, currentLanguage, safetyThresholds, promptThinkingLevel);
+            const enhanced = await enhancePromptWithGemini(
+                prompt,
+                currentLanguage,
+                safetyThresholds,
+                promptThinkingLevel,
+            );
             setPrompt(enhanced);
             addLog(t('logRewriteOk'));
         } catch (e) {
@@ -73,7 +78,18 @@ export function usePromptTools({
             setIsEnhancingPrompt(false);
             setActivePromptTool(null);
         }
-    }, [apiKeyReady, currentLanguage, handleApiKeyConnect, addLog, prompt, promptThinkingLevel, safetyThresholds, setPrompt, showNotification, t]);
+    }, [
+        apiKeyReady,
+        currentLanguage,
+        handleApiKeyConnect,
+        addLog,
+        prompt,
+        promptThinkingLevel,
+        safetyThresholds,
+        setPrompt,
+        showNotification,
+        t,
+    ]);
 
     const handleSurpriseMe = useCallback(async () => {
         if (!apiKeyReady) {
@@ -96,7 +112,16 @@ export function usePromptTools({
             setIsEnhancingPrompt(false);
             setActivePromptTool(null);
         }
-    }, [apiKeyReady, currentLanguage, handleApiKeyConnect, addLog, promptThinkingLevel, safetyThresholds, setPrompt, t]);
+    }, [
+        apiKeyReady,
+        currentLanguage,
+        handleApiKeyConnect,
+        addLog,
+        promptThinkingLevel,
+        safetyThresholds,
+        setPrompt,
+        t,
+    ]);
 
     const handleImageToPrompt = useCallback(
         async (file: File) => {
@@ -137,7 +162,17 @@ export function usePromptTools({
                 setActivePromptTool(null);
             }
         },
-        [apiKeyReady, currentLanguage, handleApiKeyConnect, addLog, promptThinkingLevel, safetyThresholds, setPrompt, showNotification, t],
+        [
+            apiKeyReady,
+            currentLanguage,
+            handleApiKeyConnect,
+            addLog,
+            promptThinkingLevel,
+            safetyThresholds,
+            setPrompt,
+            showNotification,
+            t,
+        ],
     );
 
     return {

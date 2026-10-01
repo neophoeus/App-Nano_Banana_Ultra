@@ -547,13 +547,7 @@ describe('usePerformGeneration', () => {
         });
 
         await act(async () => {
-            await latestHook!.performGeneration(
-                '',
-                '1:1',
-                '1K',
-                'Digital Illustration',
-                'gemini-3.1-flash-image',
-            );
+            await latestHook!.performGeneration('', '1:1', '1K', 'Digital Illustration', 'gemini-3.1-flash-image');
         });
 
         expect(generateImageWithGeminiMock).toHaveBeenCalledWith(

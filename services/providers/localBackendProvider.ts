@@ -209,7 +209,11 @@ const buildStreamPartSummary = (part: ResultPart): string =>
         ? `${part.kind} #${part.sequence + 1}`
         : `${part.kind} #${part.sequence + 1} (${(part as ResultImagePart).mimeType})`;
 
-async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit, debugContext?: DebugRequestContext<T>): Promise<T> {
+async function fetchJson<T>(
+    input: RequestInfo | URL,
+    init?: RequestInit,
+    debugContext?: DebugRequestContext<T>,
+): Promise<T> {
     const route = debugContext?.route || resolveRequestPath(input);
     const method = debugContext?.method || init?.method || 'GET';
     const correlationId = debugContext?.correlationId || createDebugTerminalCorrelationId('req');
@@ -303,7 +307,9 @@ async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit, debugC
                     method,
                     correlationId,
                 },
-                summary: buildErrorSummary(failure ? attachGenerationFailure(new Error(requestError.message), failure) : requestError),
+                summary: buildErrorSummary(
+                    failure ? attachGenerationFailure(new Error(requestError.message), failure) : requestError,
+                ),
                 status: response.status,
                 durationMs: Date.now() - startTime,
                 payload: {
@@ -340,7 +346,7 @@ async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit, debugC
             payload:
                 typeof debugContext.responsePayload === 'function'
                     ? debugContext.responsePayload(payload as T)
-                    : debugContext.responsePayload ?? payload,
+                    : (debugContext.responsePayload ?? payload),
         });
     }
 
@@ -417,7 +423,8 @@ const retryOperation = async <T>(
         return await operation();
     } catch (error: any) {
         const msg = error.message || '';
-        const isDeterministicQuota = msg.includes('quota') && !msg.includes('429') && !msg.includes('RESOURCE_EXHAUSTED');
+        const isDeterministicQuota =
+            msg.includes('quota') && !msg.includes('429') && !msg.includes('RESOURCE_EXHAUSTED');
         if (
             msg.includes('PROMPT_BLOCKED') ||
             msg.includes('SAFETY_BLOCK') ||
@@ -575,13 +582,15 @@ const buildSuccessGenerationResult = (
 const buildFailedGenerationResult = (
     slotIndex: number,
     error: unknown,
-    partialResponse?: Pick<GenerateResponse, 'text' | 'thoughts' | 'resultParts' | 'metadata' | 'grounding' | 'sessionHints' | 'conversation'>,
+    partialResponse?: Pick<
+        GenerateResponse,
+        'text' | 'thoughts' | 'resultParts' | 'metadata' | 'grounding' | 'sessionHints' | 'conversation'
+    >,
 ) => {
     const normalizedError = error instanceof Error ? error : new Error(String(error));
     const failure = getGenerationFailure(normalizedError);
     const carriedPartialResponse =
-        partialResponse ||
-        ((normalizedError as Error & { partialResponse?: any }).partialResponse ?? undefined);
+        partialResponse || ((normalizedError as Error & { partialResponse?: any }).partialResponse ?? undefined);
 
     return {
         slotIndex,
@@ -618,7 +627,10 @@ const mergeRecoveredFailureResult = (initialResult: any, recoveryResult: any) =>
 const executeBlockingImageAttempt = async (
     options: GenerateOptions,
     slotIndex: number,
-    onImageReceived?: (url: string, slotIndex: number) => Promise<ImageReceivedResult | undefined> | ImageReceivedResult | undefined,
+    onImageReceived?: (
+        url: string,
+        slotIndex: number,
+    ) => Promise<ImageReceivedResult | undefined> | ImageReceivedResult | undefined,
     onLog?: (msg: string) => void,
     abortSignal?: AbortSignal,
 ) => {
@@ -646,7 +658,10 @@ const executeBlockingImageAttempt = async (
 const executeBlockingImageAttemptWithTransientRetry = async (
     options: GenerateOptions,
     slotIndex: number,
-    onImageReceived?: (url: string, slotIndex: number) => Promise<ImageReceivedResult | undefined> | ImageReceivedResult | undefined,
+    onImageReceived?: (
+        url: string,
+        slotIndex: number,
+    ) => Promise<ImageReceivedResult | undefined> | ImageReceivedResult | undefined,
     onLog?: (msg: string) => void,
     abortSignal?: AbortSignal,
 ) => {
@@ -807,28 +822,29 @@ export class LocalBackendProvider implements WorkspaceExecutionProvider {
         const correlationId = createDebugTerminalCorrelationId('prompt');
         const requestPayload = { currentPrompt, lang, safetyThresholds, thinkingLevel };
         const response = await retryOperation(
-            () => fetchJson<{ text: string }>(
-                '/api/prompt/enhance',
-                {
-                    method: 'POST',
-                    headers: jsonHeaders,
-                    body: JSON.stringify(requestPayload),
-                },
-                {
-                    source: 'prompt-tools',
-                    route: '/api/prompt/enhance',
-                    method: 'POST',
-                    operation: 'Prompt enhancer',
-                    correlationId,
-                    requestLabel: 'Prompt enhancer request',
-                    requestSummary: `Prompt enhancer (${lang})`,
-                    requestPayload,
-                    responseLabel: 'Prompt enhancer response',
-                    responseSummary: (result: { text: string }) => buildTextResponseSummary(result.text),
-                    responsePayload: (result: { text: string }) => ({ text: result.text }),
-                    errorLabel: 'Prompt enhancer failed',
-                },
-            ),
+            () =>
+                fetchJson<{ text: string }>(
+                    '/api/prompt/enhance',
+                    {
+                        method: 'POST',
+                        headers: jsonHeaders,
+                        body: JSON.stringify(requestPayload),
+                    },
+                    {
+                        source: 'prompt-tools',
+                        route: '/api/prompt/enhance',
+                        method: 'POST',
+                        operation: 'Prompt enhancer',
+                        correlationId,
+                        requestLabel: 'Prompt enhancer request',
+                        requestSummary: `Prompt enhancer (${lang})`,
+                        requestPayload,
+                        responseLabel: 'Prompt enhancer response',
+                        responseSummary: (result: { text: string }) => buildTextResponseSummary(result.text),
+                        responsePayload: (result: { text: string }) => ({ text: result.text }),
+                        errorLabel: 'Prompt enhancer failed',
+                    },
+                ),
             2,
             1500,
             {
@@ -857,28 +873,29 @@ export class LocalBackendProvider implements WorkspaceExecutionProvider {
         const correlationId = createDebugTerminalCorrelationId('prompt');
         const requestPayload = { lang, safetyThresholds, thinkingLevel };
         const response = await retryOperation(
-            () => fetchJson<{ text: string }>(
-                '/api/prompt/random',
-                {
-                    method: 'POST',
-                    headers: jsonHeaders,
-                    body: JSON.stringify(requestPayload),
-                },
-                {
-                    source: 'prompt-tools',
-                    route: '/api/prompt/random',
-                    method: 'POST',
-                    operation: 'Random prompt',
-                    correlationId,
-                    requestLabel: 'Random prompt request',
-                    requestSummary: `Random prompt (${lang})`,
-                    requestPayload,
-                    responseLabel: 'Random prompt response',
-                    responseSummary: (result: { text: string }) => buildTextResponseSummary(result.text),
-                    responsePayload: (result: { text: string }) => ({ text: result.text }),
-                    errorLabel: 'Random prompt failed',
-                },
-            ),
+            () =>
+                fetchJson<{ text: string }>(
+                    '/api/prompt/random',
+                    {
+                        method: 'POST',
+                        headers: jsonHeaders,
+                        body: JSON.stringify(requestPayload),
+                    },
+                    {
+                        source: 'prompt-tools',
+                        route: '/api/prompt/random',
+                        method: 'POST',
+                        operation: 'Random prompt',
+                        correlationId,
+                        requestLabel: 'Random prompt request',
+                        requestSummary: `Random prompt (${lang})`,
+                        requestPayload,
+                        responseLabel: 'Random prompt response',
+                        responseSummary: (result: { text: string }) => buildTextResponseSummary(result.text),
+                        responsePayload: (result: { text: string }) => ({ text: result.text }),
+                        errorLabel: 'Random prompt failed',
+                    },
+                ),
             2,
             1500,
             {
@@ -908,28 +925,29 @@ export class LocalBackendProvider implements WorkspaceExecutionProvider {
         const correlationId = createDebugTerminalCorrelationId('prompt');
         const requestPayload = { imageDataUrl, lang, safetyThresholds, thinkingLevel };
         const response = await retryOperation(
-            () => fetchJson<{ text: string }>(
-                '/api/prompt/image-to-prompt',
-                {
-                    method: 'POST',
-                    headers: jsonHeaders,
-                    body: JSON.stringify(requestPayload),
-                },
-                {
-                    source: 'prompt-tools',
-                    route: '/api/prompt/image-to-prompt',
-                    method: 'POST',
-                    operation: 'Image to prompt',
-                    correlationId,
-                    requestLabel: 'Image-to-prompt request',
-                    requestSummary: `Image-to-prompt (${lang})`,
-                    requestPayload,
-                    responseLabel: 'Image-to-prompt response',
-                    responseSummary: (result: { text: string }) => buildTextResponseSummary(result.text),
-                    responsePayload: (result: { text: string }) => ({ text: result.text }),
-                    errorLabel: 'Image-to-prompt failed',
-                },
-            ),
+            () =>
+                fetchJson<{ text: string }>(
+                    '/api/prompt/image-to-prompt',
+                    {
+                        method: 'POST',
+                        headers: jsonHeaders,
+                        body: JSON.stringify(requestPayload),
+                    },
+                    {
+                        source: 'prompt-tools',
+                        route: '/api/prompt/image-to-prompt',
+                        method: 'POST',
+                        operation: 'Image to prompt',
+                        correlationId,
+                        requestLabel: 'Image-to-prompt request',
+                        requestSummary: `Image-to-prompt (${lang})`,
+                        requestPayload,
+                        responseLabel: 'Image-to-prompt response',
+                        responseSummary: (result: { text: string }) => buildTextResponseSummary(result.text),
+                        responsePayload: (result: { text: string }) => ({ text: result.text }),
+                        errorLabel: 'Image-to-prompt failed',
+                    },
+                ),
             2,
             1500,
             {

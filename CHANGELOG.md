@@ -1,5 +1,15 @@
 # Changelog
 
+## v4.7.2 - 2026-10-01
+
+- Release title: Nano Banana Ultra 4.7.2 - Progressive Batch Generation Preview & Gallery Synchronization Fix
+- Release summary:
+    - **Synchronous Batch Session Ref Management (`hooks/useBatchPreviewSession.ts`)**: Maintained `activeBatchPreviewSessionRef.current` synchronously across session start, progressive tile completion, and clearing lifecycles. Eliminates React 18/19 batched state update latency where callbacks read stale `null` session references, ensuring continuous tracking throughout multi-image generation rounds.
+    - **Progressive Stage & Gallery Synchronization (`hooks/useBatchPreviewSession.ts`, `hooks/usePerformGeneration.ts`)**: Immediately projects completed batch tiles onto the main stage viewport on `ready` and `committed` states, eliminating full-screen loading spinners as soon as the first image finishes. Progressively synchronizes completed images to the gallery and stage without waiting for all images in the round to finish.
+    - **Committed Slot Display URL Preservation (`hooks/usePerformGeneration.ts`)**: Preserved `displayUrl` in `onBatchPreviewTileUpdate` during slot commit, eliminating transient `null` preview URL transitions and enabling seamless inspection of committed tiles while subsequent images continue generating.
+    - **Shared Dual-Engine Consistency**: Confirmed identical progressive preview and gallery behavior across both Google AI Studio direct browser mode and Local API Node.js backend mode.
+    - **Automated Test Coverage Expansion (`tests/useBatchPreviewSession.test.tsx`)**: Added dedicated unit tests validating synchronous same-tick stage preview switching, committed slot preview URL retention, and committed tile selection during active generation. All 125 test suites (1,039 tests) and Playwright smoke tests pass with 100% success rate.
+
 ## v4.7.1 - 2026-09-23
 
 - Release title: Nano Banana Ultra 4.7.1 - Lite Edition Parity: Multilingual Window Confirmation, Extended Lifecycle Test Coverage & Browser-Only Test Service Overrides

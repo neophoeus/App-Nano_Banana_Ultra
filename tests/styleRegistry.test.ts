@@ -38,7 +38,9 @@ describe('styleRegistry', () => {
         expect(STYLES_BY_CATEGORY.PhotoFilm).toContain('Vintage Instant Photo');
         expect(STYLES_BY_CATEGORY.ComicsAnime).toContain('Comic Illustration');
         expect(
-            STYLES_BY_CATEGORY.All.filter((style) => style !== 'None').every((style) => getStylePromptDirective(style).length > 0),
+            STYLES_BY_CATEGORY.All.filter((style) => style !== 'None').every(
+                (style) => getStylePromptDirective(style).length > 0,
+            ),
         ).toBe(true);
     });
 

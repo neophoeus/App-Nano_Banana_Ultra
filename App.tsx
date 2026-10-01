@@ -96,10 +96,7 @@ import { useLegacyWorkspaceSnapshotMigration } from './hooks/useLegacyWorkspaceS
 import { useRateLimitNotice } from './utils/rateLimitNotice';
 import { resolveCurrentStageSelectionFirstSourceOverride } from './utils/generationSourceOverride';
 import { buildSavedImageLoadUrl, loadImageMetadata } from './utils/imageSaveUtils';
-import {
-    createImageSidecarMetadataState,
-    normalizeImageSidecarMetadata,
-} from './utils/imageSidecarMetadata';
+import { createImageSidecarMetadataState, normalizeImageSidecarMetadata } from './utils/imageSidecarMetadata';
 import { useStageImageDownloadActions } from './hooks/useStageImageDownloadActions';
 import { useBatchPreviewSession } from './hooks/useBatchPreviewSession';
 

@@ -38,13 +38,7 @@ describe('RateLimitCooldownModal', () => {
 
     it('renders nothing when notice is null or inactive', async () => {
         await act(async () => {
-            root.render(
-                <RateLimitCooldownModal
-                    notice={null}
-                    currentLanguage="zh_TW"
-                    onCancelGeneration={vi.fn()}
-                />,
-            );
+            root.render(<RateLimitCooldownModal notice={null} currentLanguage="zh_TW" onCancelGeneration={vi.fn()} />);
         });
 
         expect(container.querySelector('[data-testid="rate-limit-cooldown-modal"]')).toBeNull();
@@ -63,11 +57,7 @@ describe('RateLimitCooldownModal', () => {
 
         await act(async () => {
             root.render(
-                <RateLimitCooldownModal
-                    notice={notice}
-                    currentLanguage="zh_TW"
-                    onCancelGeneration={vi.fn()}
-                />,
+                <RateLimitCooldownModal notice={notice} currentLanguage="zh_TW" onCancelGeneration={vi.fn()} />,
             );
         });
 
@@ -87,11 +77,7 @@ describe('RateLimitCooldownModal', () => {
 
         await act(async () => {
             root.render(
-                <RateLimitCooldownModal
-                    notice={notice}
-                    currentLanguage="zh_TW"
-                    onCancelGeneration={vi.fn()}
-                />,
+                <RateLimitCooldownModal notice={notice} currentLanguage="zh_TW" onCancelGeneration={vi.fn()} />,
             );
         });
 
@@ -119,13 +105,7 @@ describe('RateLimitCooldownModal', () => {
         };
 
         await act(async () => {
-            root.render(
-                <RateLimitCooldownModal
-                    notice={notice}
-                    currentLanguage="en"
-                    onCancelGeneration={vi.fn()}
-                />,
-            );
+            root.render(<RateLimitCooldownModal notice={notice} currentLanguage="en" onCancelGeneration={vi.fn()} />);
         });
 
         const modal = container.querySelector('[data-testid="rate-limit-cooldown-modal"]');
@@ -149,11 +129,7 @@ describe('RateLimitCooldownModal', () => {
 
         await act(async () => {
             root.render(
-                <RateLimitCooldownModal
-                    notice={notice}
-                    currentLanguage="zh_TW"
-                    onCancelGeneration={handleCancel}
-                />,
+                <RateLimitCooldownModal notice={notice} currentLanguage="zh_TW" onCancelGeneration={handleCancel} />,
             );
         });
 

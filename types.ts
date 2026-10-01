@@ -1,5 +1,18 @@
 export type AspectRatio =
-    '1:1' | '16:9' | '9:16' | '4:3' | '3:4' | '2:3' | '3:2' | '21:9' | '4:5' | '5:4' | '1:4' | '4:1' | '1:8' | '8:1';
+    | '1:1'
+    | '16:9'
+    | '9:16'
+    | '4:3'
+    | '3:4'
+    | '2:3'
+    | '3:2'
+    | '21:9'
+    | '4:5'
+    | '5:4'
+    | '1:4'
+    | '4:1'
+    | '1:8'
+    | '8:1';
 export type EditorMode = 'inpaint' | 'outpaint' | 'revolve';
 export type ImageSize = '512' | '1K' | '2K' | '4K';
 
@@ -86,7 +99,10 @@ export type ImageStyle =
     | 'Miniature';
 
 export type ImageModel =
-    'gemini-3.1-flash-image' | 'gemini-3-pro-image' | 'gemini-2.5-flash-image' | 'gemini-3.1-flash-lite-image';
+    | 'gemini-3.1-flash-image'
+    | 'gemini-3-pro-image'
+    | 'gemini-2.5-flash-image'
+    | 'gemini-3.1-flash-lite-image';
 export type OutputFormat = 'images-only' | 'images-and-text';
 export type ThinkingLevel = 'disabled' | 'minimal' | 'high';
 export type PromptThinkingLevel = 'low' | 'medium' | 'high';

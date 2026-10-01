@@ -12,10 +12,7 @@ import type {
 } from '../types';
 import type { WorkspaceProgressThoughtImageDownloadRequest } from '../components/WorkspaceProgressDetailPanel';
 import { buildSavedImageLoadUrl } from '../utils/imageSaveUtils';
-import {
-    buildImageSidecarMetadata,
-    normalizeImageSidecarMetadata,
-} from '../utils/imageSidecarMetadata';
+import { buildImageSidecarMetadata, normalizeImageSidecarMetadata } from '../utils/imageSidecarMetadata';
 import { buildResultPartFilenameStem, buildSavedImageFilenameStem } from '../utils/savedImageFilename';
 import { downloadImageSource, downloadJsonDocument, stripFilenameExtension } from '../utils/browserDownload';
 
