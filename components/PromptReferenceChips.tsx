@@ -61,18 +61,23 @@ interface ChipHoverTooltipProps {
     imageSrc: string;
     hintText: string;
     align?: 'center' | 'left' | 'right';
+    placement?: 'top' | 'bottom';
 }
 
 const ChipHoverTooltip: React.FC<ChipHoverTooltipProps> = React.memo(
-    ({ tag, label, imageSrc, hintText, align = 'center' }) => {
+    ({ tag, label, imageSrc, hintText, align = 'center', placement = 'bottom' }) => {
         const alignClassName =
             align === 'left' ? 'left-0' : align === 'right' ? 'right-0' : 'left-1/2 -translate-x-1/2';
+        const placementClassName = placement === 'top' ? 'bottom-full mb-2' : 'top-full mt-2';
+        const arrowAlignClassName =
+            align === 'left' ? 'left-5' : align === 'right' ? 'right-5' : 'left-1/2 -translate-x-1/2';
+        const arrowPositionClassName = placement === 'top' ? '-bottom-1 border-b border-r' : '-top-1 border-l border-t';
 
         return (
             <div
                 role="tooltip"
                 data-testid={`reference-tag-tooltip-${tag}`}
-                className={`pointer-events-none absolute bottom-full mb-2 ${alignClassName} z-40 flex flex-col items-center rounded-xl border border-slate-200/90 bg-white/95 p-2 shadow-2xl backdrop-blur-md transition-all dark:border-slate-700/90 dark:bg-slate-900/95`}
+                className={`pointer-events-none absolute ${placementClassName} ${alignClassName} z-40 flex flex-col items-center rounded-xl border border-slate-200/90 bg-white/95 p-2 shadow-2xl backdrop-blur-md transition-all dark:border-slate-700/90 dark:bg-slate-900/95`}
                 style={{ width: '110px' }}
             >
                 <div className="relative mb-1.5 h-20 w-20 overflow-hidden rounded-lg border border-slate-200/70 bg-slate-100 shadow-inner dark:border-slate-700/60 dark:bg-slate-800">
@@ -99,7 +104,9 @@ const ChipHoverTooltip: React.FC<ChipHoverTooltipProps> = React.memo(
                         {hintText}
                     </span>
                 </div>
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-2 w-2 rotate-45 border-b border-r border-slate-200/90 bg-white/95 dark:border-slate-700/90 dark:bg-slate-900/95" />
+                <div
+                    className={`absolute ${arrowPositionClassName} ${arrowAlignClassName} h-2 w-2 rotate-45 border-slate-200/90 bg-white/95 dark:border-slate-700/90 dark:bg-slate-900/95`}
+                />
             </div>
         );
     },
@@ -216,7 +223,6 @@ export const PromptReferenceChips: React.FC<PromptReferenceChipsProps> = ({
                                 onFocus={() => setHoveredTag(item.tag)}
                                 onBlur={() => setHoveredTag(null)}
                                 aria-label={`${labelText}: ${item.tag}`}
-                                title={`${labelText}: ${item.tag}`}
                                 className={`group inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-mono font-medium transition-all focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:cursor-not-allowed disabled:opacity-50 ${
                                     isChar
                                         ? 'border-fuchsia-200/90 bg-fuchsia-50/90 text-fuchsia-800 hover:border-fuchsia-300 hover:bg-fuchsia-100 hover:shadow-sm dark:border-fuchsia-500/30 dark:bg-fuchsia-950/30 dark:text-fuchsia-200 dark:hover:border-fuchsia-400/50 dark:hover:bg-fuchsia-950/50'
@@ -250,6 +256,7 @@ export const PromptReferenceChips: React.FC<PromptReferenceChipsProps> = ({
                                     imageSrc={displayImage}
                                     hintText={insertHint}
                                     align={itemIdx === 0 ? 'left' : 'center'}
+                                    placement="bottom"
                                 />
                             )}
                         </div>
@@ -399,7 +406,6 @@ export const PromptReferencedBadges: React.FC<PromptReferencedBadgesProps> = ({
                                 onFocus={() => setHoveredTag(item.tag)}
                                 onBlur={() => setHoveredTag(null)}
                                 aria-label={`${labelText}: ${item.tag}`}
-                                title={`${labelText} - ${isZh ? '點擊在輸入框中選取' : 'Click to select in textarea'}`}
                                 className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 font-mono text-[10px] transition-colors focus:outline-none focus:ring-1 focus:ring-amber-400 ${
                                     isChar
                                         ? 'border-fuchsia-200/90 bg-fuchsia-50/70 text-fuchsia-700 hover:bg-fuchsia-100 dark:border-fuchsia-500/25 dark:bg-fuchsia-950/25 dark:text-fuchsia-300 dark:hover:bg-fuchsia-950/40'
@@ -429,6 +435,7 @@ export const PromptReferencedBadges: React.FC<PromptReferencedBadgesProps> = ({
                                     label={labelText}
                                     imageSrc={displayImage}
                                     hintText={isZh ? '提示詞中引用' : 'Referenced in prompt'}
+                                    placement="top"
                                 />
                             )}
                         </div>

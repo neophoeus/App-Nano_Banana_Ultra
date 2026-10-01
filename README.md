@@ -130,9 +130,13 @@ If you want to extract raw high-resolution images (PNG / JPEG) directly from the
 
 ## Version Overview
 
-### Latest Release: 4.7.2
+### Latest Release: 4.8.1
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
+
+### 4.8.x+ (4.x Series)
+
+Version 4.8.x introduces reference image quick-insert tag chips (`[Obj_1]`, `[Obj_2]`, `[Char_1]`, `[Char_2]`) directly above the prompt composer with live hover thumbnail preview cards, smart caret insertion, dynamic tag re-indexing upon reference upload/reorder/delete, and a bottom prompt citation tracking bar that highlights referenced tags and flags orphan citations with one-click cleanup. Version 4.8.1 refines the hover preview card geometry to project downwards into the spacious textarea area, eliminating container clipping and removing redundant browser tooltip overlap.
 
 ### 4.7.x+ (4.x Series)
 

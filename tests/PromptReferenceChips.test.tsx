@@ -99,11 +99,13 @@ describe('PromptReferenceChips', () => {
         // Before hover, tooltip is not rendered
         expect(container.querySelector('[data-testid="reference-tag-tooltip-[Obj_1]"]')).toBeNull();
 
-        // Focus/pointerenter shows tooltip
+        // Focus/pointerenter shows tooltip popping downwards
         act(() => {
             chipButton.focus();
         });
-        expect(container.querySelector('[data-testid="reference-tag-tooltip-[Obj_1]"]')).not.toBeNull();
+        const tooltip = container.querySelector('[data-testid="reference-tag-tooltip-[Obj_1]"]');
+        expect(tooltip).not.toBeNull();
+        expect(tooltip?.className).toContain('top-full');
         expect(container.textContent).toContain('Click to insert');
 
         // Blur/pointerleave hides tooltip
@@ -187,11 +189,13 @@ describe('PromptReferencedBadges', () => {
         });
         expect(onSelect).toHaveBeenCalledWith('[Char_1]');
 
-        // Focus/hover shows tooltip
+        // Focus/hover shows tooltip popping upwards
         act(() => {
             charBadge.focus();
         });
-        expect(container.querySelector('[data-testid="reference-tag-tooltip-[Char_1]"]')).not.toBeNull();
+        const citedTooltip = container.querySelector('[data-testid="reference-tag-tooltip-[Char_1]"]');
+        expect(citedTooltip).not.toBeNull();
+        expect(citedTooltip?.className).toContain('bottom-full');
     });
 
     it('identifies orphan tags when referenced image does not exist, and allows removal', () => {

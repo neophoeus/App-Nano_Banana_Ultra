@@ -1,5 +1,24 @@
 # Changelog
 
+## v4.8.1 - 2026-10-01
+
+- Release title: Nano Banana Ultra 4.8.1 - Reference Tag Tooltip Viewport Boundary Fix & Hover Presentation Polish
+- Release summary:
+    - **Directional Placement for Reference Chips Tooltip (`components/PromptReferenceChips.tsx`)**: Extended `ChipHoverTooltip` with `placement?: 'top' | 'bottom'` support. Configured the top `Reference Tags` row above the prompt textarea to expand downwards (`placement="bottom"`, `top-full mt-2`), projecting smoothly into the spacious textarea area and completely eliminating the top `overflow-hidden` container clipping bug. Kept the bottom `Prompt cited` badges row expanding upwards (`placement="top"`).
+    - **Refined Pointer Alignment (`components/PromptReferenceChips.tsx`)**: Upgraded arrow positioning (`-top-1 border-l border-t` for downward, `-bottom-1 border-b border-r` for upward). Configured left-aligned chips to center the pointer directly over the chip icon (`left-5`).
+    - **Elimination of Redundant OS Tooltip Overlap (`components/PromptReferenceChips.tsx`)**: Removed the native `title` attribute on chip and badge buttons while preserving full `aria-label` accessibility descriptions, preventing the operating system/browser's default tooltip from clashing with the rich preview card.
+    - **Unit Test Coverage Updates (`tests/PromptReferenceChips.test.tsx`)**: Added directional placement assertions verifying `top-full` for chips and `bottom-full` for cited badges. All 126 test suites (1,050 tests) pass at 100%.
+
+## v4.8.0 - 2026-10-01
+
+- Release title: Nano Banana Ultra 4.8.0 - Reference Image Quick-Insert Tags, Live Hover Previews & Prompt Citation Tracking
+- Release summary:
+    - **Quick-Insert Reference Tag Chips (`components/PromptReferenceChips.tsx`, `components/ComposerSettingsPanel.tsx`)**: Introduced quick-insert tag buttons (`[Obj_1]`, `[Obj_2]`, `[Char_1]`, `[Char_2]`) above the prompt textarea. Clicking any chip inserts the tag at the caret position with smart whitespace handling and immediate focus restoration.
+    - **Live Hover Thumbnail Previews (`components/PromptReferenceChips.tsx`)**: Added lightweight hover preview cards with high-fidelity reference thumbnails and labels, allowing users to visually inspect reference image bindings without leaving the composer.
+    - **Dynamic Reference Synchronization & Cited Badges Bar (`components/PromptReferenceChips.tsx`)**: Chips automatically sync with the latest reference ordering on upload/reorder/delete. Bottom citation bar scans the prompt for referenced tags, highlights citations with thumbnail previews, detects orphan tags (e.g. deleted images), and provides one-click cleanup.
+    - **Composer Integration (`hooks/useComposerSettingsPanelProps.ts`, `App.tsx`)**: Forwarded `surfaceObjectImages` and `surfaceCharacterImages` to ComposerSettingsPanel.
+    - **Automated Test Coverage Expansion (`tests/PromptReferenceChips.test.tsx`, `tests/ComposerSettingsPanel.test.tsx`)**: Added 10 dedicated unit tests covering insertion, hover tooltip, orphan tag handling, and composer layout integration. All 126 test suites (1,050 tests) pass with 100% success rate.
+
 ## v4.7.2 - 2026-10-01
 
 - Release title: Nano Banana Ultra 4.7.2 - Progressive Batch Generation Preview & Gallery Synchronization Fix
