@@ -19,6 +19,13 @@ describe('capability truth', () => {
         expect(MODEL_CAPABILITIES['gemini-3-pro-image'].supportsImageSearch).toBe(false);
     });
 
+    it('marks gemini-nano-banana-2.1 as not supporting temperature parameter while keeping it on other models', () => {
+        expect(MODEL_CAPABILITIES['gemini-nano-banana-2.1'].supportsTemperature).toBe(false);
+        expect(MODEL_CAPABILITIES['gemini-3.1-flash-image'].supportsTemperature).toBe(true);
+        expect(MODEL_CAPABILITIES['gemini-3-pro-image'].supportsTemperature).toBe(true);
+        expect(MODEL_CAPABILITIES['gemini-2.5-flash-image'].supportsTemperature).toBe(true);
+    });
+
     it('treats Gemini 3 image models as thought-summary capable and keeps 2.5 flash image disabled', () => {
         expect(MODEL_CAPABILITIES['gemini-3.1-flash-image'].supportsIncludeThoughts).toBe(true);
         expect(MODEL_CAPABILITIES['gemini-3-pro-image'].supportsIncludeThoughts).toBe(true);

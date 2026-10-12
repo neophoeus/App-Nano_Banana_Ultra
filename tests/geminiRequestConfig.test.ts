@@ -115,4 +115,13 @@ describe('buildImageRequestConfig', () => {
 
         expect(result.resolvedResponseModalities).toEqual(['IMAGE', 'TEXT']);
     });
+
+    it('omits temperature from outbound browser config for gemini-nano-banana-2.1', () => {
+        const result = buildImageRequestConfig('gemini-nano-banana-2.1', {
+            outputFormat: 'images-only',
+            temperature: 1.0,
+        });
+
+        expect(result.requestConfig.temperature).toBeUndefined();
+    });
 });

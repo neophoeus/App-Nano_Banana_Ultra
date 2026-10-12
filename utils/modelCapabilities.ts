@@ -47,7 +47,8 @@ export const MODEL_CAPABILITIES: Record<ImageModel, ModelCapability> = {
         maxObjects: 10,
         maxCharacters: 4,
         outputFormats: ['images-and-text', 'images-only'],
-        supportsTemperature: true,
+        // Nano Banana 2.1 (gemini-nano-banana-2.1) has removed temperature parameter support upstream
+        supportsTemperature: false,
         thinkingLevels: ['minimal', 'medium', 'high'],
         supportsIncludeThoughts: true,
         supportsGoogleSearch: true,

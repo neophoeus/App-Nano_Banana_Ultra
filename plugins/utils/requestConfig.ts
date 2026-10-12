@@ -94,10 +94,15 @@ export function buildImageRequestConfig(
         requiresTextForGroundingMetadata,
     );
 
+    const capability = MODEL_CAPABILITIES[model as ImageModel];
+    const supportsTemperature = capability ? capability.supportsTemperature : true;
+
     const requestConfig: Record<string, unknown> = {
         responseModalities: resolvedResponseModalities,
         imageConfig,
-        temperature: typeof body.temperature === 'number' ? normalizeTemperature(body.temperature) : undefined,
+        ...(supportsTemperature && typeof body.temperature === 'number'
+            ? { temperature: normalizeTemperature(body.temperature) }
+            : {}),
     };
 
     const safetySettings = buildSafetySettings(body.safetyThresholds ?? DEFAULT_SAFETY_THRESHOLDS);
@@ -105,7 +110,6 @@ export function buildImageRequestConfig(
         requestConfig.safetySettings = safetySettings;
     }
 
-    const capability = MODEL_CAPABILITIES[model as ImageModel];
     const defaultThinking: AppThinkingLevel = capability?.thinkingLevels.includes('medium')
         ? 'medium'
         : capability?.thinkingLevels.includes('minimal')

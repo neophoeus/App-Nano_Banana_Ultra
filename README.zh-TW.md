@@ -136,7 +136,7 @@ Nano Banana Ultra 目前支援五條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：4.9.0
+### 最新版本：4.9.1
 
 版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 

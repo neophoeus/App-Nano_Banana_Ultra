@@ -87,6 +87,15 @@ describe('buildImageRequestConfig', () => {
         expect(result.requestConfig.temperature).toBe(1.05);
     });
 
+    it('omits temperature from requestConfig for gemini-nano-banana-2.1', () => {
+        const result = buildImageRequestConfig('gemini-nano-banana-2.1', {
+            outputFormat: 'images-only',
+            temperature: 1.0,
+        });
+
+        expect(result.requestConfig.temperature).toBeUndefined();
+    });
+
     it('preserves permissive safety defaults when no overrides are provided', () => {
         const result = buildImageRequestConfig('gemini-3.1-flash-image', {
             outputFormat: 'images-only',

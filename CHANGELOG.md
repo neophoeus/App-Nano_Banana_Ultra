@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.9.1 - 2026-10-12
+
+- Release title: Nano Banana Ultra 4.9.1 - Gemini Nano Banana 2.1 Temperature Parameter Removal & Request Config Alignment
+- Release summary:
+    - **Gemini Nano Banana 2.1 Temperature Capability Correction (`utils/modelCapabilities.ts`)**: Updated `gemini-nano-banana-2.1` capability specification to mark `supportsTemperature: false` per Google's official Gemini API specification (Nano Banana 2.1 operates without temperature/seed overrides and relies strictly on thinking levels). Automatically hides the temperature slider and labels across composer advanced settings, setting summaries, and surface controls.
+    - **Dual-Engine Request Config Alignment (`utils/geminiRequestConfig.ts`, `plugins/utils/requestConfig.ts`)**: Updated `buildImageRequestConfig` in both browser direct and backend plugin providers to safely omit the `temperature` parameter from outbound request configurations whenever the active model does not support it, preventing API rejection errors.
+    - **Automated Test Coverage Expansion (`tests/capabilityTruth.test.ts`, `tests/geminiRequestConfig.test.ts`, `tests/requestConfig.test.ts`)**: Added comprehensive unit test coverage verifying `supportsTemperature === false` truth mapping and confirming omission of `temperature` from outbound request configurations on Nano Banana 2.1. All 126 test suites (1,054 tests) pass with 100% success rate.
+
 ## v4.9.0 - 2026-10-12
 
 - Release title: Nano Banana Ultra 4.9.0 - Gemini Nano Banana 2.1 Flagship Model Integration, Default Migration & Expanded Thinking Matrix
