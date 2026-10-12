@@ -16,7 +16,7 @@ type ImageGenerateBodyLike = {
     imageSize?: string;
     outputFormat?: 'images-only' | 'images-and-text';
     temperature?: number;
-    thinkingLevel?: 'disabled' | 'minimal' | 'high';
+    thinkingLevel?: 'disabled' | 'minimal' | 'medium' | 'high';
     includeThoughts?: boolean;
     googleSearch?: boolean;
     imageSearch?: boolean;
@@ -45,7 +45,12 @@ export function validateCapabilityRequest(model: string, body: ImageGenerateBody
     }
 
     const requestedThinking =
-        body.thinkingLevel || (capability.thinkingLevels.includes('minimal') ? 'minimal' : 'disabled');
+        body.thinkingLevel ||
+        (capability.thinkingLevels.includes('medium')
+            ? 'medium'
+            : capability.thinkingLevels.includes('minimal')
+              ? 'minimal'
+              : 'disabled');
     if (!capability.thinkingLevels.includes(requestedThinking)) {
         return `${model} does not support thinking level ${requestedThinking}.`;
     }
@@ -101,8 +106,12 @@ export function buildImageRequestConfig(
     }
 
     const capability = MODEL_CAPABILITIES[model as ImageModel];
-    const effectiveThinkingLevel: AppThinkingLevel =
-        body.thinkingLevel || (model === 'gemini-3.1-flash-image' ? 'minimal' : 'disabled');
+    const defaultThinking: AppThinkingLevel = capability?.thinkingLevels.includes('medium')
+        ? 'medium'
+        : capability?.thinkingLevels.includes('minimal')
+          ? 'minimal'
+          : 'disabled';
+    const effectiveThinkingLevel: AppThinkingLevel = body.thinkingLevel || defaultThinking;
     const shouldIncludeThoughts = Boolean(body.includeThoughts) && capability.supportsIncludeThoughts;
     const geminiThinkingLevel = toGeminiThinkingLevel(effectiveThinkingLevel);
     if (geminiThinkingLevel || shouldIncludeThoughts) {

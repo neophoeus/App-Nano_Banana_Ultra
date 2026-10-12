@@ -40,7 +40,7 @@ type BuildImageSidecarMetadataArgs = {
 };
 
 const VALID_OUTPUT_FORMATS = new Set<OutputFormat>(['images-only', 'images-and-text']);
-const VALID_THINKING_LEVELS = new Set<ThinkingLevel>(['disabled', 'minimal', 'high']);
+const VALID_THINKING_LEVELS = new Set<ThinkingLevel>(['disabled', 'minimal', 'medium', 'high']);
 const OUTPUT_DIMENSION_SIZE_LABELS: Record<string, ImageSize> = {
     '512x512': '512',
     '1024x1024': '1K',

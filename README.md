@@ -49,13 +49,19 @@ The workspace features a dual-engine architecture combining both the Local API (
 
 ## Supported Models
 
-Nano Banana Ultra currently supports four Gemini image-model paths. The UI exposes model-aware controls so each path can lean into its own strengths instead of being flattened into one generic settings surface.
+Nano Banana Ultra currently supports five Gemini image-model paths. The UI exposes model-aware controls so each path can lean into its own strengths instead of being flattened into one generic settings surface.
+
+### Nano Banana 2.1
+
+- model id: `gemini-nano-banana-2.1`
+- default mainline model in the current product flow
+- upgraded flagship model supporting 1K, 2K, and 4K resolutions, all 14 aspect ratios, up to 14 reference images (up to 10 objects and 4 characters), thinking levels (`minimal`, `medium`, `high`; default `medium`), and grounding capabilities (Web Search and Image Search)
+- resolves panoramic 2K/4K grid-tiling artifacts, making it ideal for high-fidelity generation, guided editing, and complex reference-conditioned workflows
 
 ### Nano Banana 2
 
 - model id: `gemini-3.1-flash-image`
-- default mainline model in the current product flow
-- broadest capability surface across ratio, size, grounding, and thinking controls
+- active model supporting 1K, 2K, and 4K resolutions with broad capability surface across ratio, size, grounding, and thinking controls
 - best fit for flexible generation, iteration, and reference-aware workspace use
 
 ### Nano Banana 2 Lite
@@ -130,9 +136,13 @@ If you want to extract raw high-resolution images (PNG / JPEG) directly from the
 
 ## Version Overview
 
-### Latest Release: 4.8.1
+### Latest Release: 4.9.0
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
+
+### 4.9.x+ (4.x Series)
+
+Version 4.9.x integrates Google's newly released Gemini Nano Banana 2.1 (`gemini-nano-banana-2.1`) as the flagship default model across both Local API and Google AI Studio direct modes. It expands the thinking level matrix with `medium` (official default for 2.1), eliminates panoramic 2K/4K grid-tiling artifacts across all 14 aspect ratios, supports up to 14 reference images (10 objects, 4 characters), and aligns the entire 5-model Gemini image generation family (`gemini-nano-banana-2.1`, `gemini-3.1-flash-image`, `gemini-3.1-flash-lite-image`, `gemini-3-pro-image`, `gemini-2.5-flash-image`) with complete 9-language localization and automated quota pacing.
 
 ### 4.8.x+ (4.x Series)
 

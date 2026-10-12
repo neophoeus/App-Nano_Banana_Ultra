@@ -146,13 +146,13 @@ describe('workspacePersistence', () => {
     it('returns the requested empty-workspace defaults when nothing is persisted', () => {
         expect(loadWorkspaceSnapshot().composerState).toEqual(
             expect.objectContaining({
-                imageModel: 'gemini-3.1-flash-image',
+                imageModel: 'gemini-nano-banana-2.1',
                 aspectRatio: '1:1',
                 imageSize: '2K',
                 batchSize: 1,
                 outputFormat: 'images-only',
                 temperature: 1,
-                thinkingLevel: 'minimal',
+                thinkingLevel: 'medium',
                 googleSearch: false,
                 imageSearch: false,
             }),
@@ -1247,12 +1247,15 @@ describe('workspacePersistence', () => {
     // 驗證 MODEL_CAPABILITIES 字典是否包含後向相容的 preview 別名以防 dereference crash
     it('retains backward compatibility aliases in MODEL_CAPABILITIES dictionary', () => {
         // 導入模型能力的靜態設定
+        const nanoBanana21Capability = MODEL_CAPABILITIES['gemini-nano-banana-2.1'];
         const flashCapability = MODEL_CAPABILITIES['gemini-3.1-flash-image'];
         const proCapability = MODEL_CAPABILITIES['gemini-3-pro-image'];
 
         // 確保可以用舊的 preview 鍵值獲取正確的能力設定，防止 runtime 存取時發生 undefined 錯誤
+        expect((MODEL_CAPABILITIES as any)['gemini-nano-banana-2.1-preview']).toBe(nanoBanana21Capability);
         expect((MODEL_CAPABILITIES as any)['gemini-3.1-flash-image-preview']).toBe(flashCapability);
         expect((MODEL_CAPABILITIES as any)['gemini-3-pro-image-preview']).toBe(proCapability);
+        expect((MODEL_CAPABILITIES as any)['gemini-nano-banana-2.1-preview']?.supportsGoogleSearch).toBe(true);
         expect((MODEL_CAPABILITIES as any)['gemini-3.1-flash-image-preview']?.supportsGoogleSearch).toBe(true);
     });
 

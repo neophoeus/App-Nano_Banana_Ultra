@@ -99,12 +99,13 @@ export type ImageStyle =
     | 'Miniature';
 
 export type ImageModel =
+    | 'gemini-nano-banana-2.1'
     | 'gemini-3.1-flash-image'
     | 'gemini-3-pro-image'
     | 'gemini-2.5-flash-image'
     | 'gemini-3.1-flash-lite-image';
 export type OutputFormat = 'images-only' | 'images-and-text';
-export type ThinkingLevel = 'disabled' | 'minimal' | 'high';
+export type ThinkingLevel = 'disabled' | 'minimal' | 'medium' | 'high';
 export type PromptThinkingLevel = 'low' | 'medium' | 'high';
 export type GroundingMode = 'off' | 'google-search' | 'image-search' | 'google-search-plus-image-search';
 export type StickySendIntent = 'independent' | 'memory';

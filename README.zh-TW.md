@@ -49,13 +49,19 @@ Nano Banana Ultra 是一個以 Google Gemini 影像模型為核心的影像創�
 
 ## 支援模型
 
-Nano Banana Ultra 目前支援四條 Gemini 影像模型路徑。介面會依模型能力顯示對應控制項，讓每條模型路徑都能發揮自己的長處，而不是全部共用同一套泛化表單。
+Nano Banana Ultra 目前支援五條 Gemini 影像模型路徑。介面會依模型能力顯示對應控制項，讓每條模型路徑都能發揮自己的長處，而不是全部共用同一套泛化表單。
+
+### Nano Banana 2.1
+
+- 模型 id：`gemini-nano-banana-2.1`
+- 目前產品主流程的預設旗艦模型
+- 支援 1K、2K 與 4K 解析度、全部 14 種長寬比、最多 14 張參考圖（最多 10 個物件與 4 位角色）、思維等級（`minimal`、`medium`、`high`；預設為 `medium`）與 Grounding（網頁搜尋與圖片搜尋）
+- 修復了 2K/4K 全景比例的網格拼貼瑕疵，最適合高擬真度多輪創作、編輯與複雜參考圖控制工作流
 
 ### Nano Banana 2
 
 - 模型 id：`gemini-3.1-flash-image`
-- 目前產品主流程的預設模型
-- 具備最完整的比例、尺寸、grounding 與 thinking 控制面
+- 現行活躍模型，支援 1K、2K 與 4K 解析度，具備完整的比例、尺寸、grounding 與 thinking 控制面
 - 適合高彈性、多輪延伸、以及參考圖驅動的工作流
 
 ### Nano Banana 2 Lite
@@ -130,9 +136,13 @@ Nano Banana Ultra 目前支援四條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：4.8.1
+### 最新版本：4.9.0
 
 版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
+
+### 4.9.x+（4.x 系列）
+
+4.9.x 正式整合 Google 全新推出的 Gemini Nano Banana 2.1（`gemini-nano-banana-2.1`）作為 Local API 與 Google AI Studio 直連雙引擎的主力預設旗艦模型。全面擴充思維等級矩陣支援 `medium`（2.1 官方預設等級），修復全 14 種比例之 2K/4K 全景網格拼貼瑕疵，支援最多 14 張參考圖（10 物件、4 角色），並完整對齊現行活躍的 5 款 Gemini 影像模型家族（`gemini-nano-banana-2.1`、`gemini-3.1-flash-image`、`gemini-3.1-flash-lite-image`、`gemini-3-pro-image`、`gemini-2.5-flash-image`），具備 9 國語言在地化與自動化配額調度。
 
 ### 4.8.x+（4.x 系列）
 

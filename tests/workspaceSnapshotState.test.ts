@@ -215,6 +215,16 @@ describe('workspaceSnapshotState', () => {
             executionMode: 'single-turn',
         });
 
+        const nanoBanana21Turn = buildHistoryTurn({
+            model: 'gemini-nano-banana-2.1',
+            metadata: {},
+        });
+
+        expect(buildWorkspaceComposerStateFromHistoryItem(nanoBanana21Turn)).toMatchObject({
+            imageModel: 'gemini-nano-banana-2.1',
+            thinkingLevel: 'medium',
+        });
+
         const variantTurn = buildHistoryTurn({
             variantGroupId: 'variant-group-1',
         });

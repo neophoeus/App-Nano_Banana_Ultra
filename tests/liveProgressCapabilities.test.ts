@@ -10,8 +10,9 @@ describe('live progress capabilities', () => {
     it('builds the expected included probe matrix for current supported image-model paths', () => {
         const includedCells = getLiveProgressCapabilityMatrix({ includeExcluded: false });
 
-        expect(includedCells).toHaveLength(20);
+        expect(includedCells).toHaveLength(32);
         expect(includedCells.every((cell) => cell.expectedEligible)).toBe(true);
+        expect(includedCells.filter((cell) => cell.model === 'gemini-nano-banana-2.1')).toHaveLength(12);
         expect(includedCells.filter((cell) => cell.model === 'gemini-3.1-flash-image')).toHaveLength(8);
         expect(includedCells.filter((cell) => cell.model === 'gemini-3.1-flash-lite-image')).toHaveLength(8);
         expect(includedCells.filter((cell) => cell.model === 'gemini-3-pro-image')).toHaveLength(4);

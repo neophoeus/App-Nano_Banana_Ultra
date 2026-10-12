@@ -54,6 +54,8 @@ export function toGeminiThinkingLevel(thinkingLevel: AppThinkingLevel): Thinking
     switch (thinkingLevel) {
         case 'minimal':
             return ThinkingLevel.MINIMAL;
+        case 'medium':
+            return ThinkingLevel.MEDIUM;
         case 'high':
             return ThinkingLevel.HIGH;
         default:

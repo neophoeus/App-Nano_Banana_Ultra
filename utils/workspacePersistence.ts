@@ -148,11 +148,11 @@ export const EMPTY_WORKSPACE_COMPOSER_STATE: WorkspaceComposerState = {
     aspectRatio: '1:1',
     imageSize: '2K',
     imageStyle: 'None',
-    imageModel: 'gemini-3.1-flash-image',
+    imageModel: 'gemini-nano-banana-2.1',
     batchSize: 1,
     outputFormat: 'images-only',
     temperature: DEFAULT_TEMPERATURE,
-    thinkingLevel: 'minimal',
+    thinkingLevel: 'medium',
     includeThoughts: true,
     googleSearch: false,
     imageSearch: false,
@@ -209,12 +209,19 @@ const ASPECT_RATIO_VALUES = new Set<GeneratedImage['aspectRatio']>([
 ]);
 const IMAGE_SIZE_VALUES = new Set<GeneratedImage['size']>(['512', '1K', '2K', '4K']);
 const IMAGE_MODEL_VALUES = new Set<GeneratedImage['model']>([
+    'gemini-nano-banana-2.1',
     'gemini-3.1-flash-image',
+    'gemini-3.1-flash-lite-image',
     'gemini-3-pro-image',
     'gemini-2.5-flash-image',
 ]);
 const OUTPUT_FORMAT_VALUES = new Set<WorkspaceComposerState['outputFormat']>(['images-only', 'images-and-text']);
-const THINKING_LEVEL_VALUES = new Set<WorkspaceComposerState['thinkingLevel']>(['disabled', 'minimal', 'high']);
+const THINKING_LEVEL_VALUES = new Set<WorkspaceComposerState['thinkingLevel']>([
+    'disabled',
+    'minimal',
+    'medium',
+    'high',
+]);
 const SAFETY_THRESHOLD_VALUES = new Set<SafetyThresholdKey>(SAFETY_THRESHOLD_KEYS);
 const QUEUED_BATCH_JOB_STATE_VALUES = new Set<QueuedBatchJob['state']>([
     'JOB_STATE_PENDING',
@@ -307,7 +314,9 @@ const isImageModel = (value: unknown): value is GeneratedImage['model'] =>
 
 // 過期 preview 模型與當前正式模型的一對一映射關係表，用以處理 Session 舊狀態遷移
 const LEGACY_MODEL_MIGRATION_MAP: Record<string, ImageModel> = {
+    'gemini-nano-banana-2.1-preview': 'gemini-nano-banana-2.1',
     'gemini-3.1-flash-image-preview': 'gemini-3.1-flash-image',
+    'gemini-3.1-flash-lite-image-preview': 'gemini-3.1-flash-lite-image',
     'gemini-3-pro-image-preview': 'gemini-3-pro-image',
 };
 

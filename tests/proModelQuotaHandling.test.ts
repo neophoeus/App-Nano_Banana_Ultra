@@ -4,6 +4,15 @@ import { describe, expect, it } from 'vitest';
 import { getModelQuotaSpec, MODEL_QUOTA_SPECS } from '../utils/modelCapabilities';
 
 describe('pro and flash model quota handling', () => {
+    it('returns correct default quota specs for gemini-nano-banana-2.1', () => {
+        const spec = getModelQuotaSpec('gemini-nano-banana-2.1');
+        expect(spec).toEqual({
+            defaultRpm: 15,
+            defaultTpm: 200000,
+            recommendedStaggerMs: 1200,
+        });
+    });
+
     it('returns correct default quota specs for gemini-3.1-flash-image', () => {
         const spec = getModelQuotaSpec('gemini-3.1-flash-image');
         expect(spec).toEqual({

@@ -54,7 +54,7 @@ type ImageGenerateBody = {
     characterImageInputs?: string[];
     outputFormat?: 'images-only' | 'images-and-text';
     temperature?: number;
-    thinkingLevel?: 'disabled' | 'minimal' | 'high';
+    thinkingLevel?: 'disabled' | 'minimal' | 'medium' | 'high';
     includeThoughts?: boolean;
     googleSearch?: boolean;
     imageSearch?: boolean;
@@ -722,7 +722,7 @@ function validateInteractiveGenerateRequest(
     body: ImageGenerateBody,
     requestContext?: ApiRequestContext,
 ): { model: string; objectImageInputs: string[]; characterImageInputs: string[] } | ValidationErrorResult {
-    const model = String(body.model || 'gemini-3.1-flash-image');
+    const model = String(body.model || 'gemini-nano-banana-2.1');
 
     if (!VALID_IMAGE_MODELS.has(model as ImageModel)) {
         logApiError(routePath, new Error('Unsupported model'), { model }, requestContext);
@@ -1137,7 +1137,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
             const body = await readJsonBody<ImageGenerateBody>(req);
             logApiRequest(requestContext, {
                 source: 'generation',
-                model: String(body.model || 'gemini-3.1-flash-image'),
+                model: String(body.model || 'gemini-nano-banana-2.1'),
                 executionMode: body.executionMode || 'single-turn',
                 outputFormat: body.outputFormat || 'images-only',
                 hasConversationContext: Boolean(body.conversationContext),
@@ -1299,7 +1299,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
             const body = await readJsonBody<ImageGenerateBody>(req);
             logApiRequest(requestContext, {
                 source: 'generation',
-                model: String(body.model || 'gemini-3.1-flash-image'),
+                model: String(body.model || 'gemini-nano-banana-2.1'),
                 executionMode: body.executionMode || 'single-turn',
                 outputFormat: body.outputFormat || 'images-only',
                 hasConversationContext: Boolean(body.conversationContext),
@@ -1328,7 +1328,12 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 executionMode: body.executionMode || 'single-turn',
                 outputFormat: body.outputFormat || 'images-only',
                 thinkingLevel:
-                    body.thinkingLevel || (validated.model === 'gemini-3.1-flash-image' ? 'minimal' : 'disabled'),
+                    body.thinkingLevel ||
+                    (validated.model === 'gemini-nano-banana-2.1'
+                        ? 'medium'
+                        : validated.model === 'gemini-3.1-flash-image' || validated.model === 'gemini-3.1-flash-lite-image'
+                          ? 'minimal'
+                          : 'disabled'),
                 includeThoughts: Boolean(body.includeThoughts),
                 batchSize: 1,
             });

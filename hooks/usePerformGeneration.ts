@@ -44,6 +44,7 @@ import {
 import { buildStyleTransferPrompt } from '../utils/styleRegistry';
 
 const MODEL_TRANSLATION_KEYS: Record<ImageModel, string> = {
+    'gemini-nano-banana-2.1': 'modelGeminiNanoBanana21',
     'gemini-3.1-flash-image': 'modelGemini31Flash',
     'gemini-3.1-flash-lite-image': 'modelGemini31FlashLite',
     'gemini-3-pro-image': 'modelGemini3Pro',

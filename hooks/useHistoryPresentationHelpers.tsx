@@ -73,6 +73,7 @@ const historyActionButtonClassNames = {
 } as const;
 
 const compactSelectedItemModelLabelByModel: Record<GeneratedImage['model'], string> = {
+    'gemini-nano-banana-2.1': 'Banana 2.1',
     'gemini-2.5-flash-image': 'Banana',
     'gemini-3.1-flash-image': 'Banana 2',
     'gemini-3.1-flash-lite-image': 'Banana Lite',

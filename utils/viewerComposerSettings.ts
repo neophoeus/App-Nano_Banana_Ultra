@@ -48,7 +48,7 @@ const VALID_ASPECT_RATIOS = new Set<AspectRatio>([
 ]);
 const VALID_IMAGE_SIZES = new Set<ImageSize>(['512', '1K', '2K', '4K']);
 const VALID_OUTPUT_FORMATS = new Set<OutputFormat>(['images-only', 'images-and-text']);
-const VALID_THINKING_LEVELS = new Set<ThinkingLevel>(['disabled', 'minimal', 'high']);
+const VALID_THINKING_LEVELS = new Set<ThinkingLevel>(['disabled', 'minimal', 'medium', 'high']);
 
 const isAspectRatioValue = (value: unknown): value is AspectRatio =>
     typeof value === 'string' && VALID_ASPECT_RATIOS.has(value as AspectRatio);

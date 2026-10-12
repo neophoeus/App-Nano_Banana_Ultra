@@ -186,6 +186,9 @@ export function useComposerSettingsPanelProps({
 }: UseComposerSettingsPanelPropsArgs): ComposerSettingsPanelProps {
     const getModelLabel = useCallback(
         (model: ImageModel) => {
+            if (model === 'gemini-nano-banana-2.1') {
+                return t('modelGeminiNanoBanana21');
+            }
             if (model === 'gemini-3.1-flash-image') {
                 return t('modelGemini31Flash');
             }

@@ -27,7 +27,7 @@ type ImageGenerateBody = {
     characterImageInputs?: string[];
     outputFormat?: 'images-only' | 'images-and-text';
     temperature?: number;
-    thinkingLevel?: 'disabled' | 'minimal' | 'high';
+    thinkingLevel?: 'disabled' | 'minimal' | 'medium' | 'high';
     includeThoughts?: boolean;
     googleSearch?: boolean;
     imageSearch?: boolean;
@@ -257,7 +257,7 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
         try {
             const ai = getAIClient();
             const body = await readJsonBody<BatchCreateBody>(req);
-            const model = String(body.model || 'gemini-3.1-flash-image');
+            const model = String(body.model || 'gemini-nano-banana-2.1');
             const displayName = body.displayName || `${model}-queued-${new Date().toISOString()}`;
             logApiRequest(requestContext, {
                 source: 'batch',

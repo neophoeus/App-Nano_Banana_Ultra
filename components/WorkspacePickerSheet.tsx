@@ -226,6 +226,9 @@ export default function WorkspacePickerSheet({
     }
 
     const getModelLabel = (model: ImageModel) => {
+        if (model === 'gemini-nano-banana-2.1') {
+            return t('modelGeminiNanoBanana21');
+        }
         if (model === 'gemini-3.1-flash-image') {
             return t('modelGemini31Flash');
         }

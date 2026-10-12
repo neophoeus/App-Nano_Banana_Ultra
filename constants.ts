@@ -31,6 +31,7 @@ export const OUTPUT_FORMATS: Array<{ value: OutputFormat; labelKey: string }> = 
 
 export const THINKING_LEVELS: Array<{ value: ThinkingLevel; labelKey: string }> = [
     { value: 'minimal', labelKey: 'thinkingLevelMinimal' },
+    { value: 'medium', labelKey: 'thinkingLevelMedium' },
     { value: 'high', labelKey: 'thinkingLevelHigh' },
 ];
 
