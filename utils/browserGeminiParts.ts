@@ -14,6 +14,7 @@ export type BrowserInlineImage = {
 export type BrowserGeneratePart = {
     text?: string;
     inlineData?: BrowserInlineImage;
+    fileData?: { fileUri: string; mimeType: string };
 };
 
 type BrowserGenerateBodyLike = {
@@ -22,6 +23,8 @@ type BrowserGenerateBodyLike = {
     sourceImageInput?: string;
     objectImageInputs?: string[];
     characterImageInputs?: string[];
+    styleImageInputs?: string[];
+    videoInput?: string;
 };
 
 export type BrowserConversationHistoryResult = {
@@ -127,10 +130,14 @@ export const buildBrowserGenerateParts = async (body: BrowserGenerateBodyLike): 
     const parts: BrowserGeneratePart[] = [];
     const prompt = String(body.prompt || 'A creative image.');
 
+    if (body.videoInput && body.videoInput.trim()) {
+        parts.push({ fileData: { fileUri: body.videoInput.trim(), mimeType: 'video/mp4' } });
+    }
     await pushImagesToParts(parts, body.editingInput ? [body.editingInput] : [], 'Edit');
     await pushImagesToParts(parts, body.sourceImageInput ? [body.sourceImageInput] : [], 'Src');
     await pushImagesToParts(parts, Array.isArray(body.objectImageInputs) ? body.objectImageInputs : [], 'Obj');
     await pushImagesToParts(parts, Array.isArray(body.characterImageInputs) ? body.characterImageInputs : [], 'Char');
+    await pushImagesToParts(parts, Array.isArray(body.styleImageInputs) ? body.styleImageInputs : [], 'Style');
     parts.push({ text: prompt });
 
     return parts;

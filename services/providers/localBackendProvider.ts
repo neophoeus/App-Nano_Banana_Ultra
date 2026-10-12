@@ -60,6 +60,8 @@ type ImageGenerateRequestBody = {
     sourceImageInput: GenerateOptions['sourceImageInput'];
     objectImageInputs: GenerateOptions['objectImageInputs'];
     characterImageInputs: GenerateOptions['characterImageInputs'];
+    styleImageInputs?: GenerateOptions['styleImageInputs'];
+    videoInput?: GenerateOptions['videoInput'];
     outputFormat: GenerateOptions['outputFormat'];
     temperature: GenerateOptions['temperature'];
     thinkingLevel: GenerateOptions['thinkingLevel'];
@@ -190,6 +192,8 @@ const buildImageGenerateRequestBody = (options: GenerateOptions, finalPrompt: st
     sourceImageInput: options.sourceImageInput,
     objectImageInputs: options.objectImageInputs,
     characterImageInputs: options.characterImageInputs,
+    styleImageInputs: options.styleImageInputs,
+    videoInput: options.videoInput,
     outputFormat: options.outputFormat,
     temperature: options.temperature,
     thinkingLevel: options.thinkingLevel,

@@ -271,11 +271,13 @@ const App: React.FC = () => {
         setStagedAssets,
         objectImages,
         characterImages,
+        styleImages,
         orderedReferenceAssets,
         currentStageAsset,
         hasSketch,
         setObjectImages,
         setCharacterImages,
+        setStyleImages,
         addWorkspaceAsset,
         clearAssetRoles,
         removeAssetAtRoleIndex,
@@ -822,6 +824,7 @@ const App: React.FC = () => {
         abortControllerRef,
         objectImages,
         characterImages,
+        styleImages,
         batchSize,
         aspectRatio,
         outputFormat,
@@ -952,6 +955,7 @@ const App: React.FC = () => {
         setImageSearch,
         setObjectImages,
         setCharacterImages,
+        setStyleImages,
         showNotification,
         t,
     });
@@ -1068,6 +1072,7 @@ const App: React.FC = () => {
         workspaceSessionSourceLineageAction: workspaceSession.sourceLineageAction,
         objectImages,
         characterImages,
+        styleImages,
         getModelLabel,
         getGenerationLineageContext,
         addLog,
@@ -1273,8 +1278,14 @@ const App: React.FC = () => {
         },
         [handleRemoveCharacterReference, isEditing, setEditorCharacterImages],
     );
+    const handleRemoveStyleReference = useCallback(
+        (indexToRemove: number) => {
+            removeAssetAtRoleIndex('style', indexToRemove);
+        },
+        [removeAssetAtRoleIndex],
+    );
     const handleClearAllReferences = useCallback(() => {
-        clearAssetRoles(['object', 'character']);
+        clearAssetRoles(['object', 'character', 'style']);
     }, [clearAssetRoles]);
 
     const { handleClearCurrentStage, handleClearGalleryHistory } = useWorkspaceResetActions({
@@ -1668,6 +1679,7 @@ const App: React.FC = () => {
         onPromptThinkingLevelChange: handlePromptThinkingLevelChange,
         objectImages: surfaceObjectImages,
         characterImages: surfaceCharacterImages,
+        styleImages,
     });
     const advancedSettingsDialogProps: React.ComponentProps<typeof ComposerAdvancedSettingsDialog> | null =
         isAdvancedSettingsOpen
@@ -2006,12 +2018,15 @@ const App: React.FC = () => {
         settingsVariant: isSketchPadOpen ? 'sketch' : 'full',
         objectImages: surfaceObjectImages,
         characterImages: surfaceCharacterImages,
+        styleImages,
         setObjectImages: setSurfaceObjectImages,
         isGenerating: isForegroundGenerationLocked,
         showNotification,
         handleRemoveObjectReference: handleSurfaceRemoveObjectReference,
         setCharacterImages: setSurfaceCharacterImages,
         handleRemoveCharacterReference: handleSurfaceRemoveCharacterReference,
+        setStyleImages,
+        handleRemoveStyleReference,
         showStyleEntry: !isEditing,
     });
     const handleOpenClearWorkspaceConfirm = useCallback(() => {
@@ -2118,14 +2133,18 @@ const App: React.FC = () => {
                 onOpenUploadToRepaint={handleOpenUploadToRepaint}
                 objectImages={objectImages}
                 characterImages={characterImages}
+                styleImages={styleImages}
                 maxObjects={capability.maxObjects}
                 maxCharacters={capability.maxCharacters}
+                maxStyles={capability.maxStyles}
                 setObjectImages={setObjectImages}
                 setCharacterImages={setCharacterImages}
+                setStyleImages={setStyleImages}
                 isGenerating={isForegroundGenerationLocked}
                 showNotification={showNotification}
                 handleRemoveObjectReference={handleRemoveObjectReference}
                 handleRemoveCharacterReference={handleRemoveCharacterReference}
+                handleRemoveStyleReference={handleRemoveStyleReference}
                 handleClearAllReferences={handleClearAllReferences}
             />
         ),
@@ -2134,6 +2153,7 @@ const App: React.FC = () => {
             canRepaintCurrentImage,
             capability.maxCharacters,
             capability.maxObjects,
+            capability.maxStyles,
             characterImages,
             currentLang,
             handleOpenEditor,
@@ -2141,11 +2161,14 @@ const App: React.FC = () => {
             handleOpenUploadToRepaint,
             handleRemoveCharacterReference,
             handleRemoveObjectReference,
+            handleRemoveStyleReference,
             isForegroundGenerationLocked,
             objectImages,
             setCharacterImages,
             setObjectImages,
+            setStyleImages,
             showNotification,
+            styleImages,
         ],
     );
     const contextProvenanceDetailPanel = useMemo(

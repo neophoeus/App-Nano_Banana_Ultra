@@ -14,7 +14,7 @@ export type AspectRatio =
     | '1:8'
     | '8:1';
 export type EditorMode = 'inpaint' | 'outpaint' | 'revolve';
-export type ImageSize = '512' | '1K' | '2K' | '4K';
+export type ImageSize = '512' | '512px' | '1K' | '2K' | '4K';
 
 export type ImageStyleCategory =
     | 'All'
@@ -139,7 +139,7 @@ export type WorkspaceSettingsDraft = {
     safetyThresholds: SafetyThresholds;
 };
 export type ExecutionMode = 'single-turn' | 'interactive-batch-variants' | 'chat-continuation' | 'queued-batch-job';
-export type StageAssetRole = 'object' | 'character' | 'stage-source';
+export type StageAssetRole = 'object' | 'character' | 'style' | 'stage-source';
 export type StageAssetOrigin = 'upload' | 'sketch' | 'generated' | 'history' | 'editor';
 export type TurnLineageAction = 'root' | 'continue' | 'branch' | 'editor-follow-up' | 'reopen';
 export type GenerationFailureCode =
@@ -192,6 +192,7 @@ export interface ConversationTurnReference {
     text: string | null;
     thoughts: string | null;
     thoughtSignature: string | null;
+    interactionId?: string | null;
 }
 
 export type BatchPreviewTileStatus = 'pending' | 'ready' | 'failed' | 'waiting' | 'committed';
@@ -285,6 +286,7 @@ export interface QueuedBatchJob {
     batchStats?: QueuedBatchJobStats | null;
     objectImageCount: number;
     characterImageCount: number;
+    styleImageCount?: number;
     createdAt: number;
     updatedAt: number;
     startedAt: number | null;
@@ -622,6 +624,8 @@ export interface GenerateOptions {
     sourceImageInput?: string;
     objectImageInputs?: string[];
     characterImageInputs?: string[];
+    styleImageInputs?: string[];
+    videoInput?: string;
     outputFormat?: OutputFormat;
     temperature?: number;
     thinkingLevel?: ThinkingLevel;

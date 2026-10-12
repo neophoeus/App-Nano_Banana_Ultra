@@ -136,29 +136,19 @@ If you want to extract raw high-resolution images (PNG / JPEG) directly from the
 
 ## Version Overview
 
-### Latest Release: 4.9.1
+### Latest Release: 4.10.0
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
 
-### 4.9.x+ (4.x Series)
+### 4.x Series
 
-Version 4.9.x integrates Google's newly released Gemini Nano Banana 2.1 (`gemini-nano-banana-2.1`) as the flagship default model across both Local API and Google AI Studio direct modes. It expands the thinking level matrix with `medium` (official default for 2.1), eliminates panoramic 2K/4K grid-tiling artifacts across all 14 aspect ratios, supports up to 14 reference images (10 objects, 4 characters), and aligns the entire 5-model Gemini image generation family (`gemini-nano-banana-2.1`, `gemini-3.1-flash-image`, `gemini-3.1-flash-lite-image`, `gemini-3-pro-image`, `gemini-2.5-flash-image`) with complete 9-language localization and automated quota pacing.
+Version 4.x establishes the unified dual-engine architecture (seamlessly bridging Google AI Studio direct browser mode and the local Node.js backend plugin) and serves as the production-grade foundation for the entire platform. Building upon the core convergence of the Lite edition, 4.x delivers progressive multi-image generation previews, multi-tier Google AI quota pacing, and persistent IndexedDB v2 large workspace recovery.
 
-### 4.8.x+ (4.x Series)
-
-Version 4.8.x introduces reference image quick-insert tag chips (`[Obj_1]`, `[Obj_2]`, `[Char_1]`, `[Char_2]`) directly above the prompt composer with live hover thumbnail preview cards, smart caret insertion, dynamic tag re-indexing upon reference upload/reorder/delete, and a bottom prompt citation tracking bar that highlights referenced tags and flags orphan citations with one-click cleanup. Version 4.8.1 refines the hover preview card geometry to project downwards into the spacious textarea area, eliminating container clipping and removing redundant browser tooltip overlap.
-
-### 4.7.x+ (4.x Series)
-
-Version 4.7.x restores progressive multi-image generation previews and real-time gallery synchronization (eliminating full-screen wait spinners so newly generated images preview immediately on the main stage and synchronize to the gallery without waiting for the entire batch to finish, shared identically across Local API and Google AI Studio direct modes). It standardizes the remote Gemini Batch Queue architecture to strict `@google/genai` v1.31.0+ official API schemas (providing `{ contents, generationConfig }` fallbacks, paginated `/api/batches/list`, remote `/api/batches/delete`, and workspace remote batch recovery), and delivers full parity with the standalone Lite edition by porting 9-language window-close warning confirmations, expanding workspace app lifecycle unit test coverage, and supporting client test service override hooks with Playwright smoke tests. It executes a major architectural modularization of the application shell, decomposing `App.tsx` from 3,044 lines down to 2,482 lines (~562 lines reduced) by cleanly decoupling the top header support rail (`WorkspaceSupportRail.tsx`), stage download and Sidecar JSON metadata construction (`useStageImageDownloadActions.ts`), batch preview session streaming (`useBatchPreviewSession.ts`), and unified detail modal overlays (`WorkspaceDetailOverlays.tsx`) with zero regression in Phase B render stability and 100% automated test pass rate.
-
-### 4.6.x+ (4.x Series)
-
-Version 4.6.x introduces full 3D interactive spatial camera manipulation in Revolve mode (Orbit/Pan tools, 20%~300% zoom, right-click pan shortcut) powered by continuous 3D Gaussian Splatting (3DGS). It delivers Solution A+B: edge-preserving cross-bilateral disparity fields that lock depths onto subject contours, 3D surface normal geometry that tilts splats along surface tangents with occlusion boundary tearing, and a hardware-accelerated WebGL2 GPU shader engine running at a smooth 60 FPS with automatic Canvas 2D fallback. It completely decouples the Revolve source image into an independent first-class channel (`[Src_1]`) alongside the 3D viewpoint guidance (`[Edit_1]`), fully preserving user-uploaded reference images (`[Obj_1]`, `[Obj_2]`) while adopting a universal, style-agnostic 2-sentence prompt contract suitable for any subject and art style with 100% Google AI Studio sandbox compatibility.
-
-### 4.5.x+ (4.x Series)
-
-Version 4.5.x established the definitive dual-engine and full Lite edition convergence milestone for Nano Banana Ultra 4.x, and all subsequent releases in the 4.x series build upon this foundation: seamlessly unifying the local backend engine and Google AI Studio client engine into one cohesive workspace, while fully converging Lite's sequential batch generation with live progressive previews, thinking loop circuit breaking, and persistent cross-reload rate limit cooling. The 4.x series delivers multi-tier Google AI subscription pacing (Pro, Ultra 5x, Ultra 20x), adaptive workload delay management, IndexedDB v2 large workspace persistence overcoming browser quota limits, and interactive 429 cooldown protection for resilient multi-turn creative workflows.
+Key milestones across the 4.x series include:
+- **Spatial 3D Viewpoint Manipulation**: Interactive Revolve mode powered by 3D Gaussian Splatting (3DGS) and WebGL2 GPU acceleration, decoupling viewpoint guidance (`[Edit_1]`) from source images (`[Src_1]`).
+- **Prompt Reference Chips & Citation Tracking**: Interactive tag insertion chips (`[Obj_N]`, `[Char_N]`, `[Style_N]`) with downward-projecting hover preview cards and live prompt citation tracking.
+- **Gemini Nano Banana 2.1 Flagship Integration**: Full support for `gemini-nano-banana-2.1` with expanded thinking level matrix (`medium`), seamless quota pacing, and panoramic 2K/4K artifact elimination across all 14 aspect ratios.
+- **Official Image Generation Spec Alignment**: Full alignment with Google's official Gemini Image Generation & Interactions API specifications (`ai.google.dev`), introducing canonical `512px` resolution normalization, first-class Style Reference images (up to 3 style images on `gemini-3-pro-image`), and multimodal video input reference support on Flash models with complete 9-language localization.
 
 ### 3.5.x+ (3.x Series)
 

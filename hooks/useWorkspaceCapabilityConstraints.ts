@@ -21,6 +21,7 @@ type UseWorkspaceCapabilityConstraintsArgs = {
     setImageSearch: Dispatch<SetStateAction<boolean>>;
     setObjectImages: Dispatch<SetStateAction<string[]>>;
     setCharacterImages: Dispatch<SetStateAction<string[]>>;
+    setStyleImages?: Dispatch<SetStateAction<string[]>>;
     showNotification: (message: string, type?: 'info' | 'error') => void;
     t: (key: string) => string;
 };
@@ -44,6 +45,7 @@ export function useWorkspaceCapabilityConstraints({
     setImageSearch,
     setObjectImages,
     setCharacterImages,
+    setStyleImages,
     showNotification,
     t,
 }: UseWorkspaceCapabilityConstraintsArgs) {
@@ -107,6 +109,20 @@ export function useWorkspaceCapabilityConstraints({
 
             return prevImages;
         });
+
+        if (setStyleImages) {
+            setStyleImages((prevImages) => {
+                if (prevImages.length > capability.maxStyles) {
+                    showNotification(
+                        t('workspaceConstraintTrimStyles').replace('{0}', String(capability.maxStyles)),
+                        'info',
+                    );
+                    return prevImages.slice(0, capability.maxStyles);
+                }
+
+                return prevImages;
+            });
+        }
     }, [
         aspectRatio,
         capability,
@@ -124,6 +140,7 @@ export function useWorkspaceCapabilityConstraints({
         setIncludeThoughts,
         setObjectImages,
         setOutputFormat,
+        setStyleImages,
         setThinkingLevel,
         showNotification,
         t,

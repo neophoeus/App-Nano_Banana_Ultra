@@ -43,6 +43,8 @@ type GenerateImageBodyLike = {
     sourceImageInput?: string;
     objectImageInputs?: string[];
     characterImageInputs?: string[];
+    styleImageInputs?: string[];
+    videoInput?: string;
 };
 
 const inferExtensionFromMimeType = (mimeType: string): string => {
@@ -259,22 +261,33 @@ async function pushFileImagesToParts(
 export function normalizeReferenceImages(body: GenerateImageBodyLike): {
     objectImageInputs: string[];
     characterImageInputs: string[];
+    styleImageInputs: string[];
+    videoInput?: string;
 } {
     return {
         objectImageInputs: Array.isArray(body.objectImageInputs) ? body.objectImageInputs : [],
         characterImageInputs: Array.isArray(body.characterImageInputs) ? body.characterImageInputs : [],
+        styleImageInputs: Array.isArray(body.styleImageInputs) ? body.styleImageInputs : [],
+        videoInput:
+            typeof body.videoInput === 'string' && body.videoInput.trim().length > 0
+                ? body.videoInput.trim()
+                : undefined,
     };
 }
 
 export function buildGenerateParts(body: GenerateImageBodyLike, resolvedDir: string): InlineGeneratePart[] {
-    const { objectImageInputs, characterImageInputs } = normalizeReferenceImages(body);
+    const { objectImageInputs, characterImageInputs, styleImageInputs, videoInput } = normalizeReferenceImages(body);
     const parts: InlineGeneratePart[] = [];
     const prompt = String(body.prompt || 'A creative image.');
 
+    if (videoInput) {
+        parts.push({ fileData: { fileUri: videoInput, mimeType: 'video/mp4' } });
+    }
     pushImagesToParts(parts, body.editingInput ? [body.editingInput] : [], 'Edit', resolvedDir);
     pushImagesToParts(parts, body.sourceImageInput ? [body.sourceImageInput] : [], 'Src', resolvedDir);
     pushImagesToParts(parts, objectImageInputs, 'Obj', resolvedDir);
     pushImagesToParts(parts, characterImageInputs, 'Char', resolvedDir);
+    pushImagesToParts(parts, styleImageInputs, 'Style', resolvedDir);
     parts.push({
         text: prompt,
     });
@@ -286,14 +299,18 @@ export async function buildGenerateFileParts(
     body: GenerateImageBodyLike,
     resolveFileImage: (image: string) => Promise<ResolvedFileImage>,
 ): Promise<FileGeneratePart[]> {
-    const { objectImageInputs, characterImageInputs } = normalizeReferenceImages(body);
+    const { objectImageInputs, characterImageInputs, styleImageInputs, videoInput } = normalizeReferenceImages(body);
     const parts: FileGeneratePart[] = [];
     const prompt = String(body.prompt || 'A creative image.');
 
+    if (videoInput) {
+        parts.push({ fileData: { fileUri: videoInput, mimeType: 'video/mp4' } });
+    }
     await pushFileImagesToParts(parts, body.editingInput ? [body.editingInput] : [], 'Edit', resolveFileImage);
     await pushFileImagesToParts(parts, body.sourceImageInput ? [body.sourceImageInput] : [], 'Src', resolveFileImage);
     await pushFileImagesToParts(parts, objectImageInputs, 'Obj', resolveFileImage);
     await pushFileImagesToParts(parts, characterImageInputs, 'Char', resolveFileImage);
+    await pushFileImagesToParts(parts, styleImageInputs, 'Style', resolveFileImage);
     parts.push({ text: prompt });
 
     return parts;

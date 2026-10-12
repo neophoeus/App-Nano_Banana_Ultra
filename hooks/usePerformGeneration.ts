@@ -186,6 +186,8 @@ interface UsePerformGenerationProps {
     abortControllerRef: MutableRefObject<AbortController | null>;
     objectImages: string[];
     characterImages: string[];
+    styleImages?: string[];
+    videoInput?: string;
     batchSize: number;
     aspectRatio: AspectRatio;
     outputFormat: OutputFormat;
@@ -243,6 +245,8 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
         abortControllerRef,
         objectImages,
         characterImages,
+        styleImages,
+        videoInput,
         batchSize,
         aspectRatio,
         outputFormat,
@@ -290,9 +294,13 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
             extraCharacterImages?: string[],
             sourceOverride?: GenerationSourceOverride | null,
             sourceImageInput?: string,
+            extraStyleImages?: string[],
+            extraVideoInput?: string,
         ) => {
             const isStyleTransfer =
-                (objectImages.length > 0 || characterImages.length > 0) && targetStyle !== 'None' && !editingInput;
+                (objectImages.length > 0 || characterImages.length > 0 || (styleImages && styleImages.length > 0)) &&
+                targetStyle !== 'None' &&
+                !editingInput;
 
             if (!targetPrompt.trim() && !editingInput && !isStyleTransfer) {
                 showNotification(t('errorNoPrompt'), 'error');
@@ -329,6 +337,8 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
 
             let finalObjectInputs: string[] = [];
             let finalCharacterInputs: string[] = [];
+            let finalStyleInputs: string[] = [];
+            let finalVideoInput: string | undefined = extraVideoInput || videoInput;
 
             if (editingInput) {
                 // When editingInput is present, extraObjectImages contains the user's actual reference objects
@@ -339,9 +349,13 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                 if (extraCharacterImages && extraCharacterImages.length > 0) {
                     finalCharacterInputs = [...extraCharacterImages];
                 }
+                if (extraStyleImages && extraStyleImages.length > 0) {
+                    finalStyleInputs = [...extraStyleImages];
+                }
             } else {
                 if (objectImages.length > 0) finalObjectInputs = objectImages;
                 if (characterImages.length > 0) finalCharacterInputs = characterImages;
+                if (styleImages && styleImages.length > 0) finalStyleInputs = styleImages;
             }
 
             const currentBatchSize = customBatchSize !== undefined ? customBatchSize : batchSize;
@@ -741,6 +755,8 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                             sourceImageInput,
                             objectImageInputs: finalObjectInputs,
                             characterImageInputs: finalCharacterInputs,
+                            styleImageInputs: finalStyleInputs,
+                            videoInput: finalVideoInput,
                             model: targetModel,
                             outputFormat,
                             temperature,
@@ -863,6 +879,8 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
             autoExportTrigger,
             batchSize,
             characterImages,
+            styleImages,
+            videoInput,
             getConversationRequestContext,
             getGenerationLineageContext,
             googleSearch,

@@ -14,6 +14,8 @@ type ImageGenerateBodyLike = {
     model?: string;
     aspectRatio?: string;
     imageSize?: string;
+    styleImageInputs?: string[];
+    videoInput?: string;
     outputFormat?: 'images-only' | 'images-and-text';
     temperature?: number;
     thinkingLevel?: 'disabled' | 'minimal' | 'medium' | 'high';
@@ -40,8 +42,22 @@ export function validateCapabilityRequest(model: string, body: ImageGenerateBody
         return `${model} does not support aspect ratio ${body.aspectRatio}.`;
     }
 
-    if (body.imageSize && !capability.supportedSizes.includes(body.imageSize as ImageSize)) {
+    const normalizedSize = body.imageSize === '512px' ? '512' : body.imageSize;
+    if (normalizedSize && !capability.supportedSizes.includes(normalizedSize as ImageSize)) {
         return `${model} does not support image size ${body.imageSize}.`;
+    }
+
+    if (body.styleImageInputs && body.styleImageInputs.length > 0) {
+        if (capability.maxStyles === 0) {
+            return `${model} does not support style reference images.`;
+        }
+        if (body.styleImageInputs.length > capability.maxStyles) {
+            return `${model} supports up to ${capability.maxStyles} style reference images.`;
+        }
+    }
+
+    if (body.videoInput && !capability.supportsVideo) {
+        return `${model} does not support video inputs.`;
     }
 
     const requestedThinking =
@@ -85,7 +101,7 @@ export function buildImageRequestConfig(
         imageConfig.aspectRatio = body.aspectRatio;
     }
     if (model !== 'gemini-2.5-flash-image' && body.imageSize) {
-        imageConfig.imageSize = body.imageSize;
+        imageConfig.imageSize = body.imageSize === '512' ? '512px' : body.imageSize;
     }
 
     const requiresTextForGroundingMetadata = Boolean(body.imageSearch);

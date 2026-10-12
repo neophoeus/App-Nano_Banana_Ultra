@@ -9,7 +9,7 @@ import {
 export interface ReferenceChipItem {
     id: string;
     tag: string;
-    type: 'Obj' | 'Char';
+    type: 'Obj' | 'Char' | 'Style';
     index: number; // 0-based
     displayIndex: number; // 1-based
     image: string;
@@ -18,6 +18,7 @@ export interface ReferenceChipItem {
 export interface PromptReferenceChipsProps {
     objectImages?: string[];
     characterImages?: string[];
+    styleImages?: string[];
     onInsertTag: (tag: string) => void;
     currentLanguage?: Language;
     disabled?: boolean;
@@ -27,6 +28,7 @@ export interface PromptReferencedBadgesProps {
     prompt: string;
     objectImages?: string[];
     characterImages?: string[];
+    styleImages?: string[];
     onRemoveTag?: (tag: string) => void;
     onSelectTagInTextarea?: (tag: string) => void;
     currentLanguage?: Language;
@@ -121,6 +123,7 @@ ChipHoverTooltip.displayName = 'ChipHoverTooltip';
 export const PromptReferenceChips: React.FC<PromptReferenceChipsProps> = ({
     objectImages = [],
     characterImages = [],
+    styleImages = [],
     onInsertTag,
     currentLanguage = 'en' as Language,
     disabled = false,
@@ -132,11 +135,13 @@ export const PromptReferenceChips: React.FC<PromptReferenceChipsProps> = ({
     const objectLabel = getTranslation(currentLanguage, 'objectRefs') || (isZh ? '物件參考' : 'Object Reference');
     const characterLabel =
         getTranslation(currentLanguage, 'characterRefs') || (isZh ? '角色參考' : 'Character Reference');
+    const styleLabel =
+        getTranslation(currentLanguage, 'styleRefs') || (isZh ? '風格參考' : 'Style Reference');
     const insertHint = isZh ? '點擊插入提示詞' : 'Click to insert';
 
     // Synchronize lightweight cached thumbnails for images
     useEffect(() => {
-        const allImages = [...objectImages, ...characterImages];
+        const allImages = [...objectImages, ...characterImages, ...styleImages];
         const missing = Array.from(new Set(allImages)).filter((img) => img && !getReferencePreviewDataUrl(img));
 
         if (missing.length === 0) {
@@ -158,7 +163,7 @@ export const PromptReferenceChips: React.FC<PromptReferenceChipsProps> = ({
         return () => {
             cancelled = true;
         };
-    }, [objectImages, characterImages]);
+    }, [objectImages, characterImages, styleImages]);
 
     const chipItems: ReferenceChipItem[] = useMemo(() => {
         const items: ReferenceChipItem[] = [];
@@ -187,8 +192,20 @@ export const PromptReferenceChips: React.FC<PromptReferenceChipsProps> = ({
             });
         });
 
+        styleImages.forEach((image, index) => {
+            if (!image) return;
+            items.push({
+                id: `Style_${index + 1}`,
+                tag: `[Style_${index + 1}]`,
+                type: 'Style',
+                index,
+                displayIndex: index + 1,
+                image,
+            });
+        });
+
         return items;
-    }, [objectImages, characterImages]);
+    }, [objectImages, characterImages, styleImages]);
 
     if (chipItems.length === 0) {
         return null;
@@ -204,7 +221,8 @@ export const PromptReferenceChips: React.FC<PromptReferenceChipsProps> = ({
                     const isHovered = hoveredTag === item.tag;
                     const displayImage = resolveDisplayReferenceImage(item.image);
                     const isChar = item.type === 'Char';
-                    const labelText = `${isChar ? characterLabel : objectLabel} ${item.displayIndex}`;
+                    const isStyle = item.type === 'Style';
+                    const labelText = `${isChar ? characterLabel : isStyle ? styleLabel : objectLabel} ${item.displayIndex}`;
 
                     return (
                         <div
@@ -226,7 +244,9 @@ export const PromptReferenceChips: React.FC<PromptReferenceChipsProps> = ({
                                 className={`group inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-mono font-medium transition-all focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:cursor-not-allowed disabled:opacity-50 ${
                                     isChar
                                         ? 'border-fuchsia-200/90 bg-fuchsia-50/90 text-fuchsia-800 hover:border-fuchsia-300 hover:bg-fuchsia-100 hover:shadow-sm dark:border-fuchsia-500/30 dark:bg-fuchsia-950/30 dark:text-fuchsia-200 dark:hover:border-fuchsia-400/50 dark:hover:bg-fuchsia-950/50'
-                                        : 'border-sky-200/90 bg-sky-50/90 text-sky-800 hover:border-sky-300 hover:bg-sky-100 hover:shadow-sm dark:border-sky-500/30 dark:bg-sky-950/30 dark:text-sky-200 dark:hover:border-sky-400/50 dark:hover:bg-sky-950/50'
+                                        : isStyle
+                                          ? 'border-amber-200/90 bg-amber-50/90 text-amber-800 hover:border-amber-300 hover:bg-amber-100 hover:shadow-sm dark:border-amber-500/30 dark:bg-amber-950/30 dark:text-amber-200 dark:hover:border-amber-400/50 dark:hover:bg-amber-950/50'
+                                          : 'border-sky-200/90 bg-sky-50/90 text-sky-800 hover:border-sky-300 hover:bg-sky-100 hover:shadow-sm dark:border-sky-500/30 dark:bg-sky-950/30 dark:text-sky-200 dark:hover:border-sky-400/50 dark:hover:bg-sky-950/50'
                                 }`}
                             >
                                 <span className="relative flex h-4 w-4 shrink-0 overflow-hidden rounded-full border border-black/10 dark:border-white/20">
@@ -239,7 +259,7 @@ export const PromptReferenceChips: React.FC<PromptReferenceChipsProps> = ({
                                         />
                                     ) : (
                                         <span className="flex h-full w-full items-center justify-center bg-slate-200 text-[8px] dark:bg-slate-700">
-                                            {isChar ? '👤' : '🖼️'}
+                                            {isChar ? '👤' : isStyle ? '🎨' : '🖼️'}
                                         </span>
                                     )}
                                 </span>
@@ -276,6 +296,7 @@ export const PromptReferencedBadges: React.FC<PromptReferencedBadgesProps> = ({
     prompt,
     objectImages = [],
     characterImages = [],
+    styleImages = [],
     onRemoveTag,
     onSelectTagInTextarea,
     currentLanguage = 'en' as Language,
@@ -287,21 +308,23 @@ export const PromptReferencedBadges: React.FC<PromptReferencedBadgesProps> = ({
     const objectLabel = getTranslation(currentLanguage, 'objectRefs') || (isZh ? '物件參考' : 'Object Reference');
     const characterLabel =
         getTranslation(currentLanguage, 'characterRefs') || (isZh ? '角色參考' : 'Character Reference');
+    const styleLabel =
+        getTranslation(currentLanguage, 'styleRefs') || (isZh ? '風格參考' : 'Style Reference');
     const referencedTitle = isZh ? '提示詞已引用:' : 'Prompt cited:';
     const notUploadedTitle = isZh ? '未上傳' : 'Not uploaded';
     const removeTitle = isZh ? '從提示詞移除' : 'Remove from prompt';
 
     const citedTags = useMemo(() => {
         if (!prompt) return [];
-        const matches = prompt.match(/\[(Char|Obj)_[1-9]\d*\]/g) || [];
+        const matches = prompt.match(/\[(Char|Obj|Style)_[1-9]\d*\]/g) || [];
         const unique = Array.from(new Set(matches));
 
         return unique.map((tag) => {
-            const parsed = tag.match(/\[(Char|Obj)_([1-9]\d*)\]/);
+            const parsed = tag.match(/\[(Char|Obj|Style)_([1-9]\d*)\]/);
             if (!parsed) {
                 return { tag, type: 'Obj' as const, index: 0, isValid: false, image: '' };
             }
-            const type = parsed[1] as 'Char' | 'Obj';
+            const type = parsed[1] as 'Char' | 'Obj' | 'Style';
             const index = parseInt(parsed[2], 10) - 1;
 
             if (type === 'Char') {
@@ -316,6 +339,18 @@ export const PromptReferencedBadges: React.FC<PromptReferencedBadgesProps> = ({
                 };
             }
 
+            if (type === 'Style') {
+                const isValid = index >= 0 && index < styleImages.length && Boolean(styleImages[index]);
+                return {
+                    tag,
+                    type,
+                    index,
+                    displayIndex: index + 1,
+                    isValid,
+                    image: isValid ? styleImages[index] : '',
+                };
+            }
+
             const isValid = index >= 0 && index < objectImages.length && Boolean(objectImages[index]);
             return {
                 tag,
@@ -326,7 +361,7 @@ export const PromptReferencedBadges: React.FC<PromptReferencedBadgesProps> = ({
                 image: isValid ? objectImages[index] : '',
             };
         });
-    }, [prompt, objectImages, characterImages]);
+    }, [prompt, objectImages, characterImages, styleImages]);
 
     if (citedTags.length === 0) {
         return null;
@@ -355,8 +390,9 @@ export const PromptReferencedBadges: React.FC<PromptReferencedBadgesProps> = ({
                     const isHovered = hoveredTag === item.tag;
                     const displayImage = item.isValid ? resolveDisplayReferenceImage(item.image) : '';
                     const isChar = item.type === 'Char';
+                    const isStyle = item.type === 'Style';
                     const labelText = item.isValid
-                        ? `${isChar ? characterLabel : objectLabel} ${item.displayIndex}`
+                        ? `${isChar ? characterLabel : isStyle ? styleLabel : objectLabel} ${item.displayIndex}`
                         : `${item.tag} (${notUploadedTitle})`;
 
                     if (!item.isValid) {
@@ -409,7 +445,9 @@ export const PromptReferencedBadges: React.FC<PromptReferencedBadgesProps> = ({
                                 className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 font-mono text-[10px] transition-colors focus:outline-none focus:ring-1 focus:ring-amber-400 ${
                                     isChar
                                         ? 'border-fuchsia-200/90 bg-fuchsia-50/70 text-fuchsia-700 hover:bg-fuchsia-100 dark:border-fuchsia-500/25 dark:bg-fuchsia-950/25 dark:text-fuchsia-300 dark:hover:bg-fuchsia-950/40'
-                                        : 'border-sky-200/90 bg-sky-50/70 text-sky-700 hover:bg-sky-100 dark:border-sky-500/25 dark:bg-sky-950/25 dark:text-sky-300 dark:hover:bg-sky-950/40'
+                                        : isStyle
+                                          ? 'border-amber-200/90 bg-amber-50/70 text-amber-700 hover:bg-amber-100 dark:border-amber-500/25 dark:bg-amber-950/25 dark:text-amber-300 dark:hover:bg-amber-950/40'
+                                          : 'border-sky-200/90 bg-sky-50/70 text-sky-700 hover:bg-sky-100 dark:border-sky-500/25 dark:bg-sky-950/25 dark:text-sky-300 dark:hover:bg-sky-950/40'
                                 }`}
                             >
                                 <span className="relative flex h-3.5 w-3.5 shrink-0 overflow-hidden rounded-full border border-black/10 dark:border-white/20">

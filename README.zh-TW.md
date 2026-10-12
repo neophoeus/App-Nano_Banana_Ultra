@@ -136,29 +136,19 @@ Nano Banana Ultra 目前支援五條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：4.9.1
+### 最新版本：4.10.0
 
 版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
-### 4.9.x+（4.x 系列）
+### 4.x 系列
 
-4.9.x 正式整合 Google 全新推出的 Gemini Nano Banana 2.1（`gemini-nano-banana-2.1`）作為 Local API 與 Google AI Studio 直連雙引擎的主力預設旗艦模型。全面擴充思維等級矩陣支援 `medium`（2.1 官方預設等級），修復全 14 種比例之 2K/4K 全景網格拼貼瑕疵，支援最多 14 張參考圖（10 物件、4 角色），並完整對齊現行活躍的 5 款 Gemini 影像模型家族（`gemini-nano-banana-2.1`、`gemini-3.1-flash-image`、`gemini-3.1-flash-lite-image`、`gemini-3-pro-image`、`gemini-2.5-flash-image`），具備 9 國語言在地化與自動化配額調度。
+4.x 系列確立了雙引擎架構（無縫橋接 Google AI Studio 瀏覽器直連模式與本機 Node.js 後端外掛），奠定專案進入生產級創作工作區的核心基礎。在全面收斂 Lite 版本的基石之上，4.x 帶來多圖生成漸進式即時預覽、多層級 Google AI 訂閱配額調度、以及突破瀏覽器限制的 IndexedDB v2 大型工作區快照持久化。
 
-### 4.8.x+（4.x 系列）
-
-4.8.x 引入提示詞輸入框上方的參考圖快捷插入標籤晶片（`[Obj_1]`, `[Obj_2]`, `[Char_1]`, `[Char_2]`），支援即時滑鼠懸停縮圖預覽卡片、游標精確插入、參考圖增刪與排序時動態自動重排索引，以及底欄提示詞引用檢測條（支援已引用標籤縮圖查看與失效標籤一鍵清理）。4.8.1 針對預覽卡片幾何定位優化，將頂部快捷列改為向下伸展至寬敞的輸入框區域，徹底解決容器上邊緣切邊問題，並消除瀏覽器原生提示框的重疊干擾。
-
-### 4.7.x+（4.x 系列）
-
-4.7.x 修復並恢復多圖回合生成時的漸進式即時預覽與藝廊即時同步（消除了需等待整回合全部完成才一次上傳藝廊的問題，完成一張即於主舞台即時呈現預覽並同步進藝廊，本機 Local API 與 Google AI Studio 直連模式完全共用一致體驗）。4.7.x 正式將遠端 Gemini 批次佇列（Batch Queue）標準化至 `@google/genai` v1.31.0+ 官方 API 規範（包含提供 `{ contents, generationConfig }` 標準 Schema 退避、分頁列舉端點 `/api/batches/list`、遠端清理端點 `/api/batches/delete`，以及工作區遠端批次任務隨選同步恢復），並完整收斂獨立 Lite 版的 9 國語言視窗關閉確認鍵、擴充生命週期單元測試覆蓋率，以及支援客戶端測試服務覆寫 Hook 與 Playwright 煙霧測試。同時針對主應用程式外殼執行重要模組化重構，將 `App.tsx` 自 3,044 行精簡至 2,482 行（減少 ~562 行），抽離頂部導航支援軌（`WorkspaceSupportRail.tsx`）、舞台下載與 Sidecar JSON 構建（`useStageImageDownloadActions.ts`）、批次預覽與即時串流 Session（`useBatchPreviewSession.ts`），以及統一的細節彈窗覆蓋容器（`WorkspaceDetailOverlays.tsx`），保持 Phase B 渲染穩定性零多餘 re-render，自動化測試套件 100% 通過。
-
-### 4.6.x+（4.x 系列）
-
-4.6.x 引入 Revolve 模式的完整 3D 空間相機互動操作（Orbit/Pan 工具切換、20%~300% 垂直縮放、右鍵直接拖曳平移），並交付方案 A+B：以雙邊導向濾波讓深度緊密吸附在主體輪廓上，以 3D 表面法向量消除視角旋轉空洞，配合深度斷裂遮罩杜絕起司拉扯，並搭載原生 WebGL2 GPU 著色器即時渲染管線（支援 10 萬粒子 60 FPS 與 Canvas 2D 自動降級）。將 Revolve 底圖解耦為一級獨立參數通道（`[Src_1]`）並與 3D 視角畫布（`[Edit_1]`）並行傳送，徹底保護使用者自行上傳的參考圖（`[Obj_1]`, `[Obj_2]`），同時採用風格中立、主題通用的精簡 2 句提示詞，100% 相容 Google AI Studio 安全沙盒與 CSP 規範。
-
-### 4.5.x+（4.x 系列）
-
-4.5.x 是 Nano Banana Ultra 4.x 正式完成雙引擎架構與獨立 Lite 版全面收斂的真正整合完成版本，4.5.x 以後的所有版本皆為 4.x 系列的實用基準版：將本機後端引擎與 Google AI Studio 客戶端引擎無縫整合於同一套工作區，並完整收斂 Lite 版的循序批次生成即時預覽、思考迴圈熔斷與跨頁限流冷卻持久化。4.x 系列建立 Google AI 訂閱分級調度（Pro / Ultra 5x / Ultra 20x）、動態負載自適應延遲計算、突破 5MB 配額的 IndexedDB v2 大型工作區快照持久化，以及 429 互動式倒數冷卻機制，為多輪迭代創作提供穩定高容錯的工作空間。
+4.x 系列的核心重大里程碑包括：
+- **3D 空間視角互動操縱**：引入以 3D Gaussian Splatting (3DGS) 與 WebGL2 GPU 加速驅動的 Revolve 旋轉視角模式，將 3D 視角引導（`[Edit_1]`）與來源底圖（`[Src_1]`）完全解耦。
+- **提示詞參考圖晶片與引用追蹤**：引進輸入框上方的快速插入標籤晶片（`[Obj_N]`、`[Char_N]`、`[Style_N]`），支援滑鼠懸停縮圖預覽卡片、游標精確插入、動態自動重排與底欄提示詞引用檢測條。
+- **Gemini Nano Banana 2.1 旗艦模型整合**：全面導入主力預設模型 `gemini-nano-banana-2.1`，擴充思考等級矩陣（`medium`），並消除全 14 種長寬比在 2K/4K 輸出時的全景拼貼瑕疵。
+- **Google 官方影像生成規範全面對齊**：深度對齊 Google 官方最新 Gemini Image Generation 與 Interactions API 規範（`ai.google.dev`），將解析度規格標準化（`'512'` 正規化為 `'512px'`），擴充風格參考圖（`gemini-3-pro-image` 專屬最多 3 張風格圖）與 Flash 模型多模態視訊輸入參考，並維持 9 國語言在地化完全對齊與 1,070 項測試 100% 通過。
 
 ### 3.5.x+（3.x 系列）
 

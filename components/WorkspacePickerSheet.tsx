@@ -45,12 +45,15 @@ type WorkspacePickerSheetProps = {
     settingsVariant: GenerationSettingsSheetVariant;
     objectImages: string[];
     characterImages: string[];
+    styleImages?: string[];
     setObjectImages: (nextImages: string[] | ((prev: string[]) => string[])) => void;
     isGenerating: boolean;
     showNotification: (message: string, type?: 'info' | 'error') => void;
     handleRemoveObjectReference: (index: number) => void;
     setCharacterImages: (nextImages: string[] | ((prev: string[]) => string[])) => void;
     handleRemoveCharacterReference: (index: number) => void;
+    setStyleImages?: (nextImages: string[] | ((prev: string[]) => string[])) => void;
+    handleRemoveStyleReference?: (index: number) => void;
     showStyleEntry?: boolean;
 };
 
@@ -112,12 +115,15 @@ export default function WorkspacePickerSheet({
     settingsVariant,
     objectImages,
     characterImages,
+    styleImages = [],
     setObjectImages,
     isGenerating,
     showNotification,
     handleRemoveObjectReference,
     setCharacterImages,
     handleRemoveCharacterReference,
+    setStyleImages,
+    handleRemoveStyleReference,
     showStyleEntry = true,
 }: WorkspacePickerSheetProps) {
     const [localSettingsDraft, setLocalSettingsDraft] = useState<GenerationSettingsDraft>({
@@ -569,6 +575,21 @@ export default function WorkspacePickerSheet({
                             prefixTag="Char"
                             safeLimit={Math.max(1, Math.floor(capability.maxCharacters / 2))}
                             onRemove={handleRemoveCharacterReference}
+                        />
+                    )}
+
+                    {capability.maxStyles > 0 && setStyleImages && (
+                        <ImageUploader
+                            images={styleImages}
+                            onImagesChange={setStyleImages}
+                            disabled={isGenerating}
+                            label={t('styleRefs')}
+                            currentLanguage={currentLanguage}
+                            onWarning={(msg) => showNotification(msg, 'error')}
+                            maxImages={capability.maxStyles}
+                            prefixTag="Style"
+                            safeLimit={Math.max(1, Math.floor(capability.maxStyles / 2))}
+                            onRemove={handleRemoveStyleReference}
                         />
                     )}
                 </div>

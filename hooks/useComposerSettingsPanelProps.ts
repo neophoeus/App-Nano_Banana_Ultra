@@ -90,6 +90,7 @@ type UseComposerSettingsPanelPropsArgs = {
     onPromptThinkingLevelChange?: (level: PromptThinkingLevel) => void;
     objectImages?: string[];
     characterImages?: string[];
+    styleImages?: string[];
 };
 
 type ComposerSettingsPanelHandlers = {
@@ -183,6 +184,7 @@ export function useComposerSettingsPanelProps({
     onPromptThinkingLevelChange,
     objectImages,
     characterImages,
+    styleImages,
 }: UseComposerSettingsPanelPropsArgs): ComposerSettingsPanelProps {
     const getModelLabel = useCallback(
         (model: ImageModel) => {
@@ -341,6 +343,7 @@ export function useComposerSettingsPanelProps({
             onPromptThinkingLevelChange,
             objectImages,
             characterImages,
+            styleImages,
         }),
         [
             prompt,
@@ -391,6 +394,7 @@ export function useComposerSettingsPanelProps({
             onPromptThinkingLevelChange,
             objectImages,
             characterImages,
+            styleImages,
         ],
     );
 }

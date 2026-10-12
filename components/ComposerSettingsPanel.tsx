@@ -83,6 +83,7 @@ export type ComposerSettingsPanelProps = {
     imageToolsPanel?: React.ReactNode;
     objectImages?: string[];
     characterImages?: string[];
+    styleImages?: string[];
     roundCount?: number;
     onRoundCountChange?: (rounds: number) => void;
     autoExportTrigger?: 'off' | 'count' | 'size' | 'both';
@@ -207,6 +208,7 @@ function ComposerSettingsPanel({
     imageToolsPanel,
     objectImages = [],
     characterImages = [],
+    styleImages = [],
     roundCount = 1,
     onRoundCountChange,
     autoExportTrigger = 'off',
@@ -1164,6 +1166,7 @@ function ComposerSettingsPanel({
                             <PromptReferenceChips
                                 objectImages={objectImages}
                                 characterImages={characterImages}
+                                styleImages={styleImages}
                                 onInsertTag={handleInsertReferenceTag}
                                 currentLanguage={currentLanguage}
                                 disabled={isActionLocked}
@@ -1327,6 +1330,7 @@ function ComposerSettingsPanel({
                                 prompt={prompt}
                                 objectImages={objectImages}
                                 characterImages={characterImages}
+                                styleImages={styleImages}
                                 onRemoveTag={handleRemoveReferenceTagFromPrompt}
                                 onSelectTagInTextarea={handleSelectTagInTextarea}
                                 currentLanguage={currentLanguage}

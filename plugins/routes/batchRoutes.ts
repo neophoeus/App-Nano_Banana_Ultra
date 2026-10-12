@@ -25,6 +25,8 @@ type ImageGenerateBody = {
     sourceImageInput?: string;
     objectImageInputs?: string[];
     characterImageInputs?: string[];
+    styleImageInputs?: string[];
+    videoInput?: string;
     outputFormat?: 'images-only' | 'images-and-text';
     temperature?: number;
     thinkingLevel?: 'disabled' | 'minimal' | 'medium' | 'high';
@@ -324,10 +326,11 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
                 return;
             }
 
-            const { objectImageInputs, characterImageInputs } = normalizeReferenceImages(body);
+            const { objectImageInputs, characterImageInputs, styleImageInputs } = normalizeReferenceImages(body);
             const totalReferenceImages =
                 objectImageInputs.length +
                 characterImageInputs.length +
+                styleImageInputs.length +
                 (body.editingInput ? 1 : 0) +
                 (body.sourceImageInput ? 1 : 0);
             if (model === 'gemini-2.5-flash-image' && totalReferenceImages > 3) {

@@ -237,7 +237,7 @@ const EXECUTION_MODE_VALUES = new Set<NonNullable<GeneratedImage['executionMode'
     'chat-continuation',
     'queued-batch-job',
 ]);
-const STAGE_ASSET_ROLE_VALUES = new Set<StageAsset['role']>(['object', 'character', 'stage-source']);
+const STAGE_ASSET_ROLE_VALUES = new Set<StageAsset['role']>(['object', 'character', 'style', 'stage-source']);
 const STAGE_ASSET_ORIGIN_VALUES = new Set<StageAsset['origin']>(['upload', 'sketch', 'generated', 'history', 'editor']);
 const LINEAGE_ACTION_VALUES = new Set<NonNullable<GeneratedImage['lineageAction']>>([
     'root',

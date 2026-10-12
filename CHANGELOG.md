@@ -1,5 +1,16 @@
 # Changelog
 
+## v4.10.0 - 2026-10-12
+
+- Release title: Nano Banana Ultra 4.10.0 - Google Gemini Official Image Generation Spec Alignment, Style Reference Images & Multimodal Video-to-Image Support
+- Release summary:
+    - **Official Gemini Image Generation Spec & Resolution Normalization (`types.ts`, `utils/geminiRequestConfig.ts`, `plugins/utils/requestConfig.ts`)**: Fully aligned image generation request contracts with Google's official Interactions API & Image Generation documentation (`ai.google.dev`). Expanded `ImageSize` to accept `'512px'` and introduced automatic bidirectional normalization in `buildImageRequestConfig` across both browser direct and backend plugin providers, guaranteeing that `'512'` is consistently mapped to the canonical upstream `'512px'` format while preserving full backward compatibility with saved workspaces.
+    - **Style Reference Images Support (`types.ts`, `utils/modelCapabilities.ts`, `components/PromptReferenceChips.tsx`, `components/WorkspaceSideToolPanel.tsx`, `components/WorkspacePickerSheet.tsx`, `components/ComposerSettingsPanel.tsx`, `hooks/useWorkspaceAssets.ts`, `hooks/useWorkspaceCapabilityConstraints.ts`)**: Added first-class `'style'` role to `StageAssetRole` for artistic style and palette transfer. Updated model capabilities to allocate `maxStyles: 3` for `gemini-3-pro-image` (and 0 for Flash/2.5 models). Integrated amber-themed style reference chips (`🎨 Style`) with hover thumbnails and `[Style_N]` prompt tags, rendered dedicated style uploaders across composer settings and picker sheets, and established automatic constraint trimming when switching between models.
+    - **Prompt Parts & Payload Construction (`plugins/utils/imageReferences.ts`, `utils/browserGeminiParts.ts`)**: Enhanced image payload generators to construct `[Style_N]` tagged prompt parts and associate corresponding image parts (inline data and Files API references) seamlessly across client and backend execution paths.
+    - **Multimodal Video Input Support (`types.ts`, `utils/modelCapabilities.ts`, `plugins/routes/generateRoutes.ts`, `plugins/routes/batchRoutes.ts`, `services/browserDirectProvider.ts`, `services/localBackendProvider.ts`)**: Added `videoInput?: string` to `GenerateOptions` and `QueuedBatchJob`. Configured `supportsVideo: true` for Flash image models (`gemini-nano-banana-2.1`, `gemini-3.1-flash-image`, `gemini-3.1-flash-lite-image`) and added strict capability validations and Video Part constructors across dual-engine generation and batch queue routes.
+    - **Full 9-Language Localization Parity (`locales/*.ts`)**: Added `styleRefs`, `videoRef`, `workspacePickerStyles`, and `workspaceConstraintTrimStyles` across all 9 supported languages (`en`, `zh_TW`, `zh_CN`, `de`, `es`, `fr`, `ja`, `ko`, `ru`), maintaining exact 100% key parity with zero discrepancies.
+    - **Dedicated Specification Alignment Test Suite (`tests/officialSpecAlignment.test.ts`)**: Created 16 dedicated unit tests covering `512px` normalization, model capability enforcement, style reference count bounds, video input rejection on unsupported models, and payload part assembly. Expanded full test suite to 127 test files and 1,070 tests passing at 100%.
+
 ## v4.9.1 - 2026-10-12
 
 - Release title: Nano Banana Ultra 4.9.1 - Gemini Nano Banana 2.1 Temperature Parameter Removal & Request Config Alignment

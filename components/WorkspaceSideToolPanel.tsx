@@ -11,14 +11,18 @@ type WorkspaceSideToolPanelProps = {
     onOpenUploadToRepaint: () => void;
     objectImages: string[];
     characterImages: string[];
+    styleImages?: string[];
     maxObjects: number;
     maxCharacters: number;
+    maxStyles?: number;
     setObjectImages: (nextImages: string[] | ((prev: string[]) => string[])) => void;
     setCharacterImages: (nextImages: string[] | ((prev: string[]) => string[])) => void;
+    setStyleImages?: (nextImages: string[] | ((prev: string[]) => string[])) => void;
     isGenerating: boolean;
     showNotification: (message: string, type?: 'info' | 'error') => void;
     handleRemoveObjectReference: (index: number) => void;
     handleRemoveCharacterReference: (index: number) => void;
+    handleRemoveStyleReference?: (index: number) => void;
     handleClearAllReferences?: () => void;
 };
 
@@ -30,14 +34,18 @@ function WorkspaceSideToolPanel({
     onOpenUploadToRepaint,
     objectImages,
     characterImages,
+    styleImages = [],
     maxObjects,
     maxCharacters,
+    maxStyles = 0,
     setObjectImages,
     setCharacterImages,
+    setStyleImages,
     isGenerating,
     showNotification,
     handleRemoveObjectReference,
     handleRemoveCharacterReference,
+    handleRemoveStyleReference,
     handleClearAllReferences,
 }: WorkspaceSideToolPanelProps) {
     const t = (key: string) => getTranslation(currentLanguage, key);
@@ -115,8 +123,19 @@ function WorkspaceSideToolPanel({
                   },
               ]
             : []),
+        ...(maxStyles > 0
+            ? [
+                  {
+                      key: 'style',
+                      label: t('workspacePickerStyles'),
+                      count: styleImages.length,
+                      max: maxStyles,
+                      isActive: styleImages.length > 0,
+                  },
+              ]
+            : []),
     ];
-    const totalReferenceCount = objectImages.length + characterImages.length;
+    const totalReferenceCount = objectImages.length + characterImages.length + styleImages.length;
     const clearAllReferencesDisabled = !handleClearAllReferences || totalReferenceCount === 0 || isGenerating;
 
     React.useEffect(() => {
@@ -308,6 +327,23 @@ function WorkspaceSideToolPanel({
                                         prefixTag="Char"
                                         safeLimit={Math.max(1, Math.floor(maxCharacters / 2))}
                                         onRemove={handleRemoveCharacterReference}
+                                    />
+                                )}
+
+                                {maxStyles > 0 && setStyleImages && (
+                                    <ImageUploader
+                                        images={styleImages}
+                                        onImagesChange={setStyleImages}
+                                        disabled={isGenerating}
+                                        label={t('styleRefs')}
+                                        currentLanguage={currentLanguage}
+                                        onWarning={(message) => showNotification(message, 'error')}
+                                        maxImages={maxStyles}
+                                        gridColumns={5}
+                                        lazyMountImages={true}
+                                        prefixTag="Style"
+                                        safeLimit={Math.max(1, Math.floor(maxStyles / 2))}
+                                        onRemove={handleRemoveStyleReference}
                                     />
                                 )}
                             </div>

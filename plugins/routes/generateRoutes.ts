@@ -52,6 +52,8 @@ type ImageGenerateBody = {
     sourceImageInput?: string;
     objectImageInputs?: string[];
     characterImageInputs?: string[];
+    styleImageInputs?: string[];
+    videoInput?: string;
     outputFormat?: 'images-only' | 'images-and-text';
     temperature?: number;
     thinkingLevel?: 'disabled' | 'minimal' | 'medium' | 'high';
@@ -721,7 +723,15 @@ function validateInteractiveGenerateRequest(
     routePath: string,
     body: ImageGenerateBody,
     requestContext?: ApiRequestContext,
-): { model: string; objectImageInputs: string[]; characterImageInputs: string[] } | ValidationErrorResult {
+):
+    | {
+          model: string;
+          objectImageInputs: string[];
+          characterImageInputs: string[];
+          styleImageInputs: string[];
+          videoInput?: string;
+      }
+    | ValidationErrorResult {
     const model = String(body.model || 'gemini-nano-banana-2.1');
 
     if (!VALID_IMAGE_MODELS.has(model as ImageModel)) {
@@ -764,8 +774,8 @@ function validateInteractiveGenerateRequest(
         };
     }
 
-    const { objectImageInputs, characterImageInputs } = normalizeReferenceImages(body);
-    const totalReferenceImages = objectImageInputs.length + characterImageInputs.length;
+    const { objectImageInputs, characterImageInputs, styleImageInputs, videoInput } = normalizeReferenceImages(body);
+    const totalReferenceImages = objectImageInputs.length + characterImageInputs.length + styleImageInputs.length;
     if (model === 'gemini-2.5-flash-image' && totalReferenceImages > 3) {
         logApiError(
             routePath,
@@ -785,6 +795,8 @@ function validateInteractiveGenerateRequest(
         model,
         objectImageInputs,
         characterImageInputs,
+        styleImageInputs,
+        videoInput,
     };
 }
 

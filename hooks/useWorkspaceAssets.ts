@@ -30,14 +30,16 @@ type UseWorkspaceAssetsReturn = {
     setStagedAssets: Dispatch<SetStateAction<StageAsset[]>>;
     objectImages: string[];
     characterImages: string[];
+    styleImages: string[];
     orderedReferenceAssets: StageAsset[];
     currentStageAsset: StageAsset | null;
     hasSketch: boolean;
     setObjectImages: (nextImages: string[] | ((prev: string[]) => string[])) => void;
     setCharacterImages: (nextImages: string[] | ((prev: string[]) => string[])) => void;
+    setStyleImages: (nextImages: string[] | ((prev: string[]) => string[])) => void;
     addWorkspaceAsset: (asset: AddWorkspaceAssetArgs) => void;
     clearAssetRoles: (roles: StageAssetRole[]) => void;
-    removeAssetAtRoleIndex: (role: Extract<StageAssetRole, 'object' | 'character'>, indexToRemove: number) => void;
+    removeAssetAtRoleIndex: (role: Extract<StageAssetRole, 'object' | 'character' | 'style'>, indexToRemove: number) => void;
     upsertViewerStageSource: (args: {
         url: string;
         origin: StageAssetOrigin;
@@ -48,7 +50,13 @@ type UseWorkspaceAssetsReturn = {
 };
 
 const sanitizeStagedAssets = (assets: StageAsset[]) =>
-    assets.filter((asset) => asset.role === 'object' || asset.role === 'character' || asset.role === 'stage-source');
+    assets.filter(
+        (asset) =>
+            asset.role === 'object' ||
+            asset.role === 'character' ||
+            asset.role === 'style' ||
+            asset.role === 'stage-source',
+    );
 
 export function useWorkspaceAssets({ initialStagedAssets }: UseWorkspaceAssetsArgs): UseWorkspaceAssetsReturn {
     const [stagedAssets, setStagedAssetsState] = useState<StageAsset[]>(() =>
@@ -64,8 +72,13 @@ export function useWorkspaceAssets({ initialStagedAssets }: UseWorkspaceAssetsAr
 
     const objectImages = useMemo(() => getStageAssetUrlsByRole(stagedAssets, 'object'), [stagedAssets]);
     const characterImages = useMemo(() => getStageAssetUrlsByRole(stagedAssets, 'character'), [stagedAssets]);
+    const styleImages = useMemo(() => getStageAssetUrlsByRole(stagedAssets, 'style'), [stagedAssets]);
     const orderedReferenceAssets = useMemo(
-        () => [...getStageAssetsByRole(stagedAssets, 'object'), ...getStageAssetsByRole(stagedAssets, 'character')],
+        () => [
+            ...getStageAssetsByRole(stagedAssets, 'object'),
+            ...getStageAssetsByRole(stagedAssets, 'character'),
+            ...getStageAssetsByRole(stagedAssets, 'style'),
+        ],
         [stagedAssets],
     );
     const currentStageAsset = useMemo(
@@ -79,7 +92,7 @@ export function useWorkspaceAssets({ initialStagedAssets }: UseWorkspaceAssetsAr
 
     const setRoleImages = useCallback(
         (
-            role: Extract<StageAssetRole, 'object' | 'character'>,
+            role: Extract<StageAssetRole, 'object' | 'character' | 'style'>,
             nextImages: string[] | ((prev: string[]) => string[]),
         ) => {
             setStagedAssets((prev) => {
@@ -105,6 +118,13 @@ export function useWorkspaceAssets({ initialStagedAssets }: UseWorkspaceAssetsAr
         [setRoleImages],
     );
 
+    const setStyleImages = useCallback(
+        (nextImages: string[] | ((prev: string[]) => string[])) => {
+            setRoleImages('style', nextImages);
+        },
+        [setRoleImages],
+    );
+
     const addWorkspaceAsset = useCallback((asset: AddWorkspaceAssetArgs) => {
         setStagedAssets((prev) => addStageAsset(prev, asset));
     }, []);
@@ -114,7 +134,7 @@ export function useWorkspaceAssets({ initialStagedAssets }: UseWorkspaceAssetsAr
     }, []);
 
     const removeAssetAtRoleIndex = useCallback(
-        (role: Extract<StageAssetRole, 'object' | 'character'>, indexToRemove: number) => {
+        (role: Extract<StageAssetRole, 'object' | 'character' | 'style'>, indexToRemove: number) => {
             setStagedAssets((prev) => {
                 const targetAsset = getStageAssetsByRole(prev, role)[indexToRemove];
                 if (!targetAsset) {
@@ -154,11 +174,13 @@ export function useWorkspaceAssets({ initialStagedAssets }: UseWorkspaceAssetsAr
         setStagedAssets,
         objectImages,
         characterImages,
+        styleImages,
         orderedReferenceAssets,
         currentStageAsset,
         hasSketch,
         setObjectImages,
         setCharacterImages,
+        setStyleImages,
         addWorkspaceAsset,
         clearAssetRoles,
         removeAssetAtRoleIndex,

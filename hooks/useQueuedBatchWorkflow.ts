@@ -264,6 +264,8 @@ type UseQueuedBatchWorkflowArgs = {
     workspaceSessionSourceLineageAction?: 'continue' | 'branch' | null;
     objectImages: string[];
     characterImages: string[];
+    styleImages?: string[];
+    videoInput?: string;
     getModelLabel: (model: ImageModel) => string;
     getGenerationLineageContext: (params: {
         mode: string;
@@ -289,6 +291,8 @@ type QueuedBatchJobGenerationDraft = {
     lineageContext: GenerationLineageContext;
     finalObjectInputs: string[];
     finalCharacterInputs: string[];
+    finalStyleInputs?: string[];
+    videoInput?: string;
     batchSize: number;
     aspectRatio: QueuedBatchJob['aspectRatio'];
     imageSize: QueuedBatchJob['imageSize'];
@@ -375,6 +379,8 @@ export function useQueuedBatchWorkflow({
     workspaceSessionSourceLineageAction,
     objectImages,
     characterImages,
+    styleImages = [],
+    videoInput,
     getModelLabel,
     getGenerationLineageContext,
     addLog,
@@ -445,6 +451,8 @@ export function useQueuedBatchWorkflow({
             lineageContext,
             finalObjectInputs: objectImages,
             finalCharacterInputs: characterImages,
+            finalStyleInputs: styleImages,
+            videoInput,
             batchSize,
             aspectRatio,
             imageSize,
@@ -473,8 +481,10 @@ export function useQueuedBatchWorkflow({
         objectImages,
         outputFormat,
         prompt,
+        styleImages,
         temperature,
         thinkingLevel,
+        videoInput,
     ]);
 
     const buildQueuedJobFollowUpGenerationDraft = useCallback((): QueuedBatchJobGenerationDraft | null => {
@@ -506,6 +516,8 @@ export function useQueuedBatchWorkflow({
             lineageContext,
             finalObjectInputs: objectImages,
             finalCharacterInputs: characterImages,
+            finalStyleInputs: styleImages,
+            videoInput,
             batchSize,
             aspectRatio,
             imageSize,
@@ -539,8 +551,10 @@ export function useQueuedBatchWorkflow({
         objectImages,
         outputFormat,
         prompt,
+        styleImages,
         temperature,
         thinkingLevel,
+        videoInput,
         workspaceSessionSourceHistoryId,
         workspaceSessionSourceLineageAction,
     ]);
@@ -626,6 +640,7 @@ export function useQueuedBatchWorkflow({
             batchStats: null,
             objectImageCount: draft.finalObjectInputs.length,
             characterImageCount: draft.finalCharacterInputs.length,
+            styleImageCount: draft.finalStyleInputs?.length ?? 0,
             createdAt,
             updatedAt: createdAt,
             startedAt: null,
@@ -782,6 +797,8 @@ export function useQueuedBatchWorkflow({
                     sourceImageInput: queuedDraft.sourceImageInput,
                     objectImageInputs: queuedDraft.finalObjectInputs,
                     characterImageInputs: queuedDraft.finalCharacterInputs,
+                    styleImageInputs: queuedDraft.finalStyleInputs,
+                    videoInput: queuedDraft.videoInput,
                     outputFormat: queuedDraft.outputFormat,
                     temperature: queuedDraft.temperature,
                     thinkingLevel: queuedDraft.thinkingLevel,

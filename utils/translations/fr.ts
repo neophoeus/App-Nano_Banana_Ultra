@@ -57,6 +57,8 @@ export const fr = {
         "Fermer cette app supprimera l'espace de travail actuel. Annulez et revenez d'abord si vous voulez exporter l'espace de travail.",
     objectRefs: "Références d'objets",
     characterRefs: 'Références de personnages',
+    styleRefs: 'Références de style',
+    videoRef: 'Référence vidéo',
     unsupportedModel: 'Non pris en charge par ce modèle',
     modelSelect: 'Modèle',
     modelGeminiNanoBanana21: 'Nano Banana 2.1 (gemini-nano-banana-2.1)',
@@ -689,6 +691,8 @@ export const fr = {
     workspaceConstraintTrimObjects: "Les images d'objets ont ete reduites a {0} a cause des contraintes du modele.",
     workspaceConstraintTrimCharacters:
         'Les images de personnages ont ete reduites a {0} a cause des contraintes du modele.',
+    workspaceConstraintTrimStyles:
+        'Les références de style ont été réduites à {0} à cause des contraintes du modèle.',
     workspacePickerSharedPrompt: 'Prompt partage',
     workspacePickerSharedPromptPlaceholder: 'Mettez a jour ici le prompt partage du compositeur.',
     workspacePickerFullGallery: 'Galerie complete',
@@ -700,6 +704,7 @@ export const fr = {
     workspacePickerHasSketchAsset: 'Inclut la ressource de croquis actuelle.',
     workspacePickerNoSketchAsset: "Aucune ressource de croquis n'est preparee.",
     workspacePickerCharacters: 'Personnages',
+    workspacePickerStyles: 'Styles',
     workspacePickerCharacterHint: "Les references de personnage restent dans le meme modele d'ingestion prepare.",
     workspacePickerStageSource: 'Image de scene',
     workspacePickerHistoryLinked: "lie a l'historique",
