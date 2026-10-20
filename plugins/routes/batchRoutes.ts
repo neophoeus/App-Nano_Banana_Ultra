@@ -192,6 +192,38 @@ async function uploadBatchSourceImage(
     }
 }
 
+const BATCH_JSONL_TOP_LEVEL_KEYS = [
+    'safetySettings',
+    'tools',
+    'toolConfig',
+    'systemInstruction',
+    'cachedContent',
+] as const;
+
+function normalizeBatchJsonlRequestEntry(rawRequest: Record<string, unknown>): Record<string, unknown> {
+    if (!rawRequest || typeof rawRequest !== 'object') {
+        return rawRequest;
+    }
+    const normalized: Record<string, unknown> = { ...rawRequest };
+    if (normalized.generationConfig && typeof normalized.generationConfig === 'object') {
+        const genConfig: Record<string, unknown> = { ...(normalized.generationConfig as Record<string, unknown>) };
+        let modified = false;
+        for (const key of BATCH_JSONL_TOP_LEVEL_KEYS) {
+            if (key in genConfig) {
+                if (normalized[key] === undefined) {
+                    normalized[key] = genConfig[key];
+                }
+                delete genConfig[key];
+                modified = true;
+            }
+        }
+        if (modified) {
+            normalized.generationConfig = genConfig;
+        }
+    }
+    return normalized;
+}
+
 function buildBatchJsonlRequests(
     ai: GoogleGenAI,
     model: string,
@@ -210,10 +242,11 @@ function buildBatchJsonlRequests(
             if (Array.isArray(transformedRequests) && transformedRequests.length === inlineRequests.length) {
                 return transformedRequests.map((entry, index) => ({
                     key: `request-${index + 1}`,
-                    request:
+                    request: normalizeBatchJsonlRequestEntry(
                         entry && typeof entry.request === 'object' && entry.request
-                            ? entry.request
+                            ? (entry.request as Record<string, unknown>)
                             : (entry as Record<string, unknown>),
+                    ),
                 }));
             }
         } catch {
@@ -221,13 +254,18 @@ function buildBatchJsonlRequests(
         }
     }
 
-    return inlineRequests.map((entry, index) => ({
-        key: `request-${index + 1}`,
-        request: {
+    return inlineRequests.map((entry, index) => {
+        const rawConfig = (entry.config as Record<string, unknown>) || {};
+        const generationConfig: Record<string, unknown> = { ...rawConfig };
+        const request: Record<string, unknown> = {
             contents: entry.contents,
-            generationConfig: entry.config,
-        },
-    }));
+            generationConfig,
+        };
+        return {
+            key: `request-${index + 1}`,
+            request: normalizeBatchJsonlRequestEntry(request),
+        };
+    });
 }
 
 function writeBatchJsonlManifest(
@@ -357,12 +395,11 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
                 const parts = await buildGenerateFileParts(body, (image) =>
                     uploadBatchSourceImage(ai, image, resolvedDir, tempDir),
                 );
-                const inlineRequests: GenerateBatchRequest[] = [
-                    {
-                        contents: [{ role: 'user', parts: parts as Array<Record<string, unknown>> }],
-                        config: batchRequestConfig,
-                    },
-                ];
+                const requestedCount = Math.max(1, Math.min(10, Math.floor(Number(body.requestCount || 1))));
+                const inlineRequests: GenerateBatchRequest[] = Array.from({ length: requestedCount }, () => ({
+                    contents: [{ role: 'user', parts: parts as Array<Record<string, unknown>> }],
+                    config: batchRequestConfig,
+                }));
                 const batchJsonlRequests = buildBatchJsonlRequests(ai, model, inlineRequests, displayName);
                 const manifestPath = writeBatchJsonlManifest(tempDir, batchJsonlRequests);
                 const uploadedManifest = await ai.files.upload({

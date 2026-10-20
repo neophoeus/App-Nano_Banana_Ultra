@@ -1024,6 +1024,7 @@ const App: React.FC = () => {
         currentStageAsset,
         objectImageCount: objectImages.length,
         characterImageCount: characterImages.length,
+        styleImageCount: styleImages.length,
         stickySendIntent,
         workspaceSession,
         conversationState,

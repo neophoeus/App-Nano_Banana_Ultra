@@ -1,5 +1,26 @@
 # Changelog
 
+## v4.11.0 - 2026-10-20
+
+- Release title: Nano Banana Ultra 4.11.0 - AI Studio-Compatible 3DGS Revolve Rendering Upgrade & Official Queued Batch Workflow Alignment
+- Release summary:
+    - **AI Studio-Compatible 3D Gaussian Splatting Revolve Engine Upgrade (`utils/gaussianSplatting.ts`, `components/ImageEditor.tsx`, `utils/editorPromptBuilder.ts`)**:
+        - **Multi-Scale À-Trous Disparity Field & Border Background Prior**: Implemented `computeEdgeAwareDepthField` with 4-stage À-Trous cross-bilateral filtering (`steps = [8, 4, 2, 1]`) and border background color estimation, effectively separating foreground subject depth from backgrounds and eliminating depth sinkhole artifacts on dark hair, pupils, and deep clothing textures.
+        - **Anisotropic Surface-Tangent Splat Expansion**: Enhanced `GaussianSplat` with `depthGradX` and `depthGradY` gradients. Dynamically stretches ellipse tangents along local surface derivatives and Euler camera rotations (Yaw up to ±90°, Pitch up to ±45°), closing novel-view perspective disocclusion cracks while clamping occlusion boundary edges (`isEdge === true`) to prevent streak tearing.
+        - **Back-to-Front Depth Sorting & Transparent WebGL2 Blending**: Sorted point cloud instances back-to-front before instance VBO uploads and disabled depth buffer writes (`gl.depthMask(false)`) during transparent splat rasterization, resolving internal polygon tearing and hollow holes.
+        - **Unpremultiplied Chroma-Clean Guard (`#00ff00`)**: Eliminated neon-green bleed in WebGL2 (`u_isChromaKey == 1`) and 2D canvas fallback by discarding sub-threshold fragments (`alpha * v_color.a < 0.18`) and rendering pure opaque foreground cores (`fragColor = vec4(v_color.rgb, 1.0)` / `rgb(r,g,b)`), guaranteeing crisp isolation from the green inpainting mask.
+        - **Editor Viewport State Preservation & Production Acceleration**: Fixed Revolve Front camera preset resetting `panX/panY/zoom`, unified `renderMode: 'gaussian'`, and enabled singleton offscreen WebGL2 acceleration for 2D canvas submission exports. Upgraded sample density tiers to `draft: 192`, `standard: 256`, `high: 320`, `submission: 384` via `DENSITY_MAP` and exported `buildGaussianPointCloud`.
+        - **Reconstruction Prompt Enhancement**: Augmented `buildEditorPrompt` with geometry synthesis instructions ensuring Gemini synthesizes sharp cohesive surfaces from `[Src_1]` without cloud artifacts.
+    - **Queued Batch API End-to-End Workflow & Multimodal Forwarding Alignment (`services/geminiService.ts`, `plugins/routes/batchRoutes.ts`, `hooks/useQueuedBatchWorkflow.ts`, `hooks/useQueuedBatchPresentation.ts`, `components/QueuedBatchJobsPanel.tsx`, `App.tsx`)**:
+        - **Local API Multimodal Forwarding**: Updated `buildImageGenerateRequestBody` in `services/geminiService.ts` to forward `styleImageInputs` and `videoInput` to backend routes, restoring multimodal compatibility across Local API mode.
+        - **Batch Route Multi-Request Expansion**: Expanded `/api/batches/create` in `plugins/routes/batchRoutes.ts` to generate `1..10` inline requests based on `requestCount`, ensuring multi-image batches output multiple JSONL requests (`request-1`, `request-2`, ...) instead of hardcoding to 1.
+        - **JSONL GenerateContentRequest Normalization**: Hoisted `safetySettings`, `tools`, `toolConfig`, `systemInstruction`, and `cachedContent` to the top level of each batch request entry, ensuring strict adherence to Google's official Gemini Batch API JSONL schema.
+        - **State Preservation Across Polling & Import**: Updated `mapRemoteQueuedJobToLocal` in `hooks/useQueuedBatchWorkflow.ts` to retain `batchSize > 1` and `styleImageCount` without being overwritten to 1. Forwarded `finalStyleInputs` from editor queue submissions and resolved boolean short-circuit evaluation in batch size reconciliation.
+        - **UI Presentation & Metric Badges**: Added `styleImageCount` support in `useQueuedBatchPresentation` and updated `QueuedBatchJobsPanel` to display effective item counts dynamically.
+    - **Automated Test Suite Expansion & Zero-Regression Verification (`tests/*`)**:
+        - Added unit tests verifying anisotropic depth gradient expansion, occlusion boundary clamping, Chroma-Key clean separation, multimodal queued batch forwarding, batch size polling retention, and JSONL request hoisting.
+        - Maintained 100% test success across all 127 test files (1,075 tests) and clean production bundle compilation.
+
 ## v4.10.0 - 2026-10-12
 
 - Release title: Nano Banana Ultra 4.10.0 - Google Gemini Official Image Generation Spec Alignment, Style Reference Images & Multimodal Video-to-Image Support

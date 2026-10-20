@@ -2,12 +2,14 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import {
+    buildGaussianPointCloud,
     clampAngle,
     computeEdgeAwareDepthField,
     computeSurfaceNormalsAndDiscontinuity,
     createGaussianPointCloudFromImage,
     estimatePixelDepth,
     normalizeAngle,
+    projectAndSortSplats,
     projectPoint3D,
     renderGaussianSplatsToCanvas,
     rotatePoint3D,
@@ -239,5 +241,119 @@ describe('gaussianSplatting 3D math & projection engine', () => {
 
         expect(mockCanvas.getContext).toHaveBeenCalledWith('webgl2', expect.any(Object));
         expect(mockCanvas.getContext).toHaveBeenCalledWith('2d');
+    });
+
+    it('computes depth gradients and expands splats along surface tangents under novel view yaw', () => {
+        const cloud = {
+            splats: [
+                {
+                    x: 0,
+                    y: 0,
+                    z: 0.1,
+                    r: 200,
+                    g: 200,
+                    b: 200,
+                    a: 1,
+                    radius: 0.05,
+                    depthGradX: 1.5,
+                    depthGradY: 0,
+                    isEdge: false,
+                },
+                {
+                    x: 0,
+                    y: 0,
+                    z: 0.1,
+                    r: 200,
+                    g: 200,
+                    b: 200,
+                    a: 1,
+                    radius: 0.05,
+                    depthGradX: 0,
+                    depthGradY: 0,
+                    isEdge: false,
+                },
+            ],
+            originalWidth: 100,
+            originalHeight: 100,
+            aspectRatio: 1.0,
+        };
+
+        const projectedAtZero = projectAndSortSplats(cloud, { yaw: 0, pitch: 0 }, 400, 400);
+        const projectedAtYaw = projectAndSortSplats(cloud, { yaw: 45, pitch: 0 }, 400, 400);
+
+        // Slanted splat (depthGradX = 1.5) expands significantly more under 45° yaw than flat splat
+        const slantedUnderYaw = projectedAtYaw.find((p: any) => p.screenRadius > 0);
+        expect(slantedUnderYaw).toBeDefined();
+        expect(projectedAtYaw[0].screenRadius).toBeGreaterThan(projectedAtZero[0].screenRadius);
+    });
+
+    it('clamps anisotropic stretch at occlusion boundary edges and supports gaussian renderMode alias', () => {
+        const cloud = {
+            splats: [
+                {
+                    x: 0,
+                    y: 0,
+                    z: 0.1,
+                    r: 200,
+                    g: 200,
+                    b: 200,
+                    a: 1,
+                    radius: 0.05,
+                    depthGradX: 2.0,
+                    depthGradY: 0,
+                    isEdge: true, // Occlusion boundary
+                },
+                {
+                    x: 0.2,
+                    y: 0,
+                    z: 0.1,
+                    r: 200,
+                    g: 200,
+                    b: 200,
+                    a: 1,
+                    radius: 0.05,
+                    depthGradX: 2.0,
+                    depthGradY: 0,
+                    isEdge: false, // Continuous surface
+                },
+            ],
+            originalWidth: 100,
+            originalHeight: 100,
+            aspectRatio: 1.0,
+        };
+
+        const projected = projectAndSortSplats(cloud, { yaw: 45, pitch: 0 }, 400, 400);
+        const edgeSplat = projected.find((p: any) => p.isEdge === true);
+        const surfSplat = projected.find((p: any) => p.isEdge === false);
+
+        expect(edgeSplat).toBeDefined();
+        expect(surfSplat).toBeDefined();
+        // Edge splat has clamped expansion (<= 1.35x base), while continuous surface expands more
+        expect(surfSplat!.screenRadius).toBeGreaterThan(edgeSplat!.screenRadius);
+
+        const mockCtx = {
+            fillStyle: '',
+            fillRect: vi.fn(),
+            beginPath: vi.fn(),
+            arc: vi.fn(),
+            fill: vi.fn(),
+        } as unknown as CanvasRenderingContext2D;
+
+        // Verify 'gaussian' alias works seamlessly without throw and uses unpremultiplied rgb() on #00ff00
+        renderGaussianSplatsToCanvas(mockCtx, cloud, { yaw: 10, pitch: 0 }, 400, 400, {
+            renderMode: 'gaussian',
+            clearColor: '#00ff00',
+        });
+        expect(mockCtx.fillRect).toHaveBeenCalledWith(0, 0, 400, 400);
+        expect(mockCtx.fill).toHaveBeenCalled();
+        expect(mockCtx.fillStyle).toBe('rgb(200,200,200)');
+
+        const imgData = {
+            data: new Uint8ClampedArray([120, 80, 40, 255, 0, 0, 0, 0, 200, 150, 100, 255, 50, 60, 70, 255]),
+            width: 2,
+            height: 2,
+        } as unknown as ImageData;
+        const builtCloud = buildGaussianPointCloud(imgData);
+        expect(builtCloud.splats.length).toBe(3);
     });
 });

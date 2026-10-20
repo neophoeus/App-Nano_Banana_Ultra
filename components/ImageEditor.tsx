@@ -426,7 +426,11 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         const canvas = revolveCanvasRef.current;
 
         if (pointCloudRef.current && pointCloudRef.current.splats.length > 0) {
-            renderGaussianSplatsToCanvas(canvas, pointCloudRef.current, revolveTransform, canvas.width, canvas.height);
+            renderGaussianSplatsToCanvas(canvas, pointCloudRef.current, revolveTransform, canvas.width, canvas.height, {
+                clearColor: '#0b0f17',
+                splatScaleMultiplier: 1.35,
+                renderMode: 'gaussian',
+            });
         } else if (imgElement && originalDims.w > 0) {
             const ctx = canvas.getContext('2d');
             if (!ctx) return;
@@ -640,7 +644,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         const dx = clientX - pointerStart.x;
         const dy = clientY - pointerStart.y;
 
-        if (interactionState === 'panning_viewport' && stateStart && 'zoom' in stateStart) {
+        if (interactionState === 'panning_viewport' && stateStart && 'zoom' in stateStart && 'x' in stateStart) {
             setViewport(applyPanDelta(stateStart, dx, dy));
         } else if (interactionState === 'orbiting_revolve' && stateStart && 'yaw' in stateStart) {
             const sensitivity = 0.35;
@@ -658,6 +662,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                 ...stateStart,
                 x: stateStart.x + dx / viewport.zoom,
                 y: stateStart.y + dy / viewport.zoom,
+                rotation: stateStart.rotation ?? 0,
             });
         } else if (interactionState === 'rotating_image') {
             const { x, y } = screenToContent(clientX, clientY);
@@ -1018,7 +1023,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                 renderGaussianSplatsToCanvas(ctx, submissionCloud, submissionRevolveTransform, subW, subH, {
                     clearColor: '#00ff00',
                     splatScaleMultiplier: 1.35,
-                    renderMode: 'smooth',
+                    renderMode: 'gaussian',
                 });
             } else {
                 ctx.fillStyle = '#00ff00';
@@ -1372,7 +1377,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                     <div className="flex items-center gap-1">
                                         <button
                                             data-testid="editor-revolve-preset-front"
-                                            onClick={() => setRevolveTransform({ yaw: 0, pitch: 0 })}
+                                            onClick={() => setRevolveTransform((p) => ({ ...p, yaw: 0, pitch: 0 }))}
                                             disabled={isGenerating}
                                             className={`px-2 py-1 text-xs font-bold rounded transition-colors ${revolveTransform.yaw === 0 && revolveTransform.pitch === 0 ? 'bg-amber-500 text-black shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
                                             title={t('revolvePresetFront')}

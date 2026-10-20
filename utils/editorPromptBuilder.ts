@@ -204,6 +204,7 @@ export const buildEditorPrompt = ({
             finalPrompt: joinPromptSegments(prompt, [
                 `Render [Src_1] from the 3D camera viewpoint in [Edit_1] (yaw=${yaw}°, pitch=${pitch}°${framingText}).`,
                 'Inpaint the green background areas to complete the scene, preserving the subject, style, lighting, and details from [Src_1].',
+                'Synthesize sharp, cohesive surfaces and clean geometry based on [Src_1], resolving all occlusion borders seamlessly without artifacts.',
             ]),
             finalModeLabel,
         };

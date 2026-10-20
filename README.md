@@ -136,7 +136,7 @@ If you want to extract raw high-resolution images (PNG / JPEG) directly from the
 
 ## Version Overview
 
-### Latest Release: 4.10.0
+### Latest Release: 4.11.0
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
 

@@ -213,6 +213,7 @@ type RemoteQueuedJobSeed = Pick<
     | 'batchSize'
     | 'objectImageCount'
     | 'characterImageCount'
+    | 'styleImageCount'
     | 'hasImportablePayload'
     | 'submissionPending'
     | 'importDiagnostic'
@@ -589,9 +590,10 @@ export function useQueuedBatchWorkflow({
             includeThoughts: draft.includeThoughts,
             googleSearch: draft.googleSearch,
             imageSearch: draft.imageSearch,
-            batchSize: 1,
+            batchSize: Math.max(1, draft.batchSize || 1),
             objectImageCount: draft.finalObjectInputs.length,
             characterImageCount: draft.finalCharacterInputs.length,
+            styleImageCount: draft.finalStyleInputs?.length ?? 0,
             hasImportablePayload: false,
             submissionPending: true,
             importDiagnostic: null,
@@ -636,7 +638,7 @@ export function useQueuedBatchWorkflow({
             includeThoughts: draft.includeThoughts,
             googleSearch: draft.googleSearch,
             imageSearch: draft.imageSearch,
-            batchSize: 1,
+            batchSize: Math.max(1, draft.batchSize || seed.batchSize || 1),
             batchStats: null,
             objectImageCount: draft.finalObjectInputs.length,
             characterImageCount: draft.finalCharacterInputs.length,
@@ -727,10 +729,11 @@ export function useQueuedBatchWorkflow({
                 includeThoughts: seed.includeThoughts,
                 googleSearch: seed.googleSearch,
                 imageSearch: seed.imageSearch,
-                batchSize: 1,
+                batchSize: Math.max(1, seed.batchSize || 1, remoteJob.batchStats?.requestCount || 1),
                 batchStats: remoteJob.batchStats || null,
                 objectImageCount: seed.objectImageCount,
                 characterImageCount: seed.characterImageCount,
+                styleImageCount: seed.styleImageCount ?? 0,
                 createdAt,
                 updatedAt,
                 startedAt,
@@ -926,6 +929,7 @@ export function useQueuedBatchWorkflow({
                 lineageContext,
                 finalObjectInputs: objectImageInputs,
                 finalCharacterInputs: characterImageInputs,
+                finalStyleInputs: [...styleImages],
                 batchSize: editorBatchSize,
                 aspectRatio: editorAspectRatio,
                 imageSize: editorImageSize,
@@ -952,6 +956,7 @@ export function useQueuedBatchWorkflow({
             outputFormat,
             queueBatchDisabledReason,
             showNotification,
+            styleImages,
             submitQueuedBatchDraft,
             t,
             temperature,
@@ -1474,9 +1479,10 @@ export function useQueuedBatchWorkflow({
                         includeThoughts: false,
                         googleSearch: false,
                         imageSearch: false,
-                        batchSize: 1,
+                        batchSize: Math.max(1, remoteJob.batchStats?.requestCount || 1),
                         objectImageCount: 0,
                         characterImageCount: 0,
+                        styleImageCount: 0,
                         hasImportablePayload: remoteJob.hasImportablePayload,
                         submissionPending: false,
                         importDiagnostic: null,

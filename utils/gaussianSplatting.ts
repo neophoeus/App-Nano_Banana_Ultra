@@ -32,6 +32,10 @@ export interface GaussianSplat {
     normalZ?: number;
     /** Whether this splat is on a depth discontinuity boundary */
     isEdge?: boolean;
+    /** Local horizontal depth derivative dz/dx in normalized space */
+    depthGradX?: number;
+    /** Local vertical depth derivative dz/dy in normalized space */
+    depthGradY?: number;
 }
 
 export interface GaussianPointCloud {
@@ -64,6 +68,10 @@ export interface ProjectedSplat {
     screenRadius: number;
     depth: number;
     color: string;
+    r?: number;
+    g?: number;
+    b?: number;
+    a?: number;
     normalX?: number;
     normalY?: number;
     normalZ?: number;
@@ -176,6 +184,47 @@ export const computeEdgeAwareDepthField = (data: Uint8ClampedArray, width: numbe
     const lum = new Float32Array(total);
     const output = new Float32Array(total);
 
+    // Compute border background color average to prevent background color from biasing object depth
+    let borderR = 0,
+        borderG = 0,
+        borderB = 0,
+        borderCount = 0;
+    for (let x = 0; x < width; x++) {
+        const topIdx = x * 4;
+        const btmIdx = ((height - 1) * width + x) * 4;
+        if (data[topIdx + 3] > 32) {
+            borderR += data[topIdx];
+            borderG += data[topIdx + 1];
+            borderB += data[topIdx + 2];
+            borderCount++;
+        }
+        if (data[btmIdx + 3] > 32) {
+            borderR += data[btmIdx];
+            borderG += data[btmIdx + 1];
+            borderB += data[btmIdx + 2];
+            borderCount++;
+        }
+    }
+    for (let y = 1; y < height - 1; y++) {
+        const lIdx = y * width * 4;
+        const rIdx = (y * width + (width - 1)) * 4;
+        if (data[lIdx + 3] > 32) {
+            borderR += data[lIdx];
+            borderG += data[lIdx + 1];
+            borderB += data[lIdx + 2];
+            borderCount++;
+        }
+        if (data[rIdx + 3] > 32) {
+            borderR += data[rIdx];
+            borderG += data[rIdx + 1];
+            borderB += data[rIdx + 2];
+            borderCount++;
+        }
+    }
+    const bgR = borderCount > 0 ? borderR / borderCount : 128;
+    const bgG = borderCount > 0 ? borderG / borderCount : 128;
+    const bgB = borderCount > 0 ? borderB / borderCount : 128;
+
     // 1. Initial priors
     for (let y = 0; y < height; y++) {
         const normY = (y + 0.5) / height;
@@ -204,49 +253,59 @@ export const computeEdgeAwareDepthField = (data: Uint8ClampedArray, width: numbe
             const distFromCenter = Math.min(1, Math.sqrt(dx * dx + dy * dy) * Math.SQRT2);
             const centerPrior = 0.5 - distFromCenter;
 
-            const z = vertGrad * 0.45 + centerPrior * 0.35 + (l - 0.5) * 0.2;
-            rawDepth[pixelIdx] = Math.max(-0.5, Math.min(0.5, z * 0.7));
+            // Difference from border background color
+            const colorDist = (Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB)) / 765;
+
+            // Balanced prior: vertical gradient + center pop-out + border contrast + mild luminance relief
+            const z = vertGrad * 0.35 + centerPrior * 0.35 + colorDist * 0.15 + (l - 0.5) * 0.15;
+            rawDepth[pixelIdx] = Math.max(-0.5, Math.min(0.5, z * 0.75));
         }
     }
 
-    // 2. Edge-Preserving Bilateral Smoothing (5x5 kernel)
-    const radius = 2;
-    const sigmaS2 = 2 * 1.6 * 1.6; // spatial variance
-    const sigmaR2 = 2 * 0.12 * 0.12; // color boundary sensitivity
+    // 2. Edge-Preserving Bilateral Smoothing across scales (À-trous steps)
+    output.set(rawDepth);
+    const temp = new Float32Array(total);
+    const steps = [8, 4, 2, 1];
+    const sigmaR2 = 2 * 0.14 * 0.14;
 
-    for (let y = 0; y < height; y++) {
-        const yMin = Math.max(0, y - radius);
-        const yMax = Math.min(height - 1, y + radius);
+    for (let s = 0; s < steps.length; s++) {
+        const step = steps[s];
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const centerIdx = y * width + x;
+                const centerLum = lum[centerIdx];
+                const centerVal = output[centerIdx];
 
-        for (let x = 0; x < width; x++) {
-            const centerIdx = y * width + x;
-            const centerLum = lum[centerIdx];
-            const centerRaw = rawDepth[centerIdx];
+                let sumDepth = centerVal;
+                let sumW = 1.0;
 
-            let sumDepth = 0;
-            let sumW = 0;
+                const neighbors = [
+                    [x - step, y],
+                    [x + step, y],
+                    [x, y - step],
+                    [x, y + step],
+                ];
 
-            const xMin = Math.max(0, x - radius);
-            const xMax = Math.min(width - 1, x + radius);
-
-            for (let ny = yMin; ny <= yMax; ny++) {
-                const dy = ny - y;
-                const dy2 = dy * dy;
-                for (let nx = xMin; nx <= xMax; nx++) {
-                    const dx = nx - x;
-                    const dist2 = dx * dx + dy2;
-                    const nIdx = ny * width + nx;
-                    const lumDiff = lum[nIdx] - centerLum;
-
-                    // Bilateral weight: spatial proximity * photometric similarity
-                    const w = Math.exp(-dist2 / sigmaS2 - (lumDiff * lumDiff) / sigmaR2);
-                    sumDepth += rawDepth[nIdx] * w;
-                    sumW += w;
+                for (let n = 0; n < 4; n++) {
+                    const nx = neighbors[n][0];
+                    const ny = neighbors[n][1];
+                    if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                        const nIdx = ny * width + nx;
+                        const lumDiff = lum[nIdx] - centerLum;
+                        const w = Math.exp(-(lumDiff * lumDiff) / sigmaR2);
+                        sumDepth += output[nIdx] * w;
+                        sumW += w;
+                    }
                 }
-            }
 
-            output[centerIdx] = sumW > 0 ? Math.max(-0.5, Math.min(0.5, sumDepth / sumW)) : centerRaw;
+                temp[centerIdx] = sumDepth / sumW;
+            }
         }
+        output.set(temp);
+    }
+
+    for (let i = 0; i < total; i++) {
+        output[i] = Math.max(-0.5, Math.min(0.5, output[i]));
     }
 
     return output;
@@ -263,10 +322,12 @@ export const computeSurfaceNormalsAndDiscontinuity = (
 ): {
     normals: Float32Array; // [nx, ny, nz] per pixel, length width * height * 3
     isEdge: Uint8Array; // 1 if edge discontinuity, 0 otherwise
+    depthGrads?: Float32Array; // [dzdx, dzdy] per pixel
 } => {
     const total = width * height;
     const normals = new Float32Array(total * 3);
     const isEdge = new Uint8Array(total);
+    const depthGrads = new Float32Array(total * 2);
 
     const stepX = (2 * aspectRatio) / Math.max(1, width);
     const stepY = 2 / Math.max(1, height);
@@ -304,6 +365,9 @@ export const computeSurfaceNormalsAndDiscontinuity = (
             const dzdx = (zR - zL) / dxLen;
             const dzdy = (zB - zT) / dyLen;
 
+            depthGrads[idx * 2] = dzdx;
+            depthGrads[idx * 2 + 1] = dzdy;
+
             const nx = -dzdx;
             const ny = -dzdy;
             const nz = 1.0;
@@ -316,13 +380,67 @@ export const computeSurfaceNormalsAndDiscontinuity = (
         }
     }
 
-    return { normals, isEdge };
+    return { normals, isEdge, depthGrads };
 };
 
+export const DENSITY_MAP = {
+    draft: 192,
+    standard: 256,
+    high: 320,
+    submission: 384,
+} as const;
+
 export interface PointCloudGenerationOptions {
-    /** Target sample resolution along the longest axis (e.g. 96 for draft, 160 for high, 240 for submission) */
-    sampleDensity?: 'draft' | 'high' | 'submission' | number;
+    /** Target sample resolution along the longest axis (e.g. 192 for draft, 256 for standard, 320 for high, 384 for submission) */
+    sampleDensity?: 'draft' | 'standard' | 'high' | 'submission' | number;
 }
+
+/**
+ * Builds a 3D Gaussian Point Cloud directly from ImageData.
+ */
+export const buildGaussianPointCloud = (
+    imageData: ImageData,
+    options: PointCloudGenerationOptions = {},
+): GaussianPointCloud => {
+    const { data, width, height } = imageData;
+    const aspect = width / Math.max(1, height);
+    const depthField = computeEdgeAwareDepthField(data, width, height);
+    const { normals, isEdge, depthGrads } = computeSurfaceNormalsAndDiscontinuity(depthField, width, height, aspect);
+    const splats: GaussianSplat[] = [];
+    const baseRadius = (1.45 / Math.max(width, height)) * 2;
+
+    for (let sy = 0; sy < height; sy++) {
+        const normY = (sy + 0.5) / height;
+        const y3D = -(normY * 2 - 1);
+        for (let sx = 0; sx < width; sx++) {
+            const normX = (sx + 0.5) / width;
+            const x3D = (normX * 2 - 1) * aspect;
+            const idx = (sy * width + sx) * 4;
+            const a = data[idx + 3] / 255;
+            if (a < 0.05) continue;
+            const pixelIdx = sy * width + sx;
+            const nIdx = pixelIdx * 3;
+            const gIdx = pixelIdx * 2;
+            splats.push({
+                x: x3D,
+                y: y3D,
+                z: depthField[pixelIdx],
+                r: data[idx],
+                g: data[idx + 1],
+                b: data[idx + 2],
+                a,
+                radius: baseRadius,
+                normalX: normals[nIdx],
+                normalY: normals[nIdx + 1],
+                normalZ: normals[nIdx + 2],
+                isEdge: isEdge[pixelIdx] === 1,
+                depthGradX: depthGrads ? depthGrads[gIdx] : 0,
+                depthGradY: depthGrads ? depthGrads[gIdx + 1] : 0,
+            });
+        }
+    }
+    return { splats, originalWidth: width, originalHeight: height, aspectRatio: aspect };
+};
 
 /**
  * Creates a 3D Gaussian Point Cloud from an HTMLImageElement or Canvas image source.
@@ -336,7 +454,7 @@ export const createGaussianPointCloudFromImage = (
 ): GaussianPointCloud => {
     const density = options.sampleDensity ?? 'draft';
     const targetSteps =
-        typeof density === 'number' ? density : density === 'submission' ? 240 : density === 'high' ? 160 : 96;
+        typeof density === 'number' ? density : DENSITY_MAP[density] ?? DENSITY_MAP.draft;
 
     const aspect = width / Math.max(1, height);
     let sampleW: number;
@@ -365,7 +483,7 @@ export const createGaussianPointCloudFromImage = (
 
     // Compute edge-aware disparity field & surface normals
     const depthField = computeEdgeAwareDepthField(data, sampleW, sampleH);
-    const { normals, isEdge } = computeSurfaceNormalsAndDiscontinuity(depthField, sampleW, sampleH, aspect);
+    const { normals, isEdge, depthGrads } = computeSurfaceNormalsAndDiscontinuity(depthField, sampleW, sampleH, aspect);
 
     const splats: GaussianSplat[] = [];
     const baseRadius = (1.45 / Math.max(sampleW, sampleH)) * 2; // Slight overlap to prevent holes
@@ -390,6 +508,7 @@ export const createGaussianPointCloudFromImage = (
             const pixelIdx = sy * sampleW + sx;
             const z3D = depthField[pixelIdx];
             const nIdx = pixelIdx * 3;
+            const gIdx = pixelIdx * 2;
 
             splats.push({
                 x: x3D,
@@ -404,6 +523,8 @@ export const createGaussianPointCloudFromImage = (
                 normalY: normals[nIdx + 1],
                 normalZ: normals[nIdx + 2],
                 isEdge: isEdge[pixelIdx] === 1,
+                depthGradX: depthGrads ? depthGrads[gIdx] : 0,
+                depthGradY: depthGrads ? depthGrads[gIdx + 1] : 0,
             });
         }
     }
@@ -439,6 +560,11 @@ export const projectAndSortSplats = (
     const panX = camera.panX ?? 0;
     const panY = camera.panY ?? 0;
 
+    const yawRad = (yaw * Math.PI) / 180;
+    const pitchRad = (pitch * Math.PI) / 180;
+    const sinYaw = Math.abs(Math.sin(yawRad));
+    const sinPitch = Math.abs(Math.sin(pitchRad));
+
     for (let i = 0; i < splats.length; i++) {
         const s = splats[i];
         const rot = rotatePoint3D(s.x, s.y, s.z, yaw, pitch);
@@ -447,7 +573,16 @@ export const projectAndSortSplats = (
 
         const screenX = halfW + panX + proj.screenX * minViewportDim * zoom;
         const screenY = halfH + panY - proj.screenY * minViewportDim * zoom;
-        const screenRadius = Math.max(1, s.radius * proj.scale * minViewportDim * zoom);
+        const baseRadius = Math.max(1, s.radius * proj.scale * minViewportDim * zoom);
+
+        // Anisotropic tangent stretch to bridge disocclusion gaps on slanted surfaces
+        const gradX = s.depthGradX ?? 0;
+        const gradY = s.depthGradY ?? 0;
+        const stretchX = Math.sqrt(Math.cos(yawRad) ** 2 + (gradX * Math.sin(yawRad)) ** 2) + sinYaw * Math.abs(gradX) * 0.65;
+        const stretchY = Math.sqrt(Math.cos(pitchRad) ** 2 + (gradY * Math.sin(pitchRad)) ** 2) + sinPitch * Math.abs(gradY) * 0.65;
+        const maxStretch = s.isEdge ? 1.35 : 4.0;
+        const stretch = Math.min(maxStretch, Math.max(1.0, Math.max(stretchX, stretchY)));
+        const screenRadius = baseRadius * stretch;
 
         projected.push({
             screenX,
@@ -455,6 +590,10 @@ export const projectAndSortSplats = (
             screenRadius,
             depth: proj.depth,
             color: `rgba(${s.r},${s.g},${s.b},${s.a})`,
+            r: s.r,
+            g: s.g,
+            b: s.b,
+            a: s.a,
             normalX: s.normalX,
             normalY: s.normalY,
             normalZ: s.normalZ,
@@ -528,10 +667,14 @@ void main() {
     float screenX = (u_viewport.x * 0.5) + u_pan.x + (projX * minDim * u_zoom);
     float screenY = (u_viewport.y * 0.5) + u_pan.y - (projY * minDim * u_zoom);
 
-    // Quad radius in screen pixels
-    float r = max(1.0, a_radius * scale * minDim * u_zoom * u_scaleMul);
+    // Quad radius in screen pixels with independent surface-tangent stretch
+    float tiltX = abs(sin(u_yaw) * a_normal.x);
+    float tiltY = abs(sin(u_pitch) * a_normal.y);
+    float stretchX = clamp(1.0 + tiltX * 2.2, 1.0, 3.8);
+    float stretchY = clamp(1.0 + tiltY * 2.2, 1.0, 3.8);
+    vec2 rXY = max(vec2(1.0), a_radius * scale * minDim * u_zoom * u_scaleMul * vec2(stretchX, stretchY));
 
-    vec2 pixelPos = vec2(screenX, screenY) + a_quad_vertex * r;
+    vec2 pixelPos = vec2(screenX, screenY) + a_quad_vertex * rXY;
 
     // Convert pixel to WebGL NDC [-1, 1]
     float ndcX = (pixelPos.x / u_viewport.x) * 2.0 - 1.0;
@@ -549,6 +692,7 @@ in vec4 v_color;
 in vec2 v_coord;
 
 uniform int u_renderMode; // 0 = splat (Gaussian falloff), 1 = smooth (micro-quad)
+uniform int u_isChromaKey; // 1 = #00ff00 inpainting mask mode (crisp anti-bleed core)
 
 out vec4 fragColor;
 
@@ -559,9 +703,16 @@ void main() {
         if (r2 > 1.0) {
             discard;
         }
-        float alpha = exp(-2.0 * r2);
-        if (alpha < 0.1) discard;
-        fragColor = vec4(v_color.rgb, v_color.a * alpha);
+        if (u_isChromaKey == 1) {
+            // Anti-green-spill: unpremultiplied opaque foreground core when accumA >= 0.18
+            float alpha = clamp(exp(-3.0 * max(0.0, r2 - 0.2)), 0.0, 1.0);
+            if (alpha * v_color.a < 0.18) discard;
+            fragColor = vec4(v_color.rgb, 1.0);
+        } else {
+            float alpha = exp(-2.0 * r2);
+            if (alpha < 0.08) discard;
+            fragColor = vec4(v_color.rgb, v_color.a * alpha);
+        }
     } else {
         // Continuous micro-quad
         fragColor = v_color;
@@ -583,6 +734,7 @@ interface WebGLResources {
         viewport: WebGLUniformLocation;
         scaleMul: WebGLUniformLocation;
         renderMode: WebGLUniformLocation;
+        isChromaKey: WebGLUniformLocation;
     };
     capacity: number;
 }
@@ -670,6 +822,7 @@ const initWebGL2Resources = (gl: WebGL2RenderingContext): WebGLResources | null 
         viewport: gl.getUniformLocation(program, 'u_viewport')!,
         scaleMul: gl.getUniformLocation(program, 'u_scaleMul')!,
         renderMode: gl.getUniformLocation(program, 'u_renderMode')!,
+        isChromaKey: gl.getUniformLocation(program, 'u_isChromaKey')!,
     };
 
     return {
@@ -694,7 +847,7 @@ export const renderGaussianSplatsWebGL2 = (
     options?: {
         clearColor?: string;
         splatScaleMultiplier?: number;
-        renderMode?: 'splat' | 'smooth';
+        renderMode?: 'splat' | 'smooth' | 'gaussian';
     },
 ): boolean => {
     let resources = webglCache.get(gl);
@@ -708,10 +861,30 @@ export const renderGaussianSplatsWebGL2 = (
     const count = splats.length;
     if (count === 0) return true;
 
+    // 1. Back-to-front depth sorting
+    const yawRad = (clampAngle(camera.yaw, -90, 90) * Math.PI) / 180;
+    const pitchRad = (clampAngle(camera.pitch, -45, 45) * Math.PI) / 180;
+    const cosY = Math.cos(yawRad);
+    const sinY = Math.sin(yawRad);
+    const cosX = Math.cos(pitchRad);
+    const sinX = Math.sin(pitchRad);
+    const camDist = camera.distance ?? 2.4;
+
+    const sortedIndices = new Int32Array(count);
+    const depths = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+        sortedIndices[i] = i;
+        const s = splats[i];
+        const z1 = -s.x * sinY + s.z * cosY;
+        const z2 = s.y * sinX + z1 * cosX;
+        depths[i] = camDist - z2;
+    }
+    sortedIndices.sort((a, b) => depths[b] - depths[a]); // Back-to-front (largest distance first)
+
     // Pack instance buffer
     const bufferData = new Float32Array(count * 11);
     for (let i = 0; i < count; i++) {
-        const s = splats[i];
+        const s = splats[sortedIndices[i]];
         const offset = i * 11;
         bufferData[offset] = s.x;
         bufferData[offset + 1] = s.y;
@@ -720,8 +893,10 @@ export const renderGaussianSplatsWebGL2 = (
         bufferData[offset + 4] = s.g / 255;
         bufferData[offset + 5] = s.b / 255;
         bufferData[offset + 6] = s.a;
-        bufferData[offset + 7] = s.normalX ?? 0;
-        bufferData[offset + 8] = s.normalY ?? 0;
+        // Edge boundary clamp: reduce normal gradient on edges to prevent streak tearing
+        const normalScale = s.isEdge ? 0.25 : 1.0;
+        bufferData[offset + 7] = (s.normalX ?? 0) * normalScale;
+        bufferData[offset + 8] = (s.normalY ?? 0) * normalScale;
         bufferData[offset + 9] = s.normalZ ?? 1;
         bufferData[offset + 10] = s.radius;
     }
@@ -738,6 +913,7 @@ export const renderGaussianSplatsWebGL2 = (
     gl.viewport(0, 0, width, height);
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
+    gl.depthMask(false); // Back-to-front blended splats do not write to depth mask
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
@@ -757,8 +933,6 @@ export const renderGaussianSplatsWebGL2 = (
     gl.useProgram(resources.program);
     gl.bindVertexArray(resources.vao);
 
-    const yawRad = (clampAngle(camera.yaw, -90, 90) * Math.PI) / 180;
-    const pitchRad = (clampAngle(camera.pitch, -45, 45) * Math.PI) / 180;
     const fovRad = ((camera.fov ?? 50) * Math.PI) / 180;
 
     gl.uniform1f(resources.uniforms.yaw, yawRad);
@@ -769,9 +943,13 @@ export const renderGaussianSplatsWebGL2 = (
     gl.uniform1f(resources.uniforms.distance, camera.distance ?? 2.4);
     gl.uniform2f(resources.uniforms.viewport, width, height);
     gl.uniform1f(resources.uniforms.scaleMul, options?.splatScaleMultiplier ?? 1.25);
-    gl.uniform1i(resources.uniforms.renderMode, options?.renderMode === 'splat' ? 0 : 1);
+    const isSplatMode = options?.renderMode !== 'smooth';
+    gl.uniform1i(resources.uniforms.renderMode, isSplatMode ? 0 : 1);
+    const isChromaGreen = clearColor.toLowerCase() === '#00ff00';
+    gl.uniform1i(resources.uniforms.isChromaKey, isChromaGreen ? 1 : 0);
 
     gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, count);
+    gl.depthMask(true); // Restore depth mask
     gl.bindVertexArray(null);
 
     return true;
@@ -789,12 +967,13 @@ export const renderGaussianSplats2D = (
     options?: {
         clearColor?: string;
         splatScaleMultiplier?: number;
-        renderMode?: 'splat' | 'smooth';
+        renderMode?: 'splat' | 'smooth' | 'gaussian';
     },
 ): void => {
     const clearColor = options?.clearColor ?? '#00ff00';
     const scaleMul = options?.splatScaleMultiplier ?? 1.25;
     const renderMode = options?.renderMode ?? 'smooth';
+    const isChromaGreen = clearColor.toLowerCase() === '#00ff00';
 
     ctx.fillStyle = clearColor;
     ctx.fillRect(0, 0, width, height);
@@ -804,22 +983,26 @@ export const renderGaussianSplats2D = (
     if (renderMode === 'smooth') {
         for (let i = 0; i < projected.length; i++) {
             const p = projected[i];
+            if (isChromaGreen && (p.a ?? 1) < 0.18) continue;
             const r = p.screenRadius * scaleMul;
-            ctx.fillStyle = p.color;
+            ctx.fillStyle = isChromaGreen && p.r !== undefined ? `rgb(${p.r},${p.g},${p.b})` : p.color;
             ctx.fillRect(p.screenX - r, p.screenY - r, r * 2, r * 2);
         }
     } else {
         for (let i = 0; i < projected.length; i++) {
             const p = projected[i];
+            if (isChromaGreen && (p.a ?? 1) < 0.18) continue;
             const r = p.screenRadius * scaleMul;
 
-            ctx.fillStyle = p.color;
+            ctx.fillStyle = isChromaGreen && p.r !== undefined ? `rgb(${p.r},${p.g},${p.b})` : p.color;
             ctx.beginPath();
             ctx.arc(p.screenX, p.screenY, r, 0, Math.PI * 2);
             ctx.fill();
         }
     }
 };
+
+let offscreenCanvasSingleton: HTMLCanvasElement | null = null;
 
 /**
  * Unified 3DGS renderer:
@@ -835,7 +1018,7 @@ export const renderGaussianSplatsToCanvas = (
     options?: {
         clearColor?: string;
         splatScaleMultiplier?: number;
-        renderMode?: 'splat' | 'smooth';
+        renderMode?: 'splat' | 'smooth' | 'gaussian';
         preferWebGL?: boolean;
     },
 ): void => {
@@ -872,6 +1055,41 @@ export const renderGaussianSplatsToCanvas = (
 
     if (!ctx) {
         return;
+    }
+
+    // When target is a 2D context and WebGL is preferred, try accelerated offscreen WebGL2 rendering
+    if (
+        preferWebGL &&
+        typeof window !== 'undefined' &&
+        typeof (window as any).WebGL2RenderingContext !== 'undefined' &&
+        typeof document !== 'undefined' &&
+        typeof document.createElement === 'function'
+    ) {
+        try {
+            if (!offscreenCanvasSingleton) {
+                offscreenCanvasSingleton = document.createElement('canvas');
+            }
+            if (offscreenCanvasSingleton.width !== width || offscreenCanvasSingleton.height !== height) {
+                offscreenCanvasSingleton.width = width;
+                offscreenCanvasSingleton.height = height;
+            }
+            const offscreenGl = offscreenCanvasSingleton.getContext('webgl2', {
+                antialias: true,
+                alpha: true,
+                depth: true,
+                preserveDrawingBuffer: true,
+            }) as WebGL2RenderingContext | null;
+
+            if (offscreenGl && !offscreenGl.isContextLost()) {
+                const ok = renderGaussianSplatsWebGL2(offscreenGl, cloud, camera, width, height, options);
+                if (ok) {
+                    ctx.drawImage(offscreenCanvasSingleton, 0, 0);
+                    return;
+                }
+            }
+        } catch {
+            // Fall through to 2D
+        }
     }
 
     renderGaussianSplats2D(ctx, cloud, camera, width, height, options);

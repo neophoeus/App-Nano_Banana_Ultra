@@ -69,6 +69,7 @@ const buildQueuedJob = (overrides: Partial<QueuedBatchJob> = {}): QueuedBatchJob
     batchSize: overrides.batchSize ?? 1,
     objectImageCount: overrides.objectImageCount ?? 0,
     characterImageCount: overrides.characterImageCount ?? 0,
+    styleImageCount: overrides.styleImageCount ?? 0,
     createdAt: overrides.createdAt ?? 1710400000000,
     updatedAt: overrides.updatedAt ?? 1710400005000,
     startedAt: overrides.startedAt ?? 1710400001000,
@@ -137,6 +138,7 @@ describe('useQueuedBatchWorkflow', () => {
                 workspaceSessionSourceLineageAction: overrides.workspaceSessionSourceLineageAction ?? null,
                 objectImages: overrides.objectImages ?? [],
                 characterImages: overrides.characterImages ?? [],
+                styleImages: overrides.styleImages ?? [],
                 getModelLabel: overrides.getModelLabel ?? ((model) => model),
                 getGenerationLineageContext:
                     overrides.getGenerationLineageContext ??
@@ -1650,5 +1652,77 @@ describe('useQueuedBatchWorkflow', () => {
             message: 'Cleared 1 imported queued batch jobs.',
             type: 'info',
         });
+    });
+
+    it('preserves multi-image batchSize and styleImageCount when polling queued jobs', async () => {
+        const multiJob = buildQueuedJob({
+            localId: 'job-multi-poll',
+            name: 'batches/job-multi-poll',
+            displayName: 'Multi-image batch job',
+            batchSize: 4,
+            styleImageCount: 2,
+            state: 'JOB_STATE_RUNNING',
+        });
+
+        getQueuedBatchJobMock.mockResolvedValue({
+            name: multiJob.name,
+            displayName: multiJob.displayName,
+            state: 'JOB_STATE_SUCCEEDED',
+            model: multiJob.model,
+            createTime: '2025-01-01T00:00:00.000Z',
+            updateTime: '2025-01-01T00:05:00.000Z',
+            startTime: '2025-01-01T00:01:00.000Z',
+            endTime: '2025-01-01T00:05:00.000Z',
+            error: null,
+            hasImportablePayload: true,
+        });
+
+        renderHook([multiJob]);
+
+        await act(async () => {
+            await latestHook!.handlePollQueuedJob(multiJob.localId);
+        });
+
+        expect(latestHook!.queuedJobs[0]).toEqual(
+            expect.objectContaining({
+                localId: multiJob.localId,
+                state: 'JOB_STATE_SUCCEEDED',
+                batchSize: 4,
+                styleImageCount: 2,
+            }),
+        );
+    });
+
+    it('forwards styleImages when submitting queued batch jobs from editor', async () => {
+        submitQueuedBatchJobMock.mockResolvedValue({
+            name: 'batches/editor-queued-style-job',
+            displayName: 'Editor queued style batch',
+            state: 'JOB_STATE_PENDING',
+            model: 'gemini-3.1-flash-image',
+            hasImportablePayload: false,
+        });
+
+        renderHook([], [], {
+            styleImages: ['data:image/png;base64,STYLE_EDITOR_PROOF'],
+        });
+
+        await act(async () => {
+            await latestHook!.handleQueueBatchJobFromEditor({
+                prompt: 'Editor styled prompt',
+                editingInput: 'data:image/png;base64,MASK_INPUT',
+                batchSize: 2,
+                imageSize: '1K',
+                aspectRatio: '1:1',
+            });
+        });
+
+        expect(submitQueuedBatchJobMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                prompt: 'Editor styled prompt',
+                editingInput: 'data:image/png;base64,MASK_INPUT',
+                styleImageInputs: ['data:image/png;base64,STYLE_EDITOR_PROOF'],
+                requestCount: 2,
+            }),
+        );
     });
 });

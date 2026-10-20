@@ -12,6 +12,7 @@ type UseQueuedBatchPresentationArgs = {
     currentStageAsset: StageAsset | null;
     objectImageCount: number;
     characterImageCount: number;
+    styleImageCount?: number;
     stickySendIntent: StickySendIntent;
     workspaceSession: WorkspaceSessionState;
     conversationState: WorkspaceConversationState;
@@ -37,6 +38,7 @@ export function useQueuedBatchPresentation({
     currentStageAsset,
     objectImageCount,
     characterImageCount,
+    styleImageCount = 0,
     stickySendIntent,
     workspaceSession,
     conversationState,
@@ -89,12 +91,12 @@ export function useQueuedBatchPresentation({
             return t('queueBatchModeStageGenerate');
         }
 
-        if (objectImageCount > 0 || characterImageCount > 0) {
+        if (objectImageCount > 0 || characterImageCount > 0 || styleImageCount > 0) {
             return t('queueBatchModeReferences');
         }
 
         return t('queueBatchModePromptOnly');
-    }, [characterImageCount, currentStageAsset?.url, objectImageCount, t]);
+    }, [characterImageCount, currentStageAsset?.url, objectImageCount, styleImageCount, t]);
 
     const queueBatchModeSummary = useMemo(() => {
         if (currentStageAsset?.url) {

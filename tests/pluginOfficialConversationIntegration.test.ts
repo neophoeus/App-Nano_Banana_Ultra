@@ -449,8 +449,11 @@ describe('imageSavePlugin official conversation integration', () => {
             }),
         );
         expect(uploadedBatchManifestContents).toHaveLength(1);
-        expect(uploadedBatchManifestContents[0].split(/\r?\n/u)).toHaveLength(1);
-        const firstManifestRequest = JSON.parse(uploadedBatchManifestContents[0].split(/\r?\n/u)[0]);
+        const manifestLines = uploadedBatchManifestContents[0].split(/\r?\n/u);
+        expect(manifestLines).toHaveLength(2);
+        const firstManifestRequest = JSON.parse(manifestLines[0]);
+        const secondManifestRequest = JSON.parse(manifestLines[1]);
+        expect(secondManifestRequest.key).toBe('request-2');
         expect(firstManifestRequest).toEqual(
             expect.objectContaining({
                 key: 'request-1',
@@ -474,6 +477,8 @@ describe('imageSavePlugin official conversation integration', () => {
             }),
         );
         expect(firstManifestRequest.request.generationConfig.thinkingConfig).toBeUndefined();
+        expect(firstManifestRequest.request.generationConfig.safetySettings).toBeUndefined();
+        expect(firstManifestRequest.request.safetySettings).toBeDefined();
         expect(createResponse.body.job).toEqual(
             expect.objectContaining({
                 name: 'batches/test-job',

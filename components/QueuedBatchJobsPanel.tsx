@@ -362,9 +362,10 @@ export default function QueuedBatchJobsPanel({
         const submissionPositionLabel =
             submissionItemCount > 1 ? `#${submissionItemIndex + 1}/${submissionItemCount}` : null;
         const titleLabel = isNested && submissionPositionLabel ? submissionPositionLabel : job.displayName;
+        const effectiveCount = Math.max(submissionItemCount, job.batchSize || 1, job.batchStats?.requestCount || 1);
         const queueMetaLabel = isNested
-            ? submissionPositionLabel || t('qtyX').replace('{0}', '1')
-            : t('qtyX').replace('{0}', String(submissionItemCount));
+            ? submissionPositionLabel || t('qtyX').replace('{0}', String(effectiveCount))
+            : t('qtyX').replace('{0}', String(effectiveCount));
         const isRestoredHistoricalIssue = Boolean(job.restoredFromSnapshot && isQueuedBatchJobClosedIssue(job));
         const importedHistoryItems = getImportedQueuedHistoryItems(job);
         const importedResultCount = importedHistoryItems.length;
