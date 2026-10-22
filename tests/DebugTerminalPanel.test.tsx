@@ -82,6 +82,8 @@ describe('DebugTerminalPanel', () => {
                     strategy: 'server_directed_cooldown',
                     recommendedWaitMs: 18500,
                     quotaMetric: 'generate_content_requests_per_minute',
+                    quotaLimitValue: '200000',
+                    extractedRetryDelayMs: 22925,
                 },
             },
         };
@@ -120,5 +122,7 @@ describe('DebugTerminalPanel', () => {
         expect(markup).toContain('server_directed_cooldown');
         expect(markup).toContain('18500ms');
         expect(markup).toContain('generate_content_requests_per_minute');
+        expect(markup).toContain('200000');
+        expect(markup).toContain('22.9s');
     });
 });

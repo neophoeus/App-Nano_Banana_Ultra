@@ -478,6 +478,48 @@ describe('BrowserDirectProvider and AI Studio Subscription Tier Pacing', () => {
             expect(analysis.strategy).toBe('abort_no_retry');
             expect(analysis.shouldRetry).toBe(false);
         });
+
+        it('parses real-world Gemini 429 TPM input token limit without false-positive daily exhaustion', () => {
+            const tpmErrorText =
+                'You exceeded your current quota, please check your plan and billing details. For more information see https://ai.google.dev/gemini-api/docs/rate-limits.\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_paid_tier_input_token_count, limit: 200000, model: gemini-3.1-flash-image\nPlease retry in 22.924543136s.';
+            const analysis = inspectGeminiErrorPacket(tpmErrorText, 'gemini-3.1-flash-image');
+
+            expect(analysis.category).toBe('transient_rate_limit');
+            expect(analysis.shouldRetry).toBe(true);
+            expect(analysis.strategy).toBe('server_directed_cooldown');
+            expect(analysis.quotaMetric).toBe(
+                'generativelanguage.googleapis.com/generate_content_paid_tier_input_token_count',
+            );
+            expect(analysis.quotaLimitValue).toBe('200000');
+            expect(analysis.extractedRetryDelayMs).toBe(22925);
+            expect(analysis.recommendedWaitMs).toBeGreaterThanOrEqual(25425);
+        });
+
+        it('parses real-world Gemini 429 RPM limit without false-positive daily exhaustion', () => {
+            const rpmErrorText =
+                'You exceeded your current quota, please check your plan and billing details.\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_requests_per_model, limit: 20, model: gemini-3-pro-image\nPlease retry in 16.365016553s.';
+            const analysis = inspectGeminiErrorPacket(rpmErrorText, 'gemini-3-pro-image');
+
+            expect(analysis.category).toBe('transient_rate_limit');
+            expect(analysis.shouldRetry).toBe(true);
+            expect(analysis.quotaMetric).toBe('generativelanguage.googleapis.com/generate_requests_per_model');
+            expect(analysis.quotaLimitValue).toBe('20');
+            expect(analysis.extractedRetryDelayMs).toBe(16366);
+        });
+
+        it('parses real-world Gemini 429 RPD limit with compound duration (4h35m32.187s) accurately', () => {
+            const rpdErrorText =
+                'You exceeded your current quota, please check your plan and billing details.\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_requests_per_model_per_day, limit: 1000, model: gemini-nano-banana-2.1\nPlease retry in 4h35m32.187215148s.';
+            const analysis = inspectGeminiErrorPacket(rpdErrorText, 'gemini-nano-banana-2.1');
+
+            expect(analysis.category).toBe('daily_quota_exhausted');
+            expect(analysis.shouldRetry).toBe(false);
+            expect(analysis.strategy).toBe('abort_no_retry');
+            expect(analysis.quotaMetric).toBe('generativelanguage.googleapis.com/generate_requests_per_model_per_day');
+            expect(analysis.quotaLimitValue).toBe('1000');
+            // Must NOT truncate to 4000ms: ~16,532,188 ms (> 4.5 hours)
+            expect(analysis.extractedRetryDelayMs).toBe(16532188);
+        });
     });
 
     describe('Compute Pool Status Store & Reactive Transitions', () => {
@@ -551,6 +593,42 @@ describe('BrowserDirectProvider and AI Studio Subscription Tier Pacing', () => {
             expect(reset.pacingMultiplier).toBe(1.0);
             expect(getComputePoolStatus().level).toBe('healthy');
         });
+
+        it('isolates exhausted status to specific models without penalizing healthy models', () => {
+            resetComputePoolStatus();
+            const rpdAnalysis = inspectGeminiErrorPacket(
+                '* Quota exceeded for metric: generativelanguage.googleapis.com/generate_requests_per_model_per_day, limit: 1000\nPlease retry in 4h',
+                'gemini-nano-banana-2.1',
+            );
+            recordComputePoolError(rpdAnalysis, 'gemini-nano-banana-2.1');
+
+            const status = getComputePoolStatus();
+            expect(status.level).toBe('exhausted');
+            expect(status.exhaustedModels).toContain('gemini-nano-banana-2.1');
+
+            // The exhausted model gets the 2.0x penalty
+            expect(getComputePoolPacingMultiplier('gemini-nano-banana-2.1')).toBe(2.0);
+            // Healthy models avoid the 2.0x penalty
+            expect(getComputePoolPacingMultiplier('gemini-3.1-flash-image')).toBe(1.0);
+
+            // Succeeding on the healthy model restores active pool level to healthy while keeping exhausted model tracked
+            const afterSuccess = recordComputePoolSuccess('gemini-3.1-flash-image');
+            expect(afterSuccess.level).toBe('healthy');
+            expect(afterSuccess.exhaustedModels).toContain('gemini-nano-banana-2.1');
+            expect(getComputePoolPacingMultiplier('gemini-nano-banana-2.1')).toBe(2.0);
+        });
+
+        it('does not double-count recent rate limit errors when called with the same error object', () => {
+            resetComputePoolStatus();
+            const err = new Error('429 Quota exceeded: retry in 10s');
+            updateGlobalRateLimitBackoff('gemini-3-pro-image', err);
+            const countAfterFirst = getComputePoolStatus().recentRateLimitCount;
+
+            updateGlobalRateLimitBackoff('gemini-3-pro-image', err);
+            const countAfterSecond = getComputePoolStatus().recentRateLimitCount;
+
+            expect(countAfterSecond).toBe(countAfterFirst);
+        });
     });
 
     describe('retryOperation with Deep Error Packet Analysis', () => {
@@ -576,7 +654,6 @@ describe('BrowserDirectProvider and AI Studio Subscription Tier Pacing', () => {
                     3,
                     100,
                     {
-                        operationName: 'daily quota test',
                         model: 'gemini-3-pro-image',
                     },
                 ),
@@ -584,6 +661,42 @@ describe('BrowserDirectProvider and AI Studio Subscription Tier Pacing', () => {
 
             // Must have aborted on attempt 1 without attempting retries
             expect(attempts).toBe(1);
+        });
+
+        it('terminates remaining batch slots early when Slot 0 fails with daily quota exhaustion', async () => {
+            (window as any).aistudio = {};
+            const fetchMock = vi
+                .fn()
+                .mockRejectedValue(
+                    new Error(
+                        'You exceeded your current quota, please check your plan and billing details.\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_requests_per_model_per_day, limit: 1000, model: gemini-3.1-flash-image\nPlease retry in 4h35m32.187215148s.',
+                    ),
+                );
+            vi.stubGlobal('fetch', fetchMock);
+
+            const logs: string[] = [];
+            const slotStarts: number[] = [];
+            const results = await browserDirectProvider.generateImages(
+                {
+                    prompt: 'A banana in space',
+                    model: 'gemini-3.1-flash-image',
+                    aspectRatio: '1:1',
+                    imageSize: '1K',
+                } as any,
+                4,
+                {
+                    onLog: (msg) => logs.push(msg),
+                    onSlotStart: (slot) => slotStarts.push(slot),
+                },
+            );
+
+            // Only Slot 0 should have started and called fetch once; Slots 1, 2, 3 are skipped immediately
+            expect(slotStarts).toEqual([0]);
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+            expect(results).toHaveLength(4);
+            expect(results.every((r) => r.status === 'failed')).toBe(true);
+            expect(results[3].failure).toBeDefined();
+            expect(logs.some((msg) => msg.includes('每日配額已耗盡'))).toBe(true);
         });
     });
 });

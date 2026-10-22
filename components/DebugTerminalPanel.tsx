@@ -474,6 +474,24 @@ export default function DebugTerminalPanel({
                                             <div>
                                                 Wait: <span className="font-semibold text-amber-300">{deepErrorAnalysis.recommendedWaitMs}ms</span>
                                             </div>
+                                            {deepErrorAnalysis.extractedRetryDelayMs !== null ? (
+                                                <div>
+                                                    Server Delay:{' '}
+                                                    <span className="font-semibold text-cyan-100">
+                                                        {deepErrorAnalysis.extractedRetryDelayMs >= 3600000
+                                                            ? `${(deepErrorAnalysis.extractedRetryDelayMs / 3600000).toFixed(1)}h`
+                                                            : `${(deepErrorAnalysis.extractedRetryDelayMs / 1000).toFixed(1)}s`}
+                                                    </span>
+                                                </div>
+                                            ) : null}
+                                            {deepErrorAnalysis.quotaLimitValue ? (
+                                                <div>
+                                                    Limit:{' '}
+                                                    <span className="font-semibold text-amber-200">
+                                                        {deepErrorAnalysis.quotaLimitValue}
+                                                    </span>
+                                                </div>
+                                            ) : null}
                                             {deepErrorAnalysis.quotaMetric ? (
                                                 <div className="col-span-2">
                                                     Quota Metric: <span className="font-mono text-slate-200">{deepErrorAnalysis.quotaMetric}</span>

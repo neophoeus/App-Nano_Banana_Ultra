@@ -42,6 +42,8 @@ export type DebugTerminalEventInput = Omit<DebugTerminalEvent, 'id' | 'timestamp
 
 export const DEBUG_TERMINAL_STORAGE_KEY = 'nbu_ultra_debug_terminal_events';
 export const DEBUG_TERMINAL_MAX_EVENTS = 500;
+export const DEBUG_TERMINAL_MAX_WORKSPACE_EVENTS = 80;
+export const DEBUG_TERMINAL_WORKSPACE_COALESCE_WINDOW_MS = 300;
 export const DEBUG_TERMINAL_REQUEST_ID_HEADER = 'X-NBU-Debug-Request-ID';
 
 const MAX_STRING_LENGTH = 1200;
@@ -235,8 +237,60 @@ export const sanitizeDebugTerminalPayload = (value: unknown, keyHint?: string, d
     };
 };
 
-export const trimDebugTerminalEvents = (events: DebugTerminalEvent[]): DebugTerminalEvent[] =>
-    events.slice(-DEBUG_TERMINAL_MAX_EVENTS);
+export const trimDebugTerminalEvents = (events: DebugTerminalEvent[]): DebugTerminalEvent[] => {
+    if (events.length <= 1) {
+        return events;
+    }
+
+    // Step 1: Coalesce consecutive routine workspace save events within 300ms window
+    const coalesced: DebugTerminalEvent[] = [];
+    for (let i = 0; i < events.length; i++) {
+        const current = events[i];
+        const prev = coalesced.length > 0 ? coalesced[coalesced.length - 1] : null;
+
+        const isRoutineWorkspaceCurrent =
+            current.source === 'workspace' &&
+            current.kind !== 'error' &&
+            (current.operation === 'workspace-snapshot.save' || current.label.toLowerCase().includes('workspace snapshot'));
+
+        const isRoutineWorkspacePrev =
+            prev !== null &&
+            prev.source === 'workspace' &&
+            prev.kind !== 'error' &&
+            (prev.operation === 'workspace-snapshot.save' || prev.label.toLowerCase().includes('workspace snapshot'));
+
+        if (
+            isRoutineWorkspaceCurrent &&
+            isRoutineWorkspacePrev &&
+            prev !== null &&
+            prev.phase === current.phase &&
+            Math.abs(current.timestamp - prev.timestamp) < DEBUG_TERMINAL_WORKSPACE_COALESCE_WINDOW_MS
+        ) {
+            coalesced[coalesced.length - 1] = current;
+        } else {
+            coalesced.push(current);
+        }
+    }
+
+    // Step 2: If routine workspace events exceed DEBUG_TERMINAL_MAX_WORKSPACE_EVENTS,
+    // prune older routine workspace events so high-value generation, error, and retry events are preserved.
+    const routineWorkspaceIndices: number[] = [];
+    coalesced.forEach((ev, idx) => {
+        if (ev.source === 'workspace' && ev.kind !== 'error') {
+            routineWorkspaceIndices.push(idx);
+        }
+    });
+
+    let pruned = coalesced;
+    if (routineWorkspaceIndices.length > DEBUG_TERMINAL_MAX_WORKSPACE_EVENTS) {
+        const excessCount = routineWorkspaceIndices.length - DEBUG_TERMINAL_MAX_WORKSPACE_EVENTS;
+        const indicesToRemove = new Set(routineWorkspaceIndices.slice(0, excessCount));
+        pruned = coalesced.filter((_, idx) => !indicesToRemove.has(idx));
+    }
+
+    // Step 3: Trim to DEBUG_TERMINAL_MAX_EVENTS
+    return pruned.slice(-DEBUG_TERMINAL_MAX_EVENTS);
+};
 
 export const emitDebugTerminalEvent = (input: DebugTerminalEventInput): DebugTerminalEvent => {
     const event: DebugTerminalEvent = {

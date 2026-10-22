@@ -1,5 +1,29 @@
 # Changelog
 
+## v4.12.1 - 2026-10-22
+
+- Release title: Nano Banana Ultra 4.12.1 - Production Diagnostics Forensics, Deep 429 Classification Refinement & Telemetry Buffer Protection
+- Release summary:
+    - **Accurate 429 Error Packet Classification & Zero False-Positive Daily Quota Aborts (`utils/aiStudioPlan.ts`)**:
+        - Removed broad `billing details` string matching that previously caused 100% of standard Gemini 429 rate limit responses (which always begin with the boilerplate `"You exceeded your current quota, please check your plan and billing details"`) to be misclassified as `daily_quota_exhausted`.
+        - Added regex pattern extraction `/\*\s*Quota exceeded for metric:\s*([^\s,]+)(?:,\s*limit:\s*(\d+))?/i` directly extracting plain-text quota metrics and limits (e.g., `generate_content_paid_tier_input_token_count, limit: 200000` or `generate_requests_per_model, limit: 20`).
+        - Transient TPM and RPM limits now correctly enter `transient_rate_limit` with server-directed cooldowns instead of prematurely aborting retries.
+    - **Compound Duration String Parsing Support (`utils/aiStudioPlan.ts`)**:
+        - Upgraded `parseRetryDelayStringToMs` to parse Go/Protobuf compound duration strings like `"4h35m32.187215148s"` into accurate millisecond values (~`16,532,188ms`), resolving a bug where compound durations were truncated to `4000ms`.
+        - Integrated multi-hour retry delays (>= 1 hour) as an accurate signal for daily limit exhaustion.
+    - **Multi-Image Batch Early Termination on Daily Quota Exhaustion (`services/providers/browserDirectProvider.ts`)**:
+        - In `generateImages`, when any slot genuinely fails due to `daily_quota_exhausted`, immediately halts subsequent batch slots, logging a clear cancellation notice and marking remaining slots with structured failure info without sending redundant network requests.
+    - **Model-Scoped Compute Pool Exhaustion & Idempotent Backoff Tracking (`utils/aiStudioPlan.ts`, `services/providers/browserDirectProvider.ts`)**:
+        - Scoped `exhausted` state to individual models via `exhaustedModels`, preventing a daily limit on one model (e.g., `gemini-nano-banana-2.1`) from penalizing healthy models (e.g., `gemini-3.1-flash-image`) with 2.0x pacing.
+        - Eliminated duplicate rate limit count increments via `WeakSet<object>` tracking across caller and callee catch chains.
+        - Excluded `daily_quota_exhausted` errors from setting artificial 12s per-minute backoff delays.
+    - **Diagnostic Ring Buffer Protection & Event Metadata Tagging (`utils/debugTerminalEvents.ts`, `components/DebugTerminalPanel.tsx`)**:
+        - Coalesces rapid burst workspace snapshot save events within 300ms and caps routine workspace events at 80 entries, preserving generation, error, and retry history across sessions within the 500-event ring buffer.
+        - Tagged direct provider events with default `source: 'generation'` and `route: 'browser-direct'` to restore filterability in `DebugTerminalPanel`.
+        - Added server delay and metric limit values to the deep error packet card in the diagnostics terminal.
+    - **Automated Regression Test Suite Expansion (`tests/*`)**:
+        - Added regression tests for real-world TPM (200k), RPM (20), RPD (1k compound duration), batch early termination, and workspace buffer preservation. Verified 127 test files (1,097 tests) passing and zero-error production build.
+
 ## v4.12.0 - 2026-10-22
 
 - Release title: Nano Banana Ultra 4.12.0 - AI Studio Shared Compute Pool Architecture Alignment, Deep Error Packet Inspection & Telemetry Monitors

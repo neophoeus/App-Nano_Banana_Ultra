@@ -492,6 +492,8 @@ const emitGenerationDebugEvent = ({
         requestId,
         sessionId,
         slotIndex,
+        source: 'generation',
+        route: 'browser-direct',
     });
 };
 
@@ -874,6 +876,7 @@ export function detectThinkingLoop(thoughts: string | undefined | null): boolean
 const RATE_LIMIT_STORAGE_PREFIX = 'nbu_model_rate_limit_backoff_until_';
 const modelRateLimitBackoffs = new Map<string, number>();
 const modelLastRequestCompletedAt = new Map<string, number>();
+const recordedRateLimitErrors = new WeakSet<object>();
 
 export const getModelRateLimitBackoffUntil = (model: string): number => {
     const maxFutureAllowanceMs = 120000;
@@ -940,6 +943,13 @@ export const parseRateLimitWaitMs = (msg: unknown, model?: string): number => {
 };
 
 export const updateGlobalRateLimitBackoff = (model: string, errorOrMsg: unknown): void => {
+    if (errorOrMsg && typeof errorOrMsg === 'object') {
+        if (recordedRateLimitErrors.has(errorOrMsg)) {
+            return;
+        }
+        recordedRateLimitErrors.add(errorOrMsg);
+    }
+
     const analysis = inspectGeminiErrorPacket(errorOrMsg, model);
     const isRateLimitOrCongestion =
         analysis.category === 'transient_rate_limit' ||
@@ -947,6 +957,12 @@ export const updateGlobalRateLimitBackoff = (model: string, errorOrMsg: unknown)
         analysis.category === 'daily_quota_exhausted';
 
     if (!isRateLimitOrCongestion) {
+        return;
+    }
+
+    // Daily quota exhaustion does not benefit from setting a 12s rate-limit cooldown
+    if (analysis.category === 'daily_quota_exhausted') {
+        recordComputePoolError(analysis, model, 0);
         return;
     }
 
@@ -1146,7 +1162,9 @@ export const retryOperation = async <T>(
             const strategyLabel =
                 analysis.category === 'pool_congestion'
                     ? '算力池擁塞去共振退避'
-                    : '瞬時頻率限流冷卻';
+                    : analysis.category === 'transient_rate_limit'
+                      ? '瞬時頻率限流冷卻'
+                      : '瞬時網路或空白回應重試';
 
             onLog?.(`⏳ [${strategyLabel}] Retrying in ${(waitMs / 1000).toFixed(1)}s... (${retries} left)`);
 
@@ -1419,7 +1437,6 @@ export class BrowserDirectProvider implements WorkspaceExecutionProvider {
                 try {
                     const staggerDelay = getAdaptiveModelPacingDelayMs(
                         options.model,
-                        getStoredAiStudioSubscriptionTier(),
                         workload,
                     );
                     await delayWithAbort(staggerDelay, abortSignal);
@@ -1470,7 +1487,6 @@ export class BrowserDirectProvider implements WorkspaceExecutionProvider {
                     try {
                         const staggerDelay = getAdaptiveModelPacingDelayMs(
                             options.model,
-                            getStoredAiStudioSubscriptionTier(),
                             workload,
                         );
                         await delayWithAbort(staggerDelay, abortSignal);
@@ -1515,11 +1531,43 @@ export class BrowserDirectProvider implements WorkspaceExecutionProvider {
                 }
 
                 results.push(finalizeBatchResult(finalizedResult));
+
+                // If recovery failed due to daily quota exhaustion, halt remaining slots in the batch
+                const recoveryFailureAnalysis = inspectGeminiErrorPacket(finalizedResult.error, options.model);
+                if (recoveryFailureAnalysis.category === 'daily_quota_exhausted' && index + 1 < batchSize) {
+                    onLog?.(
+                        `Image #${index + 1}: ⛔ 每日配額已耗盡，提前終止批次中剩餘 ${batchSize - index - 1} 個請求以避免無效調用。`,
+                    );
+                    for (let remainingSlot = index + 1; remainingSlot < batchSize; remainingSlot++) {
+                        const skippedResult = {
+                            ...buildFailedGenerationResult(remainingSlot, finalizedResult.error),
+                            ...(finalizedResult.failure ? { failure: finalizedResult.failure } : {}),
+                        };
+                        results.push(finalizeBatchResult(skippedResult));
+                    }
+                    break;
+                }
                 continue;
             }
 
             onLog?.(`Image #${index + 1} Failed: ${initialResult.error}`);
             results.push(finalizeBatchResult(initialResult));
+
+            // If initial failure was caused by daily quota exhaustion, halt remaining slots in the batch
+            const failureAnalysis = inspectGeminiErrorPacket(initialResult.error, options.model);
+            if (failureAnalysis.category === 'daily_quota_exhausted' && index + 1 < batchSize) {
+                onLog?.(
+                    `Image #${index + 1}: ⛔ 每日配額已耗盡，提前終止批次中剩餘 ${batchSize - index - 1} 個請求以避免無效調用。`,
+                );
+                for (let remainingSlot = index + 1; remainingSlot < batchSize; remainingSlot++) {
+                    const skippedResult = {
+                        ...buildFailedGenerationResult(remainingSlot, initialResult.error),
+                        ...(initialResult.failure ? { failure: initialResult.failure } : {}),
+                    };
+                    results.push(finalizeBatchResult(skippedResult));
+                }
+                break;
+            }
         }
 
         return results;

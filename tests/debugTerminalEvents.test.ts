@@ -118,4 +118,70 @@ describe('debugTerminalEvents', () => {
         expect(trimmedEvents[0]?.id).toBe('event-40');
         expect(trimmedEvents.at(-1)?.id).toBe('event-539');
     });
+
+    it('coalesces rapid burst workspace snapshot save events within 300ms', () => {
+        const events = [
+            {
+                id: 'ws-1',
+                kind: 'log' as const,
+                label: 'Local workspace snapshot save',
+                source: 'workspace' as const,
+                phase: 'save',
+                timestamp: 1000,
+            },
+            {
+                id: 'ws-2',
+                kind: 'log' as const,
+                label: 'Local workspace snapshot save',
+                source: 'workspace' as const,
+                phase: 'save',
+                timestamp: 1050,
+            },
+            {
+                id: 'ws-3',
+                kind: 'log' as const,
+                label: 'Local workspace snapshot save',
+                source: 'workspace' as const,
+                phase: 'save',
+                timestamp: 1100,
+            },
+            {
+                id: 'gen-1',
+                kind: 'request' as const,
+                label: 'Image #1: Request prepared',
+                source: 'generation' as const,
+                timestamp: 1200,
+            },
+        ];
+
+        const trimmed = trimDebugTerminalEvents(events);
+        expect(trimmed).toHaveLength(2);
+        expect(trimmed[0].id).toBe('ws-3');
+        expect(trimmed[1].id).toBe('gen-1');
+    });
+
+    it('caps routine workspace events to protect generation and error history from eviction', () => {
+        const events = [
+            {
+                id: 'important-generation-event',
+                kind: 'request' as const,
+                label: 'Image #1: Request completed',
+                source: 'generation' as const,
+                timestamp: 100,
+            },
+            ...Array.from({ length: 120 }, (_, index) => ({
+                id: `ws-routine-${index}`,
+                kind: 'log' as const,
+                label: 'Local workspace snapshot saved',
+                source: 'workspace' as const,
+                phase: 'saved',
+                timestamp: 1000 + index * 500,
+            })),
+        ];
+
+        const trimmed = trimDebugTerminalEvents(events);
+        expect(trimmed.some((e) => e.id === 'important-generation-event')).toBe(true);
+        const routineWs = trimmed.filter((e) => e.source === 'workspace' && e.kind !== 'error');
+        expect(routineWs).toHaveLength(80);
+    });
 });

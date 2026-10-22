@@ -72,6 +72,7 @@ export interface ComputePoolStatusSnapshot {
     recentRateLimitCount: number;
     recentCongestionCount: number;
     dailyQuotaExhausted: boolean;
+    exhaustedModels?: string[];
     lastErrorAnalysis: DeepErrorPacketAnalysis | null;
     lastUpdatedAt: number;
 }
@@ -254,6 +255,7 @@ const createInitialComputePoolSnapshot = (): ComputePoolStatusSnapshot => ({
     recentRateLimitCount: 0,
     recentCongestionCount: 0,
     dailyQuotaExhausted: false,
+    exhaustedModels: [],
     lastErrorAnalysis: null,
     lastUpdatedAt: Date.now(),
 });
@@ -271,6 +273,9 @@ let currentComputePoolSnapshot: ComputePoolStatusSnapshot = (() => {
                 const cooldown = Number(parsed.activeCooldownUntil) || 0;
                 // Self-healing: if cooldown expired or corrupted (> 180s in future), reset to healthy
                 const isCooldownValid = cooldown > now && cooldown < now + 180000;
+                const exhaustedModels = Array.isArray(parsed.exhaustedModels)
+                    ? parsed.exhaustedModels.filter((item: unknown): item is string => typeof item === 'string')
+                    : [];
                 return {
                     level: isCooldownValid ? (parsed.level || 'throttled') : 'healthy',
                     pacingMultiplier: isCooldownValid ? (Number(parsed.pacingMultiplier) || 1.5) : 1.0,
@@ -279,7 +284,8 @@ let currentComputePoolSnapshot: ComputePoolStatusSnapshot = (() => {
                     consecutiveSuccesses: Number(parsed.consecutiveSuccesses) || 0,
                     recentRateLimitCount: Number(parsed.recentRateLimitCount) || 0,
                     recentCongestionCount: Number(parsed.recentCongestionCount) || 0,
-                    dailyQuotaExhausted: Boolean(parsed.dailyQuotaExhausted && isCooldownValid),
+                    dailyQuotaExhausted: Boolean(parsed.dailyQuotaExhausted && (isCooldownValid || exhaustedModels.length > 0)),
+                    exhaustedModels: isCooldownValid || exhaustedModels.length > 0 ? exhaustedModels : [],
                     lastErrorAnalysis: parsed.lastErrorAnalysis || null,
                     lastUpdatedAt: Number(parsed.lastUpdatedAt) || now,
                 };
@@ -330,14 +336,26 @@ export const getComputePoolStatus = (): ComputePoolStatusSnapshot => {
     return currentComputePoolSnapshot;
 };
 
-export const getComputePoolPacingMultiplier = (): number => {
+export const getComputePoolPacingMultiplier = (model?: string): number => {
     const status = getComputePoolStatus();
+    if (model && status.exhaustedModels?.includes(model)) {
+        return 2.0;
+    }
     switch (status.level) {
         case 'congested':
             return 1.8;
         case 'throttled':
             return 1.5;
         case 'exhausted':
+            // If exhausted due to another model's RPD limit, don't penalize healthy models
+            if (
+                model &&
+                status.exhaustedModels &&
+                status.exhaustedModels.length > 0 &&
+                !status.exhaustedModels.includes(model)
+            ) {
+                return 1.0;
+            }
             return 2.0;
         case 'healthy':
         default:
@@ -359,7 +377,14 @@ export const recordComputePoolError = (
     let nextLevel: ComputePoolHealthLevel = 'healthy';
     let nextMultiplier = 1.0;
 
-    if (isDaily) {
+    const currentExhausted = new Set(currentComputePoolSnapshot.exhaustedModels || []);
+    if (isDaily && model) {
+        currentExhausted.add(model);
+    }
+
+    const isTargetModelExhausted = isDaily || (model ? currentExhausted.has(model) : currentExhausted.size > 0);
+
+    if (isTargetModelExhausted) {
         nextLevel = 'exhausted';
         nextMultiplier = 2.0;
     } else if (isCongestion) {
@@ -381,7 +406,8 @@ export const recordComputePoolError = (
         consecutiveSuccesses: 0,
         recentRateLimitCount: currentComputePoolSnapshot.recentRateLimitCount + (isRateLimit ? 1 : 0),
         recentCongestionCount: currentComputePoolSnapshot.recentCongestionCount + (isCongestion ? 1 : 0),
-        dailyQuotaExhausted: isDaily || currentComputePoolSnapshot.dailyQuotaExhausted,
+        dailyQuotaExhausted: isTargetModelExhausted,
+        exhaustedModels: Array.from(currentExhausted),
         lastErrorAnalysis: analysis,
         lastUpdatedAt: now,
     };
@@ -395,6 +421,11 @@ export const recordComputePoolSuccess = (model?: string): ComputePoolStatusSnaps
     const now = Date.now();
     const consecutive = currentComputePoolSnapshot.consecutiveSuccesses + 1;
     const isCooling = currentComputePoolSnapshot.activeCooldownUntil > now;
+
+    const currentExhausted = new Set(currentComputePoolSnapshot.exhaustedModels || []);
+    if (model) {
+        currentExhausted.delete(model);
+    }
 
     let nextLevel = currentComputePoolSnapshot.level;
     let nextMultiplier = currentComputePoolSnapshot.pacingMultiplier;
@@ -417,6 +448,13 @@ export const recordComputePoolSuccess = (model?: string): ComputePoolStatusSnaps
         nextMultiplier = 1.0;
     }
 
+    // Only keep global level as exhausted if no healthy model was explicitly reported
+    const hasRemainingExhausted = currentExhausted.size > 0;
+    if (!model && hasRemainingExhausted && nextLevel === 'healthy') {
+        nextLevel = 'exhausted';
+        nextMultiplier = 2.0;
+    }
+
     currentComputePoolSnapshot = {
         ...currentComputePoolSnapshot,
         level: nextLevel,
@@ -424,7 +462,8 @@ export const recordComputePoolSuccess = (model?: string): ComputePoolStatusSnaps
         activeCooldownUntil: nextLevel === 'healthy' ? 0 : currentComputePoolSnapshot.activeCooldownUntil,
         activeModel: model || currentComputePoolSnapshot.activeModel,
         consecutiveSuccesses: consecutive,
-        dailyQuotaExhausted: false,
+        dailyQuotaExhausted: nextLevel === 'exhausted',
+        exhaustedModels: Array.from(currentExhausted),
         lastUpdatedAt: now,
     };
 
@@ -473,7 +512,7 @@ export const getAdaptiveModelPacingDelayMs = (
 
     const baseDelay = getModelPacingDelayMs(model);
     if (!workload || !isImageModel(model)) {
-        const poolMultiplier = getComputePoolPacingMultiplier();
+        const poolMultiplier = getComputePoolPacingMultiplier(model);
         return Math.round(baseDelay * poolMultiplier);
     }
 
@@ -495,7 +534,7 @@ export const getAdaptiveModelPacingDelayMs = (
         workloadBuffer += 1000;
     }
 
-    const poolMultiplier = getComputePoolPacingMultiplier();
+    const poolMultiplier = getComputePoolPacingMultiplier(model);
     return Math.round((baseDelay + workloadBuffer) * poolMultiplier);
 };
 
@@ -560,7 +599,7 @@ function safeExtractJsonObjects(text: string): any[] {
     return results;
 }
 
-function parseRetryDelayStringToMs(val: unknown): number | null {
+export function parseRetryDelayStringToMs(val: unknown): number | null {
     if (typeof val === 'number' && !isNaN(val)) {
         return val > 1000 ? val : val * 1000;
     }
@@ -574,12 +613,39 @@ function parseRetryDelayStringToMs(val: unknown): number | null {
     if (typeof val !== 'string') return null;
 
     const trimmed = val.trim();
-    const match = trimmed.match(/^([\d.]+)\s*(ms|s|seconds|second|minutes|min)?$/i);
-    if (match) {
+
+    // Check for single or compound time components: e.g. "4h35m32.187215148s", "5h7m28s", "22.9s", "1500ms"
+    const componentRegex = /(\d+(?:\.\d+)?)\s*(ms|minutes?|min|m|hours?|h|seconds?|sec|s)(?=[^a-z]|$)/gi;
+    let match: RegExpExecArray | null;
+    let totalMs = 0;
+    let matchedAny = false;
+
+    while ((match = componentRegex.exec(trimmed)) !== null) {
+        matchedAny = true;
         const num = parseFloat(match[1]);
-        const unit = (match[2] || 's').toLowerCase();
+        const unit = match[2].toLowerCase();
+        if (unit === 'ms') {
+            totalMs += num;
+        } else if (unit.startsWith('h')) {
+            totalMs += num * 3600000;
+        } else if (unit.startsWith('m') && !unit.startsWith('ms')) {
+            totalMs += num * 60000;
+        } else {
+            totalMs += num * 1000;
+        }
+    }
+
+    if (matchedAny && totalMs > 0) {
+        return Math.ceil(totalMs);
+    }
+
+    const simpleMatch = trimmed.match(/^([\d.]+)\s*(ms|s|seconds|second|minutes|min|h|hours)?$/i);
+    if (simpleMatch) {
+        const num = parseFloat(simpleMatch[1]);
+        const unit = (simpleMatch[2] || 's').toLowerCase();
         if (unit === 'ms') return Math.ceil(num);
-        if (unit.startsWith('min')) return Math.ceil(num * 60000);
+        if (unit.startsWith('h')) return Math.ceil(num * 3600000);
+        if (unit.startsWith('m') && !unit.startsWith('ms')) return Math.ceil(num * 60000);
         return Math.ceil(num * 1000);
     }
     return null;
@@ -699,23 +765,46 @@ export function inspectGeminiErrorPacket(error: unknown, model?: string): DeepEr
         }
     }
 
-    // 3. Fallback regex extraction for retry durations in text
+    // 2.5 Extract plain text quota metric and limit from Gemini error messages if not yet captured
+    // e.g. "* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_paid_tier_input_token_count, limit: 200000, model: gemini-3.1-flash-image"
+    if (!quotaMetric || !quotaLimitValue) {
+        const quotaExceededMatch = rawSummary.match(
+            /\*\s*Quota exceeded for metric:\s*([^\s,]+)(?:,\s*limit:\s*(\d+))?/i,
+        );
+        if (quotaExceededMatch) {
+            if (!quotaMetric && quotaExceededMatch[1]) {
+                quotaMetric = quotaExceededMatch[1];
+            }
+            if (!quotaLimitValue && quotaExceededMatch[2]) {
+                quotaLimitValue = quotaExceededMatch[2];
+            }
+        }
+    }
+
+    // 3. Fallback regex extraction for retry durations in text (supporting compound durations like "4h35m32.187s")
     if (extractedRetryDelayMs === null) {
         const retryAfterMatch = rawSummary.match(/retry.?after[:\s]*(\d+)/i);
         if (retryAfterMatch) {
             extractedRetryDelayMs = parseInt(retryAfterMatch[1], 10) * 1000;
         } else {
-            const retryInMatch = rawSummary.match(/retry\s+in\s+([\d.]+)\s*(ms|s|seconds|second|minutes|min)?/i);
+            const retryInMatch = rawSummary.match(
+                /retry\s+in\s+((?:(?:\d+(?:\.\d+)?)\s*(?:h|hours?|m|minutes?|min|s|seconds?|sec|ms)\s*)+|\d+(?:\.\d+)?\s*(?:h|hours?|m|minutes?|min|s|seconds?|sec|ms)?)/i,
+            );
             if (retryInMatch) {
-                extractedRetryDelayMs = parseRetryDelayStringToMs(
-                    `${retryInMatch[1]}${retryInMatch[2] || 's'}`,
+                const parsed = parseRetryDelayStringToMs(retryInMatch[1]);
+                if (parsed !== null && parsed > 0) {
+                    extractedRetryDelayMs = parsed;
+                }
+            }
+            if (extractedRetryDelayMs === null) {
+                const waitMatch = rawSummary.match(
+                    /wait\s+((?:(?:\d+(?:\.\d+)?)\s*(?:h|hours?|m|minutes?|min|s|seconds?|sec|ms)\s*)+|\d+(?:\.\d+)?\s*(?:h|hours?|m|minutes?|min|s|seconds?|sec|ms)?)/i,
                 );
-            } else {
-                const waitMatch = rawSummary.match(/wait\s+([\d.]+)\s*(ms|s|seconds|second)?/i);
                 if (waitMatch) {
-                    extractedRetryDelayMs = parseRetryDelayStringToMs(
-                        `${waitMatch[1]}${waitMatch[2] || 's'}`,
-                    );
+                    const parsed = parseRetryDelayStringToMs(waitMatch[1]);
+                    if (parsed !== null && parsed > 0) {
+                        extractedRetryDelayMs = parsed;
+                    }
                 }
             }
         }
@@ -750,9 +839,10 @@ export function inspectGeminiErrorPacket(error: unknown, model?: string): DeepEr
         lowerSummary.includes('rpd') ||
         lowerSummary.includes('limit: 0') ||
         quotaLimitValue === '0' ||
-        (quotaMetric && /day|daily|rpd/i.test(quotaMetric)) ||
+        (Boolean(quotaMetric) && /day|daily|rpd/i.test(quotaMetric || '')) ||
         (errorReason === 'BILLING_DISABLED') ||
-        lowerSummary.includes('billing details');
+        lowerSummary.includes('billing disabled') ||
+        (extractedRetryDelayMs !== null && extractedRetryDelayMs >= 3600000 && !/minute|rpm|tpm|second/i.test(quotaMetric || ''));
 
     const isCongestion =
         httpStatus === 503 ||
@@ -835,7 +925,7 @@ export function inspectGeminiErrorPacket(error: unknown, model?: string): DeepEr
     // Rule C: Daily Quota or Hard Limit: 0 reached -> immediate abort (waiting 20s won't reset daily limit)
     if (
         isDailyQuota &&
-        (isRateLimit || lowerSummary.includes('quota') || errorReason === 'BILLING_DISABLED' || lowerSummary.includes('billing'))
+        (isRateLimit || lowerSummary.includes('quota') || errorReason === 'BILLING_DISABLED' || lowerSummary.includes('billing disabled'))
     ) {
         return {
             category: 'daily_quota_exhausted',
