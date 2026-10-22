@@ -6,7 +6,7 @@ Nano Banana Ultra 是一個以 Google Gemini 影像模型為核心的影像創�
 
 它更像一個可以推進整條創作脈絡的影像 workspace，而不是一次性的生圖工具。你可以從草稿開始，一路做到批次探索、來源接續、局部編修、版本比較、工作區回復，最後再把有價值的結果帶回下一輪。
 
-專案採用雙引擎架構，將本機 API 模式（Node 後端）與 AI Studio 運行模式（原 Ultra Lite 專案）完整整合成單一專案。你可以於本地環境啟動本機開發伺服器運行，也可以直接部署／運行於 Google AI Studio 享受 Google AI Pro / Ultra 訂閱額度。工作區支援自動環境偵測，亦可在頂部導覽列隨時手動切換執行引擎（「自動偵測」、「本地 API 運行」、「AI Studio 運行」），並可選擇 Google AI 訂閱方案（`Google AI Pro`、`Google AI Ultra 5x`、`Google AI Ultra 20x`）以套用最佳 IPM 生圖節奏與抗限流保護。
+專案採用雙引擎架構，將本機 API 模式（Node 後端）與 AI Studio 運行模式（原 Ultra Lite 專案）完整整合成單一專案。你可以於本地環境啟動本機開發伺服器運行，也可以直接部署／運行於 Google AI Studio 環境。工作區支援自動環境偵測，亦可在頂部導覽列隨時手動切換執行引擎（「自動偵測」、「本地 API 運行」、「AI Studio 運行」），並配備即時「共享算力池狀態監視器」（包含正常、限流、擁塞、耗盡四段燈號）、自適應漏桶節流保護與深度錯誤封包解析，能智慧因應各類配額狀況而無須承受人為訂閱等級限制。
 
 ## 產品概要
 
@@ -136,7 +136,7 @@ Nano Banana Ultra 目前支援五條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：4.11.0
+### 最新版本：4.12.0
 
 版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -145,6 +145,7 @@ Nano Banana Ultra 目前支援五條 Gemini 影像模型路徑。介面會依模
 4.x 系列確立了雙引擎架構（無縫橋接 Google AI Studio 瀏覽器直連模式與本機 Node.js 後端外掛），奠定專案進入生產級創作工作區的核心基礎。在全面收斂 Lite 版本的基石之上，4.x 帶來多圖生成漸進式即時預覽、多層級 Google AI 訂閱配額調度、以及突破瀏覽器限制的 IndexedDB v2 大型工作區快照持久化。
 
 4.x 系列的核心重大里程碑包括：
+- **共享算力池架構對齊與深度錯誤封包解析**：深度對齊 Google AI Studio 的 Build 模式基礎架構，確立預覽環境透過專案 API Key 呼叫標準 Gemini 開發者端點之機制。解除消費者訂閱等級（Pro/Ultra）的節流限制，改採統一基準節流、響應式算力池狀態燈號監控（🟢 正常 / 🟡 限流 / 🟠 擁塞 / 🔴 耗盡）與深度 Google RPC 錯誤封包解析器（`inspectGeminiErrorPacket`），精確區分個人每日配額耗盡（`RequestsPerDay` 即時中斷）、共享算力池擁塞（503 `MODEL_OVERLOADED` 去共振重試）與瞬時限流（RPM/TPM）以採取針對性重試策略。
 - **3D 空間視角互動操縱**：引入以 3D Gaussian Splatting (3DGS) 與 WebGL2 GPU 加速驅動的 Revolve 旋轉視角模式，將 3D 視角引導（`[Edit_1]`）與來源底圖（`[Src_1]`）完全解耦。
 - **提示詞參考圖晶片與引用追蹤**：引進輸入框上方的快速插入標籤晶片（`[Obj_N]`、`[Char_N]`、`[Style_N]`），支援滑鼠懸停縮圖預覽卡片、游標精確插入、動態自動重排與底欄提示詞引用檢測條。
 - **Gemini Nano Banana 2.1 旗艦模型整合**：全面導入主力預設模型 `gemini-nano-banana-2.1`，擴充思考等級矩陣（`medium`），並消除全 14 種長寬比在 2K/4K 輸出時的全景拼貼瑕疵。

@@ -6,7 +6,7 @@ Nano Banana Ultra is a Gemini-powered image workspace for creation, guided editi
 
 Instead of treating image generation as a disposable one-shot action, Nano Banana Ultra keeps prompting, references, history, editing, reuse, and restore inside one connected workspace flow.
 
-The workspace features a dual-engine architecture combining both the Local API (Node backend) and AI Studio mode into a single cohesive codebase. You can run it locally with your local dev server, or run directly within Google AI Studio to take advantage of Google AI Pro/Ultra subscription quotas. The workspace automatically detects the environment and provides an on-the-fly engine selector in the top bar (`Auto Detect`, `Local API`, and `AI Studio`), along with a dedicated Google AI Plan tier selector (`Google AI Pro`, `Google AI Ultra 5x`, `Google AI Ultra 20x`) that optimizes IPM generation pacing and prevents rate limiting.
+The workspace features a dual-engine architecture combining both the Local API (Node backend) and AI Studio mode into a single cohesive codebase. You can run it locally with your local dev server, or run directly within Google AI Studio to take advantage of Google AI Studio environments. The workspace automatically detects the environment and provides an on-the-fly engine selector in the top bar (`Auto Detect`, `Local API`, and `AI Studio`), along with real-time Shared Compute Pool health monitoring (Healthy, Throttled, Congested, Exhausted), workload-adaptive leaky-bucket pacing, and deep error packet inspection to intelligently handle rate limits and pool congestion without arbitrary subscription tier penalties.
 
 ## At a Glance
 
@@ -136,7 +136,7 @@ If you want to extract raw high-resolution images (PNG / JPEG) directly from the
 
 ## Version Overview
 
-### Latest Release: 4.11.0
+### Latest Release: 4.12.0
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
 
@@ -145,6 +145,7 @@ See [CHANGELOG.md](CHANGELOG.md) for details.
 Version 4.x establishes the unified dual-engine architecture (seamlessly bridging Google AI Studio direct browser mode and the local Node.js backend plugin) and serves as the production-grade foundation for the entire platform. Building upon the core convergence of the Lite edition, 4.x delivers progressive multi-image generation previews, multi-tier Google AI quota pacing, and persistent IndexedDB v2 large workspace recovery.
 
 Key milestones across the 4.x series include:
+- **Shared Compute Pool Architecture Alignment & Deep Error Packet Inspection**: Formally aligned with Google AI Studio's Build mode infrastructure where preview environments access standard Gemini Developer API endpoints via project API keys. Eliminated legacy consumer subscription tier pacing penalties in favor of unified adaptive pacing, reactive Compute Pool health monitoring (🟢/🟡/🟠/🔴), and a deep Google RPC error inspection engine (`inspectGeminiErrorPacket`) that differentiates daily quota exhaustion (`RequestsPerDay`), shared pool congestion (503 `MODEL_OVERLOADED`), and transient rate limits (RPM/TPM) to apply targeted retry strategies.
 - **Spatial 3D Viewpoint Manipulation**: Interactive Revolve mode powered by 3D Gaussian Splatting (3DGS) and WebGL2 GPU acceleration, decoupling viewpoint guidance (`[Edit_1]`) from source images (`[Src_1]`).
 - **Prompt Reference Chips & Citation Tracking**: Interactive tag insertion chips (`[Obj_N]`, `[Char_N]`, `[Style_N]`) with downward-projecting hover preview cards and live prompt citation tracking.
 - **Gemini Nano Banana 2.1 Flagship Integration**: Full support for `gemini-nano-banana-2.1` with expanded thinking level matrix (`medium`), seamless quota pacing, and panoramic 2K/4K artifact elimination across all 14 aspect ratios.

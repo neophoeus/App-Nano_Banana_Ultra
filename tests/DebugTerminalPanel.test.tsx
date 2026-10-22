@@ -62,5 +62,63 @@ describe('DebugTerminalPanel', () => {
         expect(markup).toContain('1.3s');
         expect(markup).toContain('visible result');
         expect(markup).toContain('debugTerminalFocusCorrelation');
+        expect(markup).toContain('debug-terminal-pool-status');
+        expect(markup).toContain('debug-terminal-reset-pool-btn');
+    });
+
+    it('renders deep error packet inspection card when selected event has deepErrorAnalysis', () => {
+        const errorEvent: DebugTerminalEvent = {
+            id: 'event-err-1',
+            kind: 'retry',
+            label: 'Transient rate limit backoff',
+            timestamp: 456,
+            source: 'generation',
+            route: 'browser-direct',
+            status: 429,
+            summary: 'RESOURCE_EXHAUSTED',
+            payload: {
+                deepErrorAnalysis: {
+                    category: 'transient_rate_limit',
+                    strategy: 'server_directed_cooldown',
+                    recommendedWaitMs: 18500,
+                    quotaMetric: 'generate_content_requests_per_minute',
+                },
+            },
+        };
+
+        const markup = renderToStaticMarkup(
+            <DebugTerminalPanel
+                events={[errorEvent]}
+                filteredEvents={[errorEvent]}
+                selectedEvent={errorEvent}
+                selectedEventId="event-err-1"
+                filter="all"
+                sourceFilter="all"
+                routeFilter="all"
+                searchQuery=""
+                activeCorrelationId={null}
+                autoScroll={false}
+                kindCounts={{ all: 1, request: 0, response: 0, error: 0, stream: 0, retry: 1, log: 0 }}
+                sourceOptions={['generation']}
+                routeOptions={['browser-direct']}
+                t={translate}
+                onFilterChange={vi.fn()}
+                onSourceFilterChange={vi.fn()}
+                onRouteFilterChange={vi.fn()}
+                onSearchQueryChange={vi.fn()}
+                onActiveCorrelationIdChange={vi.fn()}
+                onSelectEvent={vi.fn()}
+                onAutoScrollChange={vi.fn()}
+                onClear={vi.fn()}
+                onClose={vi.fn()}
+            />,
+        );
+
+        expect(markup).toContain('debug-terminal-deep-error-card');
+        expect(markup).toContain('debugTerminalDeepErrorCardTitle');
+        expect(markup).toContain('transient_rate_limit');
+        expect(markup).toContain('server_directed_cooldown');
+        expect(markup).toContain('18500ms');
+        expect(markup).toContain('generate_content_requests_per_minute');
     });
 });

@@ -2,7 +2,6 @@ import React from 'react';
 import WorkspaceModalFrame from './WorkspaceModalFrame';
 import { WORKSPACE_OVERLAY_Z_INDEX } from '../constants/workspaceOverlays';
 import { dismissRateLimitNotice, RateLimitNoticeSession } from '../utils/rateLimitNotice';
-import { getStoredAiStudioSubscriptionTier, getAiStudioTierPacingConfig } from '../utils/aiStudioPlan';
 import { getTranslation, Language } from '../utils/translations';
 
 interface RateLimitCooldownModalProps {
@@ -11,6 +10,34 @@ interface RateLimitCooldownModalProps {
     onCancelGeneration: () => void;
     onContinueWaiting?: () => void;
 }
+
+const getCategoryLabel = (category: string | undefined, t: (k: any) => string): string => {
+    switch (category) {
+        case 'daily_quota_exhausted':
+            return t('geminiErrorCategoryDailyQuota');
+        case 'pool_congestion':
+            return t('geminiErrorCategoryPoolCongestion');
+        case 'transient_auth':
+            return t('geminiErrorCategoryTransientAuth');
+        case 'transient_rate_limit':
+        default:
+            return t('geminiErrorCategoryRateLimit');
+    }
+};
+
+const getStrategyLabel = (strategy: string | undefined, t: (k: any) => string): string => {
+    switch (strategy) {
+        case 'server_directed_cooldown':
+            return t('geminiStrategyServerCooldown');
+        case 'congestion_desync_backoff':
+            return t('geminiStrategyCongestionDesync');
+        case 'abort_no_retry':
+            return t('geminiStrategyAbort');
+        case 'adaptive_leaky_bucket_backoff':
+        default:
+            return t('geminiStrategyAdaptiveBackoff');
+    }
+};
 
 export default function RateLimitCooldownModal({
     notice,
@@ -30,9 +57,6 @@ export default function RateLimitCooldownModal({
         100,
         Math.max(0, Math.round(((notice.totalWaitMs - notice.remainingMs) / Math.max(1, notice.totalWaitMs)) * 100)),
     );
-
-    const currentTier = getStoredAiStudioSubscriptionTier();
-    const tierConfig = getAiStudioTierPacingConfig(currentTier);
 
     const handleWaitClick = () => {
         if (onContinueWaiting) {
@@ -103,21 +127,42 @@ export default function RateLimitCooldownModal({
                 </div>
 
                 {/* Metadata badges */}
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-100/80 px-3.5 py-2.5 text-[12px] dark:bg-slate-800/60">
-                    <div className="flex items-center gap-1.5">
-                        <span className="text-slate-400 dark:text-slate-500">模型:</span>
-                        <span className="font-semibold text-slate-700 dark:text-slate-200">{notice.model}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="rounded-md bg-indigo-500/10 px-2 py-0.5 font-medium text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
-                            {tierConfig.tier.toUpperCase()}
-                        </span>
+                <div className="space-y-2 rounded-xl bg-slate-100/80 p-3 text-[12px] dark:bg-slate-800/60">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-slate-400 dark:text-slate-500">模型:</span>
+                            <span className="font-semibold text-slate-700 dark:text-slate-200">{notice.model}</span>
+                        </div>
                         <span
                             data-testid="rate-limit-retry-badge"
                             className="rounded-md bg-amber-500/10 px-2 py-0.5 font-medium text-amber-700 dark:bg-amber-500/20 dark:text-amber-300"
                         >
                             {retryBadgeText}
                         </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5 border-t border-slate-200/60 pt-1.5 dark:border-white/5">
+                        <span
+                            data-testid="rate-limit-category-badge"
+                            className="rounded-md bg-indigo-500/10 px-2 py-0.5 text-[11px] font-medium text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400"
+                        >
+                            {getCategoryLabel(notice.category, t)}
+                        </span>
+                        {notice.strategy && (
+                            <span
+                                data-testid="rate-limit-strategy-badge"
+                                className="rounded-md bg-sky-500/10 px-2 py-0.5 text-[11px] font-medium text-sky-600 dark:bg-sky-500/20 dark:text-sky-400"
+                            >
+                                {getStrategyLabel(notice.strategy, t)}
+                            </span>
+                        )}
+                        {notice.quotaMetric && (
+                            <span
+                                data-testid="rate-limit-metric-badge"
+                                className="rounded-md bg-slate-200/60 px-2 py-0.5 font-mono text-[10px] text-slate-600 dark:bg-slate-700/60 dark:text-slate-300"
+                            >
+                                {notice.quotaMetric}
+                            </span>
+                        )}
                     </div>
                 </div>
 

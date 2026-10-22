@@ -6,6 +6,12 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import ExecutionModeSelector from '../components/ExecutionModeSelector';
 import { preloadAllTranslations } from '../utils/translations';
 import { setExecutionModeSetting, getExecutionModeSetting } from '../utils/workspaceExecutionMode';
+import {
+    recordComputePoolError,
+    inspectGeminiErrorPacket,
+    getComputePoolStatus,
+    resetComputePoolStatus,
+} from '../utils/aiStudioPlan';
 
 describe('ExecutionModeSelector', () => {
     let container: HTMLDivElement;
@@ -117,7 +123,12 @@ describe('ExecutionModeSelector', () => {
         expect(button.textContent).toContain('AI Studio 実行');
     });
 
-    it('renders and selects Google AI subscription tiers when in direct mode', async () => {
+    it('renders shared compute pool monitor card and resets status when in direct mode', async () => {
+        resetComputePoolStatus();
+        // Cause a congestion state to verify card rendering
+        const analysis = inspectGeminiErrorPacket('503 Service Unavailable: overloaded', 'gemini-3-pro-image');
+        recordComputePoolError(analysis, 'gemini-3-pro-image', Date.now() + 10000);
+
         setExecutionModeSetting('direct');
         await act(async () => {
             root.render(<ExecutionModeSelector currentLanguage="zh_TW" />);
@@ -133,21 +144,23 @@ describe('ExecutionModeSelector', () => {
 
         const menu = container.querySelector('[data-testid="execution-mode-menu"]');
         expect(menu).toBeTruthy();
-        expect(menu?.textContent).toContain('Google AI 訂閱方案');
-        expect(menu?.textContent).toContain('Google AI Pro');
-        expect(menu?.textContent).toContain('Google AI Ultra (5x 算力池)');
-        expect(menu?.textContent).toContain('Google AI Ultra (20x 極限算力池)');
+        expect(menu?.textContent).toContain('共享算力池狀態');
+        expect(menu?.textContent).toContain('算力池擁塞');
+        expect(menu?.textContent).toContain('1.8x');
 
-        // Click Ultra 5x tier option
-        const ultra5xOption = container.querySelector(
-            '[data-testid="ai-studio-tier-option-ultra_5x"]',
-        ) as HTMLButtonElement;
-        expect(ultra5xOption).toBeTruthy();
+        const card = container.querySelector('[data-testid="ai-studio-pool-monitor-card"]');
+        expect(card).toBeTruthy();
 
+        const resetBtn = container.querySelector('[data-testid="compute-pool-reset-btn"]') as HTMLButtonElement;
+        expect(resetBtn).toBeTruthy();
+        expect(resetBtn.textContent).toContain('重設狀態');
+
+        // Click reset button
         await act(async () => {
-            ultra5xOption.click();
+            resetBtn.click();
         });
 
-        expect(localStorage.getItem('nbu_ai_studio_subscription_tier')).toBe('ultra_5x');
+        expect(getComputePoolStatus().level).toBe('healthy');
+        expect(getComputePoolStatus().pacingMultiplier).toBe(1.0);
     });
 });

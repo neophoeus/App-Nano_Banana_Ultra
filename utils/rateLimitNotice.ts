@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import type { GeminiErrorCategory, RetryStrategyKind, ComputePoolHealthLevel } from './aiStudioPlan';
 
 export interface RateLimitNoticeSession {
     active: boolean;
@@ -8,6 +9,11 @@ export interface RateLimitNoticeSession {
     retryCount: number;
     maxRetries: number;
     isDismissed: boolean;
+    category?: GeminiErrorCategory;
+    strategy?: RetryStrategyKind;
+    quotaMetric?: string | null;
+    serverRetryDelayMs?: number | null;
+    poolLevel?: ComputePoolHealthLevel;
 }
 
 let currentNotice: RateLimitNoticeSession | null = null;

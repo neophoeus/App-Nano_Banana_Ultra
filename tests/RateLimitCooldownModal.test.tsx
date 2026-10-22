@@ -175,4 +175,32 @@ describe('RateLimitCooldownModal', () => {
 
         expect(handleWait).toHaveBeenCalledTimes(1);
     });
+
+    it('renders deep error category, strategy, and quota metric badges when present', async () => {
+        const notice: RateLimitNoticeSession = {
+            active: true,
+            model: 'gemini-3-pro-image',
+            totalWaitMs: 30000,
+            remainingMs: 22000,
+            retryCount: 1,
+            maxRetries: 4,
+            category: 'pool_congestion',
+            strategy: 'congestion_desync_backoff',
+            quotaMetric: 'generate_content_requests_per_minute',
+            isDismissed: false,
+        };
+
+        await act(async () => {
+            root.render(<RateLimitCooldownModal notice={notice} currentLanguage="zh_TW" onCancelGeneration={vi.fn()} />);
+        });
+
+        const categoryBadge = container.querySelector('[data-testid="rate-limit-category-badge"]');
+        expect(categoryBadge?.textContent).toContain('共享算力池資源擁塞');
+
+        const strategyBadge = container.querySelector('[data-testid="rate-limit-strategy-badge"]');
+        expect(strategyBadge?.textContent).toContain('抗共振離散重試');
+
+        const metricBadge = container.querySelector('[data-testid="rate-limit-metric-badge"]');
+        expect(metricBadge?.textContent).toContain('generate_content_requests_per_minute');
+    });
 });

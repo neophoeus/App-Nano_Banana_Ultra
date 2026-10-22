@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Language, getTranslation } from '../utils/translations';
 import { useWorkspaceExecutionMode } from '../hooks/useWorkspaceExecutionMode';
 import { hasConfiguredGeminiApiKey } from '../utils/geminiCredentials';
+import { useComputePoolStatus, ComputePoolHealthLevel } from '../utils/aiStudioPlan';
 
 interface WorkspaceHealthPanelProps {
     currentLanguage?: Language;
@@ -15,8 +16,37 @@ type HealthPayload = {
 
 const REFRESH_INTERVAL_MS = 30000;
 
+const getPoolTone = (level: ComputePoolHealthLevel): string => {
+    switch (level) {
+        case 'congested':
+            return 'bg-orange-500';
+        case 'throttled':
+            return 'bg-amber-500';
+        case 'exhausted':
+            return 'bg-rose-500';
+        case 'healthy':
+        default:
+            return 'bg-emerald-500';
+    }
+};
+
+const getPoolLevelKey = (level: ComputePoolHealthLevel): string => {
+    switch (level) {
+        case 'congested':
+            return 'computePoolStatusCongested';
+        case 'throttled':
+            return 'computePoolStatusThrottled';
+        case 'exhausted':
+            return 'computePoolStatusExhausted';
+        case 'healthy':
+        default:
+            return 'computePoolStatusHealthy';
+    }
+};
+
 const WorkspaceHealthPanel: React.FC<WorkspaceHealthPanelProps> = ({ currentLanguage = 'en', refreshToken = 0 }) => {
     const { resolvedMode } = useWorkspaceExecutionMode();
+    const poolStatus = useComputePoolStatus();
     const [health, setHealth] = useState<HealthPayload | null>(null);
     const [directKeyAvailable, setDirectKeyAvailable] = useState<boolean>(false);
     const [healthError, setHealthError] = useState<string | null>(null);
@@ -85,6 +115,12 @@ const WorkspaceHealthPanel: React.FC<WorkspaceHealthPanelProps> = ({ currentLang
                       testId: 'global-health-gemini-key',
                       label: t('statusPanelGeminiKey'),
                       tone: !directKeyAvailable ? 'bg-amber-500' : 'bg-emerald-500',
+                  },
+                  {
+                      key: 'compute-pool',
+                      testId: 'global-health-compute-pool',
+                      label: `${t('computePoolTitle')}: ${t(getPoolLevelKey(poolStatus.level))}`,
+                      tone: getPoolTone(poolStatus.level),
                   },
               ]
             : [

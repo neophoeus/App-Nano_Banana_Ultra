@@ -1,5 +1,31 @@
 # Changelog
 
+## v4.12.0 - 2026-10-22
+
+- Release title: Nano Banana Ultra 4.12.0 - AI Studio Shared Compute Pool Architecture Alignment, Deep Error Packet Inspection & Telemetry Monitors
+- Release summary:
+    - **Shared Compute Pool Architecture Alignment & Unified Adaptive Pacing (`utils/aiStudioPlan.ts`, `services/providers/browserDirectProvider.ts`)**:
+        - Formally aligned with Google AI Studio's Build mode infrastructure, confirming that preview apps dispatch standard Gemini API calls using the project's `GEMINI_API_KEY` backed by Google Cloud Project usage tiers and a shared compute pool rather than consumer Google One subscription tiers (Pro / Ultra 5x / Ultra 20x).
+        - Eliminated arbitrary subscription tier delays in AI Studio direct mode. Implemented unified baseline pacing (6.0s for Pro image, 3.5s for Flash image, 1.0s for text) augmented by dynamic workload buffers (4K/2K resolution, reference images, high thinking levels) and compute pool health multipliers.
+    - **Deep Gemini Error Packet Inspection Engine (`utils/aiStudioPlan.ts`, `utils/rateLimitNotice.ts`, `services/providers/browserDirectProvider.ts`)**:
+        - Created `inspectGeminiErrorPacket` to parse balanced JSON payloads and Google RPC protobuf details (`google.rpc.QuotaFailure` violations, `google.rpc.ErrorInfo` reasons, `google.rpc.RetryInfo` retry delays, and HTTP Retry-After headers).
+        - Introduced differentiated recovery strategies:
+            - `daily_quota_exhausted`: Categorizes `RequestsPerDay`, `limit: 0`, and `BILLING_DISABLED`, immediately aborting with `abort_no_retry` to prevent blind retries.
+            - `pool_congestion`: Recognizes 503 `UNAVAILABLE`, `MODEL_OVERLOADED`, and 502/504 errors, applying anti-resonance desynchronized backoff (`congestion_desync_backoff`) with wide 0~4s random dispersion to prevent harmonic herd collisions.
+            - `transient_rate_limit`: Extracts exact server retry delays from `RetryInfo` with a leaky-bucket safety margin (2.5s) for deterministic cooldowns.
+            - `transient_auth`: Identifies transient AI Studio token refresh delays and bounds retries to at most 1 fast sync attempt.
+    - **Reactive Compute Pool Health Store & Telemetry UI Monitors (`utils/aiStudioPlan.ts`, `components/WorkspaceHealthPanel.tsx`, `components/ExecutionModeSelector.tsx`, `components/RateLimitCooldownModal.tsx`, `components/DebugTerminalPanel.tsx`)**:
+        - Implemented `useComputePoolStatus` store with 4 health levels (🟢 `healthy`, 🟡 `throttled`, 🟠 `congested`, 🔴 `exhausted`), LocalStorage persistence, and self-healing mechanisms.
+        - **Top Navigation Health Panel**: Added `global-health-compute-pool` indicator displaying real-time pool status and countdown.
+        - **Execution Engine Selector**: Replaced legacy subscription tier picker with `ai-studio-pool-monitor-card` showing active status, pacing multiplier, and manual reset button (`compute-pool-reset-btn`).
+        - **Rate Limit Cooldown Modal**: Replaced old tier badge with deep error category badge, retry strategy badge, and quota metric.
+        - **Diagnostics Terminal**: Added real-time compute pool telemetry strip (`debug-terminal-pool-status`) and deep error packet inspection card (`debug-terminal-deep-error-card`).
+    - **Full 9-Language Localization Parity (`utils/translations/*.ts`)**:
+        - Added 16 new translation keys across all 9 supported languages (`en`, `zh_TW`, `zh_CN`, `ja`, `ko`, `es`, `fr`, `de`, `ru`) with 100% key parity.
+    - **Automated Test Suite Expansion & Zero-Regression Verification (`tests/*`)**:
+        - Added comprehensive unit and integration tests across `tests/browserDirectProvider.test.ts`, `tests/executionModeSelector.test.tsx`, `tests/RateLimitCooldownModal.test.tsx`, `tests/WorkspaceHealthPanel.test.tsx`, and `tests/DebugTerminalPanel.test.tsx`.
+        - Verified 100% pass rate across all 127 test files (1,090 tests passed, +15 new tests) and validated clean production build.
+
 ## v4.11.0 - 2026-10-20
 
 - Release title: Nano Banana Ultra 4.11.0 - AI Studio-Compatible 3DGS Revolve Rendering Upgrade & Official Queued Batch Workflow Alignment

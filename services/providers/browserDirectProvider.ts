@@ -52,6 +52,11 @@ import {
     getAdaptiveModelPacingDelayMs,
     getTier429SafetyMarginMs,
     type PacingWorkloadContext,
+    inspectGeminiErrorPacket,
+    recordComputePoolError,
+    recordComputePoolSuccess,
+    getComputePoolStatus,
+    type DeepErrorPacketAnalysis,
 } from '../../utils/aiStudioPlan';
 import { setRateLimitNotice, updateRateLimitRemainingMs, clearRateLimitNotice } from '../../utils/rateLimitNotice';
 import type { GenerationLiveProgressEvent, ProgressCallbacks, WorkspaceExecutionProvider } from './types';
@@ -924,52 +929,28 @@ export const extractPacingWorkloadContext = (options: Partial<GenerateOptions>):
     includeThoughts: Boolean(options.includeThoughts || options.thinkingLevel === 'high'),
 });
 
-export const parseRateLimitWaitMs = (msg: string, model?: string): number => {
-    const tier = getStoredAiStudioSubscriptionTier();
-    const defaultBackoff = getModelDefault429BackoffMs(model, tier);
-    const safetyMargin = getTier429SafetyMarginMs(tier);
+export const parseRateLimitWaitMs = (msg: unknown, model?: string): number => {
+    const analysis = inspectGeminiErrorPacket(msg, model);
+    if (analysis.recommendedWaitMs > 0) {
+        return analysis.recommendedWaitMs;
+    }
+    const defaultBackoff = getModelDefault429BackoffMs(model);
     const jitter = Math.random() * 2000;
-
-    // 1. retry-after: 25
-    const retryAfterMatch = msg.match(/retry.?after[:\s]*(\d+)/i);
-    if (retryAfterMatch) {
-        return Math.max(1500, parseInt(retryAfterMatch[1], 10) * 1000 + safetyMargin + jitter);
-    }
-
-    // 2. Please retry in 27.67s / 500ms / 2 minutes
-    const retryInMatch = msg.match(/retry\s+in\s+([\d.]+)\s*(ms|s|seconds|second|minutes|min)?/i);
-    if (retryInMatch) {
-        const value = parseFloat(retryInMatch[1]);
-        const unit = (retryInMatch[2] || 's').toLowerCase();
-        let ms = value * 1000;
-        if (unit === 'ms') {
-            ms = value;
-        } else if (unit === 'minutes' || unit === 'min') {
-            ms = value * 60000;
-        }
-        return Math.max(1500, Math.ceil(ms) + safetyMargin + jitter);
-    }
-
-    // 3. wait 15s / wait 500ms
-    const waitMatch = msg.match(/wait\s+([\d.]+)\s*(ms|s|seconds|second)?/i);
-    if (waitMatch) {
-        const value = parseFloat(waitMatch[1]);
-        const unit = (waitMatch[2] || 's').toLowerCase();
-        const ms = unit === 'ms' ? value : value * 1000;
-        return Math.max(1500, Math.ceil(ms) + safetyMargin + jitter);
-    }
-
-    // 4. Default tier-based cooldown with jitter
     return defaultBackoff + jitter;
 };
 
-export const updateGlobalRateLimitBackoff = (model: string, msg: string): void => {
-    const isRateLimit = msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('Quota exceeded');
-    if (!isRateLimit) {
+export const updateGlobalRateLimitBackoff = (model: string, errorOrMsg: unknown): void => {
+    const analysis = inspectGeminiErrorPacket(errorOrMsg, model);
+    const isRateLimitOrCongestion =
+        analysis.category === 'transient_rate_limit' ||
+        analysis.category === 'pool_congestion' ||
+        analysis.category === 'daily_quota_exhausted';
+
+    if (!isRateLimitOrCongestion) {
         return;
     }
 
-    const calculatedWaitMs = parseRateLimitWaitMs(msg, model);
+    const calculatedWaitMs = parseRateLimitWaitMs(errorOrMsg, model);
     const nextBackoff = Date.now() + calculatedWaitMs;
     const effectiveBackoff = Math.max(getModelRateLimitBackoffUntil(model), nextBackoff);
     modelRateLimitBackoffs.set(model, effectiveBackoff);
@@ -980,6 +961,7 @@ export const updateGlobalRateLimitBackoff = (model: string, msg: string): void =
     } catch {
         // Ignore localStorage write errors
     }
+    recordComputePoolError(analysis, model, effectiveBackoff);
 };
 
 export const ensureModelPacingDelay = async (
@@ -993,8 +975,7 @@ export const ensureModelPacingDelay = async (
         return;
     }
 
-    const tier = getStoredAiStudioSubscriptionTier();
-    const pacingDelay = getAdaptiveModelPacingDelayMs(model, tier, workload);
+    const pacingDelay = getAdaptiveModelPacingDelayMs(model, workload);
     const lastCompleted = getModelLastRequestCompletedAt(model);
 
     if (lastCompleted > 0) {
@@ -1002,9 +983,9 @@ export const ensureModelPacingDelay = async (
         if (elapsed < pacingDelay) {
             const waitRemaining = pacingDelay - elapsed;
             if (waitRemaining > 150) {
-                const tierConfig = getAiStudioTierPacingConfig(tier);
+                const poolStatus = getComputePoolStatus();
                 onLog?.(
-                    `⏳ [${tierConfig.tier.toUpperCase()}] Pacing protection active (${(waitRemaining / 1000).toFixed(1)}s remaining)...`,
+                    `⏳ [AI STUDIO POOL: ${poolStatus.level.toUpperCase()}] Pacing protection active (${(waitRemaining / 1000).toFixed(1)}s remaining)...`,
                 );
                 await delayWithAbort(waitRemaining, abortSignal);
             }
@@ -1074,6 +1055,7 @@ export const retryOperation = async <T>(
             const totalWait = extraWait + releaseJitter;
             onLog?.(`⏳ Rate limit backoff active, stalling request for ${(totalWait / 1000).toFixed(1)}s...`);
 
+            const currentPool = getComputePoolStatus();
             setRateLimitNotice({
                 active: true,
                 model: model || 'gemini',
@@ -1082,6 +1064,11 @@ export const retryOperation = async <T>(
                 retryCount: 1,
                 maxRetries: initialRetries,
                 isDismissed: false,
+                category: currentPool.lastErrorAnalysis?.category || 'transient_rate_limit',
+                strategy: currentPool.lastErrorAnalysis?.strategy || 'server_directed_cooldown',
+                quotaMetric: currentPool.lastErrorAnalysis?.quotaMetric,
+                serverRetryDelayMs: currentPool.lastErrorAnalysis?.extractedRetryDelayMs,
+                poolLevel: currentPool.level,
             });
 
             try {
@@ -1094,87 +1081,130 @@ export const retryOperation = async <T>(
         }
         return await operation();
     } catch (error: any) {
-        const msg = error.message || '';
-        const isDeterministicQuota =
-            msg.includes('limit: 0') ||
-            (msg.includes('quota') &&
-                !msg.includes('429') &&
-                !msg.includes('RESOURCE_EXHAUSTED') &&
-                !msg.includes('Quota exceeded'));
-        if (
-            msg.includes('PROMPT_BLOCKED') ||
-            msg.includes('SAFETY_BLOCK') ||
-            msg.includes('policy') ||
-            msg.includes('Thinking loop detected') ||
-            isDeterministicQuota ||
-            msg === 'ABORTED'
-        ) {
+        if (abortSignal?.aborted) throw new Error('ABORTED');
+
+        const analysis = inspectGeminiErrorPacket(error, model);
+        if (model) {
+            updateGlobalRateLimitBackoff(model, error);
+        }
+
+        // Rule A: Non-retryable policy, safety, thinking loop, or abort
+        if (analysis.category === 'non_retryable_policy' || error.message === 'ABORTED') {
             throw error;
         }
 
-        if (abortSignal?.aborted) throw new Error('ABORTED');
-
-        if (authRetriesRemaining > 0 && isTransientAiStudioAuthError(error)) {
-            onLog?.('⏳ AI Studio 訂閱憑證同步中，等待 1.5 秒後自動重試... (1/1)');
-            await delayWithAbort(1500, abortSignal);
-            return retryOperation(operation, retries, delayMs, {
-                ...opts,
-                authRetriesRemaining: authRetriesRemaining - 1,
+        // Rule B: Daily Quota or Hard Limit 0 reached -> immediate abort (no blind retries)
+        if (analysis.category === 'daily_quota_exhausted' || !analysis.shouldRetry) {
+            const failure = resolveGenerationFailureInfo({
+                explicitError: error.message || 'Daily quota limit reached',
             });
+            attachGenerationFailure(error, failure);
+
+            emitGenerationDebugEvent({
+                kind: 'error',
+                label: `Generation Aborted: ${analysis.errorReason || 'Daily Quota Exhausted'}`,
+                summary: `Daily quota or hard limit reached (${analysis.quotaMetric || 'RPD'}). Retries halted.`,
+                payload: {
+                    error,
+                    deepErrorAnalysis: analysis,
+                    computePool: getComputePoolStatus(),
+                },
+            });
+
+            throw error;
         }
 
-        if (model) {
-            updateGlobalRateLimitBackoff(model, msg);
+        // Rule C: Transient Auth Token Sync (bounded to at most 1 attempt)
+        if (analysis.category === 'transient_auth') {
+            if (authRetriesRemaining > 0) {
+                onLog?.('⏳ AI Studio 訂閱憑證同步中，等待 1.5 秒後自動重試... (1/1)');
+                emitGenerationDebugEvent({
+                    kind: 'retry',
+                    label: 'Auth Token Sync Retry (1/1)',
+                    summary: 'AI Studio session credential sync delay, retrying in 1.5s',
+                    payload: { deepErrorAnalysis: analysis, authRetriesRemaining },
+                });
+                await delayWithAbort(1500, abortSignal);
+                return retryOperation(operation, retries, delayMs, {
+                    ...opts,
+                    authRetriesRemaining: authRetriesRemaining - 1,
+                });
+            }
+            throw error;
         }
 
         if (retries > 0) {
-            const isRateLimit =
-                msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('Quota exceeded');
-            if (
-                msg.includes('EMPTY_RESPONSE') ||
-                msg.includes('500') ||
-                msg.includes('503') ||
-                isRateLimit ||
-                msg.includes('fetch')
-            ) {
-                const waitMs =
-                    isRateLimit && model
-                        ? Math.max(delayMs, getModelRateLimitBackoffUntil(model) - Date.now())
-                        : delayMs;
+            const isRateLimitOrCongestion =
+                analysis.category === 'transient_rate_limit' ||
+                analysis.category === 'pool_congestion';
 
-                const retryAttempt = Math.max(1, initialRetries - retries + 1);
-                onLog?.(`⏳ Rate limit protection: retrying in ${(waitMs / 1000).toFixed(1)}s... (${retries} left)`);
+            const waitMs = isRateLimitOrCongestion && model
+                ? Math.max(delayMs, analysis.recommendedWaitMs, getModelRateLimitBackoffUntil(model) - Date.now())
+                : delayMs;
 
-                if (isRateLimit && model) {
-                    setRateLimitNotice({
-                        active: true,
-                        model,
-                        totalWaitMs: waitMs,
-                        remainingMs: waitMs,
-                        retryCount: retryAttempt,
-                        maxRetries: initialRetries,
-                        isDismissed: false,
-                    });
-                }
+            const retryAttempt = Math.max(1, initialRetries - retries + 1);
+            const strategyLabel =
+                analysis.category === 'pool_congestion'
+                    ? '算力池擁塞去共振退避'
+                    : '瞬時頻率限流冷卻';
 
-                try {
-                    await countdownWithAbort(waitMs, abortSignal, (remainingMs) => {
-                        if (isRateLimit && model) {
-                            updateRateLimitRemainingMs(remainingMs);
-                        }
-                    });
-                } finally {
-                    if (isRateLimit && model) {
-                        clearRateLimitNotice();
-                    }
-                }
+            onLog?.(`⏳ [${strategyLabel}] Retrying in ${(waitMs / 1000).toFixed(1)}s... (${retries} left)`);
 
-                const effectiveMaxDelay = isRateLimit ? Math.max(maxDelay, waitMs >= 40000 ? 80000 : 60000) : maxDelay;
-                const desyncOffset = isRateLimit && waitMs >= 40000 ? Math.random() * 5000 : 0;
-                const nextDelay = Math.min(waitMs * backoffMultiplier + desyncOffset, effectiveMaxDelay);
-                return retryOperation(operation, retries - 1, nextDelay, opts);
+            if (isRateLimitOrCongestion && model) {
+                setRateLimitNotice({
+                    active: true,
+                    model,
+                    totalWaitMs: waitMs,
+                    remainingMs: waitMs,
+                    retryCount: retryAttempt,
+                    maxRetries: initialRetries,
+                    isDismissed: false,
+                    category: analysis.category,
+                    strategy: analysis.strategy,
+                    quotaMetric: analysis.quotaMetric,
+                    serverRetryDelayMs: analysis.extractedRetryDelayMs,
+                    poolLevel: analysis.poolImpact,
+                });
             }
+
+            emitGenerationDebugEvent({
+                kind: 'retry',
+                label: `Retry #${retryAttempt}: ${analysis.category}`,
+                summary: `Retrying in ${(waitMs / 1000).toFixed(1)}s via ${analysis.strategy}`,
+                payload: {
+                    deepErrorAnalysis: analysis,
+                    retryAttempt,
+                    retriesRemaining: retries - 1,
+                    waitMs,
+                    model,
+                    computePool: getComputePoolStatus(),
+                },
+            });
+
+            try {
+                await countdownWithAbort(waitMs, abortSignal, (remainingMs) => {
+                    if (isRateLimitOrCongestion && model) {
+                        updateRateLimitRemainingMs(remainingMs);
+                    }
+                });
+            } finally {
+                if (isRateLimitOrCongestion && model) {
+                    clearRateLimitNotice();
+                }
+            }
+
+            const effectiveMultiplier = analysis.backoffMultiplier || backoffMultiplier;
+            const desyncOffset =
+                analysis.category === 'pool_congestion'
+                    ? Math.random() * 3000
+                    : waitMs >= 40000
+                      ? Math.random() * 4000
+                      : 0;
+            const effectiveMaxDelay = Math.max(maxDelay, waitMs >= 40000 ? 80000 : 60000);
+            const nextDelay = Math.min(waitMs * effectiveMultiplier + desyncOffset, effectiveMaxDelay);
+            return retryOperation(operation, retries - 1, nextDelay, opts);
         }
+
         throw error;
     }
 };
@@ -1233,6 +1263,7 @@ const generateSingleImage = async (
 
         if (options.model) {
             setModelLastRequestCompletedAt(options.model, Date.now());
+            recordComputePoolSuccess(options.model);
         }
 
         emitGenerationDebugEvent({
@@ -1242,6 +1273,7 @@ const generateSingleImage = async (
             requestId: prepared.debugRequestId,
             payload: {
                 response: generateResponse,
+                computePool: getComputePoolStatus(),
             },
         });
 
@@ -1251,19 +1283,23 @@ const generateSingleImage = async (
             throw new Error('ABORTED');
         }
 
+        const analysis = inspectGeminiErrorPacket(error, options.model);
+
         if (options.model) {
             setModelLastRequestCompletedAt(options.model, Date.now());
-            updateGlobalRateLimitBackoff(options.model, error.message || '');
+            updateGlobalRateLimitBackoff(options.model, error);
         }
 
         emitGenerationDebugEvent({
             kind: 'error',
-            label: `Image #${imgIndex}: Request failed`,
+            label: `Image #${imgIndex}: Request failed (${analysis.category})`,
             summary: buildErrorSummary(error),
             requestId: prepared.debugRequestId,
             payload: {
                 error,
                 failure: getGenerationFailure(error),
+                deepErrorAnalysis: analysis,
+                computePool: getComputePoolStatus(),
             },
         });
 

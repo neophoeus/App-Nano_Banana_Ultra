@@ -22,6 +22,12 @@ import {
     getModelDefault429BackoffMs,
     subscribeAiStudioSubscriptionTier,
     AI_STUDIO_TIER_STORAGE_KEY,
+    inspectGeminiErrorPacket,
+    getComputePoolStatus,
+    recordComputePoolError,
+    recordComputePoolSuccess,
+    resetComputePoolStatus,
+    getComputePoolPacingMultiplier,
 } from '../utils/aiStudioPlan';
 
 describe('BrowserDirectProvider and AI Studio Subscription Tier Pacing', () => {
@@ -32,6 +38,7 @@ describe('BrowserDirectProvider and AI Studio Subscription Tier Pacing', () => {
         clearModelRateLimitBackoff('gemini-3-pro-image');
         clearModelRateLimitBackoff('gemini-3.1-flash-image');
         clearModelRateLimitBackoff('gemini-3.8-flash');
+        resetComputePoolStatus();
     });
 
     it('has direct provider id', () => {
@@ -63,51 +70,46 @@ describe('BrowserDirectProvider and AI Studio Subscription Tier Pacing', () => {
         unsubscribe();
     });
 
-    it('calculates IPM pacing delays correctly for Pro, Ultra 5x, and Ultra 20x tiers', () => {
-        // Pro Tier (1x)
+    it('calculates unified IPM pacing delays across models regardless of legacy subscription tiers', () => {
+        // Unified Pacing: Pro Image 6000ms, Flash Image 3500ms, Prompt Tools 1000ms
         setStoredAiStudioSubscriptionTier('pro');
-        expect(getModelPacingDelayMs('gemini-3-pro-image', 'pro')).toBe(18000);
-        expect(getModelPacingDelayMs('gemini-3.1-flash-image', 'pro')).toBe(12000);
-        expect(getModelPacingDelayMs('gemini-3.8-flash', 'pro')).toBe(2000);
+        expect(getModelPacingDelayMs('gemini-3-pro-image')).toBe(6000);
+        expect(getModelPacingDelayMs('gemini-3.1-flash-image')).toBe(3500);
+        expect(getModelPacingDelayMs('gemini-3.8-flash')).toBe(1000);
 
-        // Ultra 5x Tier
+        // Same unified values when legacy tier parameters are passed
         setStoredAiStudioSubscriptionTier('ultra_5x');
-        expect(getModelPacingDelayMs('gemini-3-pro-image', 'ultra_5x')).toBe(9000);
-        expect(getModelPacingDelayMs('gemini-3.1-flash-image', 'ultra_5x')).toBe(6000);
+        expect(getModelPacingDelayMs('gemini-3-pro-image', 'ultra_5x')).toBe(6000);
+        expect(getModelPacingDelayMs('gemini-3.1-flash-image', 'ultra_5x')).toBe(3500);
         expect(getModelPacingDelayMs('gemini-3.8-flash', 'ultra_5x')).toBe(1000);
 
-        // Ultra 20x Tier
         setStoredAiStudioSubscriptionTier('ultra_20x');
-        expect(getModelPacingDelayMs('gemini-3-pro-image', 'ultra_20x')).toBe(4500);
-        expect(getModelPacingDelayMs('gemini-3.1-flash-image', 'ultra_20x')).toBe(3000);
-        expect(getModelPacingDelayMs('gemini-3.8-flash', 'ultra_20x')).toBe(500);
+        expect(getModelPacingDelayMs('gemini-3-pro-image', 'ultra_20x')).toBe(6000);
+        expect(getModelPacingDelayMs('gemini-3.1-flash-image', 'ultra_20x')).toBe(3500);
+        expect(getModelPacingDelayMs('gemini-3.8-flash', 'ultra_20x')).toBe(1000);
     });
 
     it('calculates adaptive workload pacing based on resolution, reference images, and thinking', async () => {
-        const { getAdaptiveModelPacingDelayMs, getTier429SafetyMarginMs } = await import('../utils/aiStudioPlan');
+        const { getAdaptiveModelPacingDelayMs, getUnified429SafetyMarginMs, resetComputePoolStatus } =
+            await import('../utils/aiStudioPlan');
         const { extractPacingWorkloadContext } = await import('../services/providers/browserDirectProvider');
 
-        // Pro tier heavy workload (4K + reference + thoughts)
+        resetComputePoolStatus();
+
+        // Heavy workload (4K + reference + thoughts)
         const heavyWorkload = {
             imageSize: '4K',
             hasReferenceImages: true,
             includeThoughts: true,
         };
-        // 12000 (base) + 4000 (4K) + 3000 (reference) + 2000 (thoughts) = 21000ms
-        expect(getAdaptiveModelPacingDelayMs('gemini-3.1-flash-image', 'pro', heavyWorkload)).toBe(21000);
+        // Unified healthy pool (1.0x): 3500 (base) + 2000 (4K) + 1500 (reference) + 1000 (thoughts) = 8000ms
+        expect(getAdaptiveModelPacingDelayMs('gemini-3.1-flash-image', heavyWorkload)).toBe(8000);
 
-        // Ultra 5x heavy workload
-        // 6000 (base) + 2000 (4K) + 1500 (reference) + 1000 (thoughts) = 10500ms
-        expect(getAdaptiveModelPacingDelayMs('gemini-3.1-flash-image', 'ultra_5x', heavyWorkload)).toBe(10500);
+        // Pro model heavy workload: 6000 + 2000 + 1500 + 1000 = 10500ms
+        expect(getAdaptiveModelPacingDelayMs('gemini-3-pro-image', heavyWorkload)).toBe(10500);
 
-        // Ultra 20x heavy workload
-        // 3000 (base) + 1000 (4K) + 500 (reference) + 500 (thoughts) = 5000ms
-        expect(getAdaptiveModelPacingDelayMs('gemini-3.1-flash-image', 'ultra_20x', heavyWorkload)).toBe(5000);
-
-        // Tier safety margins
-        expect(getTier429SafetyMarginMs('pro')).toBe(3500);
-        expect(getTier429SafetyMarginMs('ultra_5x')).toBe(2000);
-        expect(getTier429SafetyMarginMs('ultra_20x')).toBe(1500);
+        // Unified 429 safety margin
+        expect(getUnified429SafetyMarginMs()).toBe(2500);
 
         // Extractor
         const extracted = extractPacingWorkloadContext({
@@ -122,30 +124,28 @@ describe('BrowserDirectProvider and AI Studio Subscription Tier Pacing', () => {
         expect(extracted.includeThoughts).toBe(true);
     });
 
-    it('provides tier-based default 429 backoff durations', () => {
-        expect(getModelDefault429BackoffMs('gemini-3-pro-image', 'pro')).toBe(30000);
-        expect(getModelDefault429BackoffMs('gemini-3.1-flash-image', 'pro')).toBe(20000);
-        expect(getModelDefault429BackoffMs('gemini-3-pro-image', 'ultra_20x')).toBe(10000);
+    it('provides unified default 429 backoff durations', () => {
+        expect(getModelDefault429BackoffMs('gemini-3-pro-image')).toBe(20000);
+        expect(getModelDefault429BackoffMs('gemini-3.1-flash-image')).toBe(12000);
+        expect(getModelDefault429BackoffMs('gemini-3.8-flash')).toBe(6000);
     });
 
-    it('parses retry-after header and message strings with jitter and safety margin', () => {
-        // Explicit retry-after with Pro safety margin (>= 25000 + 3500 = 28500)
-        setStoredAiStudioSubscriptionTier('pro');
+    it('parses retry-after header and message strings with jitter and unified safety margin', () => {
+        // Explicit retry-after with unified safety margin (>= 25000 + 2500 = 27500)
         const wait1 = parseRateLimitWaitMs('RESOURCE_EXHAUSTED: retry-after: 25', 'gemini-3-pro-image');
-        expect(wait1).toBeGreaterThanOrEqual(28500);
+        expect(wait1).toBeGreaterThanOrEqual(27500);
 
-        // Explicit retry in seconds with Pro safety margin (>= 18500 + 3500 = 22000)
+        // Explicit retry in seconds with unified safety margin (>= 18500 + 2500 = 21000)
         const wait2 = parseRateLimitWaitMs('Please retry in 18.5s', 'gemini-3.1-flash-image');
-        expect(wait2).toBeGreaterThanOrEqual(22000);
+        expect(wait2).toBeGreaterThanOrEqual(21000);
 
         // Explicit retry in ms
         const wait3 = parseRateLimitWaitMs('Rate limit hit, retry in 800ms', 'gemini-3.8-flash');
-        expect(wait3).toBeGreaterThanOrEqual(4300);
+        expect(wait3).toBeGreaterThanOrEqual(3300);
 
-        // Generic 429 without explicit time uses tier default
-        setStoredAiStudioSubscriptionTier('pro');
+        // Generic 429 without explicit time uses unified default
         const wait4 = parseRateLimitWaitMs('429 Too Many Requests: Quota exceeded', 'gemini-3-pro-image');
-        expect(wait4).toBeGreaterThanOrEqual(30000);
+        expect(wait4).toBeGreaterThanOrEqual(20000);
     });
 
     it('updates and retrieves model rate limit backoff timestamp', () => {
@@ -399,6 +399,191 @@ describe('BrowserDirectProvider and AI Studio Subscription Tier Pacing', () => {
             // Memory is cleared in beforeEach, so it queries localStorage and should self-heal
             expect(getModelRateLimitBackoffUntil('gemini-3-pro-image')).toBe(0);
             expect(localStorage.getItem('nbu_model_rate_limit_backoff_until_gemini-3-pro-image')).toBeNull();
+        });
+    });
+
+    describe('inspectGeminiErrorPacket (Deep Error Packet Inspection)', () => {
+        it('identifies daily quota exhaustion from Google RPC QuotaFailure', () => {
+            const error = {
+                status: 429,
+                message: 'RESOURCE_EXHAUSTED',
+                details: [
+                    {
+                        '@type': 'type.googleapis.com/google.rpc.QuotaFailure',
+                        violations: [
+                            {
+                                quotaMetric: 'generate_content_requests_per_day',
+                                quotaId: 'GenerateContentRequestsPerDay',
+                                description: 'Quota exceeded for quota metric RequestsPerDay',
+                            },
+                        ],
+                    },
+                ],
+            };
+
+            const analysis = inspectGeminiErrorPacket(error, 'gemini-3-pro-image');
+            expect(analysis.category).toBe('daily_quota_exhausted');
+            expect(analysis.strategy).toBe('abort_no_retry');
+            expect(analysis.shouldRetry).toBe(false);
+            expect(analysis.poolImpact).toBe('exhausted');
+            expect(analysis.quotaMetric).toBe('generate_content_requests_per_day');
+        });
+
+        it('identifies shared pool congestion from 503 UNAVAILABLE or MODEL_OVERLOADED', () => {
+            const error = new Error('503 Service Unavailable: The model is overloaded. Please try again later.');
+            const analysis = inspectGeminiErrorPacket(error, 'gemini-3.1-flash-image');
+
+            expect(analysis.category).toBe('pool_congestion');
+            expect(analysis.strategy).toBe('congestion_desync_backoff');
+            expect(analysis.shouldRetry).toBe(true);
+            expect(analysis.poolImpact).toBe('congested');
+            expect(analysis.recommendedWaitMs).toBeGreaterThanOrEqual(4000);
+        });
+
+        it('identifies transient rate limit and extracts retry delay from RetryInfo', () => {
+            const error = {
+                code: 429,
+                message: 'Rate limit exceeded',
+                details: [
+                    {
+                        '@type': 'type.googleapis.com/google.rpc.RetryInfo',
+                        retryDelay: '12s',
+                    },
+                ],
+            };
+
+            const analysis = inspectGeminiErrorPacket(error, 'gemini-3-pro-image');
+            expect(analysis.category).toBe('transient_rate_limit');
+            expect(analysis.strategy).toBe('server_directed_cooldown');
+            expect(analysis.shouldRetry).toBe(true);
+            expect(analysis.extractedRetryDelayMs).toBe(12000);
+            expect(analysis.recommendedWaitMs).toBeGreaterThanOrEqual(14500); // 12000 + 2500 margin
+        });
+
+        it('identifies transient AI Studio auth errors with fast auth sync strategy', () => {
+            const error = new Error('401 Unauthorized: Invalid authentication credentials. OAuth 2 access token has expired.');
+            const analysis = inspectGeminiErrorPacket(error, 'gemini-3.8-flash');
+
+            expect(analysis.category).toBe('transient_auth');
+            expect(analysis.strategy).toBe('fast_auth_sync');
+            expect(analysis.shouldRetry).toBe(true);
+            expect(analysis.maxRetriesOverride).toBe(1);
+        });
+
+        it('identifies non-retryable policy or safety blocks', () => {
+            const error = new Error('PROMPT_BLOCKED: Content violates safety policies');
+            const analysis = inspectGeminiErrorPacket(error, 'gemini-3-pro-image');
+
+            expect(analysis.category).toBe('non_retryable_policy');
+            expect(analysis.strategy).toBe('abort_no_retry');
+            expect(analysis.shouldRetry).toBe(false);
+        });
+    });
+
+    describe('Compute Pool Status Store & Reactive Transitions', () => {
+        it('starts in healthy state with pacing multiplier 1.0', () => {
+            const status = getComputePoolStatus();
+            expect(status.level).toBe('healthy');
+            expect(status.pacingMultiplier).toBe(1.0);
+            expect(status.dailyQuotaExhausted).toBe(false);
+            expect(getComputePoolPacingMultiplier()).toBe(1.0);
+        });
+
+        it('transitions to throttled and increases multiplier on transient rate limit', () => {
+            const analysis = inspectGeminiErrorPacket('429 RESOURCE_EXHAUSTED: retry in 10s', 'gemini-3-pro-image');
+            const updated = recordComputePoolError(analysis, 'gemini-3-pro-image', Date.now() + 10000);
+
+            expect(updated.level).toBe('throttled');
+            expect(updated.pacingMultiplier).toBe(1.5);
+            expect(getComputePoolPacingMultiplier()).toBe(1.5);
+        });
+
+        it('transitions to congested and increases multiplier on pool congestion', () => {
+            const analysis = inspectGeminiErrorPacket('503 Service Unavailable: overloaded', 'gemini-3-pro-image');
+            const updated = recordComputePoolError(analysis, 'gemini-3-pro-image', Date.now() + 8000);
+
+            expect(updated.level).toBe('congested');
+            expect(updated.pacingMultiplier).toBe(1.8);
+            expect(getComputePoolPacingMultiplier()).toBe(1.8);
+        });
+
+        it('transitions to exhausted on daily quota exhaustion', () => {
+            const analysis = inspectGeminiErrorPacket(
+                '429 Quota exceeded: RequestsPerDay limit 0 reached',
+                'gemini-3-pro-image',
+            );
+            const updated = recordComputePoolError(analysis, 'gemini-3-pro-image', Date.now() + 60000);
+
+            expect(updated.level).toBe('exhausted');
+            expect(updated.dailyQuotaExhausted).toBe(true);
+            expect(getComputePoolPacingMultiplier()).toBe(2.0);
+        });
+
+        it('recovers gradually upon consecutive successes', () => {
+            // First congest it
+            const analysis = inspectGeminiErrorPacket('503 Service Unavailable: overloaded', 'gemini-3-pro-image');
+            recordComputePoolError(analysis, 'gemini-3-pro-image', Date.now() + 8000);
+            expect(getComputePoolStatus().level).toBe('congested');
+
+            // Success 1
+            recordComputePoolSuccess('gemini-3-pro-image');
+            expect(getComputePoolStatus().consecutiveSuccesses).toBe(1);
+
+            // Success 2 -> steps down from congested to throttled
+            recordComputePoolSuccess('gemini-3-pro-image');
+            expect(getComputePoolStatus().level).toBe('throttled');
+
+            // Success 3
+            recordComputePoolSuccess('gemini-3-pro-image');
+            // Success 4 -> recovers completely to healthy
+            const recovered = recordComputePoolSuccess('gemini-3-pro-image');
+            expect(recovered.level).toBe('healthy');
+            expect(recovered.pacingMultiplier).toBe(1.0);
+        });
+
+        it('resets back to healthy when resetComputePoolStatus is invoked', () => {
+            const analysis = inspectGeminiErrorPacket('429 RESOURCE_EXHAUSTED', 'gemini-3-pro-image');
+            recordComputePoolError(analysis, 'gemini-3-pro-image', Date.now() + 10000);
+            expect(getComputePoolStatus().level).toBe('throttled');
+
+            const reset = resetComputePoolStatus();
+            expect(reset.level).toBe('healthy');
+            expect(reset.pacingMultiplier).toBe(1.0);
+            expect(getComputePoolStatus().level).toBe('healthy');
+        });
+    });
+
+    describe('retryOperation with Deep Error Packet Analysis', () => {
+        it('immediately aborts without retrying when daily quota is exhausted', async () => {
+            let attempts = 0;
+            const dailyExhaustionError = {
+                status: 429,
+                message: 'RESOURCE_EXHAUSTED: RequestsPerDay quota reached',
+                details: [
+                    {
+                        '@type': 'type.googleapis.com/google.rpc.QuotaFailure',
+                        violations: [{ quotaMetric: 'RequestsPerDay', quotaId: 'DailyRPD' }],
+                    },
+                ],
+            };
+
+            await expect(
+                retryOperation(
+                    async () => {
+                        attempts += 1;
+                        throw dailyExhaustionError;
+                    },
+                    3,
+                    100,
+                    {
+                        operationName: 'daily quota test',
+                        model: 'gemini-3-pro-image',
+                    },
+                ),
+            ).rejects.toEqual(dailyExhaustionError);
+
+            // Must have aborted on attempt 1 without attempting retries
+            expect(attempts).toBe(1);
         });
     });
 });
