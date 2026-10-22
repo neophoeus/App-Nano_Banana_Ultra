@@ -116,12 +116,6 @@ describe('usePerformGeneration', () => {
     const renderHook = (overrides: HookOverrides = {}) => {
         function Harness() {
             latestHook = usePerformGeneration({
-                safetyThresholds: {
-                    harassment: 'block-medium-and-above',
-                    'hate-speech': 'block-medium-and-above',
-                    'sexually-explicit': 'block-medium-and-above',
-                    'dangerous-content': 'block-medium-and-above',
-                },
                 t: (key) => {
                     const translations: Record<string, string> = {
                         errorNoPrompt: 'Prompt required.',

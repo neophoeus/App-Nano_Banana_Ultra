@@ -648,17 +648,6 @@ export const ru = {
         'Выше 1.0 усиливает вариативность и неожиданность, но может снизить согласованность и точность следования промпту.',
     composerAdvancedTemperatureGuideLower:
         'Ниже 1.0 делает результаты стабильнее и буквальнее, но обычно менее исследовательскими.',
-    composerAdvancedSafetyTitle: 'Фильтры безопасности',
-    composerAdvancedSafetyNote:
-        'Значение модели по умолчанию пропускает эту категорию в Gemini safetySettings. Текущая настройка продукта сохраняет все четыре фильтра в режиме без блокировки.',
-    composerAdvancedSafetyAllLabel: 'Все категории',
-    composerAdvancedSafetyMixed: 'Смешано',
-    composerAdvancedSafetyThresholdDefault: 'Модель',
-    composerAdvancedSafetyThresholdOff: 'Выкл',
-    composerAdvancedSafetyThresholdBlockNone: 'Без блок.',
-    composerAdvancedSafetyThresholdBlockOnlyHigh: 'Только высок.',
-    composerAdvancedSafetyThresholdBlockMediumAndAbove: 'Средн.+',
-    composerAdvancedSafetyThresholdBlockLowAndAbove: 'Низк.+',
     surfaceSharedControlsBadge: 'Общее',
     surfaceSharedControlsSettingsTitle: 'Настройки',
     surfaceSharedControlsOpen: 'Открыть общие элементы управления',

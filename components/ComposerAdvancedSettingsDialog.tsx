@@ -5,11 +5,9 @@ import ComposerAdvancedSettingsContent from './ComposerAdvancedSettingsContent';
 import { MODEL_CAPABILITIES } from '../constants';
 import { WORKSPACE_OVERLAY_Z_INDEX } from '../constants/workspaceOverlays';
 import {
-    SAFETY_CATEGORY_KEYS,
     type GroundingMode,
     type ImageModel,
     type OutputFormat,
-    type SafetyThresholds,
     type ThinkingLevel,
 } from '../types';
 import { getTranslation, type Language } from '../utils/translations';
@@ -19,7 +17,6 @@ type ComposerAdvancedSettingsDialogProps = {
     outputFormat: OutputFormat;
     thinkingLevel: ThinkingLevel;
     groundingMode: GroundingMode;
-    safetyThresholds: SafetyThresholds;
     imageModel: ImageModel;
     capability: (typeof MODEL_CAPABILITIES)[ImageModel];
     availableGroundingModes: GroundingMode[];
@@ -28,7 +25,6 @@ type ComposerAdvancedSettingsDialogProps = {
     onTemperatureChange: (value: number) => void;
     onThinkingLevelChange: (value: ThinkingLevel) => void;
     onGroundingModeChange: (value: GroundingMode) => void;
-    onSafetyThresholdsChange: (value: SafetyThresholds) => void;
     isOpen: boolean;
     onClose: () => void;
     onApply?: () => void;
@@ -39,7 +35,6 @@ type AdvancedSettingsDraft = {
     temperature: number;
     thinkingLevel: ThinkingLevel;
     groundingMode: GroundingMode;
-    safetyThresholds: SafetyThresholds;
 };
 
 export default function ComposerAdvancedSettingsDialog({
@@ -50,7 +45,6 @@ export default function ComposerAdvancedSettingsDialog({
     outputFormat,
     thinkingLevel,
     groundingMode,
-    safetyThresholds,
     imageModel,
     capability,
     availableGroundingModes,
@@ -59,7 +53,6 @@ export default function ComposerAdvancedSettingsDialog({
     onTemperatureChange,
     onThinkingLevelChange,
     onGroundingModeChange,
-    onSafetyThresholdsChange,
 }: ComposerAdvancedSettingsDialogProps) {
     const t = (key: string) => getTranslation(currentLanguage, key);
     const usesControlledDraft = Boolean(onApply);
@@ -68,7 +61,6 @@ export default function ComposerAdvancedSettingsDialog({
         temperature,
         thinkingLevel,
         groundingMode,
-        safetyThresholds,
     });
     const draft = usesControlledDraft
         ? {
@@ -76,7 +68,6 @@ export default function ComposerAdvancedSettingsDialog({
               temperature,
               thinkingLevel,
               groundingMode,
-              safetyThresholds,
           }
         : localDraft;
 
@@ -90,9 +81,8 @@ export default function ComposerAdvancedSettingsDialog({
             temperature,
             thinkingLevel,
             groundingMode,
-            safetyThresholds,
         });
-    }, [groundingMode, isOpen, outputFormat, safetyThresholds, temperature, thinkingLevel, usesControlledDraft]);
+    }, [groundingMode, isOpen, outputFormat, temperature, thinkingLevel, usesControlledDraft]);
 
     const handleApply = () => {
         if (onApply) {
@@ -111,13 +101,6 @@ export default function ComposerAdvancedSettingsDialog({
         }
         if (draft.groundingMode !== groundingMode) {
             onGroundingModeChange(draft.groundingMode);
-        }
-        if (
-            SAFETY_CATEGORY_KEYS.some(
-                (categoryKey) => draft.safetyThresholds[categoryKey] !== safetyThresholds[categoryKey],
-            )
-        ) {
-            onSafetyThresholdsChange(draft.safetyThresholds);
         }
 
         onClose();
@@ -148,7 +131,6 @@ export default function ComposerAdvancedSettingsDialog({
                         outputFormat={draft.outputFormat}
                         thinkingLevel={draft.thinkingLevel}
                         groundingMode={draft.groundingMode}
-                        safetyThresholds={draft.safetyThresholds}
                         imageModel={imageModel}
                         capability={capability}
                         availableGroundingModes={availableGroundingModes}
@@ -183,14 +165,6 @@ export default function ComposerAdvancedSettingsDialog({
                                 : setLocalDraft((previous) => ({
                                       ...previous,
                                       groundingMode: value,
-                                  }))
-                        }
-                        onSafetyThresholdsChange={(value) =>
-                            usesControlledDraft
-                                ? onSafetyThresholdsChange(value)
-                                : setLocalDraft((previous) => ({
-                                      ...previous,
-                                      safetyThresholds: value,
                                   }))
                         }
                     />

@@ -636,17 +636,6 @@ export const ko = {
     composerAdvancedTemperatureGuideHigher:
         '1.0보다 크면 변화와 의외성이 커지지만 일관성과 프롬프트 충실도는 떨어질 수 있습니다.',
     composerAdvancedTemperatureGuideLower: '1.0보다 작으면 결과가 더 안정적이고 직관적이지만 탐색성은 보통 낮아집니다.',
-    composerAdvancedSafetyTitle: '안전 필터',
-    composerAdvancedSafetyNote:
-        '모델 기본값은 해당 카테고리를 Gemini safetySettings에서 생략합니다. 현재 제품 기본값은 네 가지 필터를 모두 차단 안 함으로 유지합니다.',
-    composerAdvancedSafetyAllLabel: '전체 항목',
-    composerAdvancedSafetyMixed: '혼합',
-    composerAdvancedSafetyThresholdDefault: '모델 기본값',
-    composerAdvancedSafetyThresholdOff: '끔',
-    composerAdvancedSafetyThresholdBlockNone: '차단 안 함',
-    composerAdvancedSafetyThresholdBlockOnlyHigh: '높음만',
-    composerAdvancedSafetyThresholdBlockMediumAndAbove: '중간 이상',
-    composerAdvancedSafetyThresholdBlockLowAndAbove: '낮음 이상',
     surfaceSharedControlsBadge: '공유',
     surfaceSharedControlsSettingsTitle: '설정',
     surfaceSharedControlsOpen: '공유 컨트롤 열기',

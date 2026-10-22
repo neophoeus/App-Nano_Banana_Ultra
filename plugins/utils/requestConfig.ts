@@ -4,9 +4,6 @@ import { MODEL_CAPABILITIES } from '../../utils/modelCapabilities';
 import { normalizeTemperature } from '../../utils/temperature';
 import {
     buildGeminiResponseModalities,
-    buildSafetySettings,
-    DEFAULT_SAFETY_THRESHOLDS,
-    type SafetyThresholds,
     toGeminiThinkingLevel,
 } from './geminiApiConfig';
 
@@ -22,7 +19,6 @@ type ImageGenerateBodyLike = {
     includeThoughts?: boolean;
     googleSearch?: boolean;
     imageSearch?: boolean;
-    safetyThresholds?: Partial<SafetyThresholds>;
 };
 
 type AppThinkingLevel = NonNullable<ImageGenerateBodyLike['thinkingLevel']>;
@@ -120,11 +116,6 @@ export function buildImageRequestConfig(
             ? { temperature: normalizeTemperature(body.temperature) }
             : {}),
     };
-
-    const safetySettings = buildSafetySettings(body.safetyThresholds ?? DEFAULT_SAFETY_THRESHOLDS);
-    if (safetySettings) {
-        requestConfig.safetySettings = safetySettings;
-    }
 
     const defaultThinking: AppThinkingLevel = capability?.thinkingLevels.includes('medium')
         ? 'medium'

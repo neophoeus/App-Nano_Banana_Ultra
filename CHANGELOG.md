@@ -1,5 +1,21 @@
 # Changelog
 
+## v4.13.0 - 2026-10-22
+
+- Release title: Nano Banana Ultra 4.13.0 - Deprecation & Complete Retirement of Obsolete Safety Settings, Alignment with Gemini 2.5+ Inherent Safety Architecture
+- Release summary:
+    - **Deprecation & Complete Retirement of Obsolete Safety Settings (`components/*`, `services/*`, `utils/*`)**:
+        - Formally aligned with Google Gemini API official documentation and live API empirical verification confirming that safety filters default to Off in Gemini 2.5 and later models due to model inherent safety (RLHF and post-training alignment).
+        - Completely removed legacy `safetySettings` state, configuration selectors, modal settings, type definitions, and API payload mapping across 38 files.
+        - Streamlined request payloads, eliminating redundant category filters and simplifying the API contract for both Browser Direct Provider and Local Backend Provider.
+    - **UI & Modal Modernization (`components/ComposerAdvancedSettingsDialog.tsx`, `components/WorkspaceSettingsDialog.tsx`, `components/WorkspaceViewControlsModal.tsx`)**:
+        - Cleaned up Advanced Settings, Workspace Settings, and View Controls dialogs by removing obsolete safety threshold dropdowns and threshold badges.
+        - Streamlined quick parameter pills and inspector panels to focus on essential generation parameters (thinking mode, aspect ratio, image size, output format, seed).
+    - **Localization Parity Across All 9 Languages (`utils/translations/*.ts`)**:
+        - Safely cleaned up deprecated safety setting localization keys across `en`, `zh_TW`, `zh_CN`, `ja`, `ko`, `es`, `fr`, `de`, and `ru`, maintaining 100% translation key symmetry without orphan keys.
+    - **Automated Test Suite Expansion & Clean Regression Pass (`tests/*`)**:
+        - Updated test fixtures and mocks to reflect the removal of `safetySettings`. Verified all 127 test files (1,092 tests) pass and production build succeeds with zero errors.
+
 ## v4.12.1 - 2026-10-22
 
 - Release title: Nano Banana Ultra 4.12.1 - Production Diagnostics Forensics, Deep 429 Classification Refinement & Telemetry Buffer Protection

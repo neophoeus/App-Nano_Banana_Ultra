@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { enhancePromptWithGemini, generatePromptFromImage, generateRandomPrompt } from '../services/geminiService';
-import type { PromptThinkingLevel, SafetyThresholds } from '../types';
+import type { PromptThinkingLevel } from '../types';
 import { prepareImageAssetFromFile } from '../utils/imageSaveUtils';
 import { Language } from '../utils/translations';
 
@@ -11,7 +11,6 @@ interface UsePromptToolsOptions {
     currentLanguage: Language;
     prompt: string;
     promptThinkingLevel?: PromptThinkingLevel;
-    safetyThresholds: SafetyThresholds;
     setPrompt: Dispatch<SetStateAction<string>>;
     addLog: (msg: string) => void;
     showNotification: (msg: string, type: 'info' | 'error') => void;
@@ -36,7 +35,6 @@ export function usePromptTools({
     currentLanguage,
     prompt,
     promptThinkingLevel = 'low',
-    safetyThresholds,
     setPrompt,
     addLog,
     showNotification,
@@ -65,7 +63,6 @@ export function usePromptTools({
             const enhanced = await enhancePromptWithGemini(
                 prompt,
                 currentLanguage,
-                safetyThresholds,
                 promptThinkingLevel,
             );
             setPrompt(enhanced);
@@ -85,7 +82,6 @@ export function usePromptTools({
         addLog,
         prompt,
         promptThinkingLevel,
-        safetyThresholds,
         setPrompt,
         showNotification,
         t,
@@ -101,7 +97,7 @@ export function usePromptTools({
         setActivePromptTool('inspiration');
         setIsEnhancingPrompt(true);
         try {
-            const randomPrompt = await generateRandomPrompt(currentLanguage, safetyThresholds, promptThinkingLevel);
+            const randomPrompt = await generateRandomPrompt(currentLanguage, promptThinkingLevel);
             setPrompt(randomPrompt);
             addLog(t('logRandomOk'));
         } catch (e) {
@@ -118,7 +114,6 @@ export function usePromptTools({
         handleApiKeyConnect,
         addLog,
         promptThinkingLevel,
-        safetyThresholds,
         setPrompt,
         t,
     ]);
@@ -144,7 +139,6 @@ export function usePromptTools({
                 const generatedPrompt = await generatePromptFromImage(
                     preparedImage.dataUrl,
                     currentLanguage,
-                    safetyThresholds,
                     promptThinkingLevel,
                 );
                 setPrompt(generatedPrompt);
@@ -168,7 +162,6 @@ export function usePromptTools({
             handleApiKeyConnect,
             addLog,
             promptThinkingLevel,
-            safetyThresholds,
             setPrompt,
             showNotification,
             t,

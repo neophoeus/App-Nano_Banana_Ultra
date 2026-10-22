@@ -1,5 +1,4 @@
 import {
-    DEFAULT_SAFETY_THRESHOLDS,
     GenerateOptions,
     GenerateResponse,
     ImageReceivedResult,
@@ -7,7 +6,6 @@ import {
     ResultPart,
     ResultImagePart,
     type PromptThinkingLevel,
-    type SafetyThresholds,
 } from '../types';
 import {
     attachGenerationFailure,
@@ -69,7 +67,6 @@ type ImageGenerateRequestBody = {
     includeThoughts: GenerateOptions['includeThoughts'];
     googleSearch: GenerateOptions['googleSearch'];
     imageSearch: GenerateOptions['imageSearch'];
-    safetyThresholds: GenerateOptions['safetyThresholds'];
     executionMode: GenerateOptions['executionMode'];
     conversationContext: GenerateOptions['conversationContext'];
 };
@@ -207,7 +204,6 @@ const buildImageGenerateRequestBody = (options: GenerateOptions, finalPrompt: st
     includeThoughts: options.includeThoughts,
     googleSearch: options.googleSearch,
     imageSearch: options.imageSearch,
-    safetyThresholds: options.safetyThresholds,
     executionMode: options.executionMode,
     conversationContext: options.conversationContext,
 });
@@ -1372,20 +1368,19 @@ export const promptForApiKey = async (): Promise<void> => {
 export const enhancePromptWithGemini = async (
     currentPrompt: string,
     lang: Language,
-    safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
     thinkingLevel: PromptThinkingLevel = 'low',
 ): Promise<string> => {
     const testOverride = getBrowserOnlyTestGeminiServiceOverrides()?.enhancePromptWithGemini;
     if (testOverride) {
-        return await testOverride(currentPrompt, lang, safetyThresholds, thinkingLevel);
+        return await testOverride(currentPrompt, lang, thinkingLevel);
     }
 
     if (getResolvedExecutionMode() === 'direct') {
-        return await browserDirectProvider.enhancePrompt(currentPrompt, lang, safetyThresholds, thinkingLevel);
+        return await browserDirectProvider.enhancePrompt(currentPrompt, lang, thinkingLevel);
     }
 
     const correlationId = createDebugTerminalCorrelationId('prompt');
-    const requestPayload = { currentPrompt, lang, safetyThresholds, thinkingLevel };
+    const requestPayload = { currentPrompt, lang, thinkingLevel };
     const response = await retryOperation(
         () =>
             fetchJson<{ text: string }>(
@@ -1446,20 +1441,19 @@ export const enhancePromptWithGemini = async (
 
 export const generateRandomPrompt = async (
     lang: Language,
-    safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
     thinkingLevel: PromptThinkingLevel = 'low',
 ): Promise<string> => {
     const testOverride = getBrowserOnlyTestGeminiServiceOverrides()?.generateRandomPrompt;
     if (testOverride) {
-        return await testOverride(lang, safetyThresholds, thinkingLevel);
+        return await testOverride(lang, thinkingLevel);
     }
 
     if (getResolvedExecutionMode() === 'direct') {
-        return await browserDirectProvider.generateRandomPrompt(lang, safetyThresholds, thinkingLevel);
+        return await browserDirectProvider.generateRandomPrompt(lang, thinkingLevel);
     }
 
     const correlationId = createDebugTerminalCorrelationId('prompt');
-    const requestPayload = { lang, safetyThresholds, thinkingLevel };
+    const requestPayload = { lang, thinkingLevel };
     const response = await retryOperation(
         () =>
             fetchJson<{ text: string }>(
@@ -1521,20 +1515,19 @@ export const generateRandomPrompt = async (
 export const generatePromptFromImage = async (
     imageDataUrl: string,
     lang: Language,
-    safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
     thinkingLevel: PromptThinkingLevel = 'low',
 ): Promise<string> => {
     const testOverride = getBrowserOnlyTestGeminiServiceOverrides()?.generatePromptFromImage;
     if (testOverride) {
-        return await testOverride(imageDataUrl, lang, safetyThresholds, thinkingLevel);
+        return await testOverride(imageDataUrl, lang, thinkingLevel);
     }
 
     if (getResolvedExecutionMode() === 'direct') {
-        return await browserDirectProvider.generatePromptFromImage(imageDataUrl, lang, safetyThresholds, thinkingLevel);
+        return await browserDirectProvider.generatePromptFromImage(imageDataUrl, lang, thinkingLevel);
     }
 
     const correlationId = createDebugTerminalCorrelationId('prompt');
-    const requestPayload = { imageDataUrl, lang, safetyThresholds, thinkingLevel };
+    const requestPayload = { imageDataUrl, lang, thinkingLevel };
     const response = await retryOperation(
         () =>
             fetchJson<{ text: string }>(
@@ -1693,18 +1686,15 @@ export type BrowserOnlyTestGeminiServiceOverrides = {
     enhancePromptWithGemini?: (
         currentPrompt: string,
         lang?: Language,
-        safetyThresholds?: Partial<SafetyThresholds>,
         thinkingLevel?: PromptThinkingLevel,
     ) => Promise<string> | string;
     generateRandomPrompt?: (
         lang?: Language,
-        safetyThresholds?: Partial<SafetyThresholds>,
         thinkingLevel?: PromptThinkingLevel,
     ) => Promise<string> | string;
     generatePromptFromImage?: (
         imageDataUrl: string,
         lang?: Language,
-        safetyThresholds?: Partial<SafetyThresholds>,
         thinkingLevel?: PromptThinkingLevel,
     ) => Promise<string> | string;
     generateImageWithGemini?: (

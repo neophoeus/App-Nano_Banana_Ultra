@@ -1,5 +1,4 @@
 import {
-    DEFAULT_SAFETY_THRESHOLDS,
     GenerateOptions,
     GenerateResponse,
     ImageReceivedResult,
@@ -7,7 +6,6 @@ import {
     ResultPart,
     ResultImagePart,
     type PromptThinkingLevel,
-    type SafetyThresholds,
 } from '../../types';
 import {
     attachGenerationFailure,
@@ -68,7 +66,6 @@ type ImageGenerateRequestBody = {
     includeThoughts: GenerateOptions['includeThoughts'];
     googleSearch: GenerateOptions['googleSearch'];
     imageSearch: GenerateOptions['imageSearch'];
-    safetyThresholds: GenerateOptions['safetyThresholds'];
     executionMode: GenerateOptions['executionMode'];
     conversationContext: GenerateOptions['conversationContext'];
 };
@@ -200,7 +197,6 @@ const buildImageGenerateRequestBody = (options: GenerateOptions, finalPrompt: st
     includeThoughts: options.includeThoughts,
     googleSearch: options.googleSearch,
     imageSearch: options.imageSearch,
-    safetyThresholds: options.safetyThresholds,
     executionMode: options.executionMode,
     conversationContext: options.conversationContext,
 });
@@ -820,11 +816,10 @@ export class LocalBackendProvider implements WorkspaceExecutionProvider {
     async enhancePrompt(
         currentPrompt: string,
         lang: Language,
-        safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
         thinkingLevel: PromptThinkingLevel = 'low',
     ): Promise<string> {
         const correlationId = createDebugTerminalCorrelationId('prompt');
-        const requestPayload = { currentPrompt, lang, safetyThresholds, thinkingLevel };
+        const requestPayload = { currentPrompt, lang, thinkingLevel };
         const response = await retryOperation(
             () =>
                 fetchJson<{ text: string }>(
@@ -871,11 +866,10 @@ export class LocalBackendProvider implements WorkspaceExecutionProvider {
 
     async generateRandomPrompt(
         lang: Language,
-        safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
         thinkingLevel: PromptThinkingLevel = 'low',
     ): Promise<string> {
         const correlationId = createDebugTerminalCorrelationId('prompt');
-        const requestPayload = { lang, safetyThresholds, thinkingLevel };
+        const requestPayload = { lang, thinkingLevel };
         const response = await retryOperation(
             () =>
                 fetchJson<{ text: string }>(
@@ -923,11 +917,10 @@ export class LocalBackendProvider implements WorkspaceExecutionProvider {
     async generatePromptFromImage(
         imageDataUrl: string,
         lang: Language,
-        safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
         thinkingLevel: PromptThinkingLevel = 'low',
     ): Promise<string> {
         const correlationId = createDebugTerminalCorrelationId('prompt');
-        const requestPayload = { imageDataUrl, lang, safetyThresholds, thinkingLevel };
+        const requestPayload = { imageDataUrl, lang, thinkingLevel };
         const response = await retryOperation(
             () =>
                 fetchJson<{ text: string }>(

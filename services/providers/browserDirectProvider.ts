@@ -1,6 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
 import {
-    DEFAULT_SAFETY_THRESHOLDS,
     GenerateOptions,
     GenerateResponse,
     ImageReceivedResult,
@@ -8,7 +7,6 @@ import {
     ResultPart,
     ResultTextPart,
     type PromptThinkingLevel,
-    type SafetyThresholds,
 } from '../../types';
 import {
     buildImageToPromptInstruction,
@@ -17,7 +15,7 @@ import {
     buildRandomPromptRequest,
     normalizePromptToolLanguage,
 } from '../../utils/geminiPromptHelpers';
-import { buildSafetySettings, toPromptGeminiThinkingLevel } from '../../utils/geminiApiConfig';
+import { toPromptGeminiThinkingLevel } from '../../utils/geminiApiConfig';
 import {
     attachGenerationFailure,
     getGenerationFailure,
@@ -135,7 +133,6 @@ type PreparedBrowserGenerateRequest = {
         includeThoughts: GenerateOptions['includeThoughts'];
         googleSearch: GenerateOptions['googleSearch'];
         imageSearch: GenerateOptions['imageSearch'];
-        safetyThresholds: GenerateOptions['safetyThresholds'];
         executionMode: GenerateOptions['executionMode'];
         conversationContext: GenerateOptions['conversationContext'];
     };
@@ -542,7 +539,6 @@ const prepareBrowserGenerateRequest = async (
         includeThoughts: options.includeThoughts,
         googleSearch: options.googleSearch,
         imageSearch: options.imageSearch,
-        safetyThresholds: options.safetyThresholds,
         executionMode: options.executionMode,
         conversationContext: options.conversationContext,
     };
@@ -1576,16 +1572,13 @@ export class BrowserDirectProvider implements WorkspaceExecutionProvider {
     async enhancePrompt(
         currentPrompt: string,
         lang: Language,
-        safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
         thinkingLevel: PromptThinkingLevel = 'low',
     ): Promise<string> {
         const normalizedLanguage = normalizePromptToolLanguage(lang);
-        const resolvedSafetySettings = buildSafetySettings(safetyThresholds ?? DEFAULT_SAFETY_THRESHOLDS);
         const requestPayload = {
             model: 'gemini-3.8-flash',
             config: {
                 systemInstruction: buildPromptEnhancerInstruction(normalizedLanguage),
-                ...(resolvedSafetySettings ? { safetySettings: resolvedSafetySettings } : {}),
                 thinkingConfig: {
                     thinkingLevel: toPromptGeminiThinkingLevel(thinkingLevel),
                 },
@@ -1611,16 +1604,13 @@ export class BrowserDirectProvider implements WorkspaceExecutionProvider {
 
     async generateRandomPrompt(
         lang: Language,
-        safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
         thinkingLevel: PromptThinkingLevel = 'low',
     ): Promise<string> {
         const normalizedLanguage = normalizePromptToolLanguage(lang);
-        const resolvedSafetySettings = buildSafetySettings(safetyThresholds ?? DEFAULT_SAFETY_THRESHOLDS);
         const requestPayload = {
             model: 'gemini-3.8-flash',
             config: {
                 systemInstruction: buildRandomPromptInstruction(normalizedLanguage),
-                ...(resolvedSafetySettings ? { safetySettings: resolvedSafetySettings } : {}),
                 thinkingConfig: {
                     thinkingLevel: toPromptGeminiThinkingLevel(thinkingLevel),
                 },
@@ -1647,7 +1637,6 @@ export class BrowserDirectProvider implements WorkspaceExecutionProvider {
     async generatePromptFromImage(
         imageDataUrl: string,
         lang: Language,
-        safetyThresholds: Partial<SafetyThresholds> = DEFAULT_SAFETY_THRESHOLDS,
         thinkingLevel: PromptThinkingLevel = 'low',
     ): Promise<string> {
         const normalizedLanguage = normalizePromptToolLanguage(lang);
@@ -1656,12 +1645,10 @@ export class BrowserDirectProvider implements WorkspaceExecutionProvider {
             throw new Error('Failed to parse uploaded image data for prompt generation.');
         }
 
-        const resolvedSafetySettings = buildSafetySettings(safetyThresholds ?? DEFAULT_SAFETY_THRESHOLDS);
         const requestPayload = {
             model: 'gemini-3.8-flash',
             config: {
                 systemInstruction: buildImageToPromptInstruction(normalizedLanguage),
-                ...(resolvedSafetySettings ? { safetySettings: resolvedSafetySettings } : {}),
                 thinkingConfig: {
                     thinkingLevel: toPromptGeminiThinkingLevel(thinkingLevel),
                 },

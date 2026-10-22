@@ -647,17 +647,6 @@ export const fr = {
         'Au-dessus de 1.0, la variation et la surprise augmentent, mais la coherence et la fidelite au prompt peuvent diminuer.',
     composerAdvancedTemperatureGuideLower:
         'En dessous de 1.0, les resultats sont plus stables et plus litteraux, mais generalement moins exploratoires.',
-    composerAdvancedSafetyTitle: 'Filtres de securite',
-    composerAdvancedSafetyNote:
-        'Le modele par defaut omet cette categorie de Gemini safetySettings. Le reglage actuel du produit garde les quatre filtres sur Sans blocage.',
-    composerAdvancedSafetyAllLabel: 'Toutes categories',
-    composerAdvancedSafetyMixed: 'Mixte',
-    composerAdvancedSafetyThresholdDefault: 'Modele',
-    composerAdvancedSafetyThresholdOff: 'Desactive',
-    composerAdvancedSafetyThresholdBlockNone: 'Sans blocage',
-    composerAdvancedSafetyThresholdBlockOnlyHigh: 'Haut seul',
-    composerAdvancedSafetyThresholdBlockMediumAndAbove: 'Moyen+',
-    composerAdvancedSafetyThresholdBlockLowAndAbove: 'Faible+',
     surfaceSharedControlsBadge: 'Partage',
     surfaceSharedControlsSettingsTitle: 'Parametres',
     surfaceSharedControlsOpen: 'Ouvrir les controles partages',

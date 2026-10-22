@@ -881,17 +881,6 @@ export const zh_TW = {
     composerAdvancedTemperatureGuideLower: '低於 1.0 會讓結果更穩定、更貼近字面要求，但探索性通常會降低。',
     composerAdvancedHighThinkingHighTempWarning:
         '⚠️ 當開啟「高度思考模式」且「溫度」大於 1.0 時，模型可能會陷入思考重複循環，無法完成生成。若遇到此情況，建議將溫度調整回 1.0。',
-    composerAdvancedSafetyTitle: '安全過濾',
-    composerAdvancedSafetyNote:
-        '「模型預設」會省略該分類的 Gemini safetySettings。產品目前的預設仍是四類全部「不封鎖」。',
-    composerAdvancedSafetyAllLabel: '同步四項',
-    composerAdvancedSafetyMixed: '混合',
-    composerAdvancedSafetyThresholdDefault: '模型預設',
-    composerAdvancedSafetyThresholdOff: '關閉',
-    composerAdvancedSafetyThresholdBlockNone: '不封鎖',
-    composerAdvancedSafetyThresholdBlockOnlyHigh: '只擋高風險',
-    composerAdvancedSafetyThresholdBlockMediumAndAbove: '中風險以上',
-    composerAdvancedSafetyThresholdBlockLowAndAbove: '低風險以上',
     stageGroundingResultStatus: 'Grounding 結果',
     stageGroundingResultSummary: '{0} · 請求 {1} · 實際 {2}',
     stageGeneratedImageAlt: '生成圖片',

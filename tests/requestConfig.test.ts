@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HarmBlockThreshold, HarmCategory, ThinkingLevel } from '@google/genai/node';
+import { ThinkingLevel } from '@google/genai/node';
 import { buildGenerateParts } from '../plugins/utils/imageReferences';
 import { buildImageRequestConfig, validateCapabilityRequest } from '../plugins/utils/requestConfig';
 
@@ -96,67 +96,9 @@ describe('buildImageRequestConfig', () => {
         expect(result.requestConfig.temperature).toBeUndefined();
     });
 
-    it('preserves permissive safety defaults when no overrides are provided', () => {
+    it('omits safetySettings from outbound requestConfig by default', () => {
         const result = buildImageRequestConfig('gemini-3.1-flash-image', {
             outputFormat: 'images-only',
-        });
-
-        expect(result.requestConfig.safetySettings).toEqual([
-            {
-                category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-                threshold: HarmBlockThreshold.BLOCK_NONE,
-            },
-            {
-                category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                threshold: HarmBlockThreshold.BLOCK_NONE,
-            },
-            {
-                category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-                threshold: HarmBlockThreshold.BLOCK_NONE,
-            },
-            {
-                category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-                threshold: HarmBlockThreshold.BLOCK_NONE,
-            },
-        ]);
-    });
-
-    it('maps product safety threshold keys to Gemini SDK safety settings', () => {
-        const result = buildImageRequestConfig('gemini-3.1-flash-image', {
-            outputFormat: 'images-only',
-            safetyThresholds: {
-                harassment: 'default',
-                'hate-speech': 'block-only-high',
-                'sexually-explicit': 'off',
-                'dangerous-content': 'block-low-and-above',
-            },
-        });
-
-        expect(result.requestConfig.safetySettings).toEqual([
-            {
-                category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-            },
-            {
-                category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-                threshold: HarmBlockThreshold.OFF,
-            },
-            {
-                category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-                threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-            },
-        ]);
-    });
-
-    it('omits safety settings when every category uses model default behavior', () => {
-        const result = buildImageRequestConfig('gemini-3.1-flash-image', {
-            outputFormat: 'images-only',
-            safetyThresholds: {
-                harassment: 'default',
-                'hate-speech': 'default',
-                'sexually-explicit': 'default',
-                'dangerous-content': 'default',
-            },
         });
 
         expect(result.requestConfig.safetySettings).toBeUndefined();

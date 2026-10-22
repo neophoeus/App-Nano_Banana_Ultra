@@ -15,7 +15,6 @@ import {
     OutputFormat,
     ResultPart,
     ResultImagePart,
-    SafetyThresholds,
     ThinkingLevel,
 } from '../types';
 import {
@@ -196,7 +195,6 @@ interface UsePerformGenerationProps {
     includeThoughts: boolean;
     googleSearch: boolean;
     imageSearch: boolean;
-    safetyThresholds: SafetyThresholds;
     setBatchProgress: (val: { completed: number; total: number; currentRound?: number; totalRounds?: number }) => void;
     setGenerationMode: (val: string) => void;
     setExecutionMode: (val: ExecutionMode) => void;
@@ -255,7 +253,6 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
         includeThoughts,
         googleSearch,
         imageSearch,
-        safetyThresholds,
         setBatchProgress,
         setGenerationMode,
         setExecutionMode,
@@ -764,7 +761,6 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                             includeThoughts,
                             googleSearch,
                             imageSearch,
-                            safetyThresholds,
                             executionMode: currentExecutionMode,
                             conversationContext,
                             liveProgressBatchSessionId: roundBatchSessionId,

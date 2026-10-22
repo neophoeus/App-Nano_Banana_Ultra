@@ -1,8 +1,6 @@
 import { GoogleGenAI } from '@google/genai/node';
 import { cleanResponseText } from './apiHelpers';
-import { PERMISSIVE_SAFETY_SETTINGS, toPromptGeminiThinkingLevel } from './geminiApiConfig';
-
-export { PERMISSIVE_SAFETY_SETTINGS } from './geminiApiConfig';
+import { toPromptGeminiThinkingLevel } from './geminiApiConfig';
 
 const LANGUAGE_INSTRUCTION_NAMES: Record<string, string> = {
     en: 'English',
@@ -150,7 +148,6 @@ Constraints:
 1. Return ONLY a comma-separated list (e.g. "blood, gore, weapon").
 2. Do NOT output conversational text, definitions, or markdown.
 3. If specific words are not found, output the concept (e.g. "explicit violence").`,
-                safetySettings: PERMISSIVE_SAFETY_SETTINGS,
                 thinkingConfig: {
                     thinkingLevel: toPromptGeminiThinkingLevel(thinkingLevel),
                 },

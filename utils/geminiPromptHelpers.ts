@@ -1,7 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
-import { PERMISSIVE_SAFETY_SETTINGS, toPromptGeminiThinkingLevel } from './geminiApiConfig';
-
-export { PERMISSIVE_SAFETY_SETTINGS } from './geminiApiConfig';
+import { toPromptGeminiThinkingLevel } from './geminiApiConfig';
 
 const cleanResponseText = (text: string | undefined, fallback: string): string =>
     (text?.trim() || fallback).replace(/^["']|["']$/g, '');
@@ -152,7 +150,6 @@ Constraints:
 1. Return ONLY a comma-separated list (e.g. "blood, gore, weapon").
 2. Do NOT output conversational text, definitions, or markdown.
 3. If specific words are not found, output the concept (e.g. "explicit violence").`,
-                safetySettings: PERMISSIVE_SAFETY_SETTINGS,
                 thinkingConfig: {
                     thinkingLevel: toPromptGeminiThinkingLevel(thinkingLevel),
                 },

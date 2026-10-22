@@ -478,7 +478,7 @@ describe('imageSavePlugin official conversation integration', () => {
         );
         expect(firstManifestRequest.request.generationConfig.thinkingConfig).toBeUndefined();
         expect(firstManifestRequest.request.generationConfig.safetySettings).toBeUndefined();
-        expect(firstManifestRequest.request.safetySettings).toBeDefined();
+        expect(firstManifestRequest.request.safetySettings).toBeUndefined();
         expect(createResponse.body.job).toEqual(
             expect.objectContaining({
                 name: 'batches/test-job',
@@ -1145,12 +1145,6 @@ describe('imageSavePlugin official conversation integration', () => {
         const enhanceResponse = await invokeJsonRoute(promptEnhanceHandler!, {
             currentPrompt: 'a lone traveler in the rain',
             lang: 'en',
-            safetyThresholds: {
-                harassment: 'default',
-                'hate-speech': 'block-only-high',
-                'sexually-explicit': 'off',
-                'dangerous-content': 'block-none',
-            },
         });
         const randomResponse = await invokeJsonRoute(promptRandomHandler!, {
             lang: 'en',
@@ -1170,20 +1164,6 @@ describe('imageSavePlugin official conversation integration', () => {
                 model: 'gemini-3.8-flash',
                 config: expect.objectContaining({
                     systemInstruction: expect.stringContaining('2-4 short prompt-only blocks separated by line breaks'),
-                    safetySettings: [
-                        {
-                            category: 'hate',
-                            threshold: 'BLOCK_ONLY_HIGH',
-                        },
-                        {
-                            category: 'sexual',
-                            threshold: 'OFF',
-                        },
-                        {
-                            category: 'danger',
-                            threshold: 'BLOCK_NONE',
-                        },
-                    ],
                     thinkingConfig: {
                         thinkingLevel: 'LOW',
                     },

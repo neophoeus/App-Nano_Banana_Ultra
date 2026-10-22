@@ -15,10 +15,7 @@ import {
     normalizePromptToolLanguage,
 } from '../utils/promptHelpers';
 import {
-    buildSafetySettings,
-    DEFAULT_SAFETY_THRESHOLDS,
     toPromptGeminiThinkingLevel,
-    type SafetyThresholds,
 } from '../utils/geminiApiConfig';
 
 type PromptRequestBody = {
@@ -26,7 +23,6 @@ type PromptRequestBody = {
     imageDataUrl?: string;
     lang?: string;
     thinkingLevel?: 'low' | 'medium' | 'high';
-    safetyThresholds?: Partial<SafetyThresholds>;
 };
 
 function parseInlineImageFromDataUrl(imageDataUrl: string): { data: string; mimeType: string } | null {
@@ -60,10 +56,8 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 currentPrompt = '',
                 lang: requestedLang,
                 thinkingLevel,
-                safetyThresholds,
             } = await readJsonBody<PromptRequestBody>(req);
             const lang = normalizePromptToolLanguage(requestedLang);
-            const resolvedSafetySettings = buildSafetySettings(safetyThresholds ?? DEFAULT_SAFETY_THRESHOLDS);
             logApiRequest(requestContext, {
                 source: 'prompt-tools',
                 lang,
@@ -74,7 +68,6 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 model: 'gemini-3.8-flash',
                 config: {
                     systemInstruction: buildPromptEnhancerInstruction(lang),
-                    ...(resolvedSafetySettings ? { safetySettings: resolvedSafetySettings } : {}),
                     thinkingConfig: {
                         thinkingLevel: toPromptGeminiThinkingLevel(thinkingLevel),
                     },
@@ -117,9 +110,8 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
 
         try {
             const ai = getAIClient();
-            const { lang: requestedLang, thinkingLevel, safetyThresholds } = await readJsonBody<PromptRequestBody>(req);
+            const { lang: requestedLang, thinkingLevel } = await readJsonBody<PromptRequestBody>(req);
             const lang = normalizePromptToolLanguage(requestedLang);
-            const resolvedSafetySettings = buildSafetySettings(safetyThresholds ?? DEFAULT_SAFETY_THRESHOLDS);
             logApiRequest(requestContext, {
                 source: 'prompt-tools',
                 lang,
@@ -129,7 +121,6 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 model: 'gemini-3.8-flash',
                 config: {
                     systemInstruction: buildRandomPromptInstruction(lang),
-                    ...(resolvedSafetySettings ? { safetySettings: resolvedSafetySettings } : {}),
                     thinkingConfig: {
                         thinkingLevel: toPromptGeminiThinkingLevel(thinkingLevel),
                     },
@@ -176,11 +167,9 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 imageDataUrl = '',
                 lang: requestedLang,
                 thinkingLevel,
-                safetyThresholds,
             } = await readJsonBody<PromptRequestBody>(req);
             const lang = normalizePromptToolLanguage(requestedLang);
             const inlineImage = parseInlineImageFromDataUrl(String(imageDataUrl || ''));
-            const resolvedSafetySettings = buildSafetySettings(safetyThresholds ?? DEFAULT_SAFETY_THRESHOLDS);
             logApiRequest(requestContext, {
                 source: 'prompt-tools',
                 lang,
@@ -209,7 +198,6 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 model: 'gemini-3.8-flash',
                 config: {
                     systemInstruction: buildImageToPromptInstruction(lang),
-                    ...(resolvedSafetySettings ? { safetySettings: resolvedSafetySettings } : {}),
                     thinkingConfig: {
                         thinkingLevel: toPromptGeminiThinkingLevel(thinkingLevel),
                     },

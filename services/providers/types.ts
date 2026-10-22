@@ -3,7 +3,6 @@ import type {
     ImageReceivedResult,
     PromptThinkingLevel,
     ResultPart,
-    SafetyThresholds,
 } from '../../types';
 import type { Language } from '../../utils/translations';
 import type { LiveProgressStreamTruthSummary } from '../../utils/liveProgressCapabilities';
@@ -54,20 +53,17 @@ export interface WorkspaceExecutionProvider {
     enhancePrompt(
         currentPrompt: string,
         lang: Language,
-        safetyThresholds?: Partial<SafetyThresholds>,
         thinkingLevel?: PromptThinkingLevel,
     ): Promise<string>;
 
     generateRandomPrompt(
         lang: Language,
-        safetyThresholds?: Partial<SafetyThresholds>,
         thinkingLevel?: PromptThinkingLevel,
     ): Promise<string>;
 
     generatePromptFromImage(
         imageDataUrl: string,
         lang: Language,
-        safetyThresholds?: Partial<SafetyThresholds>,
         thinkingLevel?: PromptThinkingLevel,
     ): Promise<string>;
 }

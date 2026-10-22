@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MODEL_CAPABILITIES } from '../utils/modelCapabilities';
-import { DEFAULT_SAFETY_THRESHOLDS, WorkspacePersistenceSnapshot } from '../types';
+import { WorkspacePersistenceSnapshot } from '../types';
 import { buildConversationRequestContext } from '../utils/conversationState';
 import {
     clearSharedWorkspaceSnapshot,
@@ -194,7 +194,6 @@ describe('workspacePersistence', () => {
         });
 
         expect(restored.composerState.stickySendIntent).toBe('independent');
-        expect(restored.composerState.safetyThresholds).toEqual(DEFAULT_SAFETY_THRESHOLDS);
     });
 
     it('hard-migrates legacy style ids across history, queued jobs, and composer state', () => {
@@ -263,24 +262,19 @@ describe('workspacePersistence', () => {
         expect(restored.composerState.stickySendIntent).toBe('memory');
     });
 
-    it('preserves restored safety thresholds when provided explicitly', () => {
+    it('strips legacy safety thresholds on restored composer state', () => {
         const restored = sanitizeWorkspaceSnapshot({
             ...EMPTY_WORKSPACE_SNAPSHOT,
             composerState: {
                 ...EMPTY_WORKSPACE_SNAPSHOT.composerState,
                 safetyThresholds: {
-                    ...DEFAULT_SAFETY_THRESHOLDS,
                     harassment: 'default',
                     'dangerous-content': 'block-medium-and-above',
                 },
-            },
+            } as never,
         });
 
-        expect(restored.composerState.safetyThresholds).toEqual({
-            ...DEFAULT_SAFETY_THRESHOLDS,
-            harassment: 'default',
-            'dangerous-content': 'block-medium-and-above',
-        });
+        expect((restored.composerState as unknown as Record<string, unknown>).safetyThresholds).toBeUndefined();
     });
 
     it('normalizes restored composer temperature to 0.05 increments', () => {

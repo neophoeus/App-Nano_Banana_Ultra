@@ -913,17 +913,6 @@ export const en = {
         'Below 1.0 makes results more stable and literal, but usually less exploratory.',
     composerAdvancedHighThinkingHighTempWarning:
         '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
-    composerAdvancedSafetyTitle: 'Safety filters',
-    composerAdvancedSafetyNote:
-        'Model default omits that category from Gemini safetySettings. The current app default keeps all four filters at Block none.',
-    composerAdvancedSafetyAllLabel: 'All categories',
-    composerAdvancedSafetyMixed: 'Mixed',
-    composerAdvancedSafetyThresholdDefault: 'Model',
-    composerAdvancedSafetyThresholdOff: 'Off',
-    composerAdvancedSafetyThresholdBlockNone: 'None',
-    composerAdvancedSafetyThresholdBlockOnlyHigh: 'High',
-    composerAdvancedSafetyThresholdBlockMediumAndAbove: 'Med+',
-    composerAdvancedSafetyThresholdBlockLowAndAbove: 'Low+',
     stageGroundingResultStatus: 'Grounding result',
     stageGroundingResultSummary: '{0} · Requested {1} · Actual {2}',
     stageGeneratedImageAlt: 'Generated image',
