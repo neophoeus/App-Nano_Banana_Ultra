@@ -7,14 +7,12 @@ import WorkspaceImportReview from './WorkspaceImportReview';
 import WorkspaceModalFrame from './WorkspaceModalFrame';
 import WorkspacePickerSheet from './WorkspacePickerSheet';
 import WorkspaceViewerOverlay from './WorkspaceViewerOverlay';
-import RateLimitCooldownModal from './RateLimitCooldownModal';
 import { WORKSPACE_OVERLAY_Z_INDEX } from '../constants/workspaceOverlays';
 
 type NotificationState = { msg: string; type: 'info' | 'error' } | null;
 
 type WorkspaceOverlayStackProps = {
     notification: NotificationState;
-    rateLimitModalProps?: React.ComponentProps<typeof RateLimitCooldownModal> | null;
     surfaceSharedControlsProps: React.ComponentProps<typeof SurfaceSharedControls> | null;
     importReviewProps: React.ComponentProps<typeof WorkspaceImportReview> | null;
     advancedSettingsDialogProps: React.ComponentProps<typeof ComposerAdvancedSettingsDialog> | null;
@@ -36,7 +34,6 @@ type WorkspaceOverlayStackProps = {
 
 export default function WorkspaceOverlayStack({
     notification,
-    rateLimitModalProps,
     surfaceSharedControlsProps,
     importReviewProps,
     advancedSettingsDialogProps,
@@ -137,7 +134,6 @@ export default function WorkspaceOverlayStack({
             )}
 
             {branchRenameDialogProps && <BranchRenameDialog {...branchRenameDialogProps} />}
-            {rateLimitModalProps && <RateLimitCooldownModal {...rateLimitModalProps} />}
             {imageEditorSurface}
             <WorkspacePickerSheet {...pickerSheetProps} />
             <WorkspaceViewerOverlay {...viewerOverlayProps} />

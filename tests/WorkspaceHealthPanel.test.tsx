@@ -2,7 +2,6 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import WorkspaceHealthPanel from '../components/WorkspaceHealthPanel';
 import { getTranslation } from '../utils/translations';
-import { setStoredExecutionModeSetting } from '../utils/workspaceExecutionMode';
 
 describe('WorkspaceHealthPanel', () => {
     it('renders compact health indicators without expandable status copy', () => {
@@ -20,16 +19,5 @@ describe('WorkspaceHealthPanel', () => {
         expect(markup).not.toContain('global-log-stage-source-entry');
         expect(markup).not.toContain('global-log-stage-source-badge');
         expect(markup).not.toContain('global-log-minimized-source');
-    });
-
-    it('renders compute pool indicator when execution mode is direct', () => {
-        setStoredExecutionModeSetting('direct');
-        const markup = renderToStaticMarkup(<WorkspaceHealthPanel currentLanguage="en" />);
-
-        expect(markup).toContain('global-health-direct-mode');
-        expect(markup).toContain('global-health-compute-pool');
-        expect(markup).toContain(getTranslation('en', 'computePoolTitle'));
-        expect(markup).toContain(getTranslation('en', 'computePoolStatusHealthy'));
-        setStoredExecutionModeSetting('auto');
     });
 });

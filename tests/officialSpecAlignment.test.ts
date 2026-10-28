@@ -9,7 +9,6 @@ import {
     validateCapabilityRequest as serverValidateCapabilityRequest,
 } from '../plugins/utils/requestConfig';
 import { buildGenerateFileParts, buildGenerateParts } from '../plugins/utils/imageReferences';
-import { buildBrowserGenerateParts } from '../utils/browserGeminiParts';
 import { PromptReferenceChips } from '../components/PromptReferenceChips';
 
 describe('Official Gemini Nano Banana Spec Alignment', () => {
@@ -211,23 +210,6 @@ describe('Official Gemini Nano Banana Spec Alignment', () => {
             expect(videoPart).toBeDefined();
 
             const promptPart = parts.find((p) => (p as any).text === 'A portrait with custom style');
-            expect(promptPart).toBeDefined();
-        });
-
-        it('buildBrowserGenerateParts builds browser-compatible parts with style and video', async () => {
-            const parts = await buildBrowserGenerateParts({
-                prompt: 'Generate an artwork',
-                styleImageInputs: [dummyDataUrl],
-                videoInput: 'https://youtube.com/watch?v=browser-sample',
-            });
-
-            const styleTagPart = parts.find((p) => (p as any).text === '[Style_1]');
-            expect(styleTagPart).toBeDefined();
-
-            const videoPart = parts.find((p) => (p as any).fileData?.fileUri === 'https://youtube.com/watch?v=browser-sample');
-            expect(videoPart).toBeDefined();
-
-            const promptPart = parts.find((p) => (p as any).text === 'Generate an artwork');
             expect(promptPart).toBeDefined();
         });
     });

@@ -70,19 +70,12 @@ type UseComposerSettingsPanelPropsArgs = {
     getLineageActionLabel: (action?: TurnLineageAction) => string;
     roundCount?: number;
     setRoundCount?: (rounds: number) => void;
-    autoExportTrigger?: 'off' | 'count' | 'size' | 'both';
-    setAutoExportTrigger?: (trigger: 'off' | 'count' | 'size' | 'both') => void;
-    autoExportImageCount?: number;
-    setAutoExportImageCount?: (count: number) => void;
-    autoExportFileSizeMb?: number;
-    setAutoExportFileSizeMb?: (size: number) => void;
     batchProgress?: {
         completed: number;
         total: number;
         currentRound?: number;
         totalRounds?: number;
     };
-    supportsAutoBackup?: boolean;
     settingsLocked?: boolean;
     onToggleSettingsLock?: () => void;
     showNotification?: (message: string, type?: 'info' | 'error') => void;
@@ -111,9 +104,6 @@ type ComposerSettingsPanelHandlers = {
     openAdvancedSettings: () => void;
     setActivePickerSheet: Dispatch<SetStateAction<PickerSheet>>;
     setRoundCount?: (rounds: number) => void;
-    setAutoExportTrigger?: (trigger: 'off' | 'count' | 'size' | 'both') => void;
-    setAutoExportImageCount?: (count: number) => void;
-    setAutoExportFileSizeMb?: (size: number) => void;
 };
 
 export function useComposerSettingsPanelProps({
@@ -169,14 +159,7 @@ export function useComposerSettingsPanelProps({
     getLineageActionLabel,
     roundCount,
     setRoundCount,
-    autoExportTrigger,
-    setAutoExportTrigger,
-    autoExportImageCount,
-    setAutoExportImageCount,
-    autoExportFileSizeMb,
-    setAutoExportFileSizeMb,
     batchProgress,
-    supportsAutoBackup,
     settingsLocked,
     onToggleSettingsLock,
     showNotification,
@@ -222,9 +205,6 @@ export function useComposerSettingsPanelProps({
         openAdvancedSettings,
         setActivePickerSheet,
         setRoundCount,
-        setAutoExportTrigger,
-        setAutoExportImageCount,
-        setAutoExportFileSizeMb,
     });
 
     useLayoutEffect(() => {
@@ -246,9 +226,6 @@ export function useComposerSettingsPanelProps({
             openAdvancedSettings,
             setActivePickerSheet,
             setRoundCount,
-            setAutoExportTrigger,
-            setAutoExportImageCount,
-            setAutoExportFileSizeMb,
         };
     }, [
         setPrompt,
@@ -268,9 +245,6 @@ export function useComposerSettingsPanelProps({
         openAdvancedSettings,
         setActivePickerSheet,
         setRoundCount,
-        setAutoExportTrigger,
-        setAutoExportImageCount,
-        setAutoExportFileSizeMb,
     ]);
     return useMemo(
         () => ({
@@ -326,15 +300,7 @@ export function useComposerSettingsPanelProps({
             getLineageActionLabel,
             roundCount: roundCount ?? 1,
             onRoundCountChange: (rounds: number) => latestHandlersRef.current.setRoundCount?.(rounds),
-            autoExportTrigger: autoExportTrigger ?? 'off',
-            onAutoExportTriggerChange: (trigger: 'off' | 'count' | 'size' | 'both') =>
-                latestHandlersRef.current.setAutoExportTrigger?.(trigger),
-            autoExportImageCount: autoExportImageCount ?? 20,
-            onAutoExportImageCountChange: (count: number) => latestHandlersRef.current.setAutoExportImageCount?.(count),
-            autoExportFileSizeMb: autoExportFileSizeMb ?? 100,
-            onAutoExportFileSizeMbChange: (size: number) => latestHandlersRef.current.setAutoExportFileSizeMb?.(size),
             batchProgress: batchProgress || { completed: 0, total: 0 },
-            supportsAutoBackup: Boolean(supportsAutoBackup),
             settingsLocked,
             onToggleSettingsLock,
             showNotification,
@@ -382,11 +348,7 @@ export function useComposerSettingsPanelProps({
             getStageOriginLabel,
             getLineageActionLabel,
             roundCount,
-            autoExportTrigger,
-            autoExportImageCount,
-            autoExportFileSizeMb,
             batchProgress,
-            supportsAutoBackup,
             settingsLocked,
             onToggleSettingsLock,
             showNotification,

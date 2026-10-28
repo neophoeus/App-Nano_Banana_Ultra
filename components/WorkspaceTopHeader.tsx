@@ -2,7 +2,6 @@ import React from 'react';
 import { Language } from '../utils/translations';
 import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
-import ExecutionModeSelector from './ExecutionModeSelector';
 
 type WorkspaceTopHeaderProps = {
     headerConsole: React.ReactNode;
@@ -66,7 +65,6 @@ function WorkspaceTopHeader({
                             </div>
                             <div className="min-w-0 flex-1" />
                             <div className="flex shrink-0 items-center gap-2">
-                                <ExecutionModeSelector currentLanguage={currentLanguage} />
                                 <ThemeToggle currentLanguage={currentLanguage} className="h-8 w-8 shadow-none" />
                                 <LanguageSelector
                                     currentLanguage={currentLanguage}

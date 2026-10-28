@@ -86,19 +86,12 @@ export type ComposerSettingsPanelProps = {
     styleImages?: string[];
     roundCount?: number;
     onRoundCountChange?: (rounds: number) => void;
-    autoExportTrigger?: 'off' | 'count' | 'size' | 'both';
-    onAutoExportTriggerChange?: (trigger: 'off' | 'count' | 'size' | 'both') => void;
-    autoExportImageCount?: number;
-    onAutoExportImageCountChange?: (count: number) => void;
-    autoExportFileSizeMb?: number;
-    onAutoExportFileSizeMbChange?: (size: number) => void;
     batchProgress?: {
         completed: number;
         total: number;
         currentRound?: number;
         totalRounds?: number;
     };
-    supportsAutoBackup?: boolean;
     settingsLocked?: boolean;
     onToggleSettingsLock?: () => void;
     showNotification?: (message: string, type?: 'info' | 'error') => void;
@@ -211,14 +204,7 @@ function ComposerSettingsPanel({
     styleImages = [],
     roundCount = 1,
     onRoundCountChange,
-    autoExportTrigger = 'off',
-    onAutoExportTriggerChange,
-    autoExportImageCount = 20,
-    onAutoExportImageCountChange,
-    autoExportFileSizeMb = 100,
-    onAutoExportFileSizeMbChange,
     batchProgress,
-    supportsAutoBackup = false,
     settingsLocked = false,
     onToggleSettingsLock,
     showNotification,
@@ -1532,72 +1518,6 @@ function ComposerSettingsPanel({
                                 </button>
                             </div>
                         </div>
-
-                        {/* Right: Auto-Export Backup (Rendered ONLY when supportsAutoBackup is true) */}
-                        {supportsAutoBackup ? (
-                            <div
-                                className="flex flex-wrap items-center gap-3"
-                                data-testid="composer-auto-export-control"
-                            >
-                                <div className="flex items-center gap-2">
-                                    <span className="font-semibold text-slate-600 dark:text-slate-300">
-                                        {t('autoExportSwitch')}
-                                    </span>
-                                    <button
-                                        type="button"
-                                        data-testid="composer-auto-export-toggle"
-                                        onClick={() =>
-                                            onAutoExportTriggerChange?.(autoExportTrigger === 'off' ? 'both' : 'off')
-                                        }
-                                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-amber-500 focus:ring-offset-1 dark:focus:ring-offset-slate-900 ${
-                                            autoExportTrigger !== 'off'
-                                                ? 'bg-amber-500'
-                                                : 'bg-gray-200 dark:bg-slate-700'
-                                        }`}
-                                    >
-                                        <span
-                                            aria-hidden="true"
-                                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                                autoExportTrigger !== 'off' ? 'translate-x-4' : 'translate-x-0'
-                                            }`}
-                                        />
-                                    </button>
-                                </div>
-
-                                {autoExportTrigger !== 'off' && (
-                                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                                        <span className="text-[11px]">({t('autoExportTriggerCondition')}:</span>
-
-                                        <select
-                                            data-testid="composer-auto-export-count-select"
-                                            value={autoExportImageCount}
-                                            onChange={(e) => onAutoExportImageCountChange?.(Number(e.target.value))}
-                                            className="bg-white dark:bg-slate-800 border dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-medium outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-slate-700 dark:text-slate-200"
-                                        >
-                                            <option value={10}>10 {t('imagesCountUnit')}</option>
-                                            <option value={20}>20 {t('imagesCountUnit')}</option>
-                                            <option value={30}>30 {t('imagesCountUnit')}</option>
-                                            <option value={50}>50 {t('imagesCountUnit')}</option>
-                                        </select>
-
-                                        <span>/</span>
-
-                                        <select
-                                            data-testid="composer-auto-export-size-select"
-                                            value={autoExportFileSizeMb}
-                                            onChange={(e) => onAutoExportFileSizeMbChange?.(Number(e.target.value))}
-                                            className="bg-white dark:bg-slate-800 border dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-medium outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-slate-700 dark:text-slate-200"
-                                        >
-                                            <option value={50}>50MB</option>
-                                            <option value={100}>100MB</option>
-                                            <option value={150}>150MB</option>
-                                            <option value={200}>200MB</option>
-                                        </select>
-                                        <span className="text-[11px]">)</span>
-                                    </div>
-                                )}
-                            </div>
-                        ) : null}
                     </div>
                 </div>
             </div>

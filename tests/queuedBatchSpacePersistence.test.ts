@@ -11,7 +11,6 @@ import {
     saveSharedQueuedBatchSpaceSnapshot,
     SHARED_QUEUED_BATCH_SPACE_ENDPOINT,
 } from '../utils/queuedBatchSpacePersistence';
-import { setExecutionModeSetting } from '../utils/workspaceExecutionMode';
 
 const buildQueuedJob = (overrides: Partial<QueuedBatchJob> = {}): QueuedBatchJob => ({
     localId: 'queued-job-1',
@@ -154,23 +153,5 @@ describe('queuedBatchSpacePersistence', () => {
         expect(JSON.parse(requestInit.body || '{}')).toEqual({
             queuedJobs: [],
         });
-    });
-
-    it('does not send /api/queued-batch-space network requests when in direct mode', async () => {
-        setExecutionModeSetting('direct');
-        const fetchMock = vi.fn().mockResolvedValue({ ok: true });
-        vi.stubGlobal('fetch', fetchMock);
-
-        const result = await loadSharedQueuedBatchSpaceSnapshot();
-        expect(result).toEqual({ snapshot: null, reachable: false });
-        expect(fetchMock).not.toHaveBeenCalled();
-
-        await saveSharedQueuedBatchSpaceSnapshot({
-            queuedJobs: [buildQueuedJob()],
-        });
-        expect(fetchMock).not.toHaveBeenCalled();
-
-        await clearSharedQueuedBatchSpaceSnapshot();
-        expect(fetchMock).not.toHaveBeenCalled();
     });
 });

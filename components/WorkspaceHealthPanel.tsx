@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Language, getTranslation } from '../utils/translations';
-import { useWorkspaceExecutionMode } from '../hooks/useWorkspaceExecutionMode';
-import { hasConfiguredGeminiApiKey } from '../utils/geminiCredentials';
-import { useComputePoolStatus, ComputePoolHealthLevel } from '../utils/aiStudioPlan';
 
 interface WorkspaceHealthPanelProps {
     currentLanguage?: Language;
@@ -16,39 +13,8 @@ type HealthPayload = {
 
 const REFRESH_INTERVAL_MS = 30000;
 
-const getPoolTone = (level: ComputePoolHealthLevel): string => {
-    switch (level) {
-        case 'congested':
-            return 'bg-orange-500';
-        case 'throttled':
-            return 'bg-amber-500';
-        case 'exhausted':
-            return 'bg-rose-500';
-        case 'healthy':
-        default:
-            return 'bg-emerald-500';
-    }
-};
-
-const getPoolLevelKey = (level: ComputePoolHealthLevel): string => {
-    switch (level) {
-        case 'congested':
-            return 'computePoolStatusCongested';
-        case 'throttled':
-            return 'computePoolStatusThrottled';
-        case 'exhausted':
-            return 'computePoolStatusExhausted';
-        case 'healthy':
-        default:
-            return 'computePoolStatusHealthy';
-    }
-};
-
 const WorkspaceHealthPanel: React.FC<WorkspaceHealthPanelProps> = ({ currentLanguage = 'en', refreshToken = 0 }) => {
-    const { resolvedMode } = useWorkspaceExecutionMode();
-    const poolStatus = useComputePoolStatus();
     const [health, setHealth] = useState<HealthPayload | null>(null);
-    const [directKeyAvailable, setDirectKeyAvailable] = useState<boolean>(false);
     const [healthError, setHealthError] = useState<string | null>(null);
     const t = (key: string) => getTranslation(currentLanguage as Language, key);
 
@@ -56,23 +22,6 @@ const WorkspaceHealthPanel: React.FC<WorkspaceHealthPanelProps> = ({ currentLang
         let isDisposed = false;
 
         const loadHealth = async () => {
-            if (resolvedMode === 'direct') {
-                try {
-                    const hasKey = await hasConfiguredGeminiApiKey();
-                    if (!isDisposed) {
-                        setDirectKeyAvailable(hasKey);
-                        setHealth({ ok: true, hasApiKey: hasKey });
-                        setHealthError(null);
-                    }
-                } catch {
-                    if (!isDisposed) {
-                        setDirectKeyAvailable(false);
-                        setHealth({ ok: true, hasApiKey: false });
-                    }
-                }
-                return;
-            }
-
             try {
                 const response = await fetch('/api/health');
                 const payload = await response.json().catch(() => null);
@@ -99,44 +48,22 @@ const WorkspaceHealthPanel: React.FC<WorkspaceHealthPanelProps> = ({ currentLang
             isDisposed = true;
             window.clearInterval(intervalId);
         };
-    }, [currentLanguage, refreshToken, resolvedMode]);
+    }, [currentLanguage, refreshToken]);
 
-    const headerStatusItems =
-        resolvedMode === 'direct'
-            ? [
-                  {
-                      key: 'direct-mode',
-                      testId: 'global-health-direct-mode',
-                      label: t('statusPanelDirectMode') || 'AI Studio',
-                      tone: 'bg-indigo-500',
-                  },
-                  {
-                      key: 'gemini-key',
-                      testId: 'global-health-gemini-key',
-                      label: t('statusPanelGeminiKey'),
-                      tone: !directKeyAvailable ? 'bg-amber-500' : 'bg-emerald-500',
-                  },
-                  {
-                      key: 'compute-pool',
-                      testId: 'global-health-compute-pool',
-                      label: `${t('computePoolTitle')}: ${t(getPoolLevelKey(poolStatus.level))}`,
-                      tone: getPoolTone(poolStatus.level),
-                  },
-              ]
-            : [
-                  {
-                      key: 'local-api',
-                      testId: 'global-health-local-api',
-                      label: t('statusPanelLocalApi'),
-                      tone: healthError || health?.ok === false ? 'bg-red-500' : 'bg-emerald-500',
-                  },
-                  {
-                      key: 'gemini-key',
-                      testId: 'global-health-gemini-key',
-                      label: t('statusPanelGeminiKey'),
-                      tone: health && !health.hasApiKey ? 'bg-red-500' : 'bg-emerald-500',
-                  },
-              ];
+    const headerStatusItems = [
+        {
+            key: 'local-api',
+            testId: 'global-health-local-api',
+            label: t('statusPanelLocalApi'),
+            tone: healthError || health?.ok === false ? 'bg-red-500' : 'bg-emerald-500',
+        },
+        {
+            key: 'gemini-key',
+            testId: 'global-health-gemini-key',
+            label: t('statusPanelGeminiKey'),
+            tone: health && !health.hasApiKey ? 'bg-red-500' : 'bg-emerald-500',
+        },
+    ];
 
     return (
         <div data-testid="global-health-summary" className="flex items-center gap-1.5 sm:gap-2">

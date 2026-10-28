@@ -1,5 +1,26 @@
 # Changelog
 
+## v5.0.0 - 2026-10-28
+
+- Release title: Nano Banana Ultra 5.0.0 - Unified Local Engine Architecture, AI Studio Dual-Engine Retirement (Policy Alignment), Extractor-Compatible Result Export with Embedded Metadata
+- Release summary:
+    - **Unified Local Architecture & Dual-Engine Retirement Aligning with AI Studio Policy Adjustments (`services/*`, `utils/*`, `components/*`)**:
+        - Formally retired the dual-engine architecture and AI Studio preview browser direct execution engine in alignment with Google AI Studio's official policy adjustments (preview mode discontinued browser-level consumer subscription quota injection, strictly requiring standard project API keys, rendering client-side direct calls obsolete).
+        - Cleanly deleted 17 obsolete direct-provider files, packaging batch scripts (`pack_ai_studio.bat`, `scripts/pack_ai_studio.ps1`), credentials bridge, rate-limit cooldown overlays, and compute pool status monitors (-6,650+ lines).
+        - Consolidated application execution flow exclusively onto `localBackendProvider`, eliminating redundant execution mode selectors, IndexedDB dual-save branches, and delayed auth polling.
+    - **Zero-Residue Auto-Backup & Storage Alert Cleanup (`utils/translations/*`, `hooks/*`, `App.tsx`)**:
+        - Completely removed legacy auto-backup triggers, periodic storage threshold checks (300MB), and warning modals.
+        - Purged 19 obsolete translation keys across all 9 localized languages (`en`, `zh_TW`, `zh_CN`, `ja`, `ko`, `es`, `fr`, `de`, `ru`) with zero orphaned keys or translation test regressions.
+    - **Extractor-Compatible Result Export with Embedded Metadata (`components/ExportResultsModal.tsx`, `plugins/routes/workspaceRoutes.ts`, `plugins/utils/imageMetadataEmbedder.ts`)**:
+        - Introduced a dedicated "Export All Generated Results" (`匯出成品`) feature fully compatible with `App-Nano_Banana_Workspace_Extractor` and standard WebUI / ComfyUI workflows.
+        - Zero-dependency lossless metadata injection: embeds uncompressed PNG `iTXt` (`parameters` and `nano_banana_meta` chunks with CRC32) and JPEG `COM` (`0xFF 0xFE` comments with multi-byte safe UTF-8 truncation).
+        - Guaranteed idempotency via automatic pre-stripping of existing metadata blocks on re-export.
+        - Intelligent primary output deduplication: prevents primary generation results from being duplicated as extra variants from `turn.resultParts`.
+        - Safe folder resolution: supports custom relative/absolute paths with quote stripping, Windows illegal character validation (`400 Bad Request`), `./output` collision prevention, Windows native folder browser dialog, and automatic sidecar `.json` metadata merging.
+    - **Automated Test Suite Expansion & Clean Regression Pass (`tests/*`)**:
+        - Added dedicated test suites for result export UI deduplication (`ExportResultsModal.test.tsx`), backend export route handling (`exportResultsRoute.test.ts`), and PNG/JPEG metadata embedding/idempotency (`imageMetadataEmbedder.test.ts`).
+        - Full regression verification: 124 test files (1,039 tests) passing cleanly with zero errors. Production build succeeds in 1.85s with significantly reduced bundle sizes.
+
 ## v4.14.0 - 2026-10-28
 
 - Release title: Nano Banana Ultra 4.14.0 - Dual-Engine Persistence Isolation, 404 Shared Endpoint Guardrails, Safety Block Short-Circuiting & Server-Directed Rate-Limit Recovery

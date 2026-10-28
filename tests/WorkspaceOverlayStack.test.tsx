@@ -31,10 +31,6 @@ vi.mock('../components/WorkspaceViewerOverlay', () => ({
     default: () => <div data-testid="mock-workspace-viewer-overlay" />,
 }));
 
-vi.mock('../components/RateLimitCooldownModal', () => ({
-    default: () => <div data-testid="mock-rate-limit-modal" />,
-}));
-
 describe('WorkspaceOverlayStack', () => {
     it('renders the base picker and viewer overlays when optional dialogs are absent', () => {
         const markup = renderToStaticMarkup(
@@ -119,44 +115,5 @@ describe('WorkspaceOverlayStack', () => {
 
         expect(markup).toContain('Workspace Restored');
         expect(markup).toContain('top-6');
-    });
-
-    it('renders the rate limit cooldown modal when rateLimitModalProps is provided', () => {
-        const markup = renderToStaticMarkup(
-            <WorkspaceOverlayStack
-                notification={null}
-                rateLimitModalProps={{
-                    notice: {
-                        active: true,
-                        model: 'gemini-3-pro-image',
-                        totalWaitMs: 15000,
-                        remainingMs: 12000,
-                        retryCount: 1,
-                        maxRetries: 5,
-                        isDismissed: false,
-                    },
-                    currentLanguage: 'zh_TW',
-                    onCancelGeneration: vi.fn(),
-                }}
-                surfaceSharedControlsProps={null}
-                importReviewProps={null}
-                advancedSettingsDialogProps={null}
-                sketchPadSurface={null}
-                showSketchReplaceConfirm={false}
-                sketchReplaceTitle="Replace"
-                sketchReplaceMessage="Replace current sketch"
-                sketchReplaceActionsTitle="Choose next step"
-                sketchReplaceCancelLabel="Cancel"
-                sketchReplaceConfirmLabel="Confirm"
-                onSketchReplaceCancel={vi.fn()}
-                onSketchReplaceConfirm={vi.fn()}
-                branchRenameDialogProps={null}
-                imageEditorSurface={null}
-                pickerSheetProps={{} as any}
-                viewerOverlayProps={{} as any}
-            />,
-        );
-
-        expect(markup).toContain('mock-rate-limit-modal');
     });
 });

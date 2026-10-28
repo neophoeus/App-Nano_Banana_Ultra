@@ -964,6 +964,43 @@ export class LocalBackendProvider implements WorkspaceExecutionProvider {
 
         return promptText;
     }
+
+    async exportWorkspaceResults(payload: {
+        targetDir?: string;
+        items: Array<{
+            imageUrl: string;
+            baseFilename?: string;
+            metadata: any;
+        }>;
+    }): Promise<{
+        success: boolean;
+        outputDir: string;
+        exportedCount: number;
+        skippedCount: number;
+        errors: string[];
+    }> {
+        const response = await fetch('/api/export-results', {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+            const errData = await response.json().catch(() => null);
+            throw new Error(errData?.error || `Export failed with status ${response.status}`);
+        }
+        return await response.json();
+    }
+
+    async browseExportFolder(): Promise<{ cancelled: boolean; path?: string }> {
+        const response = await fetch('/api/browse-folder', {
+            method: 'POST',
+            headers: jsonHeaders,
+        });
+        if (!response.ok) {
+            return { cancelled: true };
+        }
+        return await response.json().catch(() => ({ cancelled: true }));
+    }
 }
 
 export const localBackendProvider = new LocalBackendProvider();

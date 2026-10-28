@@ -2,12 +2,14 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { WORKSPACE_OVERLAY_Z_INDEX } from '../constants/workspaceOverlays';
 import type { DebugTerminalFilter, DebugTerminalSourceFilter } from '../hooks/useDebugTerminal';
 import type { DebugTerminalEvent, DebugTerminalEventKind, DebugTerminalSource } from '../utils/debugTerminalEvents';
-import {
-    useComputePoolStatus,
-    resetComputePoolStatus,
-    ComputePoolHealthLevel,
-    DeepErrorPacketAnalysis,
-} from '../utils/aiStudioPlan';
+type DeepErrorPacketAnalysis = {
+    category: string;
+    strategy: string;
+    recommendedWaitMs: number;
+    extractedRetryDelayMs: number | null;
+    quotaLimitValue?: string | null;
+    quotaMetric?: string | null;
+};
 import WorkspaceModalFrame from './WorkspaceModalFrame';
 
 type DebugTerminalPanelProps = {
@@ -75,34 +77,6 @@ const formatDuration = (durationMs?: number): string | null => {
     return durationMs >= 1000 ? `${(durationMs / 1000).toFixed(1)}s` : `${Math.round(durationMs)}ms`;
 };
 
-const getPoolTone = (level: ComputePoolHealthLevel): string => {
-    switch (level) {
-        case 'congested':
-            return 'bg-orange-500';
-        case 'throttled':
-            return 'bg-amber-500';
-        case 'exhausted':
-            return 'bg-rose-500';
-        case 'healthy':
-        default:
-            return 'bg-emerald-500';
-    }
-};
-
-const getPoolLevelKey = (level: ComputePoolHealthLevel): string => {
-    switch (level) {
-        case 'congested':
-            return 'computePoolStatusCongested';
-        case 'throttled':
-            return 'computePoolStatusThrottled';
-        case 'exhausted':
-            return 'computePoolStatusExhausted';
-        case 'healthy':
-        default:
-            return 'computePoolStatusHealthy';
-    }
-};
-
 function DebugTerminalIcon() {
     return (
         <svg
@@ -149,7 +123,6 @@ export default function DebugTerminalPanel({
     onClose,
 }: DebugTerminalPanelProps) {
     const listEndRef = useRef<HTMLDivElement | null>(null);
-    const poolStatus = useComputePoolStatus();
     const selectedEventJson = useMemo(() => JSON.stringify(selectedEvent || {}, null, 2), [selectedEvent]);
     const selectedCorrelationId = selectedEvent?.correlationId || selectedEvent?.requestId || null;
     const deepErrorAnalysis = ((selectedEvent?.payload as any)?.deepErrorAnalysis ||
@@ -307,38 +280,6 @@ export default function DebugTerminalPanel({
                     >
                         {t('debugTerminalClear')}
                     </button>
-                </div>
-
-                <div
-                    data-testid="debug-terminal-pool-status"
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-3.5 py-2 text-[11px] font-mono text-slate-300"
-                >
-                    <div className="flex items-center gap-2">
-                        <span className={`h-2.5 w-2.5 rounded-full ${getPoolTone(poolStatus.level)}`} />
-                        <span className="font-bold text-slate-100">{t('computePoolTitle')}:</span>
-                        <span className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 font-bold uppercase tracking-wide">
-                            {t(getPoolLevelKey(poolStatus.level))}
-                        </span>
-                        <span className="text-slate-400">
-                            {t('computePoolPacingMultiplierLabel')}:{' '}
-                            <strong className="text-cyan-300">{poolStatus.pacingMultiplier.toFixed(1)}x</strong>
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {poolStatus.activeModel ? (
-                            <span className="text-slate-400">
-                                Model: <span className="text-slate-200">{poolStatus.activeModel}</span>
-                            </span>
-                        ) : null}
-                        <button
-                            type="button"
-                            data-testid="debug-terminal-reset-pool-btn"
-                            onClick={() => resetComputePoolStatus()}
-                            className="rounded-full border border-white/15 bg-white/5 px-2.5 py-0.5 text-[10px] font-bold text-slate-200 transition hover:bg-white/10 active:scale-95"
-                        >
-                            {t('computePoolResetBtn')}
-                        </button>
-                    </div>
                 </div>
 
                 <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(320px,0.85fr)_minmax(0,1.15fr)]">

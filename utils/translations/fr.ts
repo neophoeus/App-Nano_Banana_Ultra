@@ -44,11 +44,7 @@ export const fr = {
     shiftEnter: 'Maj+Entrée à la ligne',
     qtyX: '{0}x',
     roundCount: 'Tours',
-    autoExportSwitch: 'Sauvegarde automatique',
-    autoExportTriggerCondition: 'Condition de sauvegarde',
     imagesCountUnit: 'images',
-    autoExportNotificationText:
-        'Sauvegarde automatique : {0} images ont été générées ou la limite de {1} Mo a été atteinte. Le fichier a été sauvegardé dans Téléchargements.',
     logAutoExportSuccess:
         "Une copie de sauvegarde de l'espace de travail contenant {0} éléments d'historique a été exportée automatiquement.",
     cancelWithCountdown: 'Annuler (Tour {0}/{1} • {2} rest.)',
@@ -116,21 +112,6 @@ export const fr = {
     aiStudioTierUltra5x: 'Google AI Ultra (5x)',
     aiStudioTierUltra20x: 'Google AI Ultra (20x)',
     aiStudioTierSelectorTooltip: 'Sélectionner le forfait Google AI pour optimiser le rythme de génération',
-    rateLimitModalTitle: 'Limite de requêtes API atteinte',
-    rateLimitModalDesc:
-        'Le quota par minute (IPM / RPM 429) a été atteint. Le système a été mis en pause et réessaiera à la fin du délai.',
-    rateLimitCountdownLabel: "Temps d'attente restant",
-    rateLimitSecondsUnit: 's',
-    rateLimitRetryBadge: 'Nouvelle tentative automatique {current} sur {max}',
-    rateLimitActionWait: "Continuer d'attendre",
-    rateLimitActionCancel: 'Annuler la génération',
-    computePoolTitle: 'Bassin de Calcul Partagé',
-    computePoolResetBtn: 'Réinitialiser le statut',
-    computePoolPacingMultiplierLabel: 'Multiplicateur de cadence',
-    computePoolStatusHealthy: 'Sain',
-    computePoolStatusThrottled: 'Régulé',
-    computePoolStatusCongested: 'Congestionné',
-    computePoolStatusExhausted: 'Quota Quotidien Épuisé',
     geminiErrorCategoryDailyQuota: 'Quota quotidien épuisé',
     geminiErrorCategoryRateLimit: 'Limite de taux temporaire (RPM/TPM)',
     geminiErrorCategoryPoolCongestion: 'Congestion du pool de calcul partagé',
@@ -379,9 +360,6 @@ export const fr = {
     logCancelled: '🛑 Génération annulée',
     logSaved: '💾 Enregistré : {0}',
     logAutoSaveFailed: '⚠️ Échec de la sauvegarde auto',
-    workspaceStorageWarningNotice:
-        '[Avertissement] Le cache local des images est de {0} Mo (proche de la limite de 300 Mo). Veuillez exporter une sauvegarde et effacer votre historique.',
-    workspaceStorageWarningTitle: "Alerte d'espace de stockage",
 
     // --- P7: Enter to Send ---
     enterToSend: 'Enter = Envoyer',
@@ -1118,4 +1096,20 @@ export const fr = {
     generationFailureSummaryQuota: 'Limite de taux ou quota Gemini API dépassé.',
     generationFailureDetailQuota:
         'La requête a été limitée par le taux ou votre quota est temporairement épuisé. Espacer les requêtes ou attendre la réinitialisation de la fenêtre glissante peut aider.',
+
+    workspaceToolbarActionExportResults: "Exporter les Résultats",
+    workspaceToolbarExportResultsTitle: "Exporter toutes les images générées avec métadonnées intégrées",
+    exportResultsTitle: "Exporter Tous les Résultats Générés",
+    exportResultsDesc: "Extrait uniquement les images générées avec métadonnées intégrées (compatible avec Workspace Extractor).",
+    exportResultsFolderLabel: "Dossier de Destination",
+    exportResultsBrowseBtn: "Parcourir...",
+    exportResultsFolderHint: "Prend en charge les chemins relatifs (ex. ./export) ou absolus (ex. D:\\AI_Outputs).",
+    exportResultsIncludeThoughts: "Inclure les Images de Réflexion",
+    exportResultsIncludeThoughtsDesc: "Exporte également les images intermédiaires de raisonnement si disponibles.",
+    exportResultsEstimatedCount: "Images à Exporter",
+    exportResultsSuccessCount: "{0} images exportées avec succès",
+    exportResultsConfirm: "Démarrer l'exportation",
+    exportResultsRunning: "Exportation en cours...",
+    exportResultsEmptyNotice: "Aucune image générée disponible à exporter dans cet espace.",
+    exportResultsSuccessNotice: "{0} images avec métadonnées intégrées exportées avec succès vers {1}",
 } as const;

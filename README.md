@@ -6,7 +6,7 @@ Nano Banana Ultra is a Gemini-powered image workspace for creation, guided editi
 
 Instead of treating image generation as a disposable one-shot action, Nano Banana Ultra keeps prompting, references, history, editing, reuse, and restore inside one connected workspace flow.
 
-The workspace features a dual-engine architecture combining both the Local API (Node backend) and AI Studio mode into a single cohesive codebase. You can run it locally with your local dev server, or run directly within Google AI Studio to take advantage of Google AI Studio environments. The workspace automatically detects the environment and provides an on-the-fly engine selector in the top bar (`Auto Detect`, `Local API`, and `AI Studio`), along with real-time Shared Compute Pool health monitoring (Healthy, Throttled, Congested, Exhausted), workload-adaptive leaky-bucket pacing, and deep error packet inspection to intelligently handle rate limits and pool congestion without arbitrary subscription tier penalties.
+The workspace runs on a high-performance local backend architecture powered by Node.js and the official Google Gemini API. It connects directly with your Gemini API key, providing robust offline image persistence, structured metadata embedding, prompt assistance, and interactive visual generation workflows without third-party proxy dependencies.
 
 ## At a Glance
 
@@ -44,6 +44,7 @@ The workspace features a dual-engine architecture combining both the Local API (
 ### Recover
 
 - persistent history, restore, import, and source-aware workspace recovery
+- extractor-compatible result export with embedded PNG iTXt and JPEG COM metadata
 - queued batch workflows for longer-running generation work
 - multilingual UI plus light and dark themes
 
@@ -118,11 +119,12 @@ Nano Banana Ultra currently supports five Gemini image-model paths. The UI expos
 - inspect provenance and grounding context when available
 - push useful results back into the next generation pass instead of copying everything by hand
 
-## Workspace Export & Image Extraction Companion
+## Result Export & Workspace Extraction Companion
 
-When running in **Google AI Studio Mode** (or client-side browser mode), all generated images, variant outputs, thought images, and session histories are embedded directly inside exported `.json` workspace snapshots (default filename pattern: `nano-banana-workspace-*.json`).
+Nano Banana Ultra provides two complementary ways to export and manage your creative outputs:
 
-If you want to extract raw high-resolution images (PNG / JPEG) directly from these workspace files while embedding complete generation prompts and metadata into the images themselves, you can use the companion tool:
+1. **Native Result Export (`Export Results` button)**: Extract all generated artworks, variants, and optional thought images directly into a dedicated folder (default `./export` or custom folder) with generation parameters and structured metadata losslessly embedded into PNG `iTXt` and JPEG `COM` chunks.
+2. **Workspace Snapshot Extractor**: If you backup or share entire workspace snapshots (`nano-banana-workspace-*.json`), you can extract raw high-resolution images with embedded metadata using the companion tool:
 
 👉 **[App-Nano_Banana_Workspace_Extractor](https://github.com/neophoeus/App-Nano_Banana_Workspace_Extractor)**
 
@@ -136,22 +138,23 @@ If you want to extract raw high-resolution images (PNG / JPEG) directly from the
 
 ## Version Overview
 
-### Latest Release: 4.14.0
+### Latest Release: 5.0.0
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
 
+### 5.x Series
+
+Version 5.x focuses on **architectural purification in alignment with Google AI Studio's policy adjustments**. As Google AI Studio preview mode discontinued browser-level consumer subscription quota injection—strictly requiring standard project API keys for model interaction—the dual-engine architecture and direct-browser runtime were formally retired. The platform converged onto a unified, high-performance local Node.js backend. Building on this clean foundation, 5.x introduces zero-dependency result extraction with embedded PNG `iTXt` and JPEG `COM` metadata (100% compatible with Workspace Extractor, A1111, and ComfyUI), native directory browsing, and enhanced end-to-end generation efficiency.
+
 ### 4.x Series
 
-Version 4.x establishes the unified dual-engine architecture (seamlessly bridging Google AI Studio direct browser mode and the local Node.js backend plugin) and serves as the production-grade foundation for the entire platform. Building upon the core convergence of the Lite edition, 4.x delivers progressive multi-image generation previews, multi-tier Google AI quota pacing, and persistent IndexedDB v2 large workspace recovery.
+The core theme of the 4.x series was the **integration of the unified Dual-Engine Architecture**, seamlessly merging the local Node.js backend with Google AI Studio's direct browser mode into a single cohesive codebase. This resolved cross-environment persistence, quota scheduling, and advanced creative controls, establishing the production-grade foundation of the platform.
 
-Key milestones across the 4.x series include:
-- **Dual-Engine Persistence Isolation & Rate-Limit Diagnostics Hardening (v4.14.0)**: Cleanly isolated persistence semantics between Direct browser mode and Local API mode. In Local mode, images and workspace records are directly saved to disk, bypassing redundant automatic workspace file exports and IndexedDB overhead. In Direct browser mode, redundant shared endpoint calls are short-circuited with a 404/405/501 circuit breaker. Eliminates 80-second rate-limit cooldown latches by prioritizing server-directed `RetryInfo` headers, cleans up active model backoffs immediately on countdown expiry, short-circuits safety-blocked responses from blind retries, and adds a 6-hour stale decay reset to compute pool state.
-- **Gemini 2.5+ Inherent Safety Alignment & Obsolete Safety Settings Retirement (v4.13.0)**: Formally aligned with Google Gemini API 2.5+ official specifications where external safety filter thresholds default to Off due to model-level inherent safety (RLHF). Completely retired legacy safety setting UI dropdowns, store states, and API payload parameters across 38 files, streamlining generation request contracts and ensuring clean, direct interaction with modern Gemini models.
-- **Shared Compute Pool Architecture Alignment & Deep Error Packet Inspection (v4.12.x)**: Formally aligned with Google AI Studio's Build mode infrastructure where preview environments access standard Gemini Developer API endpoints via project API keys. Eliminated legacy consumer subscription tier pacing penalties in favor of unified adaptive pacing, reactive Compute Pool health monitoring (🟢/🟡/🟠/🔴), and a deep Google RPC error inspection engine (`inspectGeminiErrorPacket`) that differentiates daily quota exhaustion (`RequestsPerDay`), shared pool congestion (503 `MODEL_OVERLOADED`), and transient rate limits (RPM/TPM) without false-positive daily aborts. Features Go/Protobuf compound duration parsing, multi-image batch early termination on genuine daily exhaustion, isolated per-model exhaustion tracking, and diagnostic telemetry ring-buffer protections.
+Key achievements across the 4.x series include:
+- **Dual-Engine Integration & Adaptive Pacing Infrastructure**: Seamlessly bridged Google AI Studio preview environments and the local Node.js backend, equipped with real-time Shared Compute Pool health monitoring (🟢 Healthy / 🟡 Throttled / 🟠 Congested / 🔴 Exhausted), deep Google RPC error packet inspection (`inspectGeminiErrorPacket`), compound duration parsing, and dual-engine persistence isolation with IndexedDB v2 large workspace recovery.
 - **Spatial 3D Viewpoint Manipulation**: Interactive Revolve mode powered by 3D Gaussian Splatting (3DGS) and WebGL2 GPU acceleration, decoupling viewpoint guidance (`[Edit_1]`) from source images (`[Src_1]`).
-- **Prompt Reference Chips & Citation Tracking**: Interactive tag insertion chips (`[Obj_N]`, `[Char_N]`, `[Style_N]`) with downward-projecting hover preview cards and live prompt citation tracking.
-- **Gemini Nano Banana 2.1 Flagship Integration**: Full support for `gemini-nano-banana-2.1` with expanded thinking level matrix (`medium`), seamless quota pacing, and panoramic 2K/4K artifact elimination across all 14 aspect ratios.
-- **Official Image Generation Spec Alignment**: Full alignment with Google's official Gemini Image Generation & Interactions API specifications (`ai.google.dev`), introducing canonical `512px` resolution normalization, first-class Style Reference images (up to 3 style images on `gemini-3-pro-image`), and multimodal video input reference support on Flash models with complete 9-language localization.
+- **Prompt Reference Chips & Citation Tracking**: Interactive tag insertion chips (`[Obj_N]`, `[Char_N]`, `[Style_N]`) with hover preview cards, dynamic cursor placement, and live prompt citation tracking.
+- **Flagship Model & Official Spec Alignment**: Full integration of `gemini-nano-banana-2.1` with thinking levels (`medium`) and panoramic 2K/4K artifact elimination, official API alignment (`512px` normalization, up to 3 style reference images, multimodal video inputs), progressive generation previews, and Gemini 2.5+ inherent safety alignment.
 
 ### 3.5.x+ (3.x Series)
 

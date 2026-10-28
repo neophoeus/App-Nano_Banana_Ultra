@@ -21,7 +21,6 @@ import {
     clearStoredWorkspaceSnapshot,
     preloadWorkspaceImagesToMemory,
 } from '../utils/workspacePersistence';
-import { setExecutionModeSetting } from '../utils/workspaceExecutionMode';
 import * as browserImageStore from '../utils/browserImageStore';
 
 const baseSnapshot: WorkspacePersistenceSnapshot = {
@@ -1256,8 +1255,6 @@ describe('workspacePersistence', () => {
     });
 
     it('compacts large snapshot by pruning old thoughts and workflow logs on aggressive mode', () => {
-        setExecutionModeSetting('direct');
-
         const manyTurns = Array.from({ length: 25 }, (_, i) => ({
             id: `turn-${i}`,
             url: `/lite/session-images/img-${i}.png`,
@@ -1324,24 +1321,7 @@ describe('workspacePersistence', () => {
         await expect(preloadWorkspaceImagesToMemory(baseSnapshot)).resolves.not.toThrow();
     });
 
-    it('does not send /api/workspace-snapshot network requests when in direct mode', async () => {
-        setExecutionModeSetting('direct');
-        const fetchMock = vi.fn().mockResolvedValue({ ok: true });
-        vi.stubGlobal('fetch', fetchMock);
-
-        const loaded = await loadSharedWorkspaceSnapshot();
-        expect(loaded).toBeNull();
-        expect(fetchMock).not.toHaveBeenCalled();
-
-        await saveSharedWorkspaceSnapshot(baseSnapshot);
-        expect(fetchMock).not.toHaveBeenCalled();
-
-        await clearSharedWorkspaceSnapshot();
-        expect(fetchMock).not.toHaveBeenCalled();
-    });
-
     it('activates circuit breaker when shared workspace endpoint returns HTTP 404', async () => {
-        setExecutionModeSetting('local');
         resetSharedSnapshotOfflineState();
         const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 404 });
         vi.stubGlobal('fetch', fetchMock);
@@ -1357,17 +1337,12 @@ describe('workspacePersistence', () => {
         resetSharedSnapshotOfflineState();
     });
 
-    it('omits IndexedDB snapshot persistence in local mode and writes to IndexedDB in direct mode', () => {
+    it('omits IndexedDB snapshot persistence in local mode', () => {
         vi.stubGlobal('indexedDB', {});
         const spy = vi.spyOn(browserImageStore, 'saveBrowserWorkspaceSnapshotToDb').mockResolvedValue(true);
 
-        setExecutionModeSetting('local');
         saveWorkspaceSnapshot(baseSnapshot);
         expect(spy).not.toHaveBeenCalled();
-
-        setExecutionModeSetting('direct');
-        saveWorkspaceSnapshot(baseSnapshot);
-        expect(spy).toHaveBeenCalledTimes(1);
 
         spy.mockRestore();
     });

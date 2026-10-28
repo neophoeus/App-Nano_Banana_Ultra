@@ -21,6 +21,7 @@ type WorkspaceUnifiedHistoryPanelProps = {
     onOpenVersionsDetails?: () => void;
     onImportWorkspace?: () => void;
     onExportWorkspace?: () => void;
+    onExportResults?: () => void;
     onClearWorkspace: () => void;
     previewTiles?: BatchPreviewTile[];
     selectedPreviewSlotIndex?: number | null;
@@ -40,6 +41,7 @@ function WorkspaceUnifiedHistoryPanel({
     onOpenVersionsDetails,
     onImportWorkspace,
     onExportWorkspace,
+    onExportResults,
     onClearWorkspace,
     previewTiles = [],
     selectedPreviewSlotIndex = null,
@@ -183,6 +185,17 @@ function WorkspaceUnifiedHistoryPanel({
                                 title={t('composerToolbarExportWorkspace')}
                             >
                                 {t('workspaceToolbarActionExport') || 'Export'}
+                            </button>
+                        ) : null}
+                        {onExportResults ? (
+                            <button
+                                type="button"
+                                data-testid="history-export-results"
+                                onClick={onExportResults}
+                                className="px-2 py-1 text-[11px] font-semibold text-amber-600 transition-colors hover:bg-amber-50/80 hover:text-amber-700 dark:text-amber-400 dark:hover:bg-amber-950/30 dark:hover:text-amber-200"
+                                title={t('workspaceToolbarExportResultsTitle') || 'Export all generated images with embedded metadata'}
+                            >
+                                {t('workspaceToolbarActionExportResults') || 'Export Results'}
                             </button>
                         ) : null}
                         <button

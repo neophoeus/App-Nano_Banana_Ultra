@@ -474,4 +474,18 @@ describe('WorkspaceUnifiedHistoryPanel', () => {
         expect(emptyElement?.className).not.toContain('min-h-[200px]');
         expect(container.innerHTML).not.toContain('history-card-turn-');
     });
+
+    it('renders the export results button and calls onExportResults when clicked', () => {
+        const onExportResults = vi.fn();
+        renderPanel({ onExportResults });
+
+        const exportResultsBtn = container.querySelector('[data-testid="history-export-results"]') as HTMLButtonElement;
+        expect(exportResultsBtn).not.toBeNull();
+
+        flushSync(() => {
+            exportResultsBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        });
+
+        expect(onExportResults).toHaveBeenCalledTimes(1);
+    });
 });

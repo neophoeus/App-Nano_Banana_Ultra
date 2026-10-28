@@ -12,7 +12,6 @@ export const WORKSPACE_OVERLAY_Z_INDEX = {
     viewer: 260,
     sketchReplaceConfirm: 265,
     historyConfirm: 270,
-    rateLimitNotice: 280,
     notification: 300,
 } as const;
 

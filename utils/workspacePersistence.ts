@@ -40,7 +40,6 @@ import { sanitizeSessionHintsForStorage } from './inlineImageDisplay';
 import { buildLineagePresentation } from './lineage';
 import { normalizeImageStyle } from './styleRegistry';
 import { DEFAULT_TEMPERATURE, normalizeTemperature } from './temperature';
-import { getResolvedExecutionMode } from './workspaceExecutionMode';
 
 export const WORKSPACE_SNAPSHOT_STORAGE_KEY = 'nbu_workspaceSnapshot';
 export const SHARED_WORKSPACE_SNAPSHOT_ENDPOINT = '/api/workspace-snapshot';
@@ -156,9 +155,6 @@ export const EMPTY_WORKSPACE_COMPOSER_STATE: WorkspaceComposerState = {
     generationMode: 'Text to Image',
     executionMode: 'single-turn',
     roundCount: 1,
-    autoExportTrigger: 'both',
-    autoExportImageCount: 20,
-    autoExportFileSizeMb: 100,
 };
 
 export const EMPTY_WORKSPACE_SNAPSHOT: WorkspacePersistenceSnapshot = {
@@ -351,12 +347,8 @@ const isFailureExtractionIssue = (value: unknown): value is NonNullable<QueuedBa
     typeof value === 'string' &&
     FAILURE_EXTRACTION_ISSUE_VALUES.has(value as NonNullable<QueuedBatchJobImportIssue['extractionIssue']>);
 
-const buildLoadImageUrl = (savedFilename: string): string => {
-    if (getResolvedExecutionMode() === 'direct') {
-        return buildSavedImageLoadUrl(savedFilename);
-    }
-    return `${LOAD_IMAGE_ENDPOINT}?filename=${encodeURIComponent(savedFilename)}`;
-};
+const buildLoadImageUrl = (savedFilename: string): string =>
+    `${LOAD_IMAGE_ENDPOINT}?filename=${encodeURIComponent(savedFilename)}`;
 
 const sanitizeResultParts = (value: unknown): ResultPart[] | undefined => {
     if (!Array.isArray(value)) {
@@ -1302,21 +1294,6 @@ const sanitizeWorkspaceComposerState = (value: unknown): WorkspaceComposerState 
             typeof value.roundCount === 'number' && Number.isFinite(value.roundCount)
                 ? value.roundCount
                 : EMPTY_WORKSPACE_COMPOSER_STATE.roundCount,
-        autoExportTrigger:
-            value.autoExportTrigger === 'off' ||
-            value.autoExportTrigger === 'count' ||
-            value.autoExportTrigger === 'size' ||
-            value.autoExportTrigger === 'both'
-                ? value.autoExportTrigger
-                : EMPTY_WORKSPACE_COMPOSER_STATE.autoExportTrigger,
-        autoExportImageCount:
-            typeof value.autoExportImageCount === 'number' && Number.isFinite(value.autoExportImageCount)
-                ? value.autoExportImageCount
-                : EMPTY_WORKSPACE_COMPOSER_STATE.autoExportImageCount,
-        autoExportFileSizeMb:
-            typeof value.autoExportFileSizeMb === 'number' && Number.isFinite(value.autoExportFileSizeMb)
-                ? value.autoExportFileSizeMb
-                : EMPTY_WORKSPACE_COMPOSER_STATE.autoExportFileSizeMb,
     } as WorkspaceComposerState;
 };
 
@@ -1461,12 +1438,6 @@ export const saveWorkspaceSnapshot = (snapshot: WorkspacePersistenceSnapshot): v
     const normalized = sanitizeWorkspaceSnapshot(snapshot);
     const localSnapshot = buildPersistableWorkspaceSnapshot(normalized);
     const compactSnapshot = buildPersistableWorkspaceSnapshot(normalized, { aggressive: true });
-
-    // In direct (browser-only / AI Studio) mode, persist to IndexedDB to avoid localStorage 5MB quota ceiling.
-    // In local mode, workspace files are stored directly on the local filesystem, avoiding duplicate IndexedDB writes.
-    if (getResolvedExecutionMode() === 'direct' && typeof indexedDB !== 'undefined') {
-        void saveBrowserWorkspaceSnapshotToDb(JSON.stringify(localSnapshot));
-    }
 
     emitWorkspaceSnapshotDebugEvent({
         kind: 'request',
@@ -1623,9 +1594,6 @@ export const loadWorkspaceSnapshotFromDb = async (): Promise<WorkspacePersistenc
 };
 
 export const loadSharedWorkspaceSnapshot = async (): Promise<WorkspacePersistenceSnapshot | null> => {
-    if (getResolvedExecutionMode() === 'direct') {
-        return null;
-    }
 
     const correlationId = createDebugTerminalCorrelationId('workspace');
 
@@ -1712,9 +1680,6 @@ export const saveSharedWorkspaceSnapshot = async (
     snapshot: WorkspacePersistenceSnapshot,
     options?: { allowClearing?: boolean },
 ): Promise<void> => {
-    if (getResolvedExecutionMode() === 'direct') {
-        return;
-    }
 
     const normalized = sanitizeWorkspaceSnapshot(snapshot);
     const persistableSnapshot = buildPersistableWorkspaceSnapshot(normalized);
@@ -1839,9 +1804,6 @@ export const saveSharedWorkspaceSnapshot = async (
 };
 
 export const clearSharedWorkspaceSnapshot = async (): Promise<void> => {
-    if (getResolvedExecutionMode() === 'direct') {
-        return;
-    }
     await saveSharedWorkspaceSnapshot(EMPTY_WORKSPACE_SNAPSHOT, { allowClearing: true });
 };
 

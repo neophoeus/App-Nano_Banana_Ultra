@@ -160,7 +160,7 @@ describe('useComposerSettingsPanelProps', () => {
         expect(container.querySelector('[data-testid="send-intent-state"]')?.textContent).toBe('memory');
     });
 
-    it('passes through roundCount, autoExport and batchProgress correctly', () => {
+    it('passes through roundCount and batchProgress correctly', () => {
         let capturedProps: any = null;
         function RoundHarness() {
             const t = (key: string) => getTranslation('en', key);
@@ -209,11 +209,7 @@ describe('useComposerSettingsPanelProps', () => {
                 getStageOriginLabel: () => '',
                 getLineageActionLabel: () => '',
                 roundCount: 5,
-                autoExportTrigger: 'both',
-                autoExportImageCount: 30,
-                autoExportFileSizeMb: 150,
                 batchProgress: { completed: 2, total: 4, currentRound: 2, totalRounds: 5 },
-                supportsAutoBackup: true,
             } as any);
             return <div data-testid="round-test">{capturedProps.roundCount}</div>;
         }
@@ -223,10 +219,6 @@ describe('useComposerSettingsPanelProps', () => {
         });
 
         expect(capturedProps.roundCount).toBe(5);
-        expect(capturedProps.autoExportTrigger).toBe('both');
-        expect(capturedProps.autoExportImageCount).toBe(30);
-        expect(capturedProps.autoExportFileSizeMb).toBe(150);
-        expect(capturedProps.supportsAutoBackup).toBe(true);
         expect(capturedProps.batchProgress).toEqual({ completed: 2, total: 4, currentRound: 2, totalRounds: 5 });
     });
 });

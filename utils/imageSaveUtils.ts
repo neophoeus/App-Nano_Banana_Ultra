@@ -17,7 +17,6 @@ import {
     loadBrowserSavedImageMetadata,
     persistBrowserSavedImageRecord,
 } from './browserImageStore';
-import { getResolvedExecutionMode } from './workspaceExecutionMode';
 
 const THUMBNAIL_MAX_DIM = 200; // Max width or height for lightweight preview thumbnails
 const LOAD_IMAGE_ENDPOINT = '/api/load-image';
@@ -97,8 +96,7 @@ const withImageFileDebugHeaders = (headers: Record<string, string>, correlationI
 export const buildSavedImageLoadUrl = (savedFilename: string): string => {
     if (
         savedFilename.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX) ||
-        savedFilename.startsWith('nbu_') ||
-        getResolvedExecutionMode() === 'direct'
+        savedFilename.startsWith('nbu_')
     ) {
         return buildBrowserSavedImageLoadUrl(savedFilename);
     }
@@ -336,10 +334,6 @@ export async function saveImageToLocal(
           buildFilename(filenameStem || buildGeneratedFilenameStem(prefix), ext)
         : buildFilename(filenameStem || buildGeneratedFilenameStem(prefix), ext);
 
-    if (getResolvedExecutionMode() === 'direct') {
-        return await persistBrowserSavedImageRecord(filename, dataUrl, metadata);
-    }
-
     const correlationId = createDebugTerminalCorrelationId('imagefile');
     const requestPayload = {
         filename,
@@ -530,7 +524,7 @@ export async function loadImageMetadata(filename: string): Promise<ImageSidecarM
         ? filename.slice(BROWSER_SAVED_IMAGE_PATH_PREFIX.length)
         : filename;
 
-    if (filename.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX) || getResolvedExecutionMode() === 'direct') {
+    if (filename.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX)) {
         const metadata = await loadBrowserSavedImageMetadata(rawFilename);
         return normalizeImageSidecarMetadata(metadata);
     }
@@ -618,7 +612,7 @@ export async function loadFullImage(filename: string): Promise<string | null> {
         ? filename.slice(BROWSER_SAVED_IMAGE_PATH_PREFIX.length)
         : filename;
 
-    if (filename.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX) || getResolvedExecutionMode() === 'direct') {
+    if (filename.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX)) {
         const dataUrl = await loadBrowserSavedImageDataUrl(rawFilename);
         if (dataUrl) {
             return dataUrl;

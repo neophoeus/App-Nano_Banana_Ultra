@@ -62,8 +62,8 @@ describe('DebugTerminalPanel', () => {
         expect(markup).toContain('1.3s');
         expect(markup).toContain('visible result');
         expect(markup).toContain('debugTerminalFocusCorrelation');
-        expect(markup).toContain('debug-terminal-pool-status');
-        expect(markup).toContain('debug-terminal-reset-pool-btn');
+        expect(markup).not.toContain('debug-terminal-pool-status');
+        expect(markup).not.toContain('debug-terminal-reset-pool-btn');
     });
 
     it('renders deep error packet inspection card when selected event has deepErrorAnalysis', () => {

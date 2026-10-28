@@ -3,6 +3,7 @@ import path from 'path';
 import { sanitizeQueuedBatchSpaceSnapshot } from '../../utils/queuedBatchSpacePersistence';
 import { sanitizeWorkspaceSnapshot } from '../../utils/workspacePersistence';
 import { createApiRequestContext, logApiError, logApiRequest, readJsonBody, sendJson } from '../utils/apiHelpers';
+import { embedImageMetadata, type EmbeddedNanoBananaMeta } from '../utils/imageMetadataEmbedder';
 
 type RegisterWorkspaceRoutesArgs = {
     geminiApiKey?: string;
@@ -374,5 +375,239 @@ export function registerWorkspaceRoutes(server: any, { geminiApiKey, resolvedDir
         sanitizeSnapshot: sanitizeQueuedBatchSpaceSnapshot,
         hasContent: (normalizedSnapshot) => normalizedSnapshot.queuedJobs.length > 0,
         writeErrorMessage: 'Failed to save queued batch space backup.',
+    });
+
+    server.use('/api/export-results', async (req: any, res: any) => {
+        const requestContext = createApiRequestContext(req, '/api/export-results');
+        if (req.method !== 'POST') {
+            sendJson(res, 405, { error: 'Method not allowed' }, { requestContext, summary: 'Method not allowed' });
+            return;
+        }
+
+        try {
+            const body = await readJsonBody<{
+                targetDir?: string;
+                items?: Array<{
+                    imageUrl: string;
+                    baseFilename?: string;
+                    metadata: EmbeddedNanoBananaMeta;
+                }>;
+            }>(req);
+
+            const rawTargetDir = (body?.targetDir || '').trim().replace(/^["']+|["']+$/g, '').trim();
+            const pathWithoutDrive = rawTargetDir.replace(/^[a-zA-Z]:/, '');
+            if (/[<>:"|?*\x00-\x1F]/.test(pathWithoutDrive)) {
+                sendJson(
+                    res,
+                    400,
+                    { success: false, error: 'Invalid target directory path.' },
+                    { requestContext, summary: 'Invalid target directory path' },
+                );
+                return;
+            }
+
+            const outputDir = rawTargetDir
+                ? (path.isAbsolute(rawTargetDir) ? path.normalize(rawTargetDir) : path.resolve(process.cwd(), rawTargetDir))
+                : path.resolve(process.cwd(), 'export');
+
+            if (path.resolve(outputDir).toLowerCase() === path.resolve(resolvedDir).toLowerCase()) {
+                sendJson(
+                    res,
+                    400,
+                    { success: false, error: 'Export directory cannot be the same as the workspace output directory.' },
+                    { requestContext, summary: 'Target matches source output dir' },
+                );
+                return;
+            }
+
+            if (!fs.existsSync(outputDir)) {
+                fs.mkdirSync(outputDir, { recursive: true });
+            }
+
+            const items = Array.isArray(body?.items) ? body.items : [];
+            let exportedCount = 0;
+            let skippedCount = 0;
+            const errors: string[] = [];
+
+            for (const item of items) {
+                try {
+                    if (!item || !item.imageUrl) {
+                        skippedCount += 1;
+                        continue;
+                    }
+
+                    let imageBuffer: Buffer | null = null;
+                    let ext = '.png';
+
+                    if (item.imageUrl.startsWith('data:')) {
+                        const match = item.imageUrl.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
+                        if (match) {
+                            const subtype = match[1].toLowerCase();
+                            ext = subtype === 'jpeg' ? '.jpg' : `.${subtype}`;
+                            imageBuffer = Buffer.from(match[2], 'base64');
+                        } else {
+                            const commaIdx = item.imageUrl.indexOf(',');
+                            if (commaIdx !== -1) {
+                                imageBuffer = Buffer.from(item.imageUrl.slice(commaIdx + 1), 'base64');
+                            }
+                        }
+                    } else {
+                        let sourceFilename = '';
+                        if (item.imageUrl.includes('filename=')) {
+                            try {
+                                const urlObj = new URL(item.imageUrl, 'http://localhost');
+                                sourceFilename = urlObj.searchParams.get('filename') || '';
+                            } catch {
+                                const match = item.imageUrl.match(/[?&]filename=([^&]+)/);
+                                if (match) sourceFilename = decodeURIComponent(match[1]);
+                            }
+                        }
+                        if (!sourceFilename) {
+                            sourceFilename = path.basename(item.imageUrl);
+                        }
+
+                        const safeSourceFilename = path.basename(sourceFilename);
+                        const sourcePath = path.join(resolvedDir, safeSourceFilename);
+
+                        if (fs.existsSync(sourcePath)) {
+                            imageBuffer = fs.readFileSync(sourcePath);
+                            ext = path.extname(safeSourceFilename) || '.png';
+
+                            const stem = path.parse(safeSourceFilename).name;
+                            const sidecarPath = path.join(resolvedDir, `${stem}.json`);
+                            if (fs.existsSync(sidecarPath)) {
+                                try {
+                                    const sidecarMeta = JSON.parse(fs.readFileSync(sidecarPath, 'utf8'));
+                                    if (sidecarMeta && typeof sidecarMeta === 'object') {
+                                        item.metadata = {
+                                            ...item.metadata,
+                                            outputFormat: item.metadata.outputFormat || sidecarMeta.outputFormat,
+                                            actualOutput:
+                                                item.metadata.actualOutput ||
+                                                (sidecarMeta.actualOutput
+                                                    ? `${sidecarMeta.actualOutput.width}x${sidecarMeta.actualOutput.height}${sidecarMeta.actualOutput.mimeType ? ` (${sidecarMeta.actualOutput.mimeType})` : ''}`
+                                                    : undefined),
+                                            groundingMode: item.metadata.groundingMode || sidecarMeta.groundingMode,
+                                            groundingSources: item.metadata.groundingSources || sidecarMeta.groundingSources,
+                                            temperature:
+                                                item.metadata.temperature !== undefined
+                                                    ? item.metadata.temperature
+                                                    : sidecarMeta.temperature,
+                                            thinkingLevel: item.metadata.thinkingLevel || sidecarMeta.thinkingLevel,
+                                        };
+                                    }
+                                } catch {
+                                    // ignore sidecar read errors
+                                }
+                            }
+                        } else {
+                            skippedCount += 1;
+                            errors.push(`Source image not found: ${safeSourceFilename}`);
+                            continue;
+                        }
+                    }
+
+                    if (!imageBuffer || imageBuffer.length === 0) {
+                        skippedCount += 1;
+                        continue;
+                    }
+
+                    if (imageBuffer[0] === 0x89 && imageBuffer[1] === 0x50 && imageBuffer[2] === 0x4E && imageBuffer[3] === 0x47) {
+                        ext = '.png';
+                    } else if (imageBuffer[0] === 0xFF && imageBuffer[1] === 0xD8) {
+                        ext = '.jpg';
+                    } else if (imageBuffer[0] === 0x52 && imageBuffer[1] === 0x49 && imageBuffer[2] === 0x46 && imageBuffer[3] === 0x46) {
+                        ext = '.webp';
+                    }
+
+                    const taggedBuffer = embedImageMetadata(imageBuffer, item.metadata);
+
+                    const rawBaseName = (item.baseFilename || path.parse(item.metadata?.id || 'image').name || 'export')
+                        .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
+                        .trim() || 'export';
+
+                    let finalFilename = `${rawBaseName}${ext}`;
+                    let counter = 1;
+                    while (fs.existsSync(path.join(outputDir, finalFilename))) {
+                        finalFilename = `${rawBaseName}_${counter}${ext}`;
+                        counter += 1;
+                    }
+
+                    fs.writeFileSync(path.join(outputDir, finalFilename), taggedBuffer);
+                    exportedCount += 1;
+                } catch (err: any) {
+                    skippedCount += 1;
+                    errors.push(err?.message || String(err));
+                }
+            }
+
+            sendJson(
+                res,
+                200,
+                {
+                    success: true,
+                    outputDir,
+                    exportedCount,
+                    skippedCount,
+                    errors,
+                },
+                {
+                    requestContext,
+                    summary: `Exported ${exportedCount} items to ${outputDir}`,
+                    details: {
+                        source: 'workspace',
+                        outputDir,
+                        exportedCount,
+                        skippedCount,
+                    },
+                },
+            );
+        } catch (err: any) {
+            logApiError('/api/export-results', err, { source: 'workspace' }, requestContext);
+            sendJson(
+                res,
+                500,
+                { success: false, error: err?.message || 'Failed to export results' },
+                { requestContext, summary: 'Export failed' },
+            );
+        }
+    });
+
+    server.use('/api/browse-folder', async (req: any, res: any) => {
+        const requestContext = createApiRequestContext(req, '/api/browse-folder');
+        if (req.method !== 'POST') {
+            sendJson(res, 405, { error: 'Method not allowed' }, { requestContext, summary: 'Method not allowed' });
+            return;
+        }
+
+        if (process.platform !== 'win32') {
+            sendJson(
+                res,
+                200,
+                { cancelled: true, message: 'Native folder dialog is only supported on Windows' },
+                { requestContext, summary: 'Non-Windows platform' },
+            );
+            return;
+        }
+
+        try {
+            const { exec } = await import('child_process');
+            const psCommand = `powershell -NoProfile -Command "Add-Type -AssemblyName System.Windows.Forms; $f = New-Object System.Windows.Forms.FolderBrowserDialog; $f.Description = 'Select Export Directory'; $f.ShowNewFolderButton = $true; if ($f.ShowDialog() -eq 'OK') { [Console]::WriteLine($f.SelectedPath) }"`;
+
+            exec(psCommand, { windowsHide: true }, (err, stdout) => {
+                if (err) {
+                    sendJson(res, 200, { cancelled: true }, { requestContext, summary: 'Folder browser cancelled or failed' });
+                    return;
+                }
+                const selectedPath = (stdout || '').trim();
+                if (selectedPath) {
+                    sendJson(res, 200, { cancelled: false, path: selectedPath }, { requestContext, summary: 'Folder selected' });
+                } else {
+                    sendJson(res, 200, { cancelled: true }, { requestContext, summary: 'Folder browser cancelled' });
+                }
+            });
+        } catch {
+            sendJson(res, 200, { cancelled: true }, { requestContext, summary: 'Folder browser exception' });
+        }
     });
 }

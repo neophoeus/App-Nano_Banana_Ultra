@@ -131,14 +131,8 @@ describe('useComposerState lock behavior', () => {
 
         flushSync(() => {
             latestHook!.setRoundCount(4);
-            latestHook!.setAutoExportTrigger('size');
-            latestHook!.setAutoExportImageCount(50);
-            latestHook!.setAutoExportFileSizeMb(200);
         });
 
         expect(latestHook!.composerState.roundCount).toBe(4);
-        expect(latestHook!.composerState.autoExportTrigger).toBe('size');
-        expect(latestHook!.composerState.autoExportImageCount).toBe(50);
-        expect(latestHook!.composerState.autoExportFileSizeMb).toBe(200);
     });
 });

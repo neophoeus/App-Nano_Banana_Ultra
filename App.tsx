@@ -90,10 +90,7 @@ import { useWorkspaceShellOwnerState } from './hooks/useWorkspaceShellOwnerState
 import { useWorkspaceSettingsSession } from './hooks/useWorkspaceSettingsSession';
 import { useWorkspaceTransientUiState } from './hooks/useWorkspaceTransientUiState';
 import { useDebugTerminal } from './hooks/useDebugTerminal';
-import { useWorkspaceExecutionMode } from './hooks/useWorkspaceExecutionMode';
-import { getResolvedExecutionMode } from './utils/workspaceExecutionMode';
 import { useLegacyWorkspaceSnapshotMigration } from './hooks/useLegacyWorkspaceSnapshotMigration';
-import { useRateLimitNotice } from './utils/rateLimitNotice';
 import { resolveCurrentStageSelectionFirstSourceOverride } from './utils/generationSourceOverride';
 import { buildSavedImageLoadUrl, loadImageMetadata } from './utils/imageSaveUtils';
 import { createImageSidecarMetadataState, normalizeImageSidecarMetadata } from './utils/imageSidecarMetadata';
@@ -115,8 +112,7 @@ const App: React.FC = () => {
     const [apiKeyReady, setApiKeyReady] = useState(false);
     const [isCancelFinalizing, setIsCancelFinalizing] = useState(false);
     const [isDebugTerminalOpen, setIsDebugTerminalOpen] = useState(false);
-    const [showStorageWarningModal, setShowStorageWarningModal] = useState(false);
-    const [storageWarningSizeMb, setStorageWarningSizeMb] = useState(0);
+    const [showExportResultsModal, setShowExportResultsModal] = useState(false);
     const isDarkTheme = useDocumentThemeMode();
     const [currentLang, setCurrentLang] = useState<Language>(() => {
         const preferredLanguage = resolvePreferredLanguage();
@@ -243,12 +239,6 @@ const App: React.FC = () => {
         setStickySendIntent,
         roundCount,
         setRoundCount,
-        autoExportTrigger,
-        setAutoExportTrigger,
-        autoExportImageCount,
-        setAutoExportImageCount,
-        autoExportFileSizeMb,
-        setAutoExportFileSizeMb,
         composerState,
         applyComposerState,
         applyViewerComposerSettingsSnapshot,
@@ -802,8 +792,7 @@ const App: React.FC = () => {
         ],
     );
 
-    const { capabilities: executionModeCapabilities } = useWorkspaceExecutionMode();
-    const handleExportWorkspaceSnapshotRef = useRef<() => Promise<void>>(undefined);
+    const supportsQueuedBatch = true;
 
     const { performGeneration } = usePerformGeneration({
         t,
@@ -846,15 +835,6 @@ const App: React.FC = () => {
         onLiveProgressEvent: handleLiveProgressEvent,
         onLiveProgressReset: handleLiveProgressReset,
         roundCount,
-        supportsAutoBackup: executionModeCapabilities.supportsAutoBackup,
-        autoExportTrigger,
-        autoExportImageCount,
-        autoExportFileSizeMb,
-        handleExportWorkspaceSnapshot: async () => {
-            if (handleExportWorkspaceSnapshotRef.current) {
-                await handleExportWorkspaceSnapshotRef.current();
-            }
-        },
     });
 
     const [promptThinkingLevel, setPromptThinkingLevel] = useState<PromptThinkingLevel>(() => {
@@ -920,14 +900,7 @@ const App: React.FC = () => {
         addLog,
         showNotification,
         t,
-        onStorageWarning: (sizeMb) => {
-            setStorageWarningSizeMb(sizeMb);
-            setShowStorageWarningModal(true);
-        },
         settingsLocked,
-        autoExportTrigger,
-        supportsKeepAliveHeartbeat: executionModeCapabilities.supportsKeepAliveHeartbeat,
-        supportsStorageWarning: executionModeCapabilities.supportsStorageWarning,
     });
 
     useWorkspaceCapabilityConstraints({
@@ -1136,7 +1109,6 @@ const App: React.FC = () => {
         setBranchRenameDialog,
         setBranchRenameDraft,
     });
-    handleExportWorkspaceSnapshotRef.current = handleExportWorkspaceSnapshot;
     const applyEmptyWorkspaceSnapshot = useCallback(() => {
         clearStoredWorkspaceSnapshot();
         saveWorkspaceSnapshot(EMPTY_WORKSPACE_SNAPSHOT);
@@ -1150,36 +1122,6 @@ const App: React.FC = () => {
         applyWorkspaceSnapshot,
         addLog,
     });
-
-    useEffect(() => {
-        let isDisposed = false;
-        if (getResolvedExecutionMode() === 'direct') {
-            void loadWorkspaceSnapshotFromDb()
-                .then(async (dbSnapshot) => {
-                    if (isDisposed || !dbSnapshot) {
-                        return;
-                    }
-                    const hasMoreHistory = dbSnapshot.history.length > history.length;
-                    const hasEmptyHistory = history.length === 0 && dbSnapshot.history.length > 0;
-                    const hasRicherHistory =
-                        dbSnapshot.history.length === history.length &&
-                        dbSnapshot.history.some((dbItem, idx) => {
-                            const currentItem = history[idx];
-                            return currentItem && !currentItem.url && Boolean(dbItem.url);
-                        });
-                    if (hasMoreHistory || hasEmptyHistory || hasRicherHistory) {
-                        await preloadWorkspaceImagesToMemory(dbSnapshot).catch(() => {});
-                        if (!isDisposed) {
-                            applyWorkspaceSnapshot(dbSnapshot);
-                        }
-                    }
-                })
-                .catch(() => {});
-        }
-        return () => {
-            isDisposed = true;
-        };
-    }, [applyWorkspaceSnapshot, history]);
 
     const handleOpenWorkspaceImportPicker = useCallback(() => {
         workspaceImportInputRef.current?.click();
@@ -1631,7 +1573,7 @@ const App: React.FC = () => {
         temperature,
         isAdvancedSettingsOpen,
         generateLabel: t('generate'),
-        supportsQueuedBatch: executionModeCapabilities.supportsQueuedBatch,
+        supportsQueuedBatch: supportsQueuedBatch,
         isQueueBatchDisabled,
         queueBatchDisabledReason,
         queueBatchModeSummary,
@@ -1659,14 +1601,7 @@ const App: React.FC = () => {
         getLineageActionLabel,
         roundCount,
         setRoundCount,
-        autoExportTrigger,
-        setAutoExportTrigger,
-        autoExportImageCount,
-        setAutoExportImageCount,
-        autoExportFileSizeMb,
-        setAutoExportFileSizeMb,
         batchProgress,
-        supportsAutoBackup: executionModeCapabilities.supportsAutoBackup,
         settingsLocked,
         onToggleSettingsLock: handleToggleSettingsLock,
         showNotification,
@@ -2045,6 +1980,7 @@ const App: React.FC = () => {
                 onOpenVersionsDetails={handleOpenVersionsDetails}
                 onImportWorkspace={handleOpenWorkspaceImportPicker}
                 onExportWorkspace={handleExportWorkspaceSnapshot}
+                onExportResults={() => setShowExportResultsModal(true)}
                 onClearWorkspace={handleOpenClearWorkspaceConfirm}
             />
         ),
@@ -2099,7 +2035,7 @@ const App: React.FC = () => {
         hasProgressActivity,
         hasSourceTrailInfo,
         hasQueuedBatchActivity,
-        supportsQueuedBatch: executionModeCapabilities.supportsQueuedBatch,
+        supportsQueuedBatch: supportsQueuedBatch,
         onOpenProgressDetails: handleOpenProgressDetails,
         onOpenSourcesDetails: handleOpenSourcesDetails,
         onOpenQueuedBatchJobs: handleOpenQueuedBatchJobs,
@@ -2218,22 +2154,20 @@ const App: React.FC = () => {
             workspaceSession.sourceHistoryId,
         ],
     );
-    const handleCloseStorageWarningModal = useCallback(() => {
-        setShowStorageWarningModal(false);
-    }, []);
     const workspaceOverlayContent = (
         <WorkspaceDetailOverlays
             activeWorkspaceDetailModal={activeWorkspaceDetailModal}
             isQueuedBatchSpaceOpen={isQueuedBatchSpaceOpen}
             showClearWorkspaceConfirm={showClearWorkspaceConfirm}
-            showStorageWarningModal={showStorageWarningModal}
-            storageWarningSizeMb={storageWarningSizeMb}
+            showExportResultsModal={showExportResultsModal}
+            onCloseExportResultsModal={() => setShowExportResultsModal(false)}
+            history={history}
+            showNotification={showNotification}
             currentLang={currentLang}
             t={t}
             onCloseDetailModal={handleCloseWorkspaceDetailModal}
             onCloseClearConfirm={handleCloseClearWorkspaceConfirm}
             onConfirmClearWorkspace={handleConfirmClearWorkspace}
-            onCloseStorageWarningModal={handleCloseStorageWarningModal}
             onExportWorkspaceSnapshot={handleExportWorkspaceSnapshot}
             progressThoughtEntries={progressThoughtEntries}
             onDownloadThoughtImage={handleDownloadThoughtImage}
@@ -2290,16 +2224,6 @@ const App: React.FC = () => {
         [generatedImageStageProps, t],
     );
 
-    const rateLimitNotice = useRateLimitNotice();
-    const rateLimitModalProps =
-        rateLimitNotice && rateLimitNotice.active && !rateLimitNotice.isDismissed
-            ? {
-                  notice: rateLimitNotice,
-                  currentLanguage: currentLang,
-                  onCancelGeneration: handleCancelGeneration,
-              }
-            : null;
-
     return (
         <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(180deg,_#fffaf2_0%,_#f8fafc_38%,_#eef3f8_100%)] text-gray-900 transition-colors duration-500 dark:bg-[linear-gradient(180deg,_#111315_0%,_#090b10_46%,_#030405_100%)] dark:text-gray-100">
             <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -2326,7 +2250,6 @@ const App: React.FC = () => {
 
             <WorkspaceOverlayStack
                 notification={notification}
-                rateLimitModalProps={rateLimitModalProps}
                 surfaceSharedControlsProps={surfaceSharedControlsProps}
                 importReviewProps={importReviewProps}
                 advancedSettingsDialogProps={advancedSettingsDialogProps}
@@ -2382,9 +2305,9 @@ const App: React.FC = () => {
                                     batchSize={batchSize}
                                     onBatchSizeChange={setBatchSize}
                                     onGenerate={handleEditorGenerate}
-                                    supportsQueuedBatch={executionModeCapabilities.supportsQueuedBatch}
+                                    supportsQueuedBatch={supportsQueuedBatch}
                                     onQueueBatch={
-                                        executionModeCapabilities.supportsQueuedBatch && showEditorQueueBatch
+                                        supportsQueuedBatch && showEditorQueueBatch
                                             ? handleEditorQueueBatch
                                             : undefined
                                     }

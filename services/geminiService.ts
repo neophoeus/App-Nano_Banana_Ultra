@@ -26,8 +26,7 @@ import {
 } from '../utils/debugTerminalEvents';
 import { buildStyleAwareImagePrompt } from '../utils/stylePromptBuilder';
 import { Language } from '../utils/translations';
-import { getResolvedExecutionMode } from '../utils/workspaceExecutionMode';
-import { browserDirectProvider, isTransientAiStudioAuthError } from './providers/browserDirectProvider';
+import { localBackendProvider } from './providers/localBackendProvider';
 
 const jsonHeaders = {
     'Content-Type': 'application/json',
@@ -942,9 +941,6 @@ const executeBlockingImageAttemptWithTransientRetry = async (
 
 // Helper to ensure we get the key
 export const checkApiKey = async (): Promise<boolean> => {
-    if (getResolvedExecutionMode() === 'direct') {
-        return await browserDirectProvider.checkApiKey();
-    }
 
     try {
         const payload = await fetchJson<{ hasApiKey: boolean }>('/api/runtime-config', undefined, {
@@ -1356,10 +1352,6 @@ const executeInteractiveStreamSlot = async (
     }
 };
 export const promptForApiKey = async (): Promise<void> => {
-    if (getResolvedExecutionMode() === 'direct') {
-        await browserDirectProvider.promptForApiKey();
-        return;
-    }
     window.alert('Missing GEMINI_API_KEY. Add it to .env.local and restart the dev server.');
 };
 
@@ -1373,10 +1365,6 @@ export const enhancePromptWithGemini = async (
     const testOverride = getBrowserOnlyTestGeminiServiceOverrides()?.enhancePromptWithGemini;
     if (testOverride) {
         return await testOverride(currentPrompt, lang, thinkingLevel);
-    }
-
-    if (getResolvedExecutionMode() === 'direct') {
-        return await browserDirectProvider.enhancePrompt(currentPrompt, lang, thinkingLevel);
     }
 
     const correlationId = createDebugTerminalCorrelationId('prompt');
@@ -1448,10 +1436,6 @@ export const generateRandomPrompt = async (
         return await testOverride(lang, thinkingLevel);
     }
 
-    if (getResolvedExecutionMode() === 'direct') {
-        return await browserDirectProvider.generateRandomPrompt(lang, thinkingLevel);
-    }
-
     const correlationId = createDebugTerminalCorrelationId('prompt');
     const requestPayload = { lang, thinkingLevel };
     const response = await retryOperation(
@@ -1520,10 +1504,6 @@ export const generatePromptFromImage = async (
     const testOverride = getBrowserOnlyTestGeminiServiceOverrides()?.generatePromptFromImage;
     if (testOverride) {
         return await testOverride(imageDataUrl, lang, thinkingLevel);
-    }
-
-    if (getResolvedExecutionMode() === 'direct') {
-        return await browserDirectProvider.generatePromptFromImage(imageDataUrl, lang, thinkingLevel);
     }
 
     const correlationId = createDebugTerminalCorrelationId('prompt');
@@ -1979,15 +1959,6 @@ const retryOperation = async <T>(
 
         if (abortSignal?.aborted) throw new Error('ABORTED');
 
-        if (authRetriesRemaining > 0 && isTransientAiStudioAuthError(error)) {
-            onLog?.('⏳ AI Studio 訂閱憑證同步中，等待 1.5 秒後自動重試... (1/1)');
-            await delayWithAbort(1500, abortSignal);
-            return retryOperation(operation, retries, delayMs, {
-                ...opts,
-                authRetriesRemaining: authRetriesRemaining - 1,
-            });
-        }
-
         const isRateLimit = msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED');
         let calculatedWaitMs = delayMs;
 
@@ -2102,18 +2073,6 @@ export const generateImageWithGemini = async (
             onResult,
             onImageReceived,
             onLog: (msg: string) => onLog?.(msg),
-            onLiveProgressEvent,
-            onSlotStart,
-        });
-    }
-
-    if (getResolvedExecutionMode() === 'direct') {
-        return await browserDirectProvider.generateImages(options, batchSize, {
-            onImageReceived,
-            onLog,
-            abortSignal,
-            onProgress,
-            onResult,
             onLiveProgressEvent,
             onSlotStart,
         });
@@ -2297,4 +2256,19 @@ export const generateImageWithGemini = async (
     }
 
     return results;
+};
+
+export const exportWorkspaceResults = async (payload: {
+    targetDir?: string;
+    items: Array<{
+        imageUrl: string;
+        baseFilename?: string;
+        metadata: any;
+    }>;
+}) => {
+    return await localBackendProvider.exportWorkspaceResults(payload);
+};
+
+export const browseExportFolder = async () => {
+    return await localBackendProvider.browseExportFolder();
 };

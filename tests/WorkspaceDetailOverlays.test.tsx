@@ -44,14 +44,11 @@ describe('WorkspaceDetailOverlays', () => {
         activeWorkspaceDetailModal: null,
         isQueuedBatchSpaceOpen: false,
         showClearWorkspaceConfirm: false,
-        showStorageWarningModal: false,
-        storageWarningSizeMb: 50,
         currentLang: 'en',
         t: (key: string) => key,
         onCloseDetailModal: vi.fn(),
         onCloseClearConfirm: vi.fn(),
         onConfirmClearWorkspace: vi.fn(),
-        onCloseStorageWarningModal: vi.fn(),
         onExportWorkspaceSnapshot: vi.fn(),
         progressThoughtEntries: [],
         onDownloadThoughtImage: vi.fn(),
@@ -89,7 +86,7 @@ describe('WorkspaceDetailOverlays', () => {
         onRemoveQueuedJob: vi.fn(),
     };
 
-    it('returns null when no modal, clear confirm, or storage warning is active', () => {
+    it('returns null when no modal or clear confirm is active', () => {
         act(() => {
             root.render(<WorkspaceDetailOverlays {...defaultProps} />);
         });
@@ -157,36 +154,17 @@ describe('WorkspaceDetailOverlays', () => {
         expect(onCloseClear).toHaveBeenCalledTimes(1);
     });
 
-    it('renders storage warning modal and responds to buttons', () => {
-        const onCloseStorageWarning = vi.fn();
-        const onExport = vi.fn();
+    it('renders export results modal when showExportResultsModal is true', () => {
         act(() => {
             root.render(
                 <WorkspaceDetailOverlays
                     {...defaultProps}
-                    showStorageWarningModal={true}
-                    storageWarningSizeMb={42}
-                    onCloseStorageWarningModal={onCloseStorageWarning}
-                    onExportWorkspaceSnapshot={onExport}
+                    showExportResultsModal={true}
+                    onCloseExportResultsModal={vi.fn()}
+                    history={[]}
                 />,
             );
         });
-        const storageModal = container.querySelector('[data-testid="workspace-storage-warning-modal"]');
-        expect(storageModal).not.toBeNull();
-
-        const closeBtn = container.querySelector<HTMLButtonElement>('[data-testid="workspace-storage-warning-close"]');
-        act(() => {
-            closeBtn?.click();
-        });
-        expect(onCloseStorageWarning).toHaveBeenCalledTimes(1);
-
-        const exportBtn = container.querySelector<HTMLButtonElement>(
-            '[data-testid="workspace-storage-warning-export"]',
-        );
-        act(() => {
-            exportBtn?.click();
-        });
-        expect(onCloseStorageWarning).toHaveBeenCalledTimes(2);
-        expect(onExport).toHaveBeenCalledTimes(1);
+        expect(container.querySelector('[data-testid="export-results-modal"]')).not.toBeNull();
     });
 });

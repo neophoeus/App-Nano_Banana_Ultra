@@ -24,7 +24,6 @@ import {
     checkApiKey,
     promptForApiKey,
 } from '../services/geminiService';
-import { isTransientAiStudioAuthError } from '../utils/geminiCredentials';
 import { emitDebugTerminalEvent } from '../utils/debugTerminalEvents';
 import { buildStageErrorState, getGenerationFailure } from '../utils/generationFailure';
 import {
@@ -41,7 +40,6 @@ import {
     buildSavedImageFilenameStem,
 } from '../utils/savedImageFilename';
 import { buildStyleTransferPrompt } from '../utils/styleRegistry';
-import { getResolvedExecutionMode } from '../utils/workspaceExecutionMode';
 
 const MODEL_TRANSLATION_KEYS: Record<ImageModel, string> = {
     'gemini-nano-banana-2.1': 'modelGeminiNanoBanana21',
@@ -222,11 +220,6 @@ interface UsePerformGenerationProps {
     onLiveProgressEvent?: (event: GenerationLiveProgressEvent) => void;
     onLiveProgressReset?: () => void;
     roundCount?: number;
-    supportsAutoBackup?: boolean;
-    autoExportTrigger?: 'off' | 'count' | 'size' | 'both';
-    autoExportImageCount?: number;
-    autoExportFileSizeMb?: number;
-    handleExportWorkspaceSnapshot?: () => Promise<void>;
 }
 
 export function usePerformGeneration(options: UsePerformGenerationProps) {
@@ -272,16 +265,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
         onLiveProgressEvent,
         onLiveProgressReset,
         roundCount,
-        supportsAutoBackup,
-        autoExportTrigger = 'off',
-        autoExportImageCount = 20,
-        autoExportFileSizeMb = 100,
-        handleExportWorkspaceSnapshot,
     } = options;
-
-    const isAutoBackupSupported = supportsAutoBackup ?? (getResolvedExecutionMode() === 'direct');
-    const isAutoBackupActive =
-        isAutoBackupSupported && autoExportTrigger !== 'off' && Boolean(handleExportWorkspaceSnapshot);
 
     const performGeneration = useCallback(
         async (
@@ -407,48 +391,6 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                 googleSearch,
                 imageSearch,
             });
-
-            const checkAndTriggerAutoBackup = async () => {
-                if (!isAutoBackupActive) return;
-
-                const countSinceExport = Number(localStorage.getItem('nbu_successCountSinceExport') || '0');
-                const sizeGrowthBytes = Number(localStorage.getItem('nbu_sizeGrowthSinceExport') || '0');
-                const sizeGrowthMb = sizeGrowthBytes / (1024 * 1024);
-
-                const countThreshold = autoExportImageCount || 20;
-                const sizeThresholdMb = autoExportFileSizeMb || 100;
-
-                let shouldExport = false;
-                if (autoExportTrigger === 'count' && countSinceExport >= countThreshold) {
-                    shouldExport = true;
-                } else if (autoExportTrigger === 'size' && sizeGrowthMb >= sizeThresholdMb) {
-                    shouldExport = true;
-                } else if (
-                    autoExportTrigger === 'both' &&
-                    (countSinceExport >= countThreshold || sizeGrowthMb >= sizeThresholdMb)
-                ) {
-                    shouldExport = true;
-                }
-
-                if (shouldExport) {
-                    localStorage.setItem('nbu_successCountSinceExport', '0');
-                    localStorage.setItem('nbu_sizeGrowthSinceExport', '0');
-
-                    const notificationMsg = t('autoExportNotificationText')
-                        .replace('{0}', String(countSinceExport))
-                        .replace('{1}', sizeGrowthMb.toFixed(1));
-                    showNotification(notificationMsg, 'info');
-
-                    if (handleExportWorkspaceSnapshot) {
-                        try {
-                            await new Promise((resolve) => setTimeout(resolve, 0));
-                            await handleExportWorkspaceSnapshot();
-                        } catch (err) {
-                            console.error('Auto-export failed', err);
-                        }
-                    }
-                }
-            };
 
             try {
                 for (let currentRound = 1; currentRound <= totalRounds; currentRound++) {
@@ -661,17 +603,6 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                             thumbnailUrl = persistedThumbnail.url;
                             thumbnailSavedFilename = persistedThumbnail.thumbnailSavedFilename;
                             thumbnailInline = persistedThumbnail.thumbnailInline;
-
-                            // Calculate size and success count only when auto backup is active
-                            if (isAutoBackupActive) {
-                                const imageSizeBytes = res.url.length * 0.75;
-                                const currentSuccessCount =
-                                    Number(localStorage.getItem('nbu_successCountSinceExport') || '0') + 1;
-                                const currentSizeGrowth =
-                                    Number(localStorage.getItem('nbu_sizeGrowthSinceExport') || '0') + imageSizeBytes;
-                                localStorage.setItem('nbu_successCountSinceExport', String(currentSuccessCount));
-                                localStorage.setItem('nbu_sizeGrowthSinceExport', String(currentSizeGrowth));
-                            }
                         }
 
                         const historyItem: GeneratedImageType = {
@@ -828,27 +759,11 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                             .replace('{0}', successCount.toString())
                             .replace('{1}', failCount.toString()),
                     );
-
-                    await checkAndTriggerAutoBackup();
                 }
             } catch (err: any) {
                 console.error(err);
                 const errorMessage = err.message || 'Unknown error';
-
-                if (isTransientAiStudioAuthError(err)) {
-                    const isAiStudio = typeof window !== 'undefined' && Boolean((window as any).aistudio);
-                    const summary = isAiStudio
-                        ? 'AI Studio 訂閱登入憑證已過期，請重新整理網頁以刷新 Google 帳號授權'
-                        : t('errorApiKey');
-                    addLog(t('logFatalError').replace('{0}', errorMessage));
-                    setError({
-                        summary,
-                        detail: errorMessage,
-                        failure: null,
-                    });
-                    setApiKeyReady(false);
-                    showNotification(summary, 'error');
-                } else if (errorMessage === 'API_KEY_INVALID' || errorMessage.includes('API key')) {
+                if (errorMessage === 'API_KEY_INVALID' || errorMessage.includes('API key')) {
                     addLog(t('logFatalError').replace('{0}', errorMessage));
                     setError({
                         summary: t('errorApiKey'),
@@ -872,7 +787,6 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                 setIsGenerating(false);
                 abortControllerRef.current = null;
                 setBatchProgress({ completed: 0, total: 0 });
-                void checkAndTriggerAutoBackup();
             }
         },
         [
@@ -880,10 +794,6 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
             addLog,
             apiKeyReady,
             aspectRatio,
-            autoExportFileSizeMb,
-            autoExportImageCount,
-            autoExportTrigger,
-            isAutoBackupActive,
             batchSize,
             characterImages,
             styleImages,
@@ -892,7 +802,6 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
             getGenerationLineageContext,
             googleSearch,
             handleApiKeyConnect,
-            handleExportWorkspaceSnapshot,
             imageSearch,
             includeThoughts,
             objectImages,
