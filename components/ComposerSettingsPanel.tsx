@@ -94,6 +94,19 @@ export type ComposerSettingsPanelProps = {
     settingsLocked?: boolean;
     onToggleSettingsLock?: () => void;
     showNotification?: (message: string, type?: 'info' | 'error') => void;
+    onOpenMetadataViewer?: () => void;
+};
+
+const METADATA_VIEWER_BUTTON_LABELS: Record<Language, string> = {
+    zh_TW: '讀取參數',
+    zh_CN: '读取参数',
+    en: 'Read Metadata',
+    ja: 'メタデータ読取',
+    ko: '메타데이터 읽기',
+    de: 'Metadaten lesen',
+    fr: 'Lire les métadonnées',
+    es: 'Leer metadatos',
+    ru: 'Читать метаданные',
 };
 
 type ActivePromptTool = NonNullable<ComposerSettingsPanelProps['activePromptTool']>;
@@ -209,6 +222,7 @@ function ComposerSettingsPanel({
     showNotification,
     promptThinkingLevel = 'low',
     onPromptThinkingLevelChange,
+    onOpenMetadataViewer,
 }: ComposerSettingsPanelProps) {
     const fallbackPromptTextareaRef = React.useRef<HTMLTextAreaElement | null>(null);
     const imageToPromptInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -1320,7 +1334,24 @@ function ComposerSettingsPanel({
                                 currentLanguage={currentLanguage}
                                 disabled={isActionLocked}
                             />
-                            <div className="space-y-1.5">{advancedSettingsButton}</div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="min-w-0 flex-1">{advancedSettingsButton}</div>
+                                {onOpenMetadataViewer && (
+                                    <button
+                                        type="button"
+                                        data-testid="composer-open-metadata-viewer"
+                                        aria-label={METADATA_VIEWER_BUTTON_LABELS[currentLanguage] || '讀取參數'}
+                                        title={METADATA_VIEWER_BUTTON_LABELS[currentLanguage] || '讀取參數'}
+                                        onClick={onOpenMetadataViewer}
+                                        className="nbu-inline-panel group flex min-h-10 shrink-0 items-center gap-1.5 rounded-[20px] px-3 py-2 text-xs font-semibold text-slate-700 transition-all hover:-translate-y-0.5 hover:shadow-md dark:text-slate-200"
+                                    >
+                                        <span aria-hidden="true" className="text-sm">
+                                            🔍
+                                        </span>
+                                        <span>{METADATA_VIEWER_BUTTON_LABELS[currentLanguage] || '讀取參數'}</span>
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1372,11 +1403,8 @@ function ComposerSettingsPanel({
                             </Button>
                         ) : null}
                     </div>
-                    <div
-                        data-testid="composer-queue-actions"
-                        className={`grid gap-1.5 ${showSecondaryQueueButton ? 'sm:grid-cols-[minmax(0,1fr)_minmax(0,180px)]' : 'sm:grid-cols-1'}`}
-                    >
-                        <div className="flex min-w-0 items-center gap-1.5">
+                    <div data-testid="composer-queue-actions" className="flex flex-wrap items-center gap-1.5">
+                        <div className="flex min-w-0 flex-1 items-center gap-1.5">
                             <Button
                                 data-testid="composer-queue-batch-primary-button"
                                 variant="secondary"
@@ -1423,30 +1451,20 @@ function ComposerSettingsPanel({
                                 />
                             </div>
                         ) : null}
-                    </div>
-                    {isCancelFinalizing ? (
-                        <p
-                            data-testid="composer-cancel-finalizing-note"
-                            className="px-1 text-[11px] leading-5 text-slate-500 dark:text-slate-400"
-                        >
-                            {t('composerCancelFinalizingNote')}
-                        </p>
-                    ) : null}
 
-                    <div
-                        data-testid="composer-round-backup-strip"
-                        className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 text-xs border-t border-gray-100/50 dark:border-slate-800 pt-2 bg-gray-50/50 dark:bg-slate-900/40 rounded-2xl mt-1.5"
-                    >
-                        {/* Left: Round Count */}
-                        <div className="flex items-center gap-2" data-testid="composer-round-count-control">
+                        {/* Round Count Control integrated right beside queue actions */}
+                        <div
+                            data-testid="composer-round-count-control"
+                            className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-[20px] border border-gray-200/80 bg-gray-50/80 px-2.5 py-1 text-xs dark:border-slate-800 dark:bg-slate-900/60"
+                        >
                             <span className="font-semibold text-slate-600 dark:text-slate-300">{t('roundCount')}</span>
-                            <div className="flex items-center gap-1 bg-white dark:bg-slate-800 rounded-lg p-0.5 border dark:border-slate-700 shadow-sm">
+                            <div className="flex items-center gap-0.5 rounded-lg border bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
                                 <button
                                     type="button"
                                     data-testid="composer-round-count-decrease"
                                     disabled={roundCount <= 1 || isActionLocked}
                                     onClick={() => onRoundCountChange?.(Math.max(1, roundCount - 1))}
-                                    className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-40 font-bold select-none text-slate-600 dark:text-slate-300"
+                                    className="flex h-5 w-5 select-none items-center justify-center rounded font-bold text-slate-600 hover:bg-gray-100 disabled:opacity-40 dark:text-slate-300 dark:hover:bg-slate-700"
                                 >
                                     -
                                 </button>
@@ -1456,7 +1474,7 @@ function ComposerSettingsPanel({
                                         data-testid="composer-round-count-grid-trigger"
                                         disabled={isActionLocked}
                                         onClick={() => setIsRoundGridOpen(!isRoundGridOpen)}
-                                        className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-slate-700 text-center font-mono font-bold text-[11px] text-slate-700 dark:text-slate-200 focus:outline-none"
+                                        className="flex h-5 w-5 items-center justify-center rounded text-center font-mono text-[11px] font-bold text-slate-700 hover:bg-gray-100 focus:outline-none dark:text-slate-200 dark:hover:bg-slate-700"
                                         title={t('roundCount')}
                                     >
                                         {roundCount}
@@ -1472,7 +1490,7 @@ function ComposerSettingsPanel({
                                             {/* Glassmorphic Popover Grid */}
                                             <div
                                                 data-testid="composer-round-count-popover"
-                                                className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur border border-gray-200/80 dark:border-slate-800 rounded-xl p-2 shadow-xl w-[130px] select-none pointer-events-auto"
+                                                className="absolute bottom-full left-1/2 z-50 mb-2 w-[130px] -translate-x-1/2 select-none rounded-xl border border-gray-200/80 bg-white/95 p-2 shadow-xl backdrop-blur pointer-events-auto dark:border-slate-800 dark:bg-slate-900/95"
                                             >
                                                 <div className="grid grid-cols-5 gap-1">
                                                     {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => {
@@ -1486,10 +1504,10 @@ function ComposerSettingsPanel({
                                                                     onRoundCountChange?.(num);
                                                                     setIsRoundGridOpen(false);
                                                                 }}
-                                                                className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold font-mono transition-all ${
+                                                                className={`flex h-5 w-5 items-center justify-center rounded-md font-mono text-[10px] font-bold transition-all ${
                                                                     isSelected
                                                                         ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-white shadow-sm shadow-amber-500/20'
-                                                                        : 'hover:bg-gray-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                                                        : 'text-slate-600 hover:bg-gray-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
                                                                 }`}
                                                             >
                                                                 {num}
@@ -1508,13 +1526,21 @@ function ComposerSettingsPanel({
                                     data-testid="composer-round-count-increase"
                                     disabled={roundCount >= 10 || isActionLocked}
                                     onClick={() => onRoundCountChange?.(Math.min(10, roundCount + 1))}
-                                    className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-40 font-bold select-none text-slate-600 dark:text-slate-300"
+                                    className="flex h-5 w-5 select-none items-center justify-center rounded font-bold text-slate-600 hover:bg-gray-100 disabled:opacity-40 dark:text-slate-300 dark:hover:bg-slate-700"
                                 >
                                     +
                                 </button>
                             </div>
                         </div>
                     </div>
+                    {isCancelFinalizing ? (
+                        <p
+                            data-testid="composer-cancel-finalizing-note"
+                            className="px-1 text-[11px] leading-5 text-slate-500 dark:text-slate-400"
+                        >
+                            {t('composerCancelFinalizingNote')}
+                        </p>
+                    ) : null}
                 </div>
             </div>
         </section>

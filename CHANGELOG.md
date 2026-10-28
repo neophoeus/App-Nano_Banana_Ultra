@@ -1,5 +1,20 @@
 # Changelog
 
+## v5.1.0 - 2026-10-28
+
+- Release title: Nano Banana Ultra 5.1.0 - Dual-Mode Image Metadata Viewer Integration, Workspace Extractor Retirement, and Composer Round Count Layout Refactor
+- Release summary:
+    - **Dual-Mode Image Metadata Viewer Integration & Workspace Extractor Retirement (`utils/*`, `components/*`, `scripts/*`, `package.json`)**:
+        - Formally integrated `App-Nano_Banana_Workspace_Extractor` into `App-Nano_Banana_Ultra` and retired the standalone extractor project.
+        - **Serverless Standalone Mode**: Pure offline HTML viewer (`scripts/metadata-viewer/viewer.html`) operable via direct `file:///` without starting local Node.js or Vite servers. Features responsive image display, filmstrip preview, metadata grid, and one-click prompt copying. Added root-level `run_read_metadata.bat` and PowerShell launcher (`scripts/metadata-viewer/launch_viewer.ps1`) for drag-and-drop batch viewing, plus a zero-dependency CLI inspector (`scripts/metadata-viewer/reader.cjs` / `npm run read:metadata <image>`).
+        - **Sidecar `<stem>.json` Auto-Fallback**: Automatically discovers and merges `<stem>.json` sidecars in the same directory or `./output`, guaranteeing complete metadata extraction even when image chunks are stripped or missing.
+        - **In-App Slide-out Drawer**: Positioned a dedicated `🔍 讀取參數` button (`composer-open-metadata-viewer`) in the prompt block beside Advanced Settings in `components/ComposerSettingsPanel.tsx`. Opens a slide-out drawer (`components/MetadataViewerDrawer.tsx`) supporting multi-image and JSON sidecar drops, filmstrip navigation, copy prompt, and 3 1-click workspace actions: "Apply Prompt" (`套用提示詞`), "Apply Settings" (`套用設定`), and "Apply Both" (`✨ 同時套用`, auto-closing the drawer).
+        - **Settings Lock Protection & Security Hardening**: Preserves `settingsLocked` integrity by blocking settings changes and issuing read-only notices. Hardened offline viewer with DOM-safe APIs (`textContent`, `createElement`) and strict `https?://` URL protocol checks to eliminate DOM XSS risks.
+    - **Composer Round Count Layout Refactoring (`components/ComposerSettingsPanel.tsx`, `tests/*`)**:
+        - Completely excised the isolated bottom strip (`composer-round-backup-strip`) that previously left ~80% blank whitespace beneath the prompt textarea.
+        - Relocated the round count control (`composer-round-count-control`) directly into `composer-queue-actions` beside the generate button, providing a unified, compact, and streamlined action bar.
+        - Maintained full round count functionality (popover grid selection, numeric steppers, and independent adjustment when settings are locked) with 100% test pass rate across `ComposerSettingsPanel.roundCount.test.tsx`.
+
 ## v5.0.1 - 2026-10-28
 
 - Release title: Nano Banana Ultra 5.0.1 - Deep Forensic Architecture Purification, Dual-Engine Provider & Virtual Image Layer Elimination, Frontend Key Isolation

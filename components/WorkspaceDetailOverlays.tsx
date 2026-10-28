@@ -3,11 +3,12 @@ import WorkspaceSupportDetailSurface from './WorkspaceSupportDetailSurface';
 import WorkspaceDetailModal from './WorkspaceDetailModal';
 import WorkspaceModalFrame from './WorkspaceModalFrame';
 import ExportResultsModal from './ExportResultsModal';
+import MetadataViewerDrawer from './MetadataViewerDrawer';
 import PanelLoadingFallback from './PanelLoadingFallback';
 import { WORKSPACE_OVERLAY_Z_INDEX } from '../constants/workspaceOverlays';
 import type { Language } from '../utils/translations';
 import type { BatchProgressState, WorkspaceDetailModalState } from '../hooks/useWorkspaceShellOwnerState';
-import type { GeneratedImage, QueuedBatchJob, TurnLineageAction } from '../types';
+import type { GeneratedImage, QueuedBatchJob, TurnLineageAction, ViewerComposerSettingsSnapshot } from '../types';
 import type { WorkspaceProgressThoughtImageDownloadRequest } from './WorkspaceProgressDetailPanel';
 import type { default as WorkspaceVersionsDetailPanelComponent } from './WorkspaceVersionsDetailPanel';
 
@@ -22,6 +23,12 @@ export interface WorkspaceDetailOverlaysProps {
     showClearWorkspaceConfirm: boolean;
     showExportResultsModal?: boolean;
     onCloseExportResultsModal?: () => void;
+    showMetadataViewerDrawer?: boolean;
+    onCloseMetadataViewerDrawer?: () => void;
+    onApplyMetadataPrompt?: (prompt: string) => void;
+    onApplyMetadataSettings?: (snapshot: ViewerComposerSettingsSnapshot) => void;
+    onApplyMetadataBoth?: (prompt: string, snapshot: ViewerComposerSettingsSnapshot) => void;
+    settingsLocked?: boolean;
     history?: GeneratedImage[];
     showNotification?: (message: string, type?: 'info' | 'error') => void;
     currentLang: Language;
@@ -83,6 +90,12 @@ export const WorkspaceDetailOverlays: React.FC<WorkspaceDetailOverlaysProps> = R
         showClearWorkspaceConfirm,
         showExportResultsModal = false,
         onCloseExportResultsModal,
+        showMetadataViewerDrawer = false,
+        onCloseMetadataViewerDrawer,
+        onApplyMetadataPrompt,
+        onApplyMetadataSettings,
+        onApplyMetadataBoth,
+        settingsLocked = false,
         history = [],
         showNotification,
         currentLang,
@@ -306,7 +319,7 @@ export const WorkspaceDetailOverlays: React.FC<WorkspaceDetailOverlaysProps> = R
             </WorkspaceModalFrame>
         ) : null;
 
-        if (!detailModalContent && !clearConfirmOverlay && !showExportResultsModal) {
+        if (!detailModalContent && !clearConfirmOverlay && !showExportResultsModal && !showMetadataViewerDrawer) {
             return null;
         }
 
@@ -320,6 +333,19 @@ export const WorkspaceDetailOverlays: React.FC<WorkspaceDetailOverlaysProps> = R
                         onClose={onCloseExportResultsModal}
                         history={history}
                         t={t}
+                        showNotification={showNotification}
+                    />
+                )}
+                {showMetadataViewerDrawer && onCloseMetadataViewerDrawer && (
+                    <MetadataViewerDrawer
+                        isOpen={showMetadataViewerDrawer}
+                        onClose={onCloseMetadataViewerDrawer}
+                        currentLanguage={currentLang}
+                        t={t}
+                        onApplyPrompt={onApplyMetadataPrompt}
+                        onApplySettings={onApplyMetadataSettings}
+                        onApplyBoth={onApplyMetadataBoth}
+                        settingsLocked={settingsLocked}
                         showNotification={showNotification}
                     />
                 )}

@@ -83,6 +83,7 @@ type UseComposerSettingsPanelPropsArgs = {
     objectImages?: string[];
     characterImages?: string[];
     styleImages?: string[];
+    openMetadataViewer?: () => void;
 };
 
 type ComposerSettingsPanelHandlers = {
@@ -166,6 +167,7 @@ export function useComposerSettingsPanelProps({
     objectImages,
     characterImages,
     styleImages,
+    openMetadataViewer,
 }: UseComposerSettingsPanelPropsArgs): ComposerSettingsPanelProps {
     const getModelLabel = useCallback(
         (model: ImageModel) => {
@@ -302,11 +304,12 @@ export function useComposerSettingsPanelProps({
             settingsLocked,
             onToggleSettingsLock,
             showNotification,
-                    promptThinkingLevel,
+            promptThinkingLevel,
             onPromptThinkingLevelChange,
             objectImages,
             characterImages,
             styleImages,
+            onOpenMetadataViewer: openMetadataViewer,
         }),
         [
             prompt,
@@ -333,7 +336,7 @@ export function useComposerSettingsPanelProps({
             temperature,
             isAdvancedSettingsOpen,
             generateLabel,
-                    isQueueBatchDisabled,
+            isQueueBatchDisabled,
             queueBatchDisabledReason,
             queueBatchModeSummary,
             queueBatchGenerateModeSummary,
@@ -353,6 +356,7 @@ export function useComposerSettingsPanelProps({
             objectImages,
             characterImages,
             styleImages,
+            openMetadataViewer,
         ],
     );
 }

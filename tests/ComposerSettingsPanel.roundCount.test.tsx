@@ -5,6 +5,7 @@ import { createRoot, Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ComposerSettingsPanel from '../components/ComposerSettingsPanel';
 import { MODEL_CAPABILITIES } from '../constants';
+import { GroundingMode } from '../types';
 import { getTranslation } from '../utils/translations';
 
 const baseProps = {
@@ -27,7 +28,7 @@ const baseProps = {
     groundingMode: 'off' as const,
     currentStageAsset: null,
     capability: MODEL_CAPABILITIES['gemini-3.1-flash-image'],
-    availableGroundingModes: ['off'] as const,
+    availableGroundingModes: ['off'] as GroundingMode[],
     temperature: 1,
     isAdvancedSettingsOpen: false,
     generateLabel: 'Generate',
@@ -233,5 +234,43 @@ describe('ComposerSettingsPanel round count controls', () => {
             option7.click();
         });
         expect(onRoundCountChange).toHaveBeenCalledWith(7);
+    });
+
+    it('places composer-round-count-control inside composer-queue-actions', () => {
+        act(() => {
+            root.render(<ComposerSettingsPanel {...baseProps} roundCount={2} settingsLocked={false} />);
+        });
+
+        const queueActions = container.querySelector('[data-testid="composer-queue-actions"]');
+        expect(queueActions).toBeTruthy();
+
+        const roundControlInside = queueActions?.querySelector('[data-testid="composer-round-count-control"]');
+        expect(roundControlInside).toBeTruthy();
+
+        // composer-round-backup-strip should no longer exist
+        expect(container.querySelector('[data-testid="composer-round-backup-strip"]')).toBeNull();
+    });
+
+    it('renders metadata viewer button in composer prompt block and triggers onOpenMetadataViewer', () => {
+        const onOpenMetadataViewer = vi.fn();
+
+        act(() => {
+            root.render(
+                <ComposerSettingsPanel
+                    {...baseProps}
+                    onOpenMetadataViewer={onOpenMetadataViewer}
+                    currentLanguage="zh_TW"
+                />,
+            );
+        });
+
+        const metaBtn = container.querySelector('[data-testid="composer-open-metadata-viewer"]') as HTMLButtonElement;
+        expect(metaBtn).toBeTruthy();
+        expect(metaBtn.textContent).toContain('讀取參數');
+
+        act(() => {
+            metaBtn.click();
+        });
+        expect(onOpenMetadataViewer).toHaveBeenCalledTimes(1);
     });
 });

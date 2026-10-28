@@ -1,7 +1,7 @@
 {
     "name": "nano-banana-ultra-dev",
     "private": true,
-    "version": "5.0.1",
+    "version": "5.1.0",
     "type": "module",
     "scripts": {
         "dev": "vite",
@@ -9,7 +9,8 @@
         "preview": "vite preview",
         "test": "node ./scripts/run-vitest.mjs run",
         "test:unit": "node ./scripts/run-vitest.mjs run",
-        "test:watch": "node ./scripts/run-vitest.mjs"
+        "test:watch": "node ./scripts/run-vitest.mjs",
+        "read:metadata": "node ./scripts/metadata-viewer/reader.cjs"
     },
     "dependencies": {
         "@google/genai": "^1.31.0",

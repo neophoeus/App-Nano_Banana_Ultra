@@ -1,0 +1,872 @@
+<!doctype html>
+<html lang="zh-TW">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Nano Banana Ultra - 圖片中繼資料檢視器 (Offline Metadata Viewer)</title>
+        <style>
+            :root {
+                --bg-primary: #121316;
+                --bg-secondary: #1a1c23;
+                --bg-card: #22252f;
+                --accent: #f5c518;
+                --accent-hover: #ffd84d;
+                --text-primary: #f0f2f5;
+                --text-secondary: #9ba1b0;
+                --border: #323644;
+                --success: #10b981;
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            }
+
+            body {
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            header {
+                background-color: var(--bg-secondary);
+                border-bottom: 1px solid var(--border);
+                padding: 14px 24px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .brand {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-size: 1.15rem;
+                font-weight: 700;
+            }
+
+            .brand span.banana {
+                font-size: 1.5rem;
+            }
+
+            .badge {
+                background: rgba(245, 197, 24, 0.15);
+                color: var(--accent);
+                font-size: 0.75rem;
+                padding: 2px 8px;
+                border-radius: 999px;
+                font-weight: 600;
+            }
+
+            main {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                padding: 20px;
+                gap: 20px;
+                max-width: 1600px;
+                margin: 0 auto;
+                width: 100%;
+            }
+
+            /* Drop Zone */
+            .dropzone {
+                border: 2px dashed var(--border);
+                background-color: var(--bg-secondary);
+                border-radius: 12px;
+                padding: 30px 20px;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+
+            .dropzone:hover,
+            .dropzone.dragover {
+                border-color: var(--accent);
+                background-color: rgba(245, 197, 24, 0.05);
+            }
+
+            .dropzone .icon {
+                font-size: 2rem;
+                margin-bottom: 8px;
+            }
+
+            .dropzone h3 {
+                font-size: 1.05rem;
+                margin-bottom: 6px;
+            }
+
+            .dropzone p {
+                color: var(--text-secondary);
+                font-size: 0.85rem;
+            }
+
+            /* Content Area */
+            .content-area {
+                display: none;
+                grid-template-columns: 1fr 1fr;
+                gap: 24px;
+                flex: 1;
+            }
+
+            @media (max-width: 900px) {
+                .content-area {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            .image-pane {
+                background-color: var(--bg-secondary);
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 16px;
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                align-items: center;
+                justify-content: center;
+                min-height: 400px;
+            }
+
+            .image-pane img.main-preview {
+                max-width: 100%;
+                max-height: 65vh;
+                object-fit: contain;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            }
+
+            .filmstrip {
+                display: flex;
+                gap: 10px;
+                overflow-x: auto;
+                width: 100%;
+                padding: 8px 4px;
+            }
+
+            .filmstrip img {
+                width: 60px;
+                height: 60px;
+                object-fit: cover;
+                border-radius: 6px;
+                cursor: pointer;
+                border: 2px solid transparent;
+                opacity: 0.6;
+                transition: all 0.2s ease;
+            }
+
+            .filmstrip img.active {
+                border-color: var(--accent);
+                opacity: 1;
+                transform: scale(1.05);
+            }
+
+            .metadata-pane {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                max-height: 80vh;
+                overflow-y: auto;
+                padding-right: 6px;
+            }
+
+            .card {
+                background-color: var(--bg-card);
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 16px;
+            }
+
+            .card-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 12px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                padding-bottom: 8px;
+            }
+
+            .card-title {
+                font-size: 0.95rem;
+                font-weight: 600;
+                color: var(--accent);
+            }
+
+            .prompt-text {
+                font-size: 0.9rem;
+                line-height: 1.5;
+                white-space: pre-wrap;
+                word-break: break-word;
+                background: rgba(0, 0, 0, 0.25);
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                user-select: text;
+            }
+
+            .btn-copy {
+                background-color: var(--accent);
+                color: #000;
+                border: none;
+                border-radius: 6px;
+                padding: 6px 14px;
+                font-size: 0.8rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+
+            .btn-copy:hover {
+                background-color: var(--accent-hover);
+            }
+
+            .meta-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 10px;
+            }
+
+            .meta-item {
+                background: rgba(0, 0, 0, 0.2);
+                padding: 8px 12px;
+                border-radius: 6px;
+                border: 1px solid rgba(255, 255, 255, 0.04);
+            }
+
+            .meta-label {
+                font-size: 0.75rem;
+                color: var(--text-secondary);
+                margin-bottom: 2px;
+            }
+
+            .meta-value {
+                font-size: 0.85rem;
+                font-weight: 500;
+                word-break: break-all;
+            }
+
+            .thoughts-box {
+                font-size: 0.85rem;
+                line-height: 1.45;
+                white-space: pre-wrap;
+                background: rgba(0, 0, 0, 0.3);
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                max-height: 250px;
+                overflow-y: auto;
+                color: #c9ced8;
+            }
+
+            .grounding-list {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .grounding-item {
+                font-size: 0.8rem;
+                background: rgba(0, 0, 0, 0.2);
+                padding: 6px 10px;
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .grounding-item a {
+                color: var(--accent);
+                text-decoration: none;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                max-width: 85%;
+            }
+
+            .grounding-item a:hover {
+                text-decoration: underline;
+            }
+
+            .hidden {
+                display: none !important;
+            }
+
+            .sidecar-badge {
+                background: rgba(16, 185, 129, 0.2);
+                color: #34d399;
+                font-size: 0.7rem;
+                padding: 2px 6px;
+                border-radius: 4px;
+                margin-left: 6px;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <div class="brand">
+                <span class="banana">🍌</span>
+                <span>Nano Banana Ultra</span>
+                <span class="badge">Metadata Viewer</span>
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary)">
+                純離線圖片中繼資料讀取器 (完全不經伺服器)
+            </div>
+        </header>
+
+        <main>
+            <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+                <div class="icon">🖼️</div>
+                <h3>點擊選取或直接拖放 PNG / JPEG 圖片至此</h3>
+                <p>支援 .png, .jpg, .jpeg 及同檔名 .json 側車檔案，純本地解析無伺服器相依性。</p>
+                <input
+                    type="file"
+                    id="fileInput"
+                    accept="image/png,image/jpeg,.png,.jpg,.jpeg,.json"
+                    multiple
+                    style="display: none"
+                />
+            </div>
+
+            <div class="content-area" id="contentArea">
+                <!-- Left: Image Preview & Filmstrip -->
+                <div class="image-pane">
+                    <img id="previewImg" class="main-preview" src="" alt="預覽圖" />
+                    <div class="filmstrip" id="filmstrip"></div>
+                </div>
+
+                <!-- Right: Metadata & Prompt -->
+                <div class="metadata-pane">
+                    <!-- Prompt Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">提示詞 (Prompt)</span>
+                            <button class="btn-copy" id="btnCopyPrompt" onclick="copyPrompt()">一鍵複製提示詞</button>
+                        </div>
+                        <div class="prompt-text" id="promptText">(未設定提示詞)</div>
+                    </div>
+
+                    <!-- Parameters Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">生成參數 (Generation Parameters)</span>
+                            <span id="imageFilename" style="font-size: 0.85rem; color: var(--text-secondary)"></span>
+                        </div>
+                        <div class="meta-grid" id="metaGrid"></div>
+                    </div>
+
+                    <!-- Response / Description Card -->
+                    <div class="card hidden" id="responseCard">
+                        <div class="card-header">
+                            <span class="card-title">模型文字回覆 (Model Response)</span>
+                        </div>
+                        <div class="thoughts-box" id="responseText"></div>
+                    </div>
+
+                    <!-- Grounding Sources Card -->
+                    <div class="card hidden" id="groundingCard">
+                        <div class="card-header">
+                            <span class="card-title">搜尋引用來源 (Grounding Sources)</span>
+                        </div>
+                        <div class="grounding-list" id="groundingList"></div>
+                    </div>
+
+                    <!-- Thoughts Card -->
+                    <div class="card hidden" id="thoughtsCard">
+                        <div class="card-header">
+                            <span class="card-title">思考過程 (Thinking Process)</span>
+                        </div>
+                        <div class="thoughts-box" id="thoughtsText"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <script>
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('fileInput');
+            const contentArea = document.getElementById('contentArea');
+            const previewImg = document.getElementById('previewImg');
+            const filmstrip = document.getElementById('filmstrip');
+            const promptText = document.getElementById('promptText');
+            const imageFilename = document.getElementById('imageFilename');
+            const metaGrid = document.getElementById('metaGrid');
+            const responseCard = document.getElementById('responseCard');
+            const responseText = document.getElementById('responseText');
+            const groundingCard = document.getElementById('groundingCard');
+            const groundingList = document.getElementById('groundingList');
+            const thoughtsCard = document.getElementById('thoughtsCard');
+            const thoughtsText = document.getElementById('thoughtsText');
+            const btnCopyPrompt = document.getElementById('btnCopyPrompt');
+
+            let loadedImages = [];
+            let currentIndex = 0;
+
+            function revokeLoadedImageUrls() {
+                if (Array.isArray(loadedImages)) {
+                    loadedImages.forEach((item) => {
+                        if (item && item.url && typeof item.url === 'string' && item.url.startsWith('blob:')) {
+                            try {
+                                URL.revokeObjectURL(item.url);
+                            } catch {}
+                        }
+                    });
+                }
+            }
+
+            window.addEventListener('beforeunload', revokeLoadedImageUrls);
+
+            // Auto-load session images if launched via launch_viewer.ps1
+            window.addEventListener('DOMContentLoaded', async () => {
+                const hasDropHash = window.location.hash === '#drop';
+                if (hasDropHash && !window.__DROP_SESSION__) {
+                    await new Promise((resolve) => {
+                        const script = document.createElement('script');
+                        script.src = 'session_data.js';
+                        script.onload = () => resolve();
+                        script.onerror = () => resolve();
+                        document.head.appendChild(script);
+                    });
+                }
+                const session = window.__DROP_SESSION__;
+                const isFreshSession = session && session.timestamp && Date.now() - session.timestamp < 30000;
+
+                if (
+                    (hasDropHash || isFreshSession) &&
+                    session &&
+                    Array.isArray(session.images) &&
+                    session.images.length > 0
+                ) {
+                    await loadSessionImages(session.images);
+                    window.__DROP_SESSION__ = null;
+                    if (window.location.hash === '#drop') {
+                        history.replaceState(null, '', window.location.pathname);
+                    }
+                }
+            });
+
+            async function loadSessionImages(images) {
+                revokeLoadedImageUrls();
+                loadedImages = [];
+                for (const item of images) {
+                    try {
+                        const res = await fetch(item.data);
+                        const blob = await res.blob();
+                        const buffer = await blob.arrayBuffer();
+                        const metadata = parseImageMetadata(buffer);
+                        const url = URL.createObjectURL(blob);
+                        loadedImages.push({
+                            file: blob,
+                            name: item.name,
+                            url,
+                            metadata,
+                            sidecar: item.sidecar || null,
+                        });
+                    } catch (err) {
+                        console.error('載入圖片失敗:', item.name, err);
+                    }
+                }
+
+                if (loadedImages.length > 0) {
+                    currentIndex = 0;
+                    renderAll();
+                }
+            }
+
+            // Drag and drop event handlers
+            window.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+            window.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+            });
+            window.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    handleFiles(e.dataTransfer.files);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                    handleFiles(e.target.files);
+                }
+            });
+
+            async function handleFiles(files) {
+                const fileList = Array.from(files);
+                const imageFiles = fileList.filter((f) => /\.(png|jpe?g)$/i.test(f.name));
+                const jsonFiles = fileList.filter((f) => /\.json$/i.test(f.name));
+
+                if (imageFiles.length === 0) {
+                    alert('請選取 PNG 或 JPEG (.jpg/.jpeg) 圖片檔案！');
+                    return;
+                }
+
+                // Map sidecars by stem
+                const sidecarMap = new Map();
+                for (const jf of jsonFiles) {
+                    try {
+                        const text = await jf.text();
+                        const parsed = JSON.parse(text);
+                        const stem = jf.name.replace(/\.json$/i, '');
+                        sidecarMap.set(stem, parsed);
+                    } catch {}
+                }
+
+                revokeLoadedImageUrls();
+                loadedImages = [];
+                for (const file of imageFiles) {
+                    const buffer = await file.arrayBuffer();
+                    const metadata = parseImageMetadata(buffer);
+                    const url = URL.createObjectURL(file);
+                    const stem = file.name.replace(/\.[^.]+$/, '');
+                    const sidecar = sidecarMap.get(stem) || null;
+
+                    loadedImages.push({
+                        file,
+                        name: file.name,
+                        url,
+                        metadata,
+                        sidecar,
+                    });
+                }
+
+                currentIndex = 0;
+                renderAll();
+            }
+
+            // Parse PNG iTXt / tEXt chunks
+            function parsePngMetadata(arrayBuffer) {
+                const uint8 = new Uint8Array(arrayBuffer);
+                const view = new DataView(arrayBuffer);
+                const metadata = {};
+
+                if (
+                    uint8.length < 8 ||
+                    uint8[0] !== 0x89 ||
+                    uint8[1] !== 0x50 ||
+                    uint8[2] !== 0x4e ||
+                    uint8[3] !== 0x47
+                ) {
+                    return metadata;
+                }
+
+                let pos = 8;
+                const len = uint8.length;
+                const textDecoder = new TextDecoder('utf-8');
+
+                while (pos + 8 <= len) {
+                    const chunkLen = view.getUint32(pos);
+                    let chunkType = '';
+                    for (let i = 0; i < 4; i++) {
+                        chunkType += String.fromCharCode(uint8[pos + 4 + i]);
+                    }
+                    const dataStart = pos + 8;
+                    const dataEnd = dataStart + chunkLen;
+
+                    if (dataEnd + 4 > len) break;
+
+                    if (chunkType === 'tEXt') {
+                        const chunkData = uint8.subarray(dataStart, dataEnd);
+                        const nullIdx = chunkData.indexOf(0x00);
+                        if (nullIdx > 0) {
+                            const keyword = textDecoder.decode(chunkData.subarray(0, nullIdx));
+                            const text = textDecoder.decode(chunkData.subarray(nullIdx + 1));
+                            metadata[keyword] = text;
+                        }
+                    } else if (chunkType === 'iTXt') {
+                        const chunkData = uint8.subarray(dataStart, dataEnd);
+                        let idx = 0;
+                        const null1 = chunkData.indexOf(0x00, idx);
+                        if (null1 > 0) {
+                            const keyword = textDecoder.decode(chunkData.subarray(0, null1));
+                            idx = null1 + 1;
+                            if (idx + 2 <= chunkData.length) {
+                                const compFlag = chunkData[idx];
+                                idx += 2;
+                                const null2 = chunkData.indexOf(0x00, idx);
+                                if (null2 !== -1) {
+                                    idx = null2 + 1;
+                                    const null3 = chunkData.indexOf(0x00, idx);
+                                    if (null3 !== -1) {
+                                        idx = null3 + 1;
+                                        const textBytes = chunkData.subarray(idx);
+                                        let text = '';
+                                        if (compFlag === 0) {
+                                            text = textDecoder.decode(textBytes);
+                                        } else {
+                                            text = textDecoder.decode(textBytes);
+                                        }
+                                        metadata[keyword] = text;
+                                    }
+                                }
+                            }
+                        }
+                    } else if (chunkType === 'IEND') {
+                        break;
+                    }
+
+                    pos += 12 + chunkLen;
+                }
+
+                return metadata;
+            }
+
+            // Parse JPEG COM segments
+            function parseJpegMetadata(arrayBuffer) {
+                const uint8 = new Uint8Array(arrayBuffer);
+                const view = new DataView(arrayBuffer);
+                const metadata = {};
+
+                if (uint8.length < 4 || uint8[0] !== 0xff || uint8[1] !== 0xd8) {
+                    return metadata;
+                }
+
+                let pos = 2;
+                const len = uint8.length;
+                const textDecoder = new TextDecoder('utf-8');
+
+                while (pos + 4 <= len) {
+                    if (uint8[pos] !== 0xff) {
+                        pos++;
+                        continue;
+                    }
+
+                    while (pos < len && uint8[pos] === 0xff) {
+                        pos++;
+                    }
+                    if (pos >= len) break;
+
+                    const marker = uint8[pos++];
+
+                    if (marker === 0xd9 || marker === 0xda) {
+                        break;
+                    }
+                    if ((marker >= 0xd0 && marker <= 0xd7) || marker === 0x00) {
+                        continue;
+                    }
+
+                    if (pos + 2 > len) break;
+                    const segLen = view.getUint16(pos);
+                    if (segLen < 2 || pos + segLen > len) {
+                        break;
+                    }
+
+                    const payloadStart = pos + 2;
+                    const payloadEnd = pos + segLen;
+
+                    if (marker === 0xfe) {
+                        const text = textDecoder.decode(uint8.subarray(payloadStart, payloadEnd));
+                        const newlineIdx = text.indexOf('\n');
+                        if (newlineIdx !== -1) {
+                            const prefix = text.substring(0, newlineIdx).trim();
+                            const content = text.substring(newlineIdx + 1);
+                            if (prefix === 'nano_banana_meta' || prefix === 'parameters') {
+                                metadata[prefix] = content;
+                            } else {
+                                metadata[prefix || 'comment'] = content;
+                            }
+                        } else {
+                            metadata['comment'] = text;
+                        }
+                    }
+
+                    pos += segLen;
+                }
+
+                return metadata;
+            }
+
+            function parseImageMetadata(arrayBuffer) {
+                const uint8 = new Uint8Array(arrayBuffer);
+                if (uint8.length < 4) return {};
+
+                if (uint8[0] === 0x89 && uint8[1] === 0x50 && uint8[2] === 0x4e && uint8[3] === 0x47) {
+                    return parsePngMetadata(arrayBuffer);
+                }
+                if (uint8[0] === 0xff && uint8[1] === 0xd8) {
+                    return parseJpegMetadata(arrayBuffer);
+                }
+                return {};
+            }
+
+            function renderAll() {
+                if (loadedImages.length === 0) return;
+                contentArea.style.display = 'grid';
+
+                // Filmstrip
+                filmstrip.innerHTML = '';
+                loadedImages.forEach((img, idx) => {
+                    const thumb = document.createElement('img');
+                    thumb.src = img.url;
+                    thumb.title = img.name;
+                    if (idx === currentIndex) thumb.classList.add('active');
+                    thumb.addEventListener('click', () => {
+                        currentIndex = idx;
+                        renderDetail();
+                        updateFilmstripActive();
+                    });
+                    filmstrip.appendChild(thumb);
+                });
+
+                renderDetail();
+            }
+
+            function updateFilmstripActive() {
+                const thumbs = filmstrip.querySelectorAll('img');
+                thumbs.forEach((t, i) => {
+                    if (i === currentIndex) t.classList.add('active');
+                    else t.classList.remove('active');
+                });
+            }
+
+            function renderDetail() {
+                const current = loadedImages[currentIndex];
+                if (!current) return;
+
+                previewImg.src = current.url;
+                imageFilename.textContent = current.name;
+                if (current.sidecar) {
+                    const badge = document.createElement('span');
+                    badge.className = 'sidecar-badge';
+                    badge.textContent = 'Sidecar JSON';
+                    imageFilename.appendChild(badge);
+                }
+
+                let meta = null;
+                if (current.metadata && current.metadata['nano_banana_meta']) {
+                    try {
+                        meta = JSON.parse(current.metadata['nano_banana_meta']);
+                    } catch {}
+                }
+
+                if (!meta && current.sidecar) {
+                    meta = { ...current.sidecar };
+                } else if (meta && current.sidecar) {
+                    meta = { ...current.sidecar, ...meta };
+                }
+
+                if (meta) {
+                    promptText.textContent = meta.prompt || '(無設定提示詞)';
+                    metaGrid.innerHTML = '';
+
+                    const addGridItem = (label, value) => {
+                        if (value === undefined || value === null || value === '') return;
+                        const item = document.createElement('div');
+                        item.className = 'meta-item';
+                        const lbl = document.createElement('div');
+                        lbl.className = 'meta-label';
+                        lbl.textContent = label;
+                        const val = document.createElement('div');
+                        val.className = 'meta-value';
+                        val.textContent = typeof value === 'object' ? JSON.stringify(value) : String(value);
+                        item.appendChild(lbl);
+                        item.appendChild(val);
+                        metaGrid.appendChild(item);
+                    };
+
+                    addGridItem('模型 (Model)', meta.model);
+                    addGridItem('風格 (Style)', meta.style);
+                    addGridItem('比例 (Aspect Ratio)', meta.aspectRatio);
+                    addGridItem('尺寸 (Size)', meta.size || meta.requestedImageSize);
+                    addGridItem('輸出格式 (Output Format)', meta.outputFormat);
+                    addGridItem(
+                        '實際產出 (Actual Output)',
+                        typeof meta.actualOutput === 'object' ? JSON.stringify(meta.actualOutput) : meta.actualOutput,
+                    );
+                    addGridItem('生成模式 (Mode)', meta.mode);
+                    addGridItem('執行方式 (Execution Mode)', meta.executionMode);
+                    addGridItem('溫度 (Temperature)', meta.temperature);
+                    addGridItem('思考層級 (Thinking Level)', meta.thinkingLevel);
+                    addGridItem('搜尋增強 (Grounding)', meta.groundingMode);
+                    if (meta.createdAt) {
+                        addGridItem('生成時間', new Date(meta.createdAt).toLocaleString('zh-TW'));
+                    }
+
+                    if (meta.text && meta.text.trim()) {
+                        responseCard.classList.remove('hidden');
+                        responseText.textContent = meta.text.trim();
+                    } else {
+                        responseCard.classList.add('hidden');
+                    }
+
+                    if (meta.thoughts && meta.thoughts.trim()) {
+                        thoughtsCard.classList.remove('hidden');
+                        thoughtsText.textContent = meta.thoughts.trim();
+                    } else {
+                        thoughtsCard.classList.add('hidden');
+                    }
+
+                    if (Array.isArray(meta.groundingSources) && meta.groundingSources.length > 0) {
+                        groundingCard.classList.remove('hidden');
+                        groundingList.textContent = '';
+                        meta.groundingSources.forEach((src, idx) => {
+                            const item = document.createElement('div');
+                            item.className = 'grounding-item';
+                            const titleSpan = document.createElement('span');
+                            titleSpan.textContent = `[${idx + 1}] ${src.title || ''}`;
+                            item.appendChild(titleSpan);
+                            if (src.url && /^https?:\/\//i.test(src.url)) {
+                                const link = document.createElement('a');
+                                link.href = src.url;
+                                link.target = '_blank';
+                                link.rel = 'noreferrer';
+                                link.textContent = '連結';
+                                item.appendChild(link);
+                            }
+                            groundingList.appendChild(item);
+                        });
+                    } else {
+                        groundingCard.classList.add('hidden');
+                    }
+                } else if (current.metadata && current.metadata['parameters']) {
+                    promptText.textContent = current.metadata['parameters'];
+                    metaGrid.innerHTML =
+                        '<div class="meta-item"><div class="meta-label">原始參數</div><div class="meta-value">Civitai / A1111 format</div></div>';
+                    responseCard.classList.add('hidden');
+                    groundingCard.classList.add('hidden');
+                    thoughtsCard.classList.add('hidden');
+                } else {
+                    promptText.textContent = '(未找到 Nano Banana 或相容的中繼資料)';
+                    metaGrid.innerHTML = '';
+                    responseCard.classList.add('hidden');
+                    groundingCard.classList.add('hidden');
+                    thoughtsCard.classList.add('hidden');
+                }
+            }
+
+            function copyPrompt() {
+                const text = promptText.textContent;
+                if (!text || text === '(未設定提示詞)' || text === '(未找到 Nano Banana 或相容的中繼資料)') return;
+                navigator.clipboard.writeText(text).then(() => {
+                    const original = btnCopyPrompt.textContent;
+                    btnCopyPrompt.textContent = '✓ 已複製！';
+                    setTimeout(() => {
+                        btnCopyPrompt.textContent = original;
+                    }, 1800);
+                });
+            }
+
+            // Keyboard arrow navigation
+            window.addEventListener('keydown', (e) => {
+                if (loadedImages.length <= 1) return;
+                if (e.key === 'ArrowRight' || e.key === 'Right') {
+                    currentIndex = (currentIndex + 1) % loadedImages.length;
+                    renderDetail();
+                    updateFilmstripActive();
+                } else if (e.key === 'ArrowLeft' || e.key === 'Left') {
+                    currentIndex = (currentIndex - 1 + loadedImages.length) % loadedImages.length;
+                    renderDetail();
+                    updateFilmstripActive();
+                }
+            });
+        </script>
+    </body>
+</html>

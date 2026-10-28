@@ -110,6 +110,7 @@ const App: React.FC = () => {
     const [isCancelFinalizing, setIsCancelFinalizing] = useState(false);
     const [isDebugTerminalOpen, setIsDebugTerminalOpen] = useState(false);
     const [showExportResultsModal, setShowExportResultsModal] = useState(false);
+    const [showMetadataViewerDrawer, setShowMetadataViewerDrawer] = useState(false);
     const isDarkTheme = useDocumentThemeMode();
     const [currentLang, setCurrentLang] = useState<Language>(() => {
         const preferredLanguage = resolvePreferredLanguage();
@@ -1602,6 +1603,7 @@ const App: React.FC = () => {
         objectImages: surfaceObjectImages,
         characterImages: surfaceCharacterImages,
         styleImages,
+        openMetadataViewer: () => setShowMetadataViewerDrawer(true),
     });
     const advancedSettingsDialogProps: React.ComponentProps<typeof ComposerAdvancedSettingsDialog> | null =
         isAdvancedSettingsOpen
@@ -1746,6 +1748,41 @@ const App: React.FC = () => {
             });
         },
         [applyViewerComposerSettingsSnapshot, focusComposerPromptTextarea, showNotification, t],
+    );
+    const handleApplyBothFromMetadataViewer = useCallback(
+        (promptText: string, snapshot: ViewerComposerSettingsSnapshot) => {
+            if (settingsLocked) {
+                showNotification(t('settingsLockedNotice'), 'info');
+                handleApplyPromptFromViewer(promptText);
+                setShowMetadataViewerDrawer(false);
+                return;
+            }
+            applyViewerComposerSettingsSnapshot(snapshot);
+            setPrompt(promptText.trim());
+            focusComposerPromptTextarea({
+                delayFrames: 2,
+                ensureVisible: true,
+            });
+            showNotification(
+                currentLang === 'zh_TW'
+                    ? '已將提示詞與設定同時套用到編輯區。'
+                    : currentLang === 'zh_CN'
+                      ? '已将提示词与设置同时应用到编辑区。'
+                      : 'Applied prompt and settings to composer.',
+                'info',
+            );
+            setShowMetadataViewerDrawer(false);
+        },
+        [
+            applyViewerComposerSettingsSnapshot,
+            currentLang,
+            focusComposerPromptTextarea,
+            handleApplyPromptFromViewer,
+            setPrompt,
+            settingsLocked,
+            showNotification,
+            t,
+        ],
     );
     const stageViewerSettings = useMemo(
         () => ({
@@ -2152,6 +2189,12 @@ const App: React.FC = () => {
             showClearWorkspaceConfirm={showClearWorkspaceConfirm}
             showExportResultsModal={showExportResultsModal}
             onCloseExportResultsModal={() => setShowExportResultsModal(false)}
+            showMetadataViewerDrawer={showMetadataViewerDrawer}
+            onCloseMetadataViewerDrawer={() => setShowMetadataViewerDrawer(false)}
+            onApplyMetadataPrompt={handleApplyPromptFromViewer}
+            onApplyMetadataSettings={handleApplySettingsFromViewer}
+            onApplyMetadataBoth={handleApplyBothFromMetadataViewer}
+            settingsLocked={settingsLocked}
             history={history}
             showNotification={showNotification}
             currentLang={currentLang}
@@ -2296,12 +2339,7 @@ const App: React.FC = () => {
                                     batchSize={batchSize}
                                     onBatchSizeChange={setBatchSize}
                                     onGenerate={handleEditorGenerate}
-
-                                    onQueueBatch={
-                                        showEditorQueueBatch
-                                            ? handleEditorQueueBatch
-                                            : undefined
-                                    }
+                                    onQueueBatch={showEditorQueueBatch ? handleEditorQueueBatch : undefined}
                                     queueBatchDisabledReason={showEditorQueueBatch ? null : editorQueueDisabledReason}
                                     onCancel={closeEditor}
                                     isGenerating={isGenerating}
