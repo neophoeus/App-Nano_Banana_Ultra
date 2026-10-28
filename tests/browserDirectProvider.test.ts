@@ -28,6 +28,7 @@ import {
     recordComputePoolSuccess,
     resetComputePoolStatus,
     getComputePoolPacingMultiplier,
+    loadComputePoolStatusFromStorage,
 } from '../utils/aiStudioPlan';
 
 describe('BrowserDirectProvider and AI Studio Subscription Tier Pacing', () => {
@@ -479,6 +480,19 @@ describe('BrowserDirectProvider and AI Studio Subscription Tier Pacing', () => {
             expect(analysis.shouldRetry).toBe(false);
         });
 
+        it('identifies generationFailure safety-blocked code and filters message as non-retryable policy', () => {
+            const safetyError = new Error('Model output was blocked by safety filters.');
+            (safetyError as any).generationFailure = {
+                code: 'safety-blocked',
+                message: 'Model output was blocked by safety filters.',
+            };
+
+            const analysis = inspectGeminiErrorPacket(safetyError, 'gemini-3.1-flash-image');
+            expect(analysis.category).toBe('non_retryable_policy');
+            expect(analysis.strategy).toBe('abort_no_retry');
+            expect(analysis.shouldRetry).toBe(false);
+        });
+
         it('parses real-world Gemini 429 TPM input token limit without false-positive daily exhaustion', () => {
             const tpmErrorText =
                 'You exceeded your current quota, please check your plan and billing details. For more information see https://ai.google.dev/gemini-api/docs/rate-limits.\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_paid_tier_input_token_count, limit: 200000, model: gemini-3.1-flash-image\nPlease retry in 22.924543136s.';
@@ -629,6 +643,39 @@ describe('BrowserDirectProvider and AI Studio Subscription Tier Pacing', () => {
 
             expect(countAfterSecond).toBe(countAfterFirst);
         });
+
+        it('auto-decays stale compute pool status across sessions/days (> 6 hours)', () => {
+            resetComputePoolStatus();
+            const analysis = inspectGeminiErrorPacket('429 RESOURCE_EXHAUSTED: retry in 10s', 'gemini-3-pro-image');
+            recordComputePoolError(analysis, 'gemini-3-pro-image', Date.now() + 10000);
+            expect(getComputePoolStatus().recentRateLimitCount).toBe(1);
+
+            // Simulate loading a stale snapshot from yesterday (> 6 hours ago)
+            const staleTime = Date.now() - 7 * 60 * 60 * 1000;
+            localStorage.setItem(
+                'nbu_compute_pool_status_v1',
+                JSON.stringify({
+                    level: 'throttled',
+                    pacingMultiplier: 1.5,
+                    activeCooldownUntil: 0,
+                    activeModel: 'gemini-3-pro-image',
+                    consecutiveSuccesses: 0,
+                    recentRateLimitCount: 104,
+                    recentCongestionCount: 12,
+                    dailyQuotaExhausted: true,
+                    exhaustedModels: ['gemini-nano-banana-2.1'],
+                    lastUpdatedAt: staleTime,
+                }),
+            );
+
+            // Loading from storage rehydrates and applies stale check
+            const current = loadComputePoolStatusFromStorage();
+            expect(current.level).toBe('healthy');
+            expect(current.recentRateLimitCount).toBe(0);
+            expect(current.recentCongestionCount).toBe(0);
+            expect(current.dailyQuotaExhausted).toBe(false);
+            expect(current.exhaustedModels).toEqual([]);
+        });
     });
 
     describe('retryOperation with Deep Error Packet Analysis', () => {
@@ -697,6 +744,36 @@ describe('BrowserDirectProvider and AI Studio Subscription Tier Pacing', () => {
             expect(results.every((r) => r.status === 'failed')).toBe(true);
             expect(results[3].failure).toBeDefined();
             expect(logs.some((msg) => msg.includes('每日配額已耗盡'))).toBe(true);
+        });
+
+        it('uses server-directed cooldown rather than latched exponential delay on subsequent retries', async () => {
+            let attempt = 0;
+            const fakeOperation = vi.fn(async () => {
+                attempt++;
+                if (attempt === 1) {
+                    // First failure: asks for 20s
+                    throw new Error('Please retry in 20s');
+                }
+                if (attempt === 2) {
+                    // Second failure: server says retry in 5s
+                    throw new Error('Please retry in 5s');
+                }
+                return { success: true };
+            });
+
+            const logs: string[] = [];
+            // Start with delayMs = 80000 from a previous attempt
+            const result = await retryOperation(fakeOperation, 3, 80000, {
+                model: 'gemini-3-pro-image',
+                onLog: (msg) => logs.push(msg),
+            });
+
+            expect(result).toEqual({ success: true });
+            expect(attempt).toBe(3);
+            // Verify attempt 2 was not locked to 80s or attempt 1's 20s: waitMs should be ~7.5s-9.0s (5s + 2.5s margin + jitter)
+            const secondRetryLog = logs.find((l) => l.includes('(2 left)'));
+            expect(secondRetryLog).toBeDefined();
+            expect(secondRetryLog).toMatch(/Retrying in [789]\.\ds/);
         });
     });
 });

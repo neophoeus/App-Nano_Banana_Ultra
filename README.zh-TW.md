@@ -136,7 +136,7 @@ Nano Banana Ultra 目前支援五條 Gemini 影像模型路徑。介面會依模
 
 ## 版本總覽
 
-### 最新版本：4.13.0
+### 最新版本：4.14.0
 
 版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -145,6 +145,7 @@ Nano Banana Ultra 目前支援五條 Gemini 影像模型路徑。介面會依模
 4.x 系列確立了雙引擎架構（無縫橋接 Google AI Studio 瀏覽器直連模式與本機 Node.js 後端外掛），奠定專案進入生產級創作工作區的核心基礎。在全面收斂 Lite 版本的基石之上，4.x 帶來多圖生成漸進式即時預覽、多層級 Google AI 訂閱配額調度、以及突破瀏覽器限制的 IndexedDB v2 大型工作區快照持久化。
 
 4.x 系列的核心重大里程碑包括：
+- **雙引擎持久化語意隔離與限流診斷強化（v4.14.0）**：確立 Local 模式與 Direct 模式的持久化語意完全隔離。Local API 模式下產物直存本機磁碟，全面停用無謂的自動匯出備份（Auto-Backup JSON）與 IndexedDB 冗餘寫入；Direct 模式則自動短路後端快照 API 請求，並內建 404/405/501 斷路器防止無效請求循環。消除 80 秒指數退避鎖死問題，優先採用伺服器指定（`RetryInfo`）冷卻時長並於倒數完畢即時清理模型冷卻懲罰；內容安全過濾攔截（`safety-blocked`）直接中止不進行盲目重試，並為算力池持久化狀態加入 6 小時陳舊衰減重置機制。
 - **Gemini 2.5+ 內生安全架構對齊與過時安全設定退役（v4.13.0）**：深度對齊 Google Gemini API 2.5+ 官方規範，確立模型內建安全機制（RLHF 思想對齊）取代舊版外掛分類過濾器（未指定時過濾閾值預設為 Off）。全面廢棄並拔除跨 38 個檔案的歷史安全設定 UI 選單、Store 狀態與 API 傳參，精簡請求封包並確保符合現代化 Gemini 開發最佳實踐。
 - **共享算力池架構對齊與深度錯誤封包解析（v4.12.x）**：深度對齊 Google AI Studio 的 Build 模式基礎架構，確立預覽環境透過專案 API Key 呼叫標準 Gemini 開發者端點之機制。解除消費者訂閱等級（Pro/Ultra）的節流限制，改採統一基準節流、響應式算力池狀態燈號監控（🟢 正常 / 🟡 限流 / 🟠 擁塞 / 🔴 耗盡）與深度 Google RPC 錯誤封包解析器（`inspectGeminiErrorPacket`），精確區分個人每日配額耗盡（`RequestsPerDay` 即時中斷）、共享算力池擁塞（503 `MODEL_OVERLOADED` 去共振重試）與瞬時限流（RPM/TPM），徹底消除「billing details」導致的每日配額誤判。支援 Go/Protobuf 複合時間解析、每日配額耗盡時多圖批次提前止損、模型級別配額耗盡隔離，並強化診斷終端 Ring Buffer 防工作區快照洗版機制。
 - **3D 空間視角互動操縱**：引入以 3D Gaussian Splatting (3DGS) 與 WebGL2 GPU 加速驅動的 Revolve 旋轉視角模式，將 3D 視角引導（`[Edit_1]`）與來源底圖（`[Src_1]`）完全解耦。

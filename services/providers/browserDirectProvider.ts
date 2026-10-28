@@ -1150,8 +1150,15 @@ export const retryOperation = async <T>(
                 analysis.category === 'transient_rate_limit' ||
                 analysis.category === 'pool_congestion';
 
+            const isServerDirectedCooldown =
+                analysis.strategy === 'server_directed_cooldown' &&
+                analysis.extractedRetryDelayMs !== null &&
+                analysis.extractedRetryDelayMs > 0;
+
             const waitMs = isRateLimitOrCongestion && model
-                ? Math.max(delayMs, analysis.recommendedWaitMs, getModelRateLimitBackoffUntil(model) - Date.now())
+                ? isServerDirectedCooldown
+                    ? Math.max(analysis.recommendedWaitMs, getModelRateLimitBackoffUntil(model) - Date.now())
+                    : Math.max(delayMs, analysis.recommendedWaitMs, getModelRateLimitBackoffUntil(model) - Date.now())
                 : delayMs;
 
             const retryAttempt = Math.max(1, initialRetries - retries + 1);
@@ -1201,6 +1208,9 @@ export const retryOperation = async <T>(
                         updateRateLimitRemainingMs(remainingMs);
                     }
                 });
+                if (isRateLimitOrCongestion && model) {
+                    clearModelRateLimitBackoff(model);
+                }
             } finally {
                 if (isRateLimitOrCongestion && model) {
                     clearRateLimitNotice();
@@ -1300,7 +1310,13 @@ const generateSingleImage = async (
         const analysis = inspectGeminiErrorPacket(error, options.model);
 
         if (options.model) {
-            setModelLastRequestCompletedAt(options.model, Date.now());
+            if (
+                analysis.category !== 'transient_auth' &&
+                analysis.category !== 'transient_rate_limit' &&
+                analysis.category !== 'pool_congestion'
+            ) {
+                setModelLastRequestCompletedAt(options.model, Date.now());
+            }
             updateGlobalRateLimitBackoff(options.model, error);
         }
 
@@ -1537,7 +1553,7 @@ export class BrowserDirectProvider implements WorkspaceExecutionProvider {
                     for (let remainingSlot = index + 1; remainingSlot < batchSize; remainingSlot++) {
                         const skippedResult = {
                             ...buildFailedGenerationResult(remainingSlot, finalizedResult.error),
-                            ...(finalizedResult.failure ? { failure: finalizedResult.failure } : {}),
+                            ...('failure' in finalizedResult && finalizedResult.failure ? { failure: finalizedResult.failure } : {}),
                         };
                         results.push(finalizeBatchResult(skippedResult));
                     }
@@ -1558,7 +1574,7 @@ export class BrowserDirectProvider implements WorkspaceExecutionProvider {
                 for (let remainingSlot = index + 1; remainingSlot < batchSize; remainingSlot++) {
                     const skippedResult = {
                         ...buildFailedGenerationResult(remainingSlot, initialResult.error),
-                        ...(initialResult.failure ? { failure: initialResult.failure } : {}),
+                        ...('failure' in initialResult && initialResult.failure ? { failure: initialResult.failure } : {}),
                     };
                     results.push(finalizeBatchResult(skippedResult));
                 }

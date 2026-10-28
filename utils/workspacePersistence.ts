@@ -1462,8 +1462,9 @@ export const saveWorkspaceSnapshot = (snapshot: WorkspacePersistenceSnapshot): v
     const localSnapshot = buildPersistableWorkspaceSnapshot(normalized);
     const compactSnapshot = buildPersistableWorkspaceSnapshot(normalized, { aggressive: true });
 
-    // Always persist to IndexedDB in browser environment (especially direct mode) to avoid 5MB quota ceiling
-    if (getResolvedExecutionMode() === 'direct' || typeof indexedDB !== 'undefined') {
+    // In direct (browser-only / AI Studio) mode, persist to IndexedDB to avoid localStorage 5MB quota ceiling.
+    // In local mode, workspace files are stored directly on the local filesystem, avoiding duplicate IndexedDB writes.
+    if (getResolvedExecutionMode() === 'direct' && typeof indexedDB !== 'undefined') {
         void saveBrowserWorkspaceSnapshotToDb(JSON.stringify(localSnapshot));
     }
 
@@ -1622,6 +1623,10 @@ export const loadWorkspaceSnapshotFromDb = async (): Promise<WorkspacePersistenc
 };
 
 export const loadSharedWorkspaceSnapshot = async (): Promise<WorkspacePersistenceSnapshot | null> => {
+    if (getResolvedExecutionMode() === 'direct') {
+        return null;
+    }
+
     const correlationId = createDebugTerminalCorrelationId('workspace');
 
     emitWorkspaceSnapshotDebugEvent({
@@ -1707,6 +1712,10 @@ export const saveSharedWorkspaceSnapshot = async (
     snapshot: WorkspacePersistenceSnapshot,
     options?: { allowClearing?: boolean },
 ): Promise<void> => {
+    if (getResolvedExecutionMode() === 'direct') {
+        return;
+    }
+
     const normalized = sanitizeWorkspaceSnapshot(snapshot);
     const persistableSnapshot = buildPersistableWorkspaceSnapshot(normalized);
     const hasContent = Boolean(
@@ -1788,6 +1797,11 @@ export const saveSharedWorkspaceSnapshot = async (
             return;
         }
 
+        if (response.status === 404 || response.status === 405 || response.status === 501) {
+            sharedSnapshotOffline = true;
+            lastSharedSnapshotOfflineCheck = Date.now();
+        }
+
         emitWorkspaceSnapshotDebugEvent({
             kind: 'error',
             label: 'Shared workspace snapshot save failed',
@@ -1825,6 +1839,9 @@ export const saveSharedWorkspaceSnapshot = async (
 };
 
 export const clearSharedWorkspaceSnapshot = async (): Promise<void> => {
+    if (getResolvedExecutionMode() === 'direct') {
+        return;
+    }
     await saveSharedWorkspaceSnapshot(EMPTY_WORKSPACE_SNAPSHOT, { allowClearing: true });
 };
 

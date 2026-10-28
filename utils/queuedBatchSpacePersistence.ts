@@ -5,6 +5,7 @@ import {
     emitDebugTerminalEvent,
 } from './debugTerminalEvents';
 import { sanitizeQueuedBatchJobs } from './workspacePersistence';
+import { getResolvedExecutionMode } from './workspaceExecutionMode';
 
 export const QUEUED_BATCH_SPACE_STORAGE_KEY = 'nbu_queuedBatchSpace';
 export const SHARED_QUEUED_BATCH_SPACE_ENDPOINT = '/api/queued-batch-space';
@@ -159,6 +160,13 @@ export const loadQueuedBatchSpaceSnapshot = (): QueuedBatchSpaceSnapshot => {
 };
 
 export const loadSharedQueuedBatchSpaceSnapshot = async (): Promise<SharedQueuedBatchSpaceLoadResult> => {
+    if (getResolvedExecutionMode() === 'direct') {
+        return {
+            snapshot: null,
+            reachable: false,
+        };
+    }
+
     const correlationId = createDebugTerminalCorrelationId('batchspace');
 
     emitQueuedBatchSpaceDebugEvent({
@@ -289,6 +297,10 @@ export const saveSharedQueuedBatchSpaceSnapshot = async (
     snapshot: QueuedBatchSpaceSnapshot,
     options?: { allowClearing?: boolean },
 ): Promise<void> => {
+    if (getResolvedExecutionMode() === 'direct') {
+        return;
+    }
+
     const normalized = sanitizeQueuedBatchSpaceSnapshot(snapshot);
 
     if (normalized.queuedJobs.length === 0 && !options?.allowClearing) {
@@ -378,5 +390,8 @@ export const saveSharedQueuedBatchSpaceSnapshot = async (
 };
 
 export const clearSharedQueuedBatchSpaceSnapshot = async (): Promise<void> => {
+    if (getResolvedExecutionMode() === 'direct') {
+        return;
+    }
     await saveSharedQueuedBatchSpaceSnapshot(EMPTY_QUEUED_BATCH_SPACE_SNAPSHOT, { allowClearing: true });
 };

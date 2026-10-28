@@ -46,6 +46,11 @@ type GenerationSourceOverride = {
 type HookOverrides = {
     objectImages?: string[];
     characterImages?: string[];
+    supportsAutoBackup?: boolean;
+    autoExportTrigger?: 'off' | 'count' | 'size' | 'both';
+    autoExportImageCount?: number;
+    autoExportFileSizeMb?: number;
+    handleExportWorkspaceSnapshot?: () => Promise<void>;
 };
 
 describe('usePerformGeneration', () => {
@@ -262,6 +267,11 @@ describe('usePerformGeneration', () => {
                 onLiveProgressReset: () => {
                     liveProgressResetCount += 1;
                 },
+                supportsAutoBackup: overrides.supportsAutoBackup,
+                autoExportTrigger: overrides.autoExportTrigger ?? 'off',
+                autoExportImageCount: overrides.autoExportImageCount ?? 20,
+                autoExportFileSizeMb: overrides.autoExportFileSizeMb ?? 100,
+                handleExportWorkspaceSnapshot: overrides.handleExportWorkspaceSnapshot,
             });
             return null;
         }
@@ -1200,5 +1210,89 @@ describe('usePerformGeneration', () => {
         expect(latestError).toBeNull();
         expect(latestIsGenerating).toBe(false);
         expect(latestBatchProgress).toEqual({ completed: 0, total: 0 });
+    });
+
+    it('does not accumulate export counters or trigger auto-backup when supportsAutoBackup is false in local API mode', async () => {
+        const handleExportWorkspaceSnapshotMock = vi.fn().mockResolvedValue(undefined);
+        localStorage.clear();
+
+        generateImageWithGeminiMock.mockImplementation(
+            async (_request, _batchSize, onImageReceived) => {
+                const received = await onImageReceived('data:image/png;base64,AAA', 0);
+                return [
+                    {
+                        slotIndex: 0,
+                        status: 'success',
+                        url: 'data:image/png;base64,AAA',
+                        displayUrl: received?.displayUrl,
+                        savedFilename: received?.savedFilename,
+                        metadata: { actualOutput: { width: 1024, height: 1024 } },
+                    },
+                ];
+            },
+        );
+
+        renderHook({
+            supportsAutoBackup: false,
+            autoExportTrigger: 'both',
+            autoExportImageCount: 1,
+            handleExportWorkspaceSnapshot: handleExportWorkspaceSnapshotMock,
+        });
+
+        await act(async () => {
+            await latestHook!.performGeneration(
+                'A cute banana in local API mode',
+                '1:1',
+                '1K',
+                'None',
+                'gemini-3.1-flash-image',
+            );
+        });
+
+        expect(localStorage.getItem('nbu_successCountSinceExport')).toBeNull();
+        expect(localStorage.getItem('nbu_sizeGrowthSinceExport')).toBeNull();
+        expect(handleExportWorkspaceSnapshotMock).not.toHaveBeenCalled();
+    });
+
+    it('accumulates export counters and triggers auto-backup when supportsAutoBackup is true in direct mode', async () => {
+        const handleExportWorkspaceSnapshotMock = vi.fn().mockResolvedValue(undefined);
+        localStorage.clear();
+
+        generateImageWithGeminiMock.mockImplementation(
+            async (_request, _batchSize, onImageReceived) => {
+                const received = await onImageReceived('data:image/png;base64,AAA', 0);
+                return [
+                    {
+                        slotIndex: 0,
+                        status: 'success',
+                        url: 'data:image/png;base64,AAA',
+                        displayUrl: received?.displayUrl,
+                        savedFilename: received?.savedFilename,
+                        metadata: { actualOutput: { width: 1024, height: 1024 } },
+                    },
+                ];
+            },
+        );
+
+        renderHook({
+            supportsAutoBackup: true,
+            autoExportTrigger: 'count',
+            autoExportImageCount: 1,
+            handleExportWorkspaceSnapshot: handleExportWorkspaceSnapshotMock,
+        });
+
+        await act(async () => {
+            await latestHook!.performGeneration(
+                'A cute banana in direct AI Studio mode',
+                '1:1',
+                '1K',
+                'None',
+                'gemini-3.1-flash-image',
+            );
+        });
+
+        expect(handleExportWorkspaceSnapshotMock).toHaveBeenCalledTimes(1);
+        expect(localStorage.getItem('nbu_successCountSinceExport')).toBe('0');
+        expect(localStorage.getItem('nbu_sizeGrowthSinceExport')).toBe('0');
     });
 });

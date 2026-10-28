@@ -1,5 +1,25 @@
 # Changelog
 
+## v4.14.0 - 2026-10-28
+
+- Release title: Nano Banana Ultra 4.14.0 - Dual-Engine Persistence Isolation, 404 Shared Endpoint Guardrails, Safety Block Short-Circuiting & Server-Directed Rate-Limit Recovery
+- Release summary:
+    - **Dual-Engine Workspace Persistence Isolation (`hooks/usePerformGeneration.ts`, `utils/workspacePersistence.ts`, `utils/queuedBatchSpacePersistence.ts`, `App.tsx`)**:
+        - Isolated workspace persistence semantics between Local API mode and Direct browser mode. In Local API mode, images and generation assets are directly saved to the local file system; auto-export backup triggers (`checkAndTriggerAutoBackup`) and generation success/growth LocalStorage counters are now bypassed, preventing redundant `.json` export backups and unneeded storage churn.
+        - Restricted browser IndexedDB workspace snapshots strictly to Direct browser mode, avoiding redundant local writes when running against the local file-backed provider.
+        - Implemented client-side short-circuiting for shared workspace (`/api/workspace/snapshot`) and batch-space (`/api/batch-space/snapshot`) snapshot sync in Direct browser mode, preventing unnecessary HTTP requests when running serverless preview apps.
+        - Added an HTTP 404/405/501 circuit breaker to `workspacePersistence.ts`: once a shared workspace endpoint returns Not Found or Not Implemented, all subsequent snapshot requests are short-circuited to prevent continuous log clutter and failing network requests.
+    - **Server-Directed 429 Rate-Limit Cooldown & Delay Latch Removal (`services/providers/browserDirectProvider.ts`)**:
+        - Fixed rate limit recovery pacing by strictly prioritizing server-directed cooldown delays (`RetryInfo`, e.g., 14s or 28s) over artificially inflated exponential backoff delays (which previously locked the provider into 80-second delays).
+        - Actively purges `modelRateLimitBackoffs` upon completion of the rate-limit countdown, ensuring fresh subsequent generation requests do not inherit expired delay penalties.
+        - Excluded transient authentication, rate-limit (429), and server congestion (503) retry cycles from updating `setModelLastRequestCompletedAt`, eliminating stacked pacing delays between retries.
+    - **Safety Filter Block Short-Circuiting & Blind Retry Elimination (`utils/aiStudioPlan.ts`)**:
+        - Categorized safety filter block responses (`safety-blocked` / `policy-blocked`) directly as `abort_no_retry`, stopping fruitless exponential backoff retries when content is flagged by upstream model safety policies.
+    - **Compute Pool Stale Status Auto-Decay Reset (`utils/aiStudioPlan.ts`)**:
+        - Added a 6-hour (`COMPUTE_POOL_STALE_RESET_MS = 6 * 60 * 60 * 1000`) decay check on persistent compute pool state in browser `localStorage`. Stale exhausted or heavily throttled compute pool counters are automatically reset upon reopening the app after the decay window.
+    - **Automated Test Suite Expansion & Clean Regression Pass (`tests/*`)**:
+        - Added comprehensive unit and integration tests across `tests/usePerformGeneration.test.tsx`, `tests/workspacePersistence.test.ts`, `tests/queuedBatchSpacePersistence.test.ts`, and `tests/browserDirectProvider.test.ts`. All 127 test files (1,101 tests) passing cleanly with zero errors.
+
 ## v4.13.0 - 2026-10-22
 
 - Release title: Nano Banana Ultra 4.13.0 - Deprecation & Complete Retirement of Obsolete Safety Settings, Alignment with Gemini 2.5+ Inherent Safety Architecture

@@ -846,6 +846,7 @@ const App: React.FC = () => {
         onLiveProgressEvent: handleLiveProgressEvent,
         onLiveProgressReset: handleLiveProgressReset,
         roundCount,
+        supportsAutoBackup: executionModeCapabilities.supportsAutoBackup,
         autoExportTrigger,
         autoExportImageCount,
         autoExportFileSizeMb,

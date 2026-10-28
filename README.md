@@ -136,7 +136,7 @@ If you want to extract raw high-resolution images (PNG / JPEG) directly from the
 
 ## Version Overview
 
-### Latest Release: 4.13.0
+### Latest Release: 4.14.0
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
 
@@ -145,6 +145,7 @@ See [CHANGELOG.md](CHANGELOG.md) for details.
 Version 4.x establishes the unified dual-engine architecture (seamlessly bridging Google AI Studio direct browser mode and the local Node.js backend plugin) and serves as the production-grade foundation for the entire platform. Building upon the core convergence of the Lite edition, 4.x delivers progressive multi-image generation previews, multi-tier Google AI quota pacing, and persistent IndexedDB v2 large workspace recovery.
 
 Key milestones across the 4.x series include:
+- **Dual-Engine Persistence Isolation & Rate-Limit Diagnostics Hardening (v4.14.0)**: Cleanly isolated persistence semantics between Direct browser mode and Local API mode. In Local mode, images and workspace records are directly saved to disk, bypassing redundant automatic workspace file exports and IndexedDB overhead. In Direct browser mode, redundant shared endpoint calls are short-circuited with a 404/405/501 circuit breaker. Eliminates 80-second rate-limit cooldown latches by prioritizing server-directed `RetryInfo` headers, cleans up active model backoffs immediately on countdown expiry, short-circuits safety-blocked responses from blind retries, and adds a 6-hour stale decay reset to compute pool state.
 - **Gemini 2.5+ Inherent Safety Alignment & Obsolete Safety Settings Retirement (v4.13.0)**: Formally aligned with Google Gemini API 2.5+ official specifications where external safety filter thresholds default to Off due to model-level inherent safety (RLHF). Completely retired legacy safety setting UI dropdowns, store states, and API payload parameters across 38 files, streamlining generation request contracts and ensuring clean, direct interaction with modern Gemini models.
 - **Shared Compute Pool Architecture Alignment & Deep Error Packet Inspection (v4.12.x)**: Formally aligned with Google AI Studio's Build mode infrastructure where preview environments access standard Gemini Developer API endpoints via project API keys. Eliminated legacy consumer subscription tier pacing penalties in favor of unified adaptive pacing, reactive Compute Pool health monitoring (🟢/🟡/🟠/🔴), and a deep Google RPC error inspection engine (`inspectGeminiErrorPacket`) that differentiates daily quota exhaustion (`RequestsPerDay`), shared pool congestion (503 `MODEL_OVERLOADED`), and transient rate limits (RPM/TPM) without false-positive daily aborts. Features Go/Protobuf compound duration parsing, multi-image batch early termination on genuine daily exhaustion, isolated per-model exhaustion tracking, and diagnostic telemetry ring-buffer protections.
 - **Spatial 3D Viewpoint Manipulation**: Interactive Revolve mode powered by 3D Gaussian Splatting (3DGS) and WebGL2 GPU acceleration, decoupling viewpoint guidance (`[Edit_1]`) from source images (`[Src_1]`).

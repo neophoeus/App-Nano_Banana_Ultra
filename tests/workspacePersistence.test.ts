@@ -16,11 +16,13 @@ import {
     sanitizeWorkspaceSnapshot,
     resetSharedSnapshotOfflineState,
     WORKSPACE_SNAPSHOT_STORAGE_KEY,
+    loadSharedWorkspaceSnapshot,
     loadWorkspaceSnapshotFromDb,
     clearStoredWorkspaceSnapshot,
     preloadWorkspaceImagesToMemory,
 } from '../utils/workspacePersistence';
 import { setExecutionModeSetting } from '../utils/workspaceExecutionMode';
+import * as browserImageStore from '../utils/browserImageStore';
 
 const baseSnapshot: WorkspacePersistenceSnapshot = {
     ...EMPTY_WORKSPACE_SNAPSHOT,
@@ -1261,9 +1263,9 @@ describe('workspacePersistence', () => {
             url: `/lite/session-images/img-${i}.png`,
             thumbnailSavedFilename: `img-${i}-thumb.png`,
             prompt: `Prompt ${i}`,
-            aspectRatio: '1:1',
-            size: '1K',
-            style: 'None',
+            aspectRatio: '1:1' as const,
+            size: '1K' as const,
+            style: 'None' as const,
             model: 'gemini-3.1-flash-image' as const,
             thoughts: 'Extensive thought process '.repeat(100),
             resultParts: [
@@ -1320,5 +1322,53 @@ describe('workspacePersistence', () => {
 
     it('preloads workspace images to memory without error', async () => {
         await expect(preloadWorkspaceImagesToMemory(baseSnapshot)).resolves.not.toThrow();
+    });
+
+    it('does not send /api/workspace-snapshot network requests when in direct mode', async () => {
+        setExecutionModeSetting('direct');
+        const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+        vi.stubGlobal('fetch', fetchMock);
+
+        const loaded = await loadSharedWorkspaceSnapshot();
+        expect(loaded).toBeNull();
+        expect(fetchMock).not.toHaveBeenCalled();
+
+        await saveSharedWorkspaceSnapshot(baseSnapshot);
+        expect(fetchMock).not.toHaveBeenCalled();
+
+        await clearSharedWorkspaceSnapshot();
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('activates circuit breaker when shared workspace endpoint returns HTTP 404', async () => {
+        setExecutionModeSetting('local');
+        resetSharedSnapshotOfflineState();
+        const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 404 });
+        vi.stubGlobal('fetch', fetchMock);
+
+        // First attempt returns 404 and trips circuit breaker
+        await saveSharedWorkspaceSnapshot(baseSnapshot);
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+
+        // Second attempt within cooldown is suppressed
+        await saveSharedWorkspaceSnapshot(baseSnapshot);
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+
+        resetSharedSnapshotOfflineState();
+    });
+
+    it('omits IndexedDB snapshot persistence in local mode and writes to IndexedDB in direct mode', () => {
+        vi.stubGlobal('indexedDB', {});
+        const spy = vi.spyOn(browserImageStore, 'saveBrowserWorkspaceSnapshotToDb').mockResolvedValue(true);
+
+        setExecutionModeSetting('local');
+        saveWorkspaceSnapshot(baseSnapshot);
+        expect(spy).not.toHaveBeenCalled();
+
+        setExecutionModeSetting('direct');
+        saveWorkspaceSnapshot(baseSnapshot);
+        expect(spy).toHaveBeenCalledTimes(1);
+
+        spy.mockRestore();
     });
 });

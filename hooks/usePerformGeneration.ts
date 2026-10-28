@@ -41,6 +41,7 @@ import {
     buildSavedImageFilenameStem,
 } from '../utils/savedImageFilename';
 import { buildStyleTransferPrompt } from '../utils/styleRegistry';
+import { getResolvedExecutionMode } from '../utils/workspaceExecutionMode';
 
 const MODEL_TRANSLATION_KEYS: Record<ImageModel, string> = {
     'gemini-nano-banana-2.1': 'modelGeminiNanoBanana21',
@@ -221,6 +222,7 @@ interface UsePerformGenerationProps {
     onLiveProgressEvent?: (event: GenerationLiveProgressEvent) => void;
     onLiveProgressReset?: () => void;
     roundCount?: number;
+    supportsAutoBackup?: boolean;
     autoExportTrigger?: 'off' | 'count' | 'size' | 'both';
     autoExportImageCount?: number;
     autoExportFileSizeMb?: number;
@@ -270,11 +272,16 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
         onLiveProgressEvent,
         onLiveProgressReset,
         roundCount,
+        supportsAutoBackup,
         autoExportTrigger = 'off',
         autoExportImageCount = 20,
         autoExportFileSizeMb = 100,
         handleExportWorkspaceSnapshot,
     } = options;
+
+    const isAutoBackupSupported = supportsAutoBackup ?? (getResolvedExecutionMode() === 'direct');
+    const isAutoBackupActive =
+        isAutoBackupSupported && autoExportTrigger !== 'off' && Boolean(handleExportWorkspaceSnapshot);
 
     const performGeneration = useCallback(
         async (
@@ -401,8 +408,8 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                 imageSearch,
             });
 
-            const checkAndTriggerAutoBackup = () => {
-                if (autoExportTrigger === 'off') return;
+            const checkAndTriggerAutoBackup = async () => {
+                if (!isAutoBackupActive) return;
 
                 const countSinceExport = Number(localStorage.getItem('nbu_successCountSinceExport') || '0');
                 const sizeGrowthBytes = Number(localStorage.getItem('nbu_sizeGrowthSinceExport') || '0');
@@ -433,11 +440,12 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                     showNotification(notificationMsg, 'info');
 
                     if (handleExportWorkspaceSnapshot) {
-                        setTimeout(() => {
-                            handleExportWorkspaceSnapshot().catch((err) => {
-                                console.error('Auto-export failed', err);
-                            });
-                        }, 500);
+                        try {
+                            await new Promise((resolve) => setTimeout(resolve, 0));
+                            await handleExportWorkspaceSnapshot();
+                        } catch (err) {
+                            console.error('Auto-export failed', err);
+                        }
                     }
                 }
             };
@@ -654,14 +662,16 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                             thumbnailSavedFilename = persistedThumbnail.thumbnailSavedFilename;
                             thumbnailInline = persistedThumbnail.thumbnailInline;
 
-                            // Calculate size and success count
-                            const imageSizeBytes = res.url.length * 0.75;
-                            const currentSuccessCount =
-                                Number(localStorage.getItem('nbu_successCountSinceExport') || '0') + 1;
-                            const currentSizeGrowth =
-                                Number(localStorage.getItem('nbu_sizeGrowthSinceExport') || '0') + imageSizeBytes;
-                            localStorage.setItem('nbu_successCountSinceExport', String(currentSuccessCount));
-                            localStorage.setItem('nbu_sizeGrowthSinceExport', String(currentSizeGrowth));
+                            // Calculate size and success count only when auto backup is active
+                            if (isAutoBackupActive) {
+                                const imageSizeBytes = res.url.length * 0.75;
+                                const currentSuccessCount =
+                                    Number(localStorage.getItem('nbu_successCountSinceExport') || '0') + 1;
+                                const currentSizeGrowth =
+                                    Number(localStorage.getItem('nbu_sizeGrowthSinceExport') || '0') + imageSizeBytes;
+                                localStorage.setItem('nbu_successCountSinceExport', String(currentSuccessCount));
+                                localStorage.setItem('nbu_sizeGrowthSinceExport', String(currentSizeGrowth));
+                            }
                         }
 
                         const historyItem: GeneratedImageType = {
@@ -819,7 +829,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                             .replace('{1}', failCount.toString()),
                     );
 
-                    checkAndTriggerAutoBackup();
+                    await checkAndTriggerAutoBackup();
                 }
             } catch (err: any) {
                 console.error(err);
@@ -862,7 +872,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                 setIsGenerating(false);
                 abortControllerRef.current = null;
                 setBatchProgress({ completed: 0, total: 0 });
-                checkAndTriggerAutoBackup();
+                void checkAndTriggerAutoBackup();
             }
         },
         [
@@ -873,6 +883,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
             autoExportFileSizeMb,
             autoExportImageCount,
             autoExportTrigger,
+            isAutoBackupActive,
             batchSize,
             characterImages,
             styleImages,

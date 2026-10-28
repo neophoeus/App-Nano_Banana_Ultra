@@ -100,6 +100,7 @@ export interface AiStudioTierPacingConfig {
 
 export const AI_STUDIO_TIER_STORAGE_KEY = 'nbu_ai_studio_subscription_tier';
 export const COMPUTE_POOL_STATUS_STORAGE_KEY = 'nbu_compute_pool_status_v1';
+export const COMPUTE_POOL_STALE_RESET_MS = 6 * 60 * 60 * 1000; // 6 hours stale reset threshold
 
 export const AI_STUDIO_UNIFIED_PACING_CONFIG = {
     proImagePacingMs: 6000,
@@ -260,7 +261,7 @@ const createInitialComputePoolSnapshot = (): ComputePoolStatusSnapshot => ({
     lastUpdatedAt: Date.now(),
 });
 
-let currentComputePoolSnapshot: ComputePoolStatusSnapshot = (() => {
+export const parseStoredComputePoolStatus = (now = Date.now()): ComputePoolStatusSnapshot => {
     if (typeof window === 'undefined') {
         return createInitialComputePoolSnapshot();
     }
@@ -268,26 +269,29 @@ let currentComputePoolSnapshot: ComputePoolStatusSnapshot = (() => {
         const raw = window.localStorage.getItem(COMPUTE_POOL_STATUS_STORAGE_KEY);
         if (raw) {
             const parsed = JSON.parse(raw);
-            const now = Date.now();
             if (parsed && typeof parsed === 'object') {
                 const cooldown = Number(parsed.activeCooldownUntil) || 0;
+                const lastUpdatedAt = Number(parsed.lastUpdatedAt) || now;
                 // Self-healing: if cooldown expired or corrupted (> 180s in future), reset to healthy
                 const isCooldownValid = cooldown > now && cooldown < now + 180000;
-                const exhaustedModels = Array.isArray(parsed.exhaustedModels)
-                    ? parsed.exhaustedModels.filter((item: unknown): item is string => typeof item === 'string')
-                    : [];
+                // Stale session/day check: if more than 6 hours have elapsed, reset counters & exhaustion
+                const isStale = now - lastUpdatedAt > COMPUTE_POOL_STALE_RESET_MS;
+                const exhaustedModels =
+                    !isStale && Array.isArray(parsed.exhaustedModels)
+                        ? parsed.exhaustedModels.filter((item: unknown): item is string => typeof item === 'string')
+                        : [];
                 return {
-                    level: isCooldownValid ? (parsed.level || 'throttled') : 'healthy',
-                    pacingMultiplier: isCooldownValid ? (Number(parsed.pacingMultiplier) || 1.5) : 1.0,
-                    activeCooldownUntil: isCooldownValid ? cooldown : 0,
-                    activeModel: parsed.activeModel || null,
-                    consecutiveSuccesses: Number(parsed.consecutiveSuccesses) || 0,
-                    recentRateLimitCount: Number(parsed.recentRateLimitCount) || 0,
-                    recentCongestionCount: Number(parsed.recentCongestionCount) || 0,
-                    dailyQuotaExhausted: Boolean(parsed.dailyQuotaExhausted && (isCooldownValid || exhaustedModels.length > 0)),
-                    exhaustedModels: isCooldownValid || exhaustedModels.length > 0 ? exhaustedModels : [],
-                    lastErrorAnalysis: parsed.lastErrorAnalysis || null,
-                    lastUpdatedAt: Number(parsed.lastUpdatedAt) || now,
+                    level: !isStale && isCooldownValid ? (parsed.level || 'throttled') : 'healthy',
+                    pacingMultiplier: !isStale && isCooldownValid ? (Number(parsed.pacingMultiplier) || 1.5) : 1.0,
+                    activeCooldownUntil: !isStale && isCooldownValid ? cooldown : 0,
+                    activeModel: isStale ? null : parsed.activeModel || null,
+                    consecutiveSuccesses: isStale ? 0 : Number(parsed.consecutiveSuccesses) || 0,
+                    recentRateLimitCount: isStale ? 0 : Number(parsed.recentRateLimitCount) || 0,
+                    recentCongestionCount: isStale ? 0 : Number(parsed.recentCongestionCount) || 0,
+                    dailyQuotaExhausted: !isStale && Boolean(parsed.dailyQuotaExhausted && (isCooldownValid || exhaustedModels.length > 0)),
+                    exhaustedModels: !isStale && (isCooldownValid || exhaustedModels.length > 0) ? exhaustedModels : [],
+                    lastErrorAnalysis: isStale ? null : parsed.lastErrorAnalysis || null,
+                    lastUpdatedAt: isStale ? now : lastUpdatedAt,
                 };
             }
         }
@@ -295,7 +299,14 @@ let currentComputePoolSnapshot: ComputePoolStatusSnapshot = (() => {
         // Ignore read errors
     }
     return createInitialComputePoolSnapshot();
-})();
+};
+
+let currentComputePoolSnapshot: ComputePoolStatusSnapshot = parseStoredComputePoolStatus();
+
+export const loadComputePoolStatusFromStorage = (): ComputePoolStatusSnapshot => {
+    currentComputePoolSnapshot = parseStoredComputePoolStatus();
+    return currentComputePoolSnapshot;
+};
 
 const persistComputePoolStatus = (snapshot: ComputePoolStatusSnapshot): void => {
     if (typeof window === 'undefined') return;
@@ -318,6 +329,21 @@ const notifyComputePoolListeners = (): void => {
 
 export const getComputePoolStatus = (): ComputePoolStatusSnapshot => {
     const now = Date.now();
+    // Stale check across days/sessions: if snapshot is older than 6 hours and has accumulated counters or exhaustion, reset
+    if (
+        now - currentComputePoolSnapshot.lastUpdatedAt > COMPUTE_POOL_STALE_RESET_MS &&
+        (currentComputePoolSnapshot.dailyQuotaExhausted ||
+            currentComputePoolSnapshot.recentRateLimitCount > 0 ||
+            currentComputePoolSnapshot.recentCongestionCount > 0 ||
+            (currentComputePoolSnapshot.exhaustedModels?.length ?? 0) > 0)
+    ) {
+        currentComputePoolSnapshot = {
+            ...createInitialComputePoolSnapshot(),
+            lastUpdatedAt: now,
+        };
+        persistComputePoolStatus(currentComputePoolSnapshot);
+        return currentComputePoolSnapshot;
+    }
     // Auto-decay if cooldown expired and we were throttled/congested
     if (
         currentComputePoolSnapshot.activeCooldownUntil > 0 &&
@@ -869,9 +895,20 @@ export function inspectGeminiErrorPacket(error: unknown, model?: string): DeepEr
         lowerSummary.includes('ipm') ||
         extractedRetryDelayMs !== null;
 
+    const failureCode =
+        typeof (error as { generationFailure?: { code?: unknown } })?.generationFailure?.code === 'string'
+            ? (error as { generationFailure: { code: string } }).generationFailure.code
+            : null;
+
     const isPolicyOrSafety =
+        failureCode === 'safety-blocked' ||
+        failureCode === 'policy-blocked' ||
         lowerSummary.includes('prompt_blocked') ||
         lowerSummary.includes('safety_block') ||
+        lowerSummary.includes('blocked by safety filters') ||
+        lowerSummary.includes('blocked by policy') ||
+        lowerSummary.includes('prohibited_content') ||
+        lowerSummary.includes('image_safety') ||
         lowerSummary.includes('policy') ||
         lowerSummary.includes('thinking loop detected') ||
         rawSummary === 'ABORTED' ||
