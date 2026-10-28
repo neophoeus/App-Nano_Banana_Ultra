@@ -188,7 +188,7 @@ describe('useWorkspaceViewerProvenanceState', () => {
         expect(getMetadataValue('Model')).toBe('Loading metadata');
     });
 
-    it('renders metadata immediately for AI Studio mode history items without filename or timestamp', () => {
+    it('renders metadata immediately for in-memory history items without sidecar filename or timestamp', () => {
         const aiStudioMetadata = {
             model: 'gemini-3.1-flash-image',
             style: 'Anime',

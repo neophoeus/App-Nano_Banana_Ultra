@@ -40,7 +40,6 @@ export interface WorkspaceSupportRailProps {
     hasProgressActivity: boolean;
     hasSourceTrailInfo: boolean;
     hasQueuedBatchActivity: boolean;
-    supportsQueuedBatch: boolean;
     onOpenProgressDetails: () => void;
     onOpenSourcesDetails: () => void;
     onOpenQueuedBatchJobs: () => void;
@@ -54,7 +53,6 @@ export function renderWorkspaceSupportRail(props: WorkspaceSupportRailProps): Re
         hasProgressActivity,
         hasSourceTrailInfo,
         hasQueuedBatchActivity,
-        supportsQueuedBatch,
         onOpenProgressDetails,
         onOpenSourcesDetails,
         onOpenQueuedBatchJobs,
@@ -80,19 +78,17 @@ export function renderWorkspaceSupportRail(props: WorkspaceSupportRailProps): Re
                     <span className={topLauncherCompactLabelClassName}>{t('workspaceSupportSources')}</span>
                 </span>
             </button>
-            {supportsQueuedBatch ? (
-                <button
-                    type="button"
-                    data-testid="workspace-queue-open-details"
-                    onClick={onOpenQueuedBatchJobs}
-                    className={`${topLauncherCompactButtonClassName} nbu-shell-surface-context-rail hover:border-emerald-300 dark:hover:border-emerald-500/30`}
-                >
-                    <span className="flex min-w-0 items-center gap-2">
-                        <TopLauncherSignal active={hasQueuedBatchActivity} dataTestId="workspace-queue-signal" />
-                        <span className={topLauncherCompactLabelClassName}>{t('workspaceQueueLauncher')}</span>
-                    </span>
-                </button>
-            ) : null}
+            <button
+                type="button"
+                data-testid="workspace-queue-open-details"
+                onClick={onOpenQueuedBatchJobs}
+                className={`${topLauncherCompactButtonClassName} nbu-shell-surface-context-rail hover:border-emerald-300 dark:hover:border-emerald-500/30`}
+            >
+                <span className="flex min-w-0 items-center gap-2">
+                    <TopLauncherSignal active={hasQueuedBatchActivity} dataTestId="workspace-queue-signal" />
+                    <span className={topLauncherCompactLabelClassName}>{t('workspaceQueueLauncher')}</span>
+                </span>
+            </button>
         </React.Fragment>
     );
 }

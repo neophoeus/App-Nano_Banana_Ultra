@@ -137,7 +137,7 @@ Nano Banana Ultra 提供兩種靈活互補的成果匯出與歸檔管道：
 
 ## 版本總覽
 
-### 最新版本：5.0.0
+### 最新版本：5.0.1
 
 版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 

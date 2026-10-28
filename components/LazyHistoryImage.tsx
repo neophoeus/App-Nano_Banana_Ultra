@@ -1,10 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-    loadBrowserSavedImageDataUrl,
-    readBrowserSavedImageRecordSync,
-    BROWSER_SAVED_IMAGE_PATH_PREFIX,
-    extractBrowserSavedImageFilename,
-} from '../utils/browserImageStore';
 import { buildSavedImageLoadUrl } from '../utils/imageSaveUtils';
 
 type LazyHistoryImageProps = {
@@ -39,20 +33,7 @@ function LazyHistoryImage({
         return typeof window.IntersectionObserver === 'undefined';
     });
 
-    const [resolvedSrc, setResolvedSrc] = useState<string>('');
-
-    const isDataUrl = Boolean(src && src.startsWith('data:'));
-    const isVirtual = Boolean(
-        src &&
-        (src.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX) ||
-            src.startsWith('browser-img://') ||
-            src.includes('filename=')),
-    );
-    const isVirtualScheme = Boolean(
-        src && (src.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX) || src.startsWith('browser-img://')),
-    );
-    const isLocalResolutionNeeded = !isDataUrl && (isVirtual || Boolean(savedFilename));
-    const displaySrc = resolvedSrc || (isVirtualScheme ? '' : src);
+    const displaySrc = src || (savedFilename ? buildSavedImageLoadUrl(savedFilename) : '');
 
     useEffect(() => {
         if (typeof window === 'undefined' || typeof window.IntersectionObserver === 'undefined') {
@@ -78,51 +59,6 @@ function LazyHistoryImage({
             observer.disconnect();
         };
     }, [rootMargin]);
-
-    useEffect(() => {
-        if (!isVisible || !isLocalResolutionNeeded) {
-            return;
-        }
-
-        const extractedFilename = src ? extractBrowserSavedImageFilename(src) : undefined;
-        const filename =
-            savedFilename ||
-            extractedFilename ||
-            (src && isVirtual && src.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX)
-                ? src.slice(BROWSER_SAVED_IMAGE_PATH_PREFIX.length)
-                : undefined);
-        if (!filename) {
-            return;
-        }
-
-        // Check sync cache first
-        const syncRecord = readBrowserSavedImageRecordSync(filename);
-        if (syncRecord?.dataUrl) {
-            setResolvedSrc(syncRecord.dataUrl);
-            return;
-        }
-
-        const syncUrl = buildSavedImageLoadUrl(filename);
-        if (syncUrl && syncUrl.startsWith('data:')) {
-            setResolvedSrc(syncUrl);
-            return;
-        }
-
-        let active = true;
-        loadBrowserSavedImageDataUrl(filename)
-            .then((dataUrl) => {
-                if (active && dataUrl) {
-                    setResolvedSrc(dataUrl);
-                }
-            })
-            .catch(() => {
-                // Ignore fallback failure
-            });
-
-        return () => {
-            active = false;
-        };
-    }, [isVisible, src, savedFilename, isLocalResolutionNeeded, isVirtual]);
 
     return (
         <div ref={containerRef} className={wrapperClassName}>

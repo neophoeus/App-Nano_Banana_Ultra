@@ -17,12 +17,7 @@ const setComposerBatchSize = async (page: Page, batchSize: number) => {
 
 const installBrowserOnlyBatchCancelOverride = async (page: Page, options?: { postAbortDelayMs?: number }) => {
     await page.addInitScript(() => {
-        localStorage.setItem('nbu_geminiApiKey', 'playwright-lite-key');
-        localStorage.setItem('nbu_execution_mode_setting', 'direct');
-        window.aistudio = {
-            hasSelectedApiKey: async () => true,
-            openSelectKey: async () => {},
-        };
+        localStorage.setItem('nbu_geminiApiKey', 'playwright-test-key');
 
         const firstImage = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
 
@@ -86,12 +81,7 @@ const installBrowserOnlyBatchCancelOverride = async (page: Page, options?: { pos
 
 const installBrowserOnlyCancelBeforeFirstPreviewOverride = async (page: Page) => {
     await page.addInitScript(() => {
-        localStorage.setItem('nbu_geminiApiKey', 'playwright-lite-key');
-        localStorage.setItem('nbu_execution_mode_setting', 'direct');
-        window.aistudio = {
-            hasSelectedApiKey: async () => true,
-            openSelectKey: async () => {},
-        };
+        localStorage.setItem('nbu_geminiApiKey', 'playwright-test-key');
 
         window.__NBU_TEST_SERVICE_OVERRIDES__ = {
             generateImageWithGemini: async (_options, context) => {

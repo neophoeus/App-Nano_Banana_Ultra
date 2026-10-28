@@ -11,7 +11,6 @@ import {
 } from '../utils/imageSaveUtils';
 import { resolveCurrentStageSelectionFirstSourceOverride } from '../utils/generationSourceOverride';
 import { findClosestAspectRatio } from '../utils/canvasWorkspace';
-import { resolveDisplayImageSourceAsync } from '../utils/browserImageStore';
 import {
     AspectRatio,
     ContinuationLineageAction,
@@ -260,7 +259,7 @@ export function useWorkspaceEditorActions({
             setEditingImageSource(null);
 
             try {
-                const effectiveImageSource = await resolveDisplayImageSourceAsync(nextImageSource);
+                const effectiveImageSource = nextImageSource;
                 resolvedImageSource = effectiveImageSource;
                 const providedPreparedAsset = options?.preparedAsset;
                 if (providedPreparedAsset) {

@@ -138,7 +138,7 @@ Nano Banana Ultra provides two complementary ways to export and manage your crea
 
 ## Version Overview
 
-### Latest Release: 5.0.0
+### Latest Release: 5.0.1
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
 

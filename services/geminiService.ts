@@ -26,7 +26,6 @@ import {
 } from '../utils/debugTerminalEvents';
 import { buildStyleAwareImagePrompt } from '../utils/stylePromptBuilder';
 import { Language } from '../utils/translations';
-import { localBackendProvider } from './providers/localBackendProvider';
 
 const jsonHeaders = {
     'Content-Type': 'application/json',
@@ -1690,10 +1689,9 @@ export const getBrowserOnlyTestGeminiServiceOverrides = (): BrowserOnlyTestGemin
 
     const globalWindow = window as typeof window & {
         __NBU_TEST_SERVICE_OVERRIDES__?: BrowserOnlyTestGeminiServiceOverrides;
-        __NBU_LITE_TEST_SERVICE_OVERRIDES__?: BrowserOnlyTestGeminiServiceOverrides;
     };
 
-    return globalWindow.__NBU_TEST_SERVICE_OVERRIDES__ || globalWindow.__NBU_LITE_TEST_SERVICE_OVERRIDES__ || null;
+    return globalWindow.__NBU_TEST_SERVICE_OVERRIDES__ || null;
 };
 
 export type RemoteQueuedBatchJob = {
@@ -2265,10 +2263,39 @@ export const exportWorkspaceResults = async (payload: {
         baseFilename?: string;
         metadata: any;
     }>;
-}) => {
-    return await localBackendProvider.exportWorkspaceResults(payload);
+}): Promise<{
+    success: boolean;
+    outputDir: string;
+    exportedCount: number;
+    skippedCount: number;
+    errors: string[];
+}> => {
+    return await fetchJson(
+        '/api/export-results',
+        {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify(payload),
+        },
+        {
+            source: 'workspace',
+            requestLabel: 'Export workspace results',
+            operation: 'Export workspace results',
+        },
+    );
 };
 
-export const browseExportFolder = async () => {
-    return await localBackendProvider.browseExportFolder();
+export const browseExportFolder = async (): Promise<{ cancelled: boolean; path?: string }> => {
+    try {
+        const response = await fetch('/api/browse-folder', {
+            method: 'POST',
+            headers: jsonHeaders,
+        });
+        if (!response.ok) {
+            return { cancelled: true };
+        }
+        return await response.json().catch(() => ({ cancelled: true }));
+    } catch {
+        return { cancelled: true };
+    }
 };

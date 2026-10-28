@@ -508,7 +508,6 @@ describe('ImageEditor revolve mode (3D Gaussian Splatting perspective, pan, and 
         try {
             renderRevolveEditor({
                 initialPreparedSource: { width: 800, height: 600, wasResized: false },
-                supportsQueuedBatch: true,
                 onQueueBatch,
                 objectImages: ['https://example.com/extra-ref.png'],
             });

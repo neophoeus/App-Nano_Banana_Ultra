@@ -10,13 +10,6 @@ import {
     emitDebugTerminalEvent,
 } from './debugTerminalEvents';
 import { normalizeImageSidecarMetadata } from './imageSidecarMetadata';
-import {
-    BROWSER_SAVED_IMAGE_PATH_PREFIX,
-    buildBrowserSavedImageLoadUrl,
-    loadBrowserSavedImageDataUrl,
-    loadBrowserSavedImageMetadata,
-    persistBrowserSavedImageRecord,
-} from './browserImageStore';
 
 const THUMBNAIL_MAX_DIM = 200; // Max width or height for lightweight preview thumbnails
 const LOAD_IMAGE_ENDPOINT = '/api/load-image';
@@ -93,15 +86,17 @@ const withImageFileDebugHeaders = (headers: Record<string, string>, correlationI
     [DEBUG_TERMINAL_REQUEST_ID_HEADER]: correlationId,
 });
 
-export const buildSavedImageLoadUrl = (savedFilename: string): string => {
-    if (
-        savedFilename.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX) ||
-        savedFilename.startsWith('nbu_')
-    ) {
-        return buildBrowserSavedImageLoadUrl(savedFilename);
+export const buildSavedImageLoadUrl = (savedFilename?: string | null): string => {
+    if (typeof savedFilename !== 'string') {
+        return '';
     }
 
-    return `${LOAD_IMAGE_ENDPOINT}?filename=${encodeURIComponent(savedFilename)}`;
+    const normalizedFilename = savedFilename.trim();
+    if (!normalizedFilename) {
+        return '';
+    }
+
+    return `${LOAD_IMAGE_ENDPOINT}?filename=${encodeURIComponent(normalizedFilename)}`;
 };
 
 export const extractSavedFilename = (savedPath: string | null | undefined): string | undefined =>
@@ -385,13 +380,6 @@ export async function saveImageToLocal(
         console.error('Server save failed:', result.error);
         return null;
     } catch (err) {
-        // If local API fails in client environment, gracefully fallback to browser storage
-        try {
-            return await persistBrowserSavedImageRecord(filename, dataUrl, metadata);
-        } catch {
-            // ignore fallback error
-        }
-
         emitImageFileDebugEvent({
             kind: 'error',
             label: 'Save image failed',
@@ -520,15 +508,6 @@ export async function persistHistoryThumbnail(
 }
 
 export async function loadImageMetadata(filename: string): Promise<ImageSidecarMetadata | null> {
-    const rawFilename = filename.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX)
-        ? filename.slice(BROWSER_SAVED_IMAGE_PATH_PREFIX.length)
-        : filename;
-
-    if (filename.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX)) {
-        const metadata = await loadBrowserSavedImageMetadata(rawFilename);
-        return normalizeImageSidecarMetadata(metadata);
-    }
-
     const correlationId = createDebugTerminalCorrelationId('imagefile');
     const route = `${LOAD_IMAGE_METADATA_ENDPOINT}?filename=${encodeURIComponent(filename)}`;
 
@@ -580,16 +559,6 @@ export async function loadImageMetadata(filename: string): Promise<ImageSidecarM
         });
         return metadata;
     } catch (err) {
-        // Fallback to browser storage if local endpoint fails
-        try {
-            const metadata = await loadBrowserSavedImageMetadata(rawFilename);
-            if (metadata) {
-                return normalizeImageSidecarMetadata(metadata);
-            }
-        } catch {
-            // ignore
-        }
-
         emitImageFileDebugEvent({
             kind: 'error',
             label: 'Load image metadata failed',
@@ -608,17 +577,6 @@ export async function loadImageMetadata(filename: string): Promise<ImageSidecarM
  * Returns a base64 data URL.
  */
 export async function loadFullImage(filename: string): Promise<string | null> {
-    const rawFilename = filename.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX)
-        ? filename.slice(BROWSER_SAVED_IMAGE_PATH_PREFIX.length)
-        : filename;
-
-    if (filename.startsWith(BROWSER_SAVED_IMAGE_PATH_PREFIX)) {
-        const dataUrl = await loadBrowserSavedImageDataUrl(rawFilename);
-        if (dataUrl) {
-            return dataUrl;
-        }
-    }
-
     const correlationId = createDebugTerminalCorrelationId('imagefile');
     const route = `${LOAD_IMAGE_ENDPOINT}?filename=${encodeURIComponent(filename)}`;
 
@@ -674,16 +632,6 @@ export async function loadFullImage(filename: string): Promise<string | null> {
 
         return dataUrl;
     } catch (err) {
-        // Fallback to browser storage
-        try {
-            const dataUrl = await loadBrowserSavedImageDataUrl(rawFilename);
-            if (dataUrl) {
-                return dataUrl;
-            }
-        } catch {
-            // ignore
-        }
-
         emitImageFileDebugEvent({
             kind: 'error',
             label: 'Load full image failed',

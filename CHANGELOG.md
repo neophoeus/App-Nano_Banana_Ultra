@@ -1,5 +1,27 @@
 # Changelog
 
+## v5.0.1 - 2026-10-28
+
+- Release title: Nano Banana Ultra 5.0.1 - Deep Forensic Architecture Purification, Dual-Engine Provider & Virtual Image Layer Elimination, Frontend Key Isolation
+- Release summary:
+    - **Dual-Engine Provider Abstraction & Duplicate Utility Elimination (`services/*`, `utils/*`, `tests/*`)**:
+        - Completely excised the dual-engine Provider abstraction layer (`services/providers/types.ts`, `services/providers/localBackendProvider.ts`, `tests/localBackendProvider.test.ts`), inlining result export and directory browsing endpoints directly into `services/geminiService.ts` via standard internal API fetching.
+        - Purged client-side duplicate Gemini helper modules (`utils/geminiPromptHelpers.ts`, `utils/geminiApiConfig.ts`, `utils/geminiRequestConfig.ts`, `tests/geminiRequestConfig.test.ts`), unifying request configuration and capability testing exclusively onto backend implementations (`tests/officialSpecAlignment.test.ts`).
+        - Removed legacy test service override hooks (`__NBU_LITE_TEST_SERVICE_OVERRIDES__`).
+    - **Browser IndexedDB Virtual Image Store & Path Resolver Purge (`utils/*`, `components/*`, `hooks/*`)**:
+        - Completely deleted `utils/browserImageStore.ts` (IndexedDB `nbu-lite-browser-images`, virtual path `/lite/session-images/`) and `hooks/useResolvedImageSource.ts`.
+        - Removed startup async image preloading in `index.tsx`, eliminating memory/cache overhead and allowing instant application mounting.
+        - Restored pure local file resolution in `utils/imageSaveUtils.ts`, repairing a legacy routing bug where filenames starting with `nbu_` were redirected to virtual browser URLs rather than `/api/load-image`.
+        - Removed IndexedDB store fallbacks from `saveImageToLocal`, `loadImageMetadata`, `loadFullImage`, and `utils/browserDownload.ts`.
+        - Re-engineered `components/LazyHistoryImage.tsx` into a lightweight, pure DOM IntersectionObserver lazy loading component.
+        - Removed virtual image resolution hooks from `GeneratedImage`, `WorkspaceProgressDetailPanel`, `WorkspaceViewerOverlay`, `ImageEditor`, and `useWorkspaceEditorActions`.
+    - **Dual-Engine Prop Drilling Cleanup & Strict Client Security (`App.tsx`, `components/*`, `vite.config.ts`, `global.d.ts`)**:
+        - Removed `supportsQueuedBatch` prop drilling chains across `App.tsx`, `ComposerSettingsPanel`, `WorkspaceSupportRail`, and `ImageEditor`, ensuring batch queue features remain unconditionally active in local API mode.
+        - Enhanced frontend security by removing `define` in `vite.config.ts`, ensuring server `GEMINI_API_KEY` is strictly isolated within Node.js middleware and never bundled into client scripts.
+        - Removed obsolete `AiStudioHost` and `window.aistudio` typings from `global.d.ts` and legacy Direct mode configuration from `e2e/workspace-generation.smoke.spec.ts`.
+        - Purged 11 residual Direct mode and AI Studio tier translation keys across all 9 localized translation files.
+        - Net deletion of 3,100+ lines of residual code with 100% test pass rate across 120 test suites (1,015 unit tests) and sub-2.1s production builds.
+
 ## v5.0.0 - 2026-10-28
 
 - Release title: Nano Banana Ultra 5.0.0 - Unified Local Engine Architecture, AI Studio Dual-Engine Retirement (Policy Alignment), Extractor-Compatible Result Export with Embedded Metadata

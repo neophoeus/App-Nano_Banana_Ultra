@@ -17,11 +17,8 @@ import {
     resetSharedSnapshotOfflineState,
     WORKSPACE_SNAPSHOT_STORAGE_KEY,
     loadSharedWorkspaceSnapshot,
-    loadWorkspaceSnapshotFromDb,
     clearStoredWorkspaceSnapshot,
-    preloadWorkspaceImagesToMemory,
 } from '../utils/workspacePersistence';
-import * as browserImageStore from '../utils/browserImageStore';
 
 const baseSnapshot: WorkspacePersistenceSnapshot = {
     ...EMPTY_WORKSPACE_SNAPSHOT,
@@ -1257,7 +1254,7 @@ describe('workspacePersistence', () => {
     it('compacts large snapshot by pruning old thoughts and workflow logs on aggressive mode', () => {
         const manyTurns = Array.from({ length: 25 }, (_, i) => ({
             id: `turn-${i}`,
-            url: `/lite/session-images/img-${i}.png`,
+            url: `/api/load-image?filename=img-${i}.png`,
             thumbnailSavedFilename: `img-${i}-thumb.png`,
             prompt: `Prompt ${i}`,
             aspectRatio: '1:1' as const,
@@ -1273,7 +1270,7 @@ describe('workspacePersistence', () => {
                 },
                 {
                     kind: 'thought-image' as const,
-                    imageUrl: `/lite/session-images/img-${i}-thought.png`,
+                    imageUrl: `/api/load-image?filename=img-${i}-thought.png`,
                     savedFilename: `img-${i}-thought.png`,
                     sequence: 1,
                 },
@@ -1317,10 +1314,6 @@ describe('workspacePersistence', () => {
         expect(sessionStorage.getItem(WORKSPACE_SNAPSHOT_STORAGE_KEY)).toBeNull();
     });
 
-    it('preloads workspace images to memory without error', async () => {
-        await expect(preloadWorkspaceImagesToMemory(baseSnapshot)).resolves.not.toThrow();
-    });
-
     it('activates circuit breaker when shared workspace endpoint returns HTTP 404', async () => {
         resetSharedSnapshotOfflineState();
         const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 404 });
@@ -1335,15 +1328,5 @@ describe('workspacePersistence', () => {
         expect(fetchMock).toHaveBeenCalledTimes(1);
 
         resetSharedSnapshotOfflineState();
-    });
-
-    it('omits IndexedDB snapshot persistence in local mode', () => {
-        vi.stubGlobal('indexedDB', {});
-        const spy = vi.spyOn(browserImageStore, 'saveBrowserWorkspaceSnapshotToDb').mockResolvedValue(true);
-
-        saveWorkspaceSnapshot(baseSnapshot);
-        expect(spy).not.toHaveBeenCalled();
-
-        spy.mockRestore();
     });
 });

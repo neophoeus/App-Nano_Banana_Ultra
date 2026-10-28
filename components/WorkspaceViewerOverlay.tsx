@@ -3,7 +3,6 @@ import { WORKSPACE_OVERLAY_Z_INDEX } from '../constants/workspaceOverlays';
 import { ViewerComposerSettingsSnapshot } from '../types';
 import { sanitizeSensitiveDisplayText } from '../utils/inlineImageDisplay';
 import { getTranslation, Language } from '../utils/translations';
-import { useResolvedImageSource } from '../hooks/useResolvedImageSource';
 import { useOverlayEscapeDismiss } from '../hooks/useOverlayEscapeDismiss';
 import { useOverlayFocusTrap } from '../hooks/useOverlayFocusTrap';
 import { useOverlayScrollLock } from '../hooks/useOverlayScrollLock';
@@ -61,7 +60,7 @@ export default function WorkspaceViewerOverlay({
 }: WorkspaceViewerOverlayProps) {
     const dialogRef = useRef<HTMLDivElement>(null);
     const closeButtonRef = useRef<HTMLButtonElement>(null);
-    const displayViewerImage = useResolvedImageSource(activeViewerImage);
+    const displayViewerImage = activeViewerImage;
     useOverlayEscapeDismiss(isOpen && Boolean(activeViewerImage), onClose);
     useOverlayFocusTrap(dialogRef, {
         isEnabled: isOpen && Boolean(activeViewerImage),

@@ -231,20 +231,6 @@ describe('ComposerSettingsPanel toolbar layout', () => {
         expect(markup).toContain('p-1.5');
         expect(markup.indexOf('composer-enter-behavior-card')).toBeLessThan(markup.indexOf('composer-generate-card'));
     });
-
-    it('omits queue batch actions when supportsQueuedBatch is false', () => {
-        const markup = renderToStaticMarkup(
-            <ComposerSettingsPanel
-                {...baseProps}
-                supportsQueuedBatch={false}
-                groundingMode="off"
-                capability={MODEL_CAPABILITIES['gemini-3.1-flash-image']}
-            />,
-        );
-
-        expect(markup).not.toContain('composer-queue-actions');
-        expect(markup).not.toContain('composer-queue-batch-primary-button');
-    });
 });
 
 describe('ComposerAdvancedSettingsDialog grounding warning', () => {

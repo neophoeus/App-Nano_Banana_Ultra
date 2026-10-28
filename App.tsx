@@ -39,11 +39,8 @@ import {
     EMPTY_WORKSPACE_COMPOSER_STATE,
     EMPTY_WORKSPACE_SNAPSHOT,
     loadWorkspaceSnapshot,
-    loadWorkspaceSnapshotFromDb,
-    preloadWorkspaceImagesToMemory,
     saveWorkspaceSnapshot,
 } from './utils/workspacePersistence';
-import { clearBrowserSavedImageRecords, clearBrowserWorkspaceSnapshotFromDb } from './utils/browserImageStore';
 import { loadQueuedBatchSpaceSnapshot } from './utils/queuedBatchSpacePersistence';
 import { hasRestorableWorkspaceContent } from './utils/workspaceSnapshotState';
 import { deriveGroundingMode, getAvailableGroundingModes } from './utils/groundingMode';
@@ -792,8 +789,6 @@ const App: React.FC = () => {
         ],
     );
 
-    const supportsQueuedBatch = true;
-
     const { performGeneration } = usePerformGeneration({
         t,
         apiKeyReady,
@@ -1112,8 +1107,6 @@ const App: React.FC = () => {
     const applyEmptyWorkspaceSnapshot = useCallback(() => {
         clearStoredWorkspaceSnapshot();
         saveWorkspaceSnapshot(EMPTY_WORKSPACE_SNAPSHOT);
-        void clearBrowserWorkspaceSnapshotFromDb();
-        void clearBrowserSavedImageRecords();
         applyWorkspaceSnapshot(EMPTY_WORKSPACE_SNAPSHOT);
     }, [applyWorkspaceSnapshot]);
 
@@ -1573,7 +1566,6 @@ const App: React.FC = () => {
         temperature,
         isAdvancedSettingsOpen,
         generateLabel: t('generate'),
-        supportsQueuedBatch: supportsQueuedBatch,
         isQueueBatchDisabled,
         queueBatchDisabledReason,
         queueBatchModeSummary,
@@ -2035,7 +2027,6 @@ const App: React.FC = () => {
         hasProgressActivity,
         hasSourceTrailInfo,
         hasQueuedBatchActivity,
-        supportsQueuedBatch: supportsQueuedBatch,
         onOpenProgressDetails: handleOpenProgressDetails,
         onOpenSourcesDetails: handleOpenSourcesDetails,
         onOpenQueuedBatchJobs: handleOpenQueuedBatchJobs,
@@ -2305,9 +2296,9 @@ const App: React.FC = () => {
                                     batchSize={batchSize}
                                     onBatchSizeChange={setBatchSize}
                                     onGenerate={handleEditorGenerate}
-                                    supportsQueuedBatch={supportsQueuedBatch}
+
                                     onQueueBatch={
-                                        supportsQueuedBatch && showEditorQueueBatch
+                                        showEditorQueueBatch
                                             ? handleEditorQueueBatch
                                             : undefined
                                     }

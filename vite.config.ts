@@ -11,10 +11,6 @@ export default defineConfig(({ mode }) => {
     const resolvedApiKey = process.env.API_KEY || env.API_KEY || process.env.GEMINI_API_KEY || env.GEMINI_API_KEY || '';
 
     return {
-        define: {
-            'process.env.API_KEY': JSON.stringify(resolvedApiKey),
-            'process.env.GEMINI_API_KEY': JSON.stringify(resolvedApiKey),
-        },
         server: {
             port: Number.isNaN(devPort) ? 22287 : devPort,
             host: '0.0.0.0',

@@ -4,8 +4,6 @@ import { WORKSPACE_EDITOR_Z_INDEX } from '../constants/workspaceOverlays';
 import { EditorMode, ImageSize, AspectRatio, ImageModel } from '../types';
 import { Language, getTranslation } from '../utils/translations';
 import { MODEL_CAPABILITIES } from '../constants';
-import { resolveDisplayImageSourceAsync } from '../utils/browserImageStore';
-import { useResolvedImageSource } from '../hooks/useResolvedImageSource';
 import { buildEditorPrompt } from '../utils/editorPromptBuilder';
 import {
     appendPointToLatestStroke,
@@ -82,7 +80,6 @@ interface ImageEditorProps {
         targetRatio?: AspectRatio,
         sourceImageInput?: string,
     ) => void | Promise<void>;
-    supportsQueuedBatch?: boolean;
     queueBatchDisabledReason?: string | null;
     onCancel: (options?: { discardSharedContext?: boolean }) => void;
     isGenerating: boolean;
@@ -157,7 +154,6 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     batchSize,
     onGenerate,
     onQueueBatch,
-    supportsQueuedBatch = true,
     queueBatchDisabledReason = null,
     onCancel,
     isGenerating,
@@ -168,7 +164,6 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     leftDockTopOffset = null,
 }) => {
     const t = (key: string) => getTranslation(currentLanguage, key);
-    const resolvedInitialImageUrl = useResolvedImageSource(initialImageUrl);
 
     // --- Core State ---
     const [retouchMode, setRetouchMode] = useState<RetouchMode>('mask'); // Default to Mask (original behavior)
@@ -354,11 +349,8 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         }
 
         let cancelled = false;
-        const resolveAndLoad = async () => {
-            const effectiveSrc = await resolveDisplayImageSourceAsync(initialImageUrl);
-            if (cancelled) {
-                return;
-            }
+        const resolveAndLoad = () => {
+            const effectiveSrc = initialImageUrl;
 
             const img = new Image();
             img.crossOrigin = 'anonymous';
@@ -1065,7 +1057,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         if (!submission) return;
 
         const sourceImageInput =
-            mode === 'revolve' ? resolvedInitialImageUrl || initialImageUrl || undefined : undefined;
+            mode === 'revolve' ? initialImageUrl || undefined : undefined;
 
         onGenerate(
             submission.finalPrompt,
@@ -1087,7 +1079,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         if (!submission) return;
 
         const sourceImageInput =
-            mode === 'revolve' ? resolvedInitialImageUrl || initialImageUrl || undefined : undefined;
+            mode === 'revolve' ? initialImageUrl || undefined : undefined;
 
         onQueueBatch(
             submission.finalPrompt,
@@ -2054,7 +2046,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                         >
                             <span className="text-center leading-tight drop-shadow-md">{t('btnRender')}</span>
                         </Button>
-                        {supportsQueuedBatch && onQueueBatch ? (
+                        {onQueueBatch ? (
                             <Button
                                 data-testid="editor-queue-batch"
                                 variant="secondary"
@@ -2111,7 +2103,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                 style={{ width: originalDims.w, height: originalDims.h }}
                             >
                                 <img
-                                    src={resolvedInitialImageUrl || initialImageUrl || undefined}
+                                    src={initialImageUrl || undefined}
                                     className="w-full h-full block"
                                     alt="Source"
                                 />
@@ -2162,7 +2154,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                     }}
                                 >
                                     <img
-                                        src={resolvedInitialImageUrl || initialImageUrl || undefined}
+                                        src={initialImageUrl || undefined}
                                         className="w-full h-full object-cover shadow-xl"
                                         alt="Source"
                                     />

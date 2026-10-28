@@ -1,5 +1,4 @@
 import React from 'react';
-import { useResolvedImageSource } from '../hooks/useResolvedImageSource';
 import { QueuedBatchJob, ResultImagePart, ResultPart, ResultTextPart } from '../types';
 import { getTranslation, Language } from '../utils/translations';
 import {
@@ -89,7 +88,7 @@ const WorkspaceProgressThoughtImage: React.FC<WorkspaceProgressThoughtImageProps
     t,
     onDownloadThoughtImage,
 }) => {
-    const resolvedImageUrl = useResolvedImageSource(part.imageUrl);
+    const resolvedImageUrl = part.imageUrl;
 
     return (
         <figure

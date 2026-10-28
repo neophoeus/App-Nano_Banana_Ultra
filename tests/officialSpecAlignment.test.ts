@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MODEL_CAPABILITIES, VALID_IMAGE_SIZES } from '../utils/modelCapabilities';
 import {
-    buildImageRequestConfig as clientBuildImageRequestConfig,
-    validateCapabilityRequest as clientValidateCapabilityRequest,
-} from '../utils/geminiRequestConfig';
-import {
     buildImageRequestConfig as serverBuildImageRequestConfig,
     validateCapabilityRequest as serverValidateCapabilityRequest,
 } from '../plugins/utils/requestConfig';
@@ -21,20 +17,20 @@ describe('Official Gemini Nano Banana Spec Alignment', () => {
             expect(VALID_IMAGE_SIZES.has('4K')).toBe(true);
         });
 
-        it('normalizes 512 to 512px in client buildImageRequestConfig', () => {
-            const config512 = clientBuildImageRequestConfig('gemini-3.1-flash-image', {
+        it('normalizes 512 to 512px in server buildImageRequestConfig', () => {
+            const config512 = serverBuildImageRequestConfig('gemini-3.1-flash-image', {
                 imageSize: '512',
                 aspectRatio: '1:1',
             });
             expect((config512.requestConfig as any).imageConfig?.imageSize).toBe('512px');
 
-            const config512px = clientBuildImageRequestConfig('gemini-3.1-flash-image', {
+            const config512px = serverBuildImageRequestConfig('gemini-3.1-flash-image', {
                 imageSize: '512px',
                 aspectRatio: '1:1',
             });
             expect((config512.requestConfig as any).imageConfig?.imageSize).toBe('512px');
 
-            const config2k = clientBuildImageRequestConfig('gemini-3.1-flash-image', {
+            const config2k = serverBuildImageRequestConfig('gemini-3.1-flash-image', {
                 imageSize: '2K',
                 aspectRatio: '1:1',
             });
@@ -85,36 +81,36 @@ describe('Official Gemini Nano Banana Spec Alignment', () => {
     describe('Style and Video Reference Capability Validation', () => {
         const dummyImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
-        it('accepts up to 3 style images on gemini-3-pro-image in client validation', () => {
-            const error = clientValidateCapabilityRequest('gemini-3-pro-image', {
+        it('accepts up to 3 style images on gemini-3-pro-image in capability validation', () => {
+            const error = serverValidateCapabilityRequest('gemini-3-pro-image', {
                 styleImageInputs: [dummyImage, dummyImage],
             });
             expect(error).toBeNull();
         });
 
-        it('rejects style images exceeding 3 on gemini-3-pro-image in client validation', () => {
-            const error = clientValidateCapabilityRequest('gemini-3-pro-image', {
+        it('rejects style images exceeding 3 on gemini-3-pro-image in capability validation', () => {
+            const error = serverValidateCapabilityRequest('gemini-3-pro-image', {
                 styleImageInputs: [dummyImage, dummyImage, dummyImage, dummyImage],
             });
             expect(error).toMatch(/supports up to 3 style reference images/i);
         });
 
-        it('rejects style images on models with maxStyles 0 in client validation', () => {
-            const error = clientValidateCapabilityRequest('gemini-3.1-flash-image', {
+        it('rejects style images on models with maxStyles 0 in capability validation', () => {
+            const error = serverValidateCapabilityRequest('gemini-3.1-flash-image', {
                 styleImageInputs: [dummyImage],
             });
             expect(error).toMatch(/does not support style reference images/i);
         });
 
-        it('accepts videoInput on models with supportsVideo true in client validation', () => {
-            const error = clientValidateCapabilityRequest('gemini-3.1-flash-image', {
+        it('accepts videoInput on models with supportsVideo true in capability validation', () => {
+            const error = serverValidateCapabilityRequest('gemini-3.1-flash-image', {
                 videoInput: 'https://www.youtube.com/watch?v=sample-video',
             });
             expect(error).toBeNull();
         });
 
-        it('rejects videoInput on gemini-3-pro-image in client validation', () => {
-            const error = clientValidateCapabilityRequest('gemini-3-pro-image', {
+        it('rejects videoInput on gemini-3-pro-image in capability validation', () => {
+            const error = serverValidateCapabilityRequest('gemini-3-pro-image', {
                 videoInput: 'https://www.youtube.com/watch?v=sample-video',
             });
             expect(error).toMatch(/does not support video/i);
