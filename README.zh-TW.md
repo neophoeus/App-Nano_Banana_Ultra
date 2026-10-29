@@ -141,7 +141,7 @@ Nano Banana Ultra 提供兩種靈活互補的成果匯出與歸檔管道：
 
 ## 版本總覽
 
-### 最新版本：5.3.0
+### 最新版本：5.5.0
 
 版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -151,6 +151,7 @@ Nano Banana Ultra 提供兩種靈活互補的成果匯出與歸檔管道：
 
 #### 5.x 版本紀錄
 
+- **v5.5.0** (2026-10-29)：Nano Banana 2/2.1 視訊參考整合（Gemini Files API 影片上傳與 YouTube 網址）、Export Results 預設匯出思考過程圖片，以及動作鎖定狀態健全性強化
 - **v5.4.0** (2026-10-29)：品質／節流最佳化模式（Quality/Eco Modes）、全域 Flat SVG 圖示系統、讀取參數按鈕高對比視覺強化、全幅無接縫光暈、.gitignore 規則純化與 E2E 工作區快照隔離
 - **v5.3.0** (2026-10-29)：角色感知每圖元解析度（Role-Aware Per-Part MediaResolution）、多輪對話無損 Token 最佳化與用量遙測
 - **v5.2.0** (2026-10-29)：成品匯出自動關閉與檔名本機時間戳記對齊、支援工作區 output 資料夾選擇性清理與重置提醒、圖片中繼資料檢視器全面相容工作區儲存架構與單獨 JSON 檢視。

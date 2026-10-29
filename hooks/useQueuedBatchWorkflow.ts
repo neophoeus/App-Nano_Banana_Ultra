@@ -1,4 +1,5 @@
 import { Dispatch, MutableRefObject, SetStateAction, useCallback, useEffect, useRef } from 'react';
+import { MODEL_CAPABILITIES } from '../constants';
 import {
     cancelQueuedBatchJob,
     checkApiKey,
@@ -268,6 +269,7 @@ type UseQueuedBatchWorkflowArgs = {
     characterImages: string[];
     styleImages?: string[];
     videoInput?: string;
+    videoMimeType?: string;
     getModelLabel: (model: ImageModel) => string;
     getGenerationLineageContext: (params: {
         mode: string;
@@ -296,6 +298,7 @@ type QueuedBatchJobGenerationDraft = {
     finalCharacterInputs: string[];
     finalStyleInputs?: string[];
     videoInput?: string;
+    videoMimeType?: string;
     batchSize: number;
     aspectRatio: QueuedBatchJob['aspectRatio'];
     imageSize: QueuedBatchJob['imageSize'];
@@ -384,6 +387,7 @@ export function useQueuedBatchWorkflow({
     characterImages,
     styleImages = [],
     videoInput,
+    videoMimeType,
     getModelLabel,
     getGenerationLineageContext,
     addLog,
@@ -445,8 +449,15 @@ export function useQueuedBatchWorkflow({
         }
 
         const finalPrompt = prompt.trim() ? prompt : buildStyleTransferPrompt(imageStyle);
+        const supportsVideo = Boolean(MODEL_CAPABILITIES[imageModel]?.supportsVideo);
+        const effectiveVideoInput = supportsVideo ? videoInput : undefined;
+        const effectiveVideoMimeType = supportsVideo ? videoMimeType : undefined;
         const generationMode =
-            objectImages.length > 0 || characterImages.length > 0 ? 'Image to Image/Mixing' : 'Text to Image';
+            objectImages.length > 0 || characterImages.length > 0 || styleImages.length > 0
+                ? 'Image to Image/Mixing'
+                : effectiveVideoInput
+                  ? 'Video to Image'
+                  : 'Text to Image';
         const lineageContext = getGenerationLineageContext({ mode: generationMode });
 
         return {
@@ -456,7 +467,8 @@ export function useQueuedBatchWorkflow({
             finalObjectInputs: objectImages,
             finalCharacterInputs: characterImages,
             finalStyleInputs: styleImages,
-            videoInput,
+            videoInput: effectiveVideoInput,
+            videoMimeType: effectiveVideoMimeType,
             batchSize,
             aspectRatio,
             imageSize,
@@ -489,6 +501,7 @@ export function useQueuedBatchWorkflow({
         temperature,
         thinkingLevel,
         videoInput,
+        videoMimeType,
     ]);
 
     const buildQueuedJobFollowUpGenerationDraft = useCallback((): QueuedBatchJobGenerationDraft | null => {
@@ -511,6 +524,10 @@ export function useQueuedBatchWorkflow({
             sourceOverride,
         });
 
+        const supportsVideo = Boolean(MODEL_CAPABILITIES[imageModel]?.supportsVideo);
+        const effectiveVideoInput = supportsVideo ? videoInput : undefined;
+        const effectiveVideoMimeType = supportsVideo ? videoMimeType : undefined;
+
         return {
             finalPrompt: prompt.trim()
                 ? prompt
@@ -521,7 +538,8 @@ export function useQueuedBatchWorkflow({
             finalObjectInputs: objectImages,
             finalCharacterInputs: characterImages,
             finalStyleInputs: styleImages,
-            videoInput,
+            videoInput: effectiveVideoInput,
+            videoMimeType: effectiveVideoMimeType,
             batchSize,
             aspectRatio,
             imageSize,
@@ -559,6 +577,7 @@ export function useQueuedBatchWorkflow({
         temperature,
         thinkingLevel,
         videoInput,
+        videoMimeType,
         workspaceSessionSourceHistoryId,
         workspaceSessionSourceLineageAction,
     ]);
@@ -805,6 +824,7 @@ export function useQueuedBatchWorkflow({
                     characterImageInputs: queuedDraft.finalCharacterInputs,
                     styleImageInputs: queuedDraft.finalStyleInputs,
                     videoInput: queuedDraft.videoInput,
+                    videoMimeType: queuedDraft.videoMimeType,
                     outputFormat: queuedDraft.outputFormat,
                     temperature: queuedDraft.temperature,
                     thinkingLevel: queuedDraft.thinkingLevel,

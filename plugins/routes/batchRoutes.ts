@@ -3,7 +3,7 @@ import os from 'os';
 import path from 'path';
 import { GoogleGenAI } from '@google/genai/node';
 import type { ConversationRequestContext, ImageModel, ImageSize, OptimizationMode } from '../../types';
-import { VALID_IMAGE_MODELS, VALID_IMAGE_SIZES } from '../../utils/modelCapabilities';
+import { MODEL_CAPABILITIES, VALID_IMAGE_MODELS, VALID_IMAGE_SIZES } from '../../utils/modelCapabilities';
 import {
     createApiRequestContext,
     logApiRequest,
@@ -27,6 +27,7 @@ type ImageGenerateBody = {
     characterImageInputs?: string[];
     styleImageInputs?: string[];
     videoInput?: string;
+    videoMimeType?: string;
     outputFormat?: 'images-only' | 'images-and-text';
     temperature?: number;
     thinkingLevel?: 'disabled' | 'minimal' | 'medium' | 'high';
@@ -350,7 +351,16 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
                 return;
             }
 
-            const capabilityError = validateCapabilityRequest(model, body);
+            const isVideoSupported = Boolean(MODEL_CAPABILITIES[model as ImageModel]?.supportsVideo);
+            const sanitizedBody: BatchCreateBody = isVideoSupported
+                ? body
+                : {
+                      ...body,
+                      videoInput: undefined,
+                      videoMimeType: undefined,
+                  };
+
+            const capabilityError = validateCapabilityRequest(model, sanitizedBody);
             if (capabilityError) {
                 sendJson(
                     res,
@@ -365,13 +375,14 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
                 return;
             }
 
-            const { objectImageInputs, characterImageInputs, styleImageInputs } = normalizeReferenceImages(body);
+            const { objectImageInputs, characterImageInputs, styleImageInputs } =
+                normalizeReferenceImages(sanitizedBody);
             const totalReferenceImages =
                 objectImageInputs.length +
                 characterImageInputs.length +
                 styleImageInputs.length +
-                (body.editingInput ? 1 : 0) +
-                (body.sourceImageInput ? 1 : 0);
+                (sanitizedBody.editingInput ? 1 : 0) +
+                (sanitizedBody.sourceImageInput ? 1 : 0);
             if (model === 'gemini-2.5-flash-image' && totalReferenceImages > 3) {
                 sendJson(
                     res,
@@ -388,12 +399,12 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
                 return;
             }
 
-            const { requestConfig } = buildImageRequestConfig(model, body);
+            const { requestConfig } = buildImageRequestConfig(model, sanitizedBody);
             const batchRequestConfig = stripUnsupportedBatchRequestConfig(requestConfig as Record<string, unknown>);
             const tempDir = createTempDir('nbu-queued-batch-');
 
             try {
-                const parts = await buildGenerateFileParts(body, (image) =>
+                const parts = await buildGenerateFileParts(sanitizedBody, (image) =>
                     uploadBatchSourceImage(ai, image, resolvedDir, tempDir),
                 );
                 const requestedCount = Math.max(1, Math.min(10, Math.floor(Number(body.requestCount || 1))));

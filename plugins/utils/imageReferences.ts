@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import type { OptimizationMode } from '../../types';
+import { normalizeVideoMimeType } from '../../utils/videoReferenceUtils';
 import { type PartMediaResolutionPayload, resolveRoleMediaResolution } from './mediaResolution';
 
 const LOAD_IMAGE_ENDPOINT = '/api/load-image';
@@ -51,6 +52,7 @@ export type GenerateImageBodyLike = {
     characterImageInputs?: string[];
     styleImageInputs?: string[];
     videoInput?: string;
+    videoMimeType?: string;
     optimizationMode?: OptimizationMode | string | null;
 };
 
@@ -63,6 +65,33 @@ const inferExtensionFromMimeType = (mimeType: string): string => {
     }
     if (mimeType === 'image/gif') {
         return 'gif';
+    }
+    if (mimeType === 'video/mp4') {
+        return 'mp4';
+    }
+    if (mimeType === 'video/webm') {
+        return 'webm';
+    }
+    if (mimeType === 'video/mov' || mimeType === 'video/quicktime') {
+        return 'mov';
+    }
+    if (mimeType === 'video/mpeg') {
+        return 'mpeg';
+    }
+    if (mimeType === 'video/mpg') {
+        return 'mpg';
+    }
+    if (mimeType === 'video/avi') {
+        return 'avi';
+    }
+    if (mimeType === 'video/wmv') {
+        return 'wmv';
+    }
+    if (mimeType === 'video/3gpp') {
+        return '3gp';
+    }
+    if (mimeType === 'video/x-flv') {
+        return 'flv';
     }
 
     return 'png';
@@ -275,6 +304,7 @@ export function normalizeReferenceImages(body: GenerateImageBodyLike): {
     characterImageInputs: string[];
     styleImageInputs: string[];
     videoInput?: string;
+    videoMimeType?: string;
 } {
     return {
         objectImageInputs: Array.isArray(body.objectImageInputs) ? body.objectImageInputs : [],
@@ -283,6 +313,10 @@ export function normalizeReferenceImages(body: GenerateImageBodyLike): {
         videoInput:
             typeof body.videoInput === 'string' && body.videoInput.trim().length > 0
                 ? body.videoInput.trim()
+                : undefined,
+        videoMimeType:
+            typeof body.videoMimeType === 'string' && body.videoMimeType.trim().length > 0
+                ? body.videoMimeType.trim()
                 : undefined,
     };
 }
@@ -330,10 +364,23 @@ export function buildGenerateParts(body: GenerateImageBodyLike, resolvedDir: str
     });
 
     if (videoInput) {
-        parts.push({
-            fileData: { fileUri: videoInput, mimeType: 'video/mp4' },
-            ...(videoResolution ? { mediaResolution: videoResolution } : {}),
-        });
+        parts.push({ text: '[Video_1]' });
+        const dataMatch = videoInput.match(/^data:([^;]+);base64,(.+)$/i);
+        if (dataMatch) {
+            parts.push({
+                inlineData: {
+                    mimeType: normalizeVideoMimeType(dataMatch[1]) || 'video/mp4',
+                    data: dataMatch[2],
+                },
+                ...(videoResolution ? { mediaResolution: videoResolution } : {}),
+            });
+        } else {
+            const resolvedMime = normalizeVideoMimeType(body.videoMimeType) || 'video/mp4';
+            parts.push({
+                fileData: { fileUri: videoInput, mimeType: resolvedMime },
+                ...(videoResolution ? { mediaResolution: videoResolution } : {}),
+            });
+        }
     }
     pushImagesToParts(parts, body.editingInput ? [body.editingInput] : [], 'Edit', resolvedDir, editResolution);
     pushImagesToParts(parts, body.sourceImageInput ? [body.sourceImageInput] : [], 'Src', resolvedDir, srcResolution);
@@ -356,7 +403,17 @@ export async function buildGenerateFileParts(
     const prompt = String(body.prompt || 'A creative image.');
 
     if (videoInput) {
-        parts.push({ fileData: { fileUri: videoInput, mimeType: 'video/mp4' } });
+        parts.push({ text: '[Video_1]' });
+        const dataMatch = videoInput.match(/^data:([^;]+);base64,(.+)$/i);
+        if (dataMatch) {
+            const normalizedMime = normalizeVideoMimeType(dataMatch[1]) || 'video/mp4';
+            const normalizedDataUrl = `data:${normalizedMime};base64,${dataMatch[2]}`;
+            const resolved = await resolveFileImage(normalizedDataUrl);
+            parts.push({ fileData: resolved });
+        } else {
+            const resolvedMime = normalizeVideoMimeType(body.videoMimeType) || 'video/mp4';
+            parts.push({ fileData: { fileUri: videoInput, mimeType: resolvedMime } });
+        }
     }
     await pushFileImagesToParts(parts, body.editingInput ? [body.editingInput] : [], 'Edit', resolveFileImage);
     await pushFileImagesToParts(parts, body.sourceImageInput ? [body.sourceImageInput] : [], 'Src', resolveFileImage);

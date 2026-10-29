@@ -13,6 +13,7 @@ type UseQueuedBatchPresentationArgs = {
     objectImageCount: number;
     characterImageCount: number;
     styleImageCount?: number;
+    hasVideoInput?: boolean;
     stickySendIntent: StickySendIntent;
     workspaceSession: WorkspaceSessionState;
     conversationState: WorkspaceConversationState;
@@ -39,6 +40,7 @@ export function useQueuedBatchPresentation({
     objectImageCount,
     characterImageCount,
     styleImageCount = 0,
+    hasVideoInput = false,
     stickySendIntent,
     workspaceSession,
     conversationState,
@@ -91,12 +93,12 @@ export function useQueuedBatchPresentation({
             return t('queueBatchModeStageGenerate');
         }
 
-        if (objectImageCount > 0 || characterImageCount > 0 || styleImageCount > 0) {
+        if (objectImageCount > 0 || characterImageCount > 0 || styleImageCount > 0 || hasVideoInput) {
             return t('queueBatchModeReferences');
         }
 
         return t('queueBatchModePromptOnly');
-    }, [characterImageCount, currentStageAsset?.url, objectImageCount, styleImageCount, t]);
+    }, [characterImageCount, currentStageAsset?.url, hasVideoInput, objectImageCount, styleImageCount, t]);
 
     const queueBatchModeSummary = useMemo(() => {
         if (currentStageAsset?.url) {

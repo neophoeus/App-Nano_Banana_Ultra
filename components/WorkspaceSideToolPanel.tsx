@@ -1,7 +1,9 @@
 import React from 'react';
+import { VideoReferenceItem } from '../types';
 import { getTranslation, Language } from '../utils/translations';
 import Button from './Button';
 import ImageUploader from './ImageUploader';
+import { VideoReferenceUploader } from './VideoReferenceUploader';
 
 type WorkspaceSideToolPanelProps = {
     currentLanguage: Language;
@@ -12,6 +14,12 @@ type WorkspaceSideToolPanelProps = {
     objectImages: string[];
     characterImages: string[];
     styleImages?: string[];
+    supportsVideo?: boolean;
+    videoReference?: VideoReferenceItem | null;
+    onVideoReferenceChange?: (next: VideoReferenceItem | null) => void;
+    onUploadVideoFile?: (file: File, signal: AbortSignal) => Promise<VideoReferenceItem>;
+    isUploadingVideo?: boolean;
+    onCancelVideoUpload?: () => void;
     maxObjects: number;
     maxCharacters: number;
     maxStyles?: number;
@@ -35,6 +43,12 @@ function WorkspaceSideToolPanel({
     objectImages,
     characterImages,
     styleImages = [],
+    supportsVideo = false,
+    videoReference = null,
+    onVideoReferenceChange,
+    onUploadVideoFile,
+    isUploadingVideo,
+    onCancelVideoUpload,
     maxObjects,
     maxCharacters,
     maxStyles = 0,
@@ -134,9 +148,22 @@ function WorkspaceSideToolPanel({
                   },
               ]
             : []),
+        ...(supportsVideo
+            ? [
+                  {
+                      key: 'video',
+                      label: t('videoRef'),
+                      count: videoReference ? 1 : 0,
+                      max: 1,
+                      isActive: Boolean(videoReference),
+                  },
+              ]
+            : []),
     ];
-    const totalReferenceCount = objectImages.length + characterImages.length + styleImages.length;
-    const clearAllReferencesDisabled = !handleClearAllReferences || totalReferenceCount === 0 || isGenerating;
+    const totalReferenceCount =
+        objectImages.length + characterImages.length + styleImages.length + (videoReference ? 1 : 0);
+    const clearAllReferencesDisabled =
+        !handleClearAllReferences || (totalReferenceCount === 0 && !isUploadingVideo) || isGenerating;
 
     React.useEffect(() => {
         if (!isReferencesOpen) {
@@ -345,6 +372,24 @@ function WorkspaceSideToolPanel({
                                         safeLimit={Math.max(1, Math.floor(maxStyles / 2))}
                                         onRemove={handleRemoveStyleReference}
                                     />
+                                )}
+
+                                {supportsVideo && onVideoReferenceChange && (
+                                    <div className="pt-1">
+                                        <label className="mb-1 block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                            {t('videoRef')}
+                                        </label>
+                                        <VideoReferenceUploader
+                                            videoReference={videoReference}
+                                            onVideoReferenceChange={onVideoReferenceChange}
+                                            onUploadVideoFile={onUploadVideoFile}
+                                            isUploading={isUploadingVideo}
+                                            onCancelUpload={onCancelVideoUpload}
+                                            onWarning={(message) => showNotification(message, 'error')}
+                                            disabled={isGenerating}
+                                            currentLanguage={currentLanguage}
+                                        />
+                                    </div>
                                 )}
                             </div>
                         </div>

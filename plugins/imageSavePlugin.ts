@@ -13,6 +13,7 @@ import { extractImageDetailsFromDataUrl } from './utils/imageDimensions';
 import { registerBatchRoutes } from './routes/batchRoutes';
 import { registerGenerateRoutes } from './routes/generateRoutes';
 import { registerPromptRoutes } from './routes/promptRoutes';
+import { registerVideoRoutes } from './routes/videoRoutes';
 import { registerWorkspaceRoutes } from './routes/workspaceRoutes';
 import { normalizeImageSidecarMetadata } from '../utils/imageSidecarMetadata';
 import { embedImageMetadata } from './utils/imageMetadataEmbedder';
@@ -70,6 +71,7 @@ function registerMiddlewares(server: any, resolvedDir: string, geminiApiKey?: st
     registerPromptRoutes(server, { getAIClient });
     registerGenerateRoutes(server, { getAIClient, resolvedDir });
     registerBatchRoutes(server, { getAIClient, resolvedDir });
+    registerVideoRoutes(server, { getAIClient });
 }
 
 /**

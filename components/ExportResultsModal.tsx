@@ -72,7 +72,7 @@ function resolveItemBaseFilename(options: {
 
 export default function ExportResultsModal({ isOpen, onClose, history, t, showNotification }: ExportResultsModalProps) {
     const [targetDir, setTargetDir] = useState('./export');
-    const [includeThoughtImages, setIncludeThoughtImages] = useState(false);
+    const [includeThoughtImages, setIncludeThoughtImages] = useState(true);
     const [isExporting, setIsExporting] = useState(false);
     const [isBrowsing, setIsBrowsing] = useState(false);
     const [exportStatus, setExportStatus] = useState<{
@@ -353,6 +353,7 @@ export default function ExportResultsModal({ isOpen, onClose, history, t, showNo
                     <label className="flex items-center gap-2.5 cursor-pointer select-none">
                         <input
                             type="checkbox"
+                            data-testid="export-results-include-thoughts-checkbox"
                             checked={includeThoughtImages}
                             onChange={(e) => setIncludeThoughtImages(e.target.checked)}
                             disabled={isExporting}

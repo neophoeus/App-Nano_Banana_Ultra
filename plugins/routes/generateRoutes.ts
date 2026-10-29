@@ -24,7 +24,7 @@ import {
     LiveProgressExecutionMode,
     summarizeLiveProgressTruthfulness,
 } from '../../utils/liveProgressCapabilities';
-import { VALID_IMAGE_MODELS, VALID_IMAGE_SIZES } from '../../utils/modelCapabilities';
+import { MODEL_CAPABILITIES, VALID_IMAGE_MODELS, VALID_IMAGE_SIZES } from '../../utils/modelCapabilities';
 import { DEFAULT_TEMPERATURE, normalizeTemperature } from '../../utils/temperature';
 import {
     type ApiRequestContext,
@@ -62,6 +62,7 @@ type ImageGenerateBody = {
     characterImageInputs?: string[];
     styleImageInputs?: string[];
     videoInput?: string;
+    videoMimeType?: string;
     outputFormat?: 'images-only' | 'images-and-text';
     temperature?: number;
     thinkingLevel?: 'disabled' | 'minimal' | 'medium' | 'high';
@@ -744,6 +745,7 @@ function validateInteractiveGenerateRequest(
           characterImageInputs: string[];
           styleImageInputs: string[];
           videoInput?: string;
+          videoMimeType?: string;
       }
     | ValidationErrorResult {
     const model = String(body.model || 'gemini-nano-banana-2.1');
@@ -766,7 +768,16 @@ function validateInteractiveGenerateRequest(
         return { status: 400, error: `Unsupported image size: ${body.imageSize}` };
     }
 
-    const capabilityError = validateCapabilityRequest(model, body);
+    const isVideoSupported = Boolean(MODEL_CAPABILITIES[model as ImageModel]?.supportsVideo);
+    const sanitizedBody: ImageGenerateBody = isVideoSupported
+        ? body
+        : {
+              ...body,
+              videoInput: undefined,
+              videoMimeType: undefined,
+          };
+
+    const capabilityError = validateCapabilityRequest(model, sanitizedBody);
     if (capabilityError) {
         logApiError(
             routePath,
@@ -774,21 +785,22 @@ function validateInteractiveGenerateRequest(
             {
                 model,
                 capabilityError,
-                body,
+                body: sanitizedBody,
             },
             requestContext,
         );
         return { status: 400, error: capabilityError };
     }
 
-    if (body.executionMode === 'queued-batch-job') {
+    if (sanitizedBody.executionMode === 'queued-batch-job') {
         return {
             status: 400,
             error: 'Queued batch jobs must use /api/batches/create instead of the interactive generate route.',
         };
     }
 
-    const { objectImageInputs, characterImageInputs, styleImageInputs, videoInput } = normalizeReferenceImages(body);
+    const { objectImageInputs, characterImageInputs, styleImageInputs, videoInput, videoMimeType } =
+        normalizeReferenceImages(sanitizedBody);
     const totalReferenceImages = objectImageInputs.length + characterImageInputs.length + styleImageInputs.length;
     if (model === 'gemini-2.5-flash-image' && totalReferenceImages > 3) {
         logApiError(
@@ -811,6 +823,7 @@ function validateInteractiveGenerateRequest(
         characterImageInputs,
         styleImageInputs,
         videoInput,
+        videoMimeType,
     };
 }
 
@@ -834,7 +847,15 @@ function buildPreparedGenerateRequest(
         optimizationMode: mode,
     });
 
-    let effectiveBody: ImageGenerateBody = { ...body, model, imageSize: body.imageSize, optimizationMode: mode };
+    const isVideoSupported = Boolean(MODEL_CAPABILITIES[model as ImageModel]?.supportsVideo);
+    let effectiveBody: ImageGenerateBody = {
+        ...body,
+        model,
+        imageSize: body.imageSize,
+        optimizationMode: mode,
+        videoInput: isVideoSupported ? body.videoInput : undefined,
+        videoMimeType: isVideoSupported ? body.videoMimeType : undefined,
+    };
     let deduplicatedCurrentEditInput = false;
 
     if (useOfficialConversation && conversationHistory.length > 0 && body.editingInput && lastModelOutputImage) {

@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useEffect } from 'react';
 import { ModelCapability } from '../constants';
-import { AspectRatio, ImageSize, OutputFormat, ThinkingLevel } from '../types';
+import { AspectRatio, ImageSize, OutputFormat, ThinkingLevel, VideoReferenceItem } from '../types';
 
 type UseWorkspaceCapabilityConstraintsArgs = {
     capability: ModelCapability;
@@ -22,6 +22,8 @@ type UseWorkspaceCapabilityConstraintsArgs = {
     setObjectImages: Dispatch<SetStateAction<string[]>>;
     setCharacterImages: Dispatch<SetStateAction<string[]>>;
     setStyleImages?: Dispatch<SetStateAction<string[]>>;
+    setVideoReference?: Dispatch<SetStateAction<VideoReferenceItem | null>>;
+    onClearVideoUpload?: () => void;
     showNotification: (message: string, type?: 'info' | 'error') => void;
     t: (key: string) => string;
 };
@@ -46,6 +48,8 @@ export function useWorkspaceCapabilityConstraints({
     setObjectImages,
     setCharacterImages,
     setStyleImages,
+    setVideoReference,
+    onClearVideoUpload,
     showNotification,
     t,
 }: UseWorkspaceCapabilityConstraintsArgs) {
@@ -123,6 +127,17 @@ export function useWorkspaceCapabilityConstraints({
                 return prevImages;
             });
         }
+
+        if (setVideoReference && !capability.supportsVideo) {
+            onClearVideoUpload?.();
+            setVideoReference((prev) => {
+                if (prev !== null) {
+                    showNotification(t('workspaceConstraintClearVideo'), 'info');
+                    return null;
+                }
+                return prev;
+            });
+        }
     }, [
         aspectRatio,
         capability,
@@ -131,6 +146,7 @@ export function useWorkspaceCapabilityConstraints({
         imageSize,
         includeThoughts,
         lockedAspectRatio,
+        onClearVideoUpload,
         outputFormat,
         setAspectRatio,
         setCharacterImages,
@@ -142,6 +158,7 @@ export function useWorkspaceCapabilityConstraints({
         setOutputFormat,
         setStyleImages,
         setThinkingLevel,
+        setVideoReference,
         showNotification,
         t,
         thinkingLevel,

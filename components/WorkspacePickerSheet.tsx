@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { IMAGE_MODELS, MODEL_CAPABILITIES } from '../constants';
 import { Language } from '../utils/translations';
-import { AspectRatio, ImageModel, ImageSize, ImageStyle, WorkspaceSettingsDraft } from '../types';
+import { AspectRatio, ImageModel, ImageSize, ImageStyle, VideoReferenceItem, WorkspaceSettingsDraft } from '../types';
 import BatchSelector from './BatchSelector';
 import Button from './Button';
 import ImageUploader from './ImageUploader';
 import RatioSelector from './RatioSelector';
 import SizeSelector from './SizeSelector';
 import StyleSelector from './StyleSelector';
+import { VideoReferenceUploader } from './VideoReferenceUploader';
 import WorkspaceModalFrame from './WorkspaceModalFrame';
 
 export type PickerSheet = 'prompt' | 'styles' | 'settings' | 'model' | 'ratio' | 'size' | 'batch' | 'references' | null;
@@ -55,6 +56,11 @@ type WorkspacePickerSheetProps = {
     setStyleImages?: (nextImages: string[] | ((prev: string[]) => string[])) => void;
     handleRemoveStyleReference?: (index: number) => void;
     showStyleEntry?: boolean;
+    videoReference?: VideoReferenceItem | null;
+    onVideoReferenceChange?: (next: VideoReferenceItem | null) => void;
+    onUploadVideoFile?: (file: File, signal: AbortSignal) => Promise<VideoReferenceItem>;
+    isUploadingVideo?: boolean;
+    onCancelVideoUpload?: () => void;
 };
 
 const renderPanelLoadingState = (label: string, className?: string) => (
@@ -125,6 +131,11 @@ export default function WorkspacePickerSheet({
     setStyleImages,
     handleRemoveStyleReference,
     showStyleEntry = true,
+    videoReference = null,
+    onVideoReferenceChange,
+    onUploadVideoFile,
+    isUploadingVideo,
+    onCancelVideoUpload,
 }: WorkspacePickerSheetProps) {
     const [localSettingsDraft, setLocalSettingsDraft] = useState<GenerationSettingsDraft>({
         imageModel,
@@ -591,6 +602,24 @@ export default function WorkspacePickerSheet({
                             safeLimit={Math.max(1, Math.floor(capability.maxStyles / 2))}
                             onRemove={handleRemoveStyleReference}
                         />
+                    )}
+
+                    {capability.supportsVideo && onVideoReferenceChange && (
+                        <div>
+                            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
+                                {t('videoRef')}
+                            </label>
+                            <VideoReferenceUploader
+                                videoReference={videoReference}
+                                onVideoReferenceChange={onVideoReferenceChange}
+                                onUploadVideoFile={onUploadVideoFile}
+                                isUploading={isUploadingVideo}
+                                onCancelUpload={onCancelVideoUpload}
+                                onWarning={(msg) => showNotification(msg, 'error')}
+                                disabled={isGenerating}
+                                currentLanguage={currentLanguage}
+                            />
+                        </div>
                     )}
                 </div>
             );

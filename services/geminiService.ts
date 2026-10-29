@@ -6,6 +6,7 @@ import {
     QueuedBatchJobStats,
     ResultPart,
     ResultImagePart,
+    VideoUploadApiResponse,
     type PromptThinkingLevel,
 } from '../types';
 import {
@@ -61,6 +62,7 @@ type ImageGenerateRequestBody = {
     characterImageInputs: GenerateOptions['characterImageInputs'];
     styleImageInputs?: GenerateOptions['styleImageInputs'];
     videoInput?: GenerateOptions['videoInput'];
+    videoMimeType?: GenerateOptions['videoMimeType'];
     outputFormat: GenerateOptions['outputFormat'];
     temperature: GenerateOptions['temperature'];
     thinkingLevel: GenerateOptions['thinkingLevel'];
@@ -207,6 +209,7 @@ const buildImageGenerateRequestBody = (options: GenerateOptions, finalPrompt: st
         characterImageInputs: options.characterImageInputs,
         styleImageInputs: options.styleImageInputs,
         videoInput: options.videoInput,
+        videoMimeType: options.videoMimeType,
         outputFormat: options.outputFormat,
         temperature: options.temperature,
         thinkingLevel: effectiveThinking.thinkingLevel,
@@ -2367,4 +2370,39 @@ export const clearWorkspaceOutputFiles = async (): Promise<ClearWorkspaceOutputR
     } catch (err: any) {
         return { success: false, deletedCount: 0, errors: [err?.message || 'Network error'] };
     }
+};
+
+export const uploadReferenceVideo = async (
+    file: File,
+    options?: { signal?: AbortSignal },
+): Promise<VideoUploadApiResponse> => {
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/octet-stream',
+        'X-Video-Filename': encodeURIComponent(file.name),
+    };
+    if (file.type) {
+        headers['X-Video-Mime-Type'] = file.type;
+    }
+
+    const response = await fetch('/api/videos/upload', {
+        method: 'POST',
+        headers,
+        body: file,
+        signal: options?.signal,
+    });
+
+    if (!response.ok) {
+        let errorMessage = 'Failed to upload video';
+        try {
+            const errorData = await response.json();
+            if (errorData?.error) {
+                errorMessage = errorData.error;
+            }
+        } catch {
+            // Ignore json parse error
+        }
+        throw new Error(errorMessage);
+    }
+
+    return (await response.json()) as VideoUploadApiResponse;
 };

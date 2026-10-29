@@ -13,6 +13,7 @@ import {
     StickySendIntent,
     ThinkingLevel,
     TurnLineageAction,
+    VideoReferenceItem,
 } from '../types';
 
 type ComposerSettingsPanelProps = React.ComponentProps<typeof ComposerSettingsPanel>;
@@ -83,6 +84,8 @@ type UseComposerSettingsPanelPropsArgs = {
     objectImages?: string[];
     characterImages?: string[];
     styleImages?: string[];
+    videoReference?: VideoReferenceItem | null;
+    onClearVideoReference?: () => void;
     openMetadataViewer?: () => void;
 };
 
@@ -167,6 +170,8 @@ export function useComposerSettingsPanelProps({
     objectImages,
     characterImages,
     styleImages,
+    videoReference,
+    onClearVideoReference,
     openMetadataViewer,
 }: UseComposerSettingsPanelPropsArgs): ComposerSettingsPanelProps {
     const getModelLabel = useCallback(
@@ -309,6 +314,8 @@ export function useComposerSettingsPanelProps({
             objectImages,
             characterImages,
             styleImages,
+            videoReference,
+            onClearVideoReference,
             onOpenMetadataViewer: openMetadataViewer,
         }),
         [
@@ -356,6 +363,8 @@ export function useComposerSettingsPanelProps({
             objectImages,
             characterImages,
             styleImages,
+            videoReference,
+            onClearVideoReference,
             openMetadataViewer,
         ],
     );

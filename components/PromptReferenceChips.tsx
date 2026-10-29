@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { VideoReferenceItem } from '../types';
 import { Language, getTranslation } from '../utils/translations';
 import {
     buildSavedImageLoadUrl,
@@ -96,6 +97,8 @@ export interface PromptReferenceChipsProps {
     objectImages?: string[];
     characterImages?: string[];
     styleImages?: string[];
+    videoReference?: VideoReferenceItem | null;
+    onClearVideoReference?: () => void;
     onInsertTag: (tag: string) => void;
     currentLanguage?: Language;
     disabled?: boolean;
@@ -106,6 +109,7 @@ export interface PromptReferencedBadgesProps {
     objectImages?: string[];
     characterImages?: string[];
     styleImages?: string[];
+    videoReference?: VideoReferenceItem | null;
     onRemoveTag?: (tag: string) => void;
     onSelectTagInTextarea?: (tag: string) => void;
     currentLanguage?: Language;
@@ -201,6 +205,8 @@ export const PromptReferenceChips: React.FC<PromptReferenceChipsProps> = ({
     objectImages = [],
     characterImages = [],
     styleImages = [],
+    videoReference = null,
+    onClearVideoReference,
     onInsertTag,
     currentLanguage = 'en' as Language,
     disabled = false,
@@ -283,15 +289,55 @@ export const PromptReferenceChips: React.FC<PromptReferenceChipsProps> = ({
         return items;
     }, [objectImages, characterImages, styleImages]);
 
-    if (chipItems.length === 0) {
+    if (chipItems.length === 0 && !videoReference) {
         return null;
     }
 
     return (
         <div data-testid="composer-reference-chips" className="flex min-w-0 flex-wrap items-center gap-1.5 py-1">
-            <span className="shrink-0 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                {isZh ? '參考圖快捷標籤:' : 'Reference Tags:'}
-            </span>
+            {videoReference && (
+                <div
+                    data-testid="composer-reference-chip-video"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-sky-300/80 bg-sky-50/90 py-0.5 pl-2 pr-1 text-[11px] font-bold text-sky-800 shadow-sm dark:border-sky-500/30 dark:bg-sky-950/40 dark:text-sky-200"
+                >
+                    <button
+                        type="button"
+                        data-testid="composer-reference-chip-video-btn"
+                        disabled={disabled}
+                        onClick={() => onInsertTag('[Video_1]')}
+                        className="flex max-w-[170px] items-center gap-1 truncate text-left hover:underline disabled:cursor-not-allowed disabled:no-underline"
+                        title={videoReference.displayName}
+                        aria-label={`Insert tag [Video_1]: ${videoReference.displayName}`}
+                    >
+                        <span className="font-mono">[Video_1]</span>
+                        <span className="truncate">{videoReference.displayName}</span>
+                        <span className="opacity-60 font-sans text-[10px]">+</span>
+                    </button>
+                    {onClearVideoReference && (
+                        <button
+                            type="button"
+                            data-testid="composer-reference-chip-video-clear"
+                            disabled={disabled}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onClearVideoReference();
+                            }}
+                            className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-sky-600 hover:bg-sky-200/60 hover:text-sky-900 disabled:cursor-not-allowed disabled:opacity-40 dark:text-sky-400 dark:hover:bg-sky-900/60 dark:hover:text-sky-100"
+                            aria-label="Remove video reference"
+                        >
+                            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    )}
+                </div>
+            )}
+            {chipItems.length > 0 && (
+                <span className="shrink-0 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                    {isZh ? '參考圖快捷標籤:' : 'Reference Tags:'}
+                </span>
+            )}
             <div className="flex flex-wrap items-center gap-1.5">
                 {chipItems.map((item, itemIdx) => {
                     const isHovered = hoveredTag === item.tag;
@@ -379,6 +425,7 @@ export const PromptReferencedBadges: React.FC<PromptReferencedBadgesProps> = ({
     objectImages = [],
     characterImages = [],
     styleImages = [],
+    videoReference = null,
     onRemoveTag,
     onSelectTagInTextarea,
     currentLanguage = 'en' as Language,
@@ -391,22 +438,35 @@ export const PromptReferencedBadges: React.FC<PromptReferencedBadgesProps> = ({
     const characterLabel =
         getTranslation(currentLanguage, 'characterRefs') || (isZh ? '角色參考' : 'Character Reference');
     const styleLabel = getTranslation(currentLanguage, 'styleRefs') || (isZh ? '風格參考' : 'Style Reference');
+    const videoLabel = getTranslation(currentLanguage, 'videoRef') || (isZh ? '視訊參考' : 'Video Reference');
     const referencedTitle = isZh ? '提示詞已引用:' : 'Prompt cited:';
     const notUploadedTitle = isZh ? '未上傳' : 'Not uploaded';
     const removeTitle = isZh ? '從提示詞移除' : 'Remove from prompt';
 
     const citedTags = useMemo(() => {
         if (!prompt) return [];
-        const matches = prompt.match(/\[(Char|Obj|Style)_[1-9]\d*\]/g) || [];
+        const matches = prompt.match(/\[(Char|Obj|Style|Video)_[1-9]\d*\]/g) || [];
         const unique = Array.from(new Set(matches));
 
         return unique.map((tag) => {
-            const parsed = tag.match(/\[(Char|Obj|Style)_([1-9]\d*)\]/);
+            const parsed = tag.match(/\[(Char|Obj|Style|Video)_([1-9]\d*)\]/);
             if (!parsed) {
-                return { tag, type: 'Obj' as const, index: 0, isValid: false, image: '' };
+                return { tag, type: 'Obj' as const, index: 0, displayIndex: 1, isValid: false, image: '' };
             }
-            const type = parsed[1] as 'Char' | 'Obj' | 'Style';
+            const type = parsed[1] as 'Char' | 'Obj' | 'Style' | 'Video';
             const index = parseInt(parsed[2], 10) - 1;
+
+            if (type === 'Video') {
+                const isValid = index === 0 && Boolean(videoReference);
+                return {
+                    tag,
+                    type,
+                    index,
+                    displayIndex: index + 1,
+                    isValid,
+                    image: isValid ? videoReference?.thumbnailUrl || '' : '',
+                };
+            }
 
             if (type === 'Char') {
                 const isValid = index >= 0 && index < characterImages.length && Boolean(characterImages[index]);
@@ -442,7 +502,7 @@ export const PromptReferencedBadges: React.FC<PromptReferencedBadgesProps> = ({
                 image: isValid ? objectImages[index] : '',
             };
         });
-    }, [prompt, objectImages, characterImages, styleImages]);
+    }, [prompt, objectImages, characterImages, styleImages, videoReference]);
 
     if (citedTags.length === 0) {
         return null;
@@ -472,8 +532,11 @@ export const PromptReferencedBadges: React.FC<PromptReferencedBadgesProps> = ({
                     const displayImage = item.isValid ? resolveDisplayReferenceImage(item.image) : '';
                     const isChar = item.type === 'Char';
                     const isStyle = item.type === 'Style';
+                    const isVideo = item.type === 'Video';
                     const labelText = item.isValid
-                        ? `${isChar ? characterLabel : isStyle ? styleLabel : objectLabel} ${item.displayIndex}`
+                        ? isVideo
+                            ? `${videoLabel}: ${videoReference?.displayName || item.displayIndex}`
+                            : `${isChar ? characterLabel : isStyle ? styleLabel : objectLabel} ${item.displayIndex}`
                         : `${item.tag} (${notUploadedTitle})`;
 
                     if (!item.isValid) {

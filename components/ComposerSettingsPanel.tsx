@@ -19,6 +19,7 @@ import {
     StickySendIntent,
     ThinkingLevel,
     TurnLineageAction,
+    VideoReferenceItem,
 } from '../types';
 import { PromptReferenceChips, PromptReferencedBadges } from './PromptReferenceChips';
 
@@ -198,6 +199,8 @@ export type ComposerSettingsPanelProps = {
     objectImages?: string[];
     characterImages?: string[];
     styleImages?: string[];
+    videoReference?: VideoReferenceItem | null;
+    onClearVideoReference?: () => void;
     roundCount?: number;
     onRoundCountChange?: (rounds: number) => void;
     batchProgress?: {
@@ -329,6 +332,8 @@ function ComposerSettingsPanel({
     objectImages = [],
     characterImages = [],
     styleImages = [],
+    videoReference = null,
+    onClearVideoReference,
     roundCount = 1,
     onRoundCountChange,
     batchProgress,
@@ -1284,6 +1289,8 @@ function ComposerSettingsPanel({
                                 objectImages={objectImages}
                                 characterImages={characterImages}
                                 styleImages={styleImages}
+                                videoReference={videoReference}
+                                onClearVideoReference={onClearVideoReference}
                                 onInsertTag={handleInsertReferenceTag}
                                 currentLanguage={currentLanguage}
                                 disabled={isActionLocked}
@@ -1448,6 +1455,7 @@ function ComposerSettingsPanel({
                                 objectImages={objectImages}
                                 characterImages={characterImages}
                                 styleImages={styleImages}
+                                videoReference={videoReference}
                                 onRemoveTag={handleRemoveReferenceTagFromPrompt}
                                 onSelectTagInTextarea={handleSelectTagInTextarea}
                                 currentLanguage={currentLanguage}
@@ -1503,6 +1511,7 @@ function ComposerSettingsPanel({
                         ) : (
                             <Button
                                 onClick={handlePrimaryGenerate}
+                                disabled={isActionLocked}
                                 aria-label={primaryGenerateAriaLabel}
                                 title={primaryGenerateTitle}
                                 className="btn-shimmer min-h-[64px] rounded-[28px] text-[15px]"
@@ -1517,6 +1526,7 @@ function ComposerSettingsPanel({
                             <Button
                                 variant="secondary"
                                 onClick={onGenerate}
+                                disabled={isActionLocked}
                                 className="min-h-[64px] min-w-0 rounded-[28px] px-3.5 text-[14px]"
                             >
                                 <span className="inline-flex items-center justify-center gap-1.5">

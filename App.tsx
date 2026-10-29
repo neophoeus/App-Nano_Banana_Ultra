@@ -7,6 +7,7 @@ import {
     OptimizationMode,
     PromptThinkingLevel,
     ResultPart,
+    VideoReferenceItem,
     ViewerComposerSettingsSnapshot,
 } from './types';
 import ComposerAdvancedSettingsDialog from './components/ComposerAdvancedSettingsDialog';
@@ -53,7 +54,7 @@ import {
 } from './utils/optimizationMode';
 import { useImageGeneration } from './hooks/useImageGeneration';
 import { usePerformGeneration } from './hooks/usePerformGeneration';
-import { GenerationLiveProgressEvent } from './services/geminiService';
+import { checkApiKey, GenerationLiveProgressEvent, uploadReferenceVideo } from './services/geminiService';
 import { usePromptTools } from './hooks/usePromptTools';
 import { useComposerState } from './hooks/useComposerState';
 import { useHistoryPresentationHelpers } from './hooks/useHistoryPresentationHelpers';
@@ -212,6 +213,7 @@ const App: React.FC = () => {
         getActiveImageUrl,
         handleClearResults,
     } = useImageGeneration(initialWorkspaceSnapshot);
+    const [isUploadingVideo, setIsUploadingVideo] = useState(false);
     const isForegroundGenerationLocked = isGenerating && !isCancelFinalizing;
 
     const {
@@ -396,6 +398,99 @@ const App: React.FC = () => {
             return resolveStyleLabel(style, t);
         },
         [t],
+    );
+
+    const [videoReference, setVideoReference] = useState<VideoReferenceItem | null>(null);
+    const videoUploadAbortRef = useRef<AbortController | null>(null);
+    const videoUploadRequestIdRef = useRef(0);
+    const imageModelRef = useRef(imageModel);
+    imageModelRef.current = imageModel;
+
+    const cancelActiveVideoUpload = useCallback(() => {
+        videoUploadRequestIdRef.current += 1;
+        videoUploadAbortRef.current?.abort();
+        videoUploadAbortRef.current = null;
+        setIsUploadingVideo(false);
+    }, []);
+
+    const handleVideoReferenceChange = useCallback(
+        (next: VideoReferenceItem | null) => {
+            cancelActiveVideoUpload();
+            setVideoReference(next);
+        },
+        [cancelActiveVideoUpload],
+    );
+
+    useEffect(() => {
+        return () => {
+            videoUploadAbortRef.current?.abort();
+        };
+    }, []);
+
+    const handleUploadVideoFile = useCallback(
+        async (file: File, signal?: AbortSignal): Promise<VideoReferenceItem> => {
+            if (!apiKeyReady) {
+                const connected = await handleApiKeyConnect();
+                if (!connected) {
+                    throw new Error(t('apiKeyRequired'));
+                }
+                const ready = await checkApiKey();
+                if (!ready) {
+                    throw new Error(t('apiKeyRequired'));
+                }
+                setApiKeyReady(true);
+            }
+
+            cancelActiveVideoUpload();
+            const requestId = videoUploadRequestIdRef.current;
+            const controller = new AbortController();
+            videoUploadAbortRef.current = controller;
+
+            const handleAbort = () => {
+                controller.abort();
+            };
+            if (signal) {
+                if (signal.aborted) {
+                    controller.abort();
+                } else {
+                    signal.addEventListener('abort', handleAbort, { once: true });
+                }
+            }
+
+            setIsUploadingVideo(true);
+            try {
+                const uploaded = await uploadReferenceVideo(file, { signal: controller.signal });
+                if (
+                    requestId !== videoUploadRequestIdRef.current ||
+                    controller.signal.aborted ||
+                    !MODEL_CAPABILITIES[imageModelRef.current]?.supportsVideo
+                ) {
+                    throw new Error('ABORTED');
+                }
+
+                const nextVideoReference: VideoReferenceItem = {
+                    sourceType: 'upload',
+                    uri: uploaded.fileUri,
+                    mimeType: uploaded.mimeType,
+                    displayName: uploaded.displayName,
+                    fileSizeBytes: uploaded.sizeBytes ?? file.size,
+                    geminiFileName: uploaded.name,
+                    expiresAt: uploaded.expiresAt,
+                    createdAt: Date.now(),
+                };
+                setVideoReference(nextVideoReference);
+                return nextVideoReference;
+            } finally {
+                if (signal) {
+                    signal.removeEventListener('abort', handleAbort);
+                }
+                if (videoUploadRequestIdRef.current === requestId) {
+                    setIsUploadingVideo(false);
+                    videoUploadAbortRef.current = null;
+                }
+            }
+        },
+        [apiKeyReady, cancelActiveVideoUpload, handleApiKeyConnect, setApiKeyReady, t],
     );
 
     const markHistoryItemOpened = useCallback(
@@ -834,6 +929,8 @@ const App: React.FC = () => {
         objectImages,
         characterImages,
         styleImages,
+        videoInput: videoReference?.uri,
+        videoMimeType: videoReference?.mimeType,
         batchSize,
         aspectRatio,
         outputFormat,
@@ -950,6 +1047,8 @@ const App: React.FC = () => {
         setObjectImages,
         setCharacterImages,
         setStyleImages,
+        setVideoReference,
+        onClearVideoUpload: cancelActiveVideoUpload,
         showNotification,
         t,
     });
@@ -1019,6 +1118,7 @@ const App: React.FC = () => {
         objectImageCount: objectImages.length,
         characterImageCount: characterImages.length,
         styleImageCount: styleImages.length,
+        hasVideoInput: Boolean(videoReference),
         stickySendIntent,
         workspaceSession,
         conversationState,
@@ -1068,6 +1168,8 @@ const App: React.FC = () => {
         objectImages,
         characterImages,
         styleImages,
+        videoInput: videoReference?.uri,
+        videoMimeType: videoReference?.mimeType,
         getModelLabel,
         getGenerationLineageContext,
         addLog,
@@ -1101,7 +1203,7 @@ const App: React.FC = () => {
         workspaceImportReview,
         applyWorkspaceSnapshot,
         handleCloseWorkspaceImportReview,
-        handleApplyImportedWorkspaceSnapshot,
+        handleApplyImportedWorkspaceSnapshot: rawHandleApplyImportedWorkspaceSnapshot,
         handleMergeImportedWorkspaceSnapshot,
         handleExportWorkspaceSnapshot,
         handleImportWorkspaceSnapshot,
@@ -1137,11 +1239,21 @@ const App: React.FC = () => {
         setBranchRenameDialog,
         setBranchRenameDraft,
     });
+    const handleApplyImportedWorkspaceSnapshot = useCallback(
+        (...args: Parameters<typeof rawHandleApplyImportedWorkspaceSnapshot>) => {
+            cancelActiveVideoUpload();
+            setVideoReference(null);
+            return rawHandleApplyImportedWorkspaceSnapshot(...args);
+        },
+        [cancelActiveVideoUpload, rawHandleApplyImportedWorkspaceSnapshot],
+    );
     const applyEmptyWorkspaceSnapshot = useCallback(() => {
         clearStoredWorkspaceSnapshot();
         saveWorkspaceSnapshot(EMPTY_WORKSPACE_SNAPSHOT);
         applyWorkspaceSnapshot(EMPTY_WORKSPACE_SNAPSHOT);
-    }, [applyWorkspaceSnapshot]);
+        cancelActiveVideoUpload();
+        setVideoReference(null);
+    }, [applyWorkspaceSnapshot, cancelActiveVideoUpload]);
 
     useLegacyWorkspaceSnapshotMigration({
         composeCurrentWorkspaceSnapshot,
@@ -1249,7 +1361,9 @@ const App: React.FC = () => {
     );
     const handleClearAllReferences = useCallback(() => {
         clearAssetRoles(['object', 'character', 'style']);
-    }, [clearAssetRoles]);
+        cancelActiveVideoUpload();
+        setVideoReference(null);
+    }, [cancelActiveVideoUpload, clearAssetRoles]);
 
     const { handleClearCurrentStage, handleClearGalleryHistory } = useWorkspaceResetActions({
         lastPromotedHistoryIdRef,
@@ -1401,6 +1515,8 @@ const App: React.FC = () => {
         isSketchPadOpen,
         objectImageCount: surfaceObjectImages.length,
         characterImageCount: surfaceCharacterImages.length,
+        styleImageCount: isEditing ? 0 : styleImages.length,
+        hasVideoInput: !isEditing && Boolean(videoReference),
         t,
     });
     const viewerPromptValue = useMemo(() => {
@@ -1579,7 +1695,7 @@ const App: React.FC = () => {
         placeholder: t('placeholder'),
         enterToSubmit,
         isGenerating: isForegroundGenerationLocked,
-        isActionLocked: isGenerating,
+        isActionLocked: isGenerating || isUploadingVideo,
         isCancelFinalizing,
         isEnhancingPrompt: isEnhancingComposerPrompt,
         activePromptTool: activeComposerPromptTool,
@@ -1635,6 +1751,11 @@ const App: React.FC = () => {
         objectImages: surfaceObjectImages,
         characterImages: surfaceCharacterImages,
         styleImages,
+        videoReference,
+        onClearVideoReference: () => {
+            cancelActiveVideoUpload();
+            setVideoReference(null);
+        },
         openMetadataViewer: () => setShowMetadataViewerDrawer(true),
     });
     const advancedSettingsDialogProps: React.ComponentProps<typeof ComposerAdvancedSettingsDialog> | null =
@@ -2013,6 +2134,11 @@ const App: React.FC = () => {
         setStyleImages,
         handleRemoveStyleReference,
         showStyleEntry: !isEditing,
+        videoReference,
+        onVideoReferenceChange: isEditing ? undefined : handleVideoReferenceChange,
+        onUploadVideoFile: isEditing ? undefined : handleUploadVideoFile,
+        isUploadingVideo: isEditing ? false : isUploadingVideo,
+        onCancelVideoUpload: isEditing ? undefined : cancelActiveVideoUpload,
     });
     const handleOpenClearWorkspaceConfirm = useCallback(() => {
         setShowClearWorkspaceConfirm(true);
@@ -2136,14 +2262,22 @@ const App: React.FC = () => {
                 handleRemoveCharacterReference={handleRemoveCharacterReference}
                 handleRemoveStyleReference={handleRemoveStyleReference}
                 handleClearAllReferences={handleClearAllReferences}
+                supportsVideo={capability.supportsVideo}
+                videoReference={videoReference}
+                onVideoReferenceChange={handleVideoReferenceChange}
+                onUploadVideoFile={handleUploadVideoFile}
+                isUploadingVideo={isUploadingVideo}
+                onCancelVideoUpload={cancelActiveVideoUpload}
             />
         ),
         [
+            cancelActiveVideoUpload,
             handleClearAllReferences,
             canRepaintCurrentImage,
             capability.maxCharacters,
             capability.maxObjects,
             capability.maxStyles,
+            capability.supportsVideo,
             characterImages,
             currentLang,
             handleOpenEditor,
@@ -2152,13 +2286,17 @@ const App: React.FC = () => {
             handleRemoveCharacterReference,
             handleRemoveObjectReference,
             handleRemoveStyleReference,
+            handleUploadVideoFile,
+            handleVideoReferenceChange,
             isForegroundGenerationLocked,
+            isUploadingVideo,
             objectImages,
             setCharacterImages,
             setObjectImages,
             setStyleImages,
             showNotification,
             styleImages,
+            videoReference,
         ],
     );
     const contextProvenanceDetailPanel = useMemo(

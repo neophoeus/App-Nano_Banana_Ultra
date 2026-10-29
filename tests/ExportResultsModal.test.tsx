@@ -94,7 +94,7 @@ describe('ExportResultsModal', () => {
         expect(container.firstChild).toBeNull();
     });
 
-    it('renders modal with default export directory and deduplicates primary output from variants', () => {
+    it('renders modal with default export directory, defaults includeThoughts to checked, and includes thoughts', () => {
         act(() => {
             root.render(
                 <ExportResultsModal isOpen={true} onClose={vi.fn()} history={sampleHistory} t={(key) => key} />,
@@ -107,7 +107,35 @@ describe('ExportResultsModal', () => {
         const input = container.querySelector<HTMLInputElement>('[data-testid="export-results-target-dir-input"]');
         expect(input?.value).toBe('./export');
 
-        // Turn 1 has 1 main image + 1 extra variant (img1.png in resultParts is deduplicated!) = 2
+        const thoughtsCheckbox = container.querySelector<HTMLInputElement>(
+            '[data-testid="export-results-include-thoughts-checkbox"]',
+        );
+        expect(thoughtsCheckbox).not.toBeNull();
+        expect(thoughtsCheckbox?.checked).toBe(true);
+
+        // Turn 1 has 1 main image + 1 extra variant + 1 thought image = 3 items by default
+        expect(container.textContent).toContain('3');
+    });
+
+    it('toggles includeThoughtImages and updates exportable item count', async () => {
+        act(() => {
+            root.render(
+                <ExportResultsModal isOpen={true} onClose={vi.fn()} history={sampleHistory} t={(key) => key} />,
+            );
+        });
+
+        const thoughtsCheckbox = container.querySelector<HTMLInputElement>(
+            '[data-testid="export-results-include-thoughts-checkbox"]',
+        );
+        expect(thoughtsCheckbox?.checked).toBe(true);
+        expect(container.textContent).toContain('3');
+
+        await act(async () => {
+            thoughtsCheckbox?.click();
+        });
+
+        expect(thoughtsCheckbox?.checked).toBe(false);
+        // Without thought images: 1 main image + 1 extra variant = 2 items
         expect(container.textContent).toContain('2');
     });
 
@@ -132,11 +160,11 @@ describe('ExportResultsModal', () => {
         expect(input?.value).toBe('D:\\MyCustomOutputs');
     });
 
-    it('executes export with embedded metadata, closes modal on success, and aligns base filenames', async () => {
+    it('executes export with embedded metadata including thoughts by default, closes modal on success, and aligns base filenames', async () => {
         exportWorkspaceResultsMock.mockResolvedValueOnce({
             success: true,
             outputDir: 'D:\\MyCustomOutputs',
-            exportedCount: 2,
+            exportedCount: 3,
             skippedCount: 0,
             errors: [],
         });
@@ -177,10 +205,64 @@ describe('ExportResultsModal', () => {
                         imageUrl: 'var1.png',
                         baseFilename: 'var1',
                     }),
+                    expect.objectContaining({
+                        imageUrl: 'thought1.png',
+                        baseFilename: 'thought1',
+                    }),
                 ]),
             }),
         );
 
+        expect(showNotification).toHaveBeenCalledWith(expect.stringContaining('3'), 'info');
+        expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('excludes thought images when checkbox is unchecked', async () => {
+        exportWorkspaceResultsMock.mockResolvedValueOnce({
+            success: true,
+            outputDir: 'D:\\MyCustomOutputs',
+            exportedCount: 2,
+            skippedCount: 0,
+            errors: [],
+        });
+
+        const showNotification = vi.fn();
+        const onClose = vi.fn();
+        const mockT = (key: string) => (key === 'exportResultsSuccessNotice' ? 'Exported {0} images to {1}' : key);
+
+        act(() => {
+            root.render(
+                <ExportResultsModal
+                    isOpen={true}
+                    onClose={onClose}
+                    history={sampleHistory}
+                    t={mockT}
+                    showNotification={showNotification}
+                />,
+            );
+        });
+
+        const thoughtsCheckbox = container.querySelector<HTMLInputElement>(
+            '[data-testid="export-results-include-thoughts-checkbox"]',
+        );
+        await act(async () => {
+            thoughtsCheckbox?.click();
+        });
+
+        const confirmBtn = container.querySelector<HTMLButtonElement>('[data-testid="export-results-confirm-btn"]');
+        await act(async () => {
+            confirmBtn?.click();
+        });
+
+        expect(exportWorkspaceResultsMock).toHaveBeenCalledTimes(1);
+        const [, callArg] = exportWorkspaceResultsMock.mock.calls[0] ? [null, exportWorkspaceResultsMock.mock.calls[0][0]] : [];
+        expect(callArg.items.length).toBe(2);
+        expect(callArg.items).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({ imageUrl: 'img1.png' }),
+                expect.objectContaining({ imageUrl: 'var1.png' }),
+            ]),
+        );
         expect(showNotification).toHaveBeenCalledWith(expect.stringContaining('2'), 'info');
         expect(onClose).toHaveBeenCalledTimes(1);
     });

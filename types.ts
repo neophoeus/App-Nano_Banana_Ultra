@@ -618,6 +618,41 @@ export interface WorkspacePersistenceSnapshot {
     composerState: WorkspaceComposerState;
 }
 
+export type VideoReferenceSourceType = 'upload' | 'youtube';
+
+export type SupportedVideoMimeType =
+    | 'video/mp4'
+    | 'video/mpeg'
+    | 'video/mov'
+    | 'video/avi'
+    | 'video/x-flv'
+    | 'video/mpg'
+    | 'video/webm'
+    | 'video/wmv'
+    | 'video/3gpp';
+
+export interface VideoReferenceItem {
+    sourceType: VideoReferenceSourceType;
+    uri: string;
+    mimeType: SupportedVideoMimeType;
+    displayName: string;
+    youtubeVideoId?: string;
+    thumbnailUrl?: string;
+    fileSizeBytes?: number;
+    geminiFileName?: string;
+    expiresAt?: string;
+    createdAt: number;
+}
+
+export interface VideoUploadApiResponse {
+    fileUri: string;
+    mimeType: SupportedVideoMimeType;
+    name: string;
+    displayName: string;
+    sizeBytes?: number;
+    expiresAt?: string;
+}
+
 export interface GenerateOptions {
     prompt: string;
     aspectRatio?: AspectRatio;
@@ -630,6 +665,7 @@ export interface GenerateOptions {
     characterImageInputs?: string[];
     styleImageInputs?: string[];
     videoInput?: string;
+    videoMimeType?: string;
     outputFormat?: OutputFormat;
     temperature?: number;
     thinkingLevel?: ThinkingLevel;

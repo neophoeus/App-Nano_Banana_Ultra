@@ -29,6 +29,8 @@ type UseWorkspaceShellViewModelArgs = {
     isSketchPadOpen: boolean;
     objectImageCount: number;
     characterImageCount: number;
+    styleImageCount?: number;
+    hasVideoInput?: boolean;
     t: (key: string) => string;
 };
 
@@ -57,6 +59,8 @@ export function useWorkspaceShellViewModel({
     isSketchPadOpen,
     objectImageCount,
     characterImageCount,
+    styleImageCount = 0,
+    hasVideoInput = false,
     t,
 }: UseWorkspaceShellViewModelArgs) {
     const viewSettings = useMemo<GenerationSettings>(
@@ -152,7 +156,8 @@ export function useWorkspaceShellViewModel({
     const surfacePromptPreview = surfacePrompt.trim()
         ? surfacePrompt.trim().slice(0, 64)
         : t('workspaceSurfacePromptEmpty');
-    const totalReferenceCount = objectImageCount + characterImageCount;
+    const totalReferenceCount =
+        objectImageCount + characterImageCount + styleImageCount + (hasVideoInput ? 1 : 0);
 
     return {
         viewSettings,

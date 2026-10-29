@@ -1,4 +1,5 @@
 import { useCallback, MutableRefObject } from 'react';
+import { MODEL_CAPABILITIES } from '../constants';
 import {
     AspectRatio,
     BatchPreviewTile,
@@ -8,6 +9,7 @@ import {
     StageErrorState,
     GenerationLineageContext,
     ImageReceivedResult,
+    ImageSidecarMetadata,
     ImageSize,
     ImageStyle,
     ImageModel,
@@ -189,6 +191,7 @@ interface UsePerformGenerationProps {
     characterImages: string[];
     styleImages?: string[];
     videoInput?: string;
+    videoMimeType?: string;
     batchSize: number;
     aspectRatio: AspectRatio;
     outputFormat: OutputFormat;
@@ -244,6 +247,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
         characterImages,
         styleImages,
         videoInput,
+        videoMimeType,
         batchSize,
         aspectRatio,
         outputFormat,
@@ -289,6 +293,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
             sourceImageInput?: string,
             extraStyleImages?: string[],
             extraVideoInput?: string,
+            extraVideoMimeType?: string,
         ) => {
             const isStyleTransfer =
                 (objectImages.length > 0 || characterImages.length > 0 || (styleImages && styleImages.length > 0)) &&
@@ -331,7 +336,10 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
             let finalObjectInputs: string[] = [];
             let finalCharacterInputs: string[] = [];
             let finalStyleInputs: string[] = [];
-            let finalVideoInput: string | undefined = extraVideoInput || videoInput;
+            let finalVideoInput: string | undefined;
+            let finalVideoMimeType: string | undefined;
+
+            const targetSupportsVideo = Boolean(MODEL_CAPABILITIES[targetModel]?.supportsVideo);
 
             if (editingInput) {
                 // When editingInput is present, extraObjectImages contains the user's actual reference objects
@@ -345,10 +353,23 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                 if (extraStyleImages && extraStyleImages.length > 0) {
                     finalStyleInputs = [...extraStyleImages];
                 }
+                if (targetSupportsVideo) {
+                    if (explicitMode === 'Follow-up Edit') {
+                        finalVideoInput = extraVideoInput || videoInput;
+                        finalVideoMimeType = extraVideoMimeType || videoMimeType;
+                    } else {
+                        finalVideoInput = extraVideoInput;
+                        finalVideoMimeType = extraVideoMimeType;
+                    }
+                }
             } else {
                 if (objectImages.length > 0) finalObjectInputs = objectImages;
                 if (characterImages.length > 0) finalCharacterInputs = characterImages;
                 if (styleImages && styleImages.length > 0) finalStyleInputs = styleImages;
+                if (targetSupportsVideo) {
+                    finalVideoInput = extraVideoInput || videoInput;
+                    finalVideoMimeType = extraVideoMimeType || videoMimeType;
+                }
             }
 
             const currentBatchSize = customBatchSize !== undefined ? customBatchSize : batchSize;
@@ -372,7 +393,9 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
             let currentMode = explicitMode;
             if (!currentMode) {
                 if (editingInput) currentMode = 'Inpainting';
-                else if (objectImages.length > 0 || characterImages.length > 0) currentMode = 'Image to Image/Mixing';
+                else if (objectImages.length > 0 || characterImages.length > 0 || (styleImages && styleImages.length > 0))
+                    currentMode = 'Image to Image/Mixing';
+                else if (finalVideoInput) currentMode = 'Video to Image';
                 else currentMode = 'Text to Image';
             }
             const generationLineage =
@@ -701,6 +724,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                             characterImageInputs: finalCharacterInputs,
                             styleImageInputs: finalStyleInputs,
                             videoInput: finalVideoInput,
+                            videoMimeType: finalVideoMimeType,
                             model: targetModel,
                             outputFormat,
                             temperature,
@@ -805,6 +829,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
             characterImages,
             styleImages,
             videoInput,
+            videoMimeType,
             getConversationRequestContext,
             getGenerationLineageContext,
             googleSearch,

@@ -1,5 +1,23 @@
 # Changelog
 
+## v5.5.0 - 2026-10-29
+
+- Release title: Nano Banana Ultra 5.5.0 - Reference Video Integration (Gemini Files API & YouTube) for Nano Banana 2/2.1, Default Thought Process Image Export, and Generation Lock Resilience
+- Release summary:
+    - **End-to-End Reference Video Workflow for Nano Banana 2 / 2.1 (`components/VideoReferenceUploader.tsx`, `plugins/routes/videoRoutes.ts`, `plugins/utils/imageReferences.ts`, `services/geminiService.ts`, `hooks/*`, `App.tsx`, `tests/*`)**:
+        - Streaming video upload route (`POST /api/videos/upload`): Streams binary video payload to unique temporary files under the OS temporary directory with a strict 200 MB quota ceiling (`MAX_VIDEO_UPLOAD_BYTES`), sanitizes filenames against path traversal and control characters, intercepts premature client disconnects (`req.on('aborted')` / incomplete close) to prevent uploading truncated files, uploads to Gemini Files API via `@google/genai` Node SDK (`ai.files.upload`), and polls state progression (`PROCESSING` -> `ACTIVE`, up to 45 attempts = 90s) with classified error handling and guaranteed `finally` temp-file cleanup.
+        - Public YouTube URL reference parsing: Canonicalizes YouTube video links (`youtube.com/watch?v=`, `youtu.be/`, `/shorts/`, `/live/`, `m.youtube.com`), strips tracking query parameters (`&si=`, `&list=`, `&pp=`), extracts strict 11-character video IDs (`^[A-Za-z0-9_-]{11}$`), and generates clean thumbnail preview cards with offline SVG fallback.
+        - Dual entry point UI integration: Embedded into both `WorkspaceSideToolPanel` (under active references when model capability `supportsVideo: true`) and `WorkspacePickerSheet` modal. Provides tab switching between local file dropzone and YouTube input, real-time upload progress spinner with cancellation control, and bound reference summary card.
+        - Composer prompt tag binding & orphan tracking: Automatically injects `[Video_1]` part text into multi-modal generation payloads (`buildGenerateParts` and `buildGenerateFileParts`), surfaces quick-insert `[Video_1]` pill in `PromptReferenceChips`, and tracks referenced badge chips and orphan tags in `PromptReferencedBadges`.
+        - Controlled background upload across unmount: Decouples upload lifecycle from temporary popover mounting so closing the references sheet or clicking outside does not abort active background uploads.
+        - Residual videoInput stripping on unsupported models: Route handlers (`generateRoutes.ts` and `batchRoutes.ts`) gracefully strip residual `videoInput` and `videoMimeType` when switching to `supportsVideo: false` models (e.g. `gemini-3-pro-image`), preventing API `400 INVALID_ARGUMENT` errors.
+        - 9-language localization: Added 19 comprehensive localization keys across English, Traditional Chinese (`zh_TW`), Simplified Chinese (`zh_CN`), Japanese, Korean, German, Spanish, French, and Russian.
+    - **Default Include Thought Process Images in Result Export (`components/ExportResultsModal.tsx`, `tests/ExportResultsModal.test.tsx`)**:
+        - Default checkbox state: Initialized `includeThoughtImages` to `true` by default so users automatically export intermediate reasoning and thought process images alongside final creative outputs without manual opt-in.
+        - Automated testing contract: Updated unit tests to verify default selection of 3 images (2 outputs + 1 thought image) and exclusion upon manual uncheck.
+    - **Action Lock vs. Generation Lock Separation & Submission Safety (`components/ComposerSettingsPanel.tsx`, `App.tsx`)**:
+        - Distinct lock states: Separated `isActionLocked` (`isGenerating || isUploadingVideo`) from `isForegroundGenerationLocked` (`isGenerating && !isCancelFinalizing`), ensuring generate buttons, batch queuing, and Enter-to-submit are disabled during background video upload without falsely activating the red cancel generation button or premature stage loading animation.
+
 ## v5.4.0 - 2026-10-29
 
 - Release title: Nano Banana Ultra 5.4.0 - Quality/Eco Optimization Modes, Global Flat Icon System, High-Contrast Read Metadata, Seamless Viewport Ambient Lighting, .gitignore Purification, and E2E Workspace Snapshot Isolation
