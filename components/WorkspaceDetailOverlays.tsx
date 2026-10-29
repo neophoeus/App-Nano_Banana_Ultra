@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import WorkspaceSupportDetailSurface from './WorkspaceSupportDetailSurface';
 import WorkspaceDetailModal from './WorkspaceDetailModal';
 import WorkspaceModalFrame from './WorkspaceModalFrame';
@@ -35,7 +35,7 @@ export interface WorkspaceDetailOverlaysProps {
     t: (key: string) => string;
     onCloseDetailModal: () => void;
     onCloseClearConfirm: () => void;
-    onConfirmClearWorkspace: () => void;
+    onConfirmClearWorkspace: (clearOutput?: boolean) => void | Promise<void>;
     onExportWorkspaceSnapshot: () => Promise<void> | void;
 
     // Progress Modal Props
@@ -141,6 +141,14 @@ export const WorkspaceDetailOverlays: React.FC<WorkspaceDetailOverlaysProps> = R
         onRemoveQueuedJob,
         onRecoverRecentQueuedJobs,
     }) => {
+        const [clearOutputFiles, setClearOutputFiles] = useState(false);
+
+        useEffect(() => {
+            if (!showClearWorkspaceConfirm) {
+                setClearOutputFiles(false);
+            }
+        }, [showClearWorkspaceConfirm]);
+
         const effectiveThoughtsText = thoughtsText ?? progressThoughtsSummaryText ?? '';
         const detailModalContent =
             activeWorkspaceDetailModal === 'progress' ? (
@@ -269,14 +277,17 @@ export const WorkspaceDetailOverlays: React.FC<WorkspaceDetailOverlaysProps> = R
             <WorkspaceModalFrame
                 dataTestId="workspace-unified-history-clear-confirm"
                 zIndex={WORKSPACE_OVERLAY_Z_INDEX.historyConfirm}
-                maxWidthClass="max-w-sm"
-                onClose={onCloseClearConfirm}
+                maxWidthClass="max-w-md"
+                onClose={() => {
+                    setClearOutputFiles(false);
+                    onCloseClearConfirm();
+                }}
                 closeLabel={t('clearHistoryCancel')}
                 title={t('clearHistoryTitle')}
                 description={t('clearHistoryMsg')}
                 hideCloseButton
                 panelClassName="nbu-modal-shell"
-                headerClassName="justify-center border-b-0 px-6 pt-6 pb-4 text-center"
+                headerClassName="justify-center border-b-0 px-6 pt-6 pb-2 text-center"
                 headerExtra={
                     <div className="mt-4 flex justify-center">
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
@@ -298,11 +309,39 @@ export const WorkspaceDetailOverlays: React.FC<WorkspaceDetailOverlaysProps> = R
                     </div>
                 }
             >
+                <div className="space-y-3 px-6 pb-4 text-left">
+                    <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs leading-relaxed text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300">
+                        <div className="flex items-start gap-2">
+                            <span className="text-base leading-none">⚠️</span>
+                            <span>{t('clearHistoryExportReminder')}</span>
+                        </div>
+                    </div>
+                    <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50/60 p-3 text-xs transition-colors hover:bg-slate-100/60 dark:border-slate-800 dark:bg-slate-900/40 dark:hover:bg-slate-800/40">
+                        <input
+                            type="checkbox"
+                            data-testid="workspace-clear-output-checkbox"
+                            checked={clearOutputFiles}
+                            onChange={(e) => setClearOutputFiles(e.target.checked)}
+                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-500 focus:ring-amber-400 dark:border-slate-700"
+                        />
+                        <div className="flex flex-col gap-0.5">
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">
+                                {t('clearHistoryIncludeOutputLabel')}
+                            </span>
+                            <span className="text-slate-500 dark:text-slate-400">
+                                {t('clearHistoryIncludeOutputHint')}
+                            </span>
+                        </div>
+                    </label>
+                </div>
                 <div className="flex gap-2 border-t border-gray-100 bg-gray-50 p-2 dark:border-gray-800 dark:bg-gray-900/50">
                     <button
                         type="button"
                         data-testid="workspace-unified-history-clear-cancel"
-                        onClick={onCloseClearConfirm}
+                        onClick={() => {
+                            setClearOutputFiles(false);
+                            onCloseClearConfirm();
+                        }}
                         className="flex-1 rounded-xl border border-transparent px-4 py-2.5 text-sm font-bold text-gray-600 transition-all hover:border-gray-200 hover:bg-white dark:text-gray-300 dark:hover:border-gray-700 dark:hover:bg-gray-800"
                     >
                         {t('clearHistoryCancel')}
@@ -310,7 +349,7 @@ export const WorkspaceDetailOverlays: React.FC<WorkspaceDetailOverlaysProps> = R
                     <button
                         type="button"
                         data-testid="workspace-unified-history-clear-confirm-action"
-                        onClick={onConfirmClearWorkspace}
+                        onClick={() => onConfirmClearWorkspace(clearOutputFiles)}
                         className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-500/30 transition-all hover:bg-red-600"
                     >
                         {t('clearHistoryConfirm')}

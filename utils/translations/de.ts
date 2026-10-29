@@ -300,6 +300,9 @@ export const de = {
         'Diesen Arbeitsbereich auf den leeren Standardzustand zurücksetzen? Verlauf, Buhne, Prompt und Sitzungskontext werden entfernt. Geteilte Batch-Jobs in der Warteschlange bleiben separat verfugbar. Wir empfehlen, zuerst Arbeitsbereich exportieren zu verwenden. Dies kann nicht ruckgangig gemacht werden.',
     clearHistoryConfirm: 'Arbeitsbereich leeren',
     clearHistoryCancel: 'Abbrechen',
+    clearHistoryExportReminder: 'Erinnerung: Bitte sichern Sie vor dem Zurücksetzen Ihre gewünschten Bilder und Metadaten über "Ergebnisse exportieren (Export Results)".',
+    clearHistoryIncludeOutputLabel: 'Auch Bilddateien und Sidecar-JSONs im Ordner output löschen',
+    clearHistoryIncludeOutputHint: 'Entfernt dauerhaft alle generierten Bilder und Metadatendateien im Ordner output (Warteschlangenjobs bleiben erhalten).',
 
     // Sketch Pad
     sketchTitle: 'Skizzenblock',

@@ -297,6 +297,9 @@ export const fr = {
         "Réinitialiser cet espace de travail à son état vide par défaut ? L'historique, la scène, le prompt et le contexte de session seront supprimés. Les lots en file d'attente partagés resteront disponibles séparément. Nous recommandons d'utiliser d'abord Exporter l espace de travail. Cette action est irréversible.",
     clearHistoryConfirm: "Effacer l'espace de travail",
     clearHistoryCancel: 'Annuler',
+    clearHistoryExportReminder: 'Rappel : Avant de réinitialiser, assurez-vous de sauvegarder vos images et métadonnées via « Exporter les résultats (Export Results) ».',
+    clearHistoryIncludeOutputLabel: 'Supprimer également les fichiers image et les JSON sidecar dans le dossier output',
+    clearHistoryIncludeOutputHint: 'Supprime définitivement toutes les images générées et les fichiers de métadonnées dans le dossier output (les tâches en file d\'attente sont conservées).',
 
     // Sketch Pad
     sketchTitle: 'Bloc-notes',

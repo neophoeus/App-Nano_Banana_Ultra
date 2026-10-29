@@ -292,6 +292,9 @@ export const ko = {
         '이 작업공간을 기본 빈 상태로 되돌릴까요? 기록, 스테이지, 프롬프트, 세션 문맥은 삭제됩니다. 공유 대기열 배치 작업은 별도로 계속 사용할 수 있습니다. 먼저 워크스페이스 내보내기를 사용하는 것을 권장합니다. 이 작업은 되돌릴 수 없습니다.',
     clearHistoryConfirm: '작업공간 비우기',
     clearHistoryCancel: '취소',
+    clearHistoryExportReminder: '알림: 재설정하기 전에 "결과 내보내기 (Export Results)"를 통해 필요한 이미지와 메타데이터를 백업했는지 확인하세요.',
+    clearHistoryIncludeOutputLabel: 'output 폴더의 이미지 파일 및 sidecar JSON도 함께 삭제',
+    clearHistoryIncludeOutputHint: '선택 시 output 디렉터리의 모든 생성된 이미지와 메타데이터 파일이 영구 삭제됩니다(대기열 작업은 보존됨).',
 
     // Sketch Pad
     sketchTitle: '스케치 패드',

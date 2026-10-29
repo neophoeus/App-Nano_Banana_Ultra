@@ -30,6 +30,7 @@ import { buildSavedImageLoadUrl } from './imageSaveUtils';
 import { sanitizeSessionHintsForStorage } from './inlineImageDisplay';
 import { buildLineagePresentation } from './lineage';
 import { normalizeImageStyle } from './styleRegistry';
+import { formatLocalTimestamp } from './savedImageFilename';
 import { DEFAULT_TEMPERATURE, normalizeTemperature } from './temperature';
 
 export const WORKSPACE_SNAPSHOT_STORAGE_KEY = 'nbu_workspaceSnapshot';
@@ -1716,8 +1717,8 @@ export const parseWorkspaceSnapshotDocument = (raw: string): WorkspacePersistenc
 };
 
 export const buildWorkspaceSnapshotExportFilename = (date = new Date()): string => {
-    const isoStamp = date.toISOString().replace(/[:]/g, '-').replace(/\..+$/, '');
-    return `nano-banana-workspace-${isoStamp}.json`;
+    const localStamp = formatLocalTimestamp(date);
+    return `nano-banana-workspace-${localStamp}.json`;
 };
 
 const remapHistoryReferences = (

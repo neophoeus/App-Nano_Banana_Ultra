@@ -54,6 +54,7 @@ describe('Export Results Route (/api/export-results)', () => {
     let testOutputDir: string;
     let testSourceDir: string;
     let exportHandler: MiddlewareHandler;
+    let clearOutputHandler: MiddlewareHandler;
 
     beforeEach(() => {
         testOutputDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nbu-export-test-'));
@@ -66,6 +67,7 @@ describe('Export Results Route (/api/export-results)', () => {
         };
         registerWorkspaceRoutes(mockServer, { geminiApiKey: 'test-key', resolvedDir: testSourceDir });
         exportHandler = routes.get('/api/export-results')!;
+        clearOutputHandler = routes.get('/api/clear-output')!;
     });
 
     afterEach(() => {
@@ -195,5 +197,28 @@ describe('Export Results Route (/api/export-results)', () => {
         expect(sameDirRes.status).toBe(400);
         expect(sameDirRes.body.success).toBe(false);
         expect(sameDirRes.body.error).toContain('cannot be the same');
+    });
+
+    it('clears images and sidecars via POST /api/clear-output while preserving queued_batch_space.json', async () => {
+        // Create dummy files in testSourceDir
+        const img1 = path.join(testSourceDir, 'test1.jpg');
+        const json1 = path.join(testSourceDir, 'test1.json');
+        const batchFile = path.join(testSourceDir, 'queued_batch_space.json');
+        const batchTmp = path.join(testSourceDir, 'queued_batch_space.json.tmp');
+
+        fs.writeFileSync(img1, 'fake-image');
+        fs.writeFileSync(json1, '{}');
+        fs.writeFileSync(batchFile, '{"queuedJobs":[]}');
+        fs.writeFileSync(batchTmp, '{"queuedJobs":[]}');
+
+        const res = await invokeJsonRoute(clearOutputHandler, {}, 'POST');
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+        expect(res.body.deletedCount).toBe(2);
+
+        expect(fs.existsSync(img1)).toBe(false);
+        expect(fs.existsSync(json1)).toBe(false);
+        expect(fs.existsSync(batchFile)).toBe(true);
+        expect(fs.existsSync(batchTmp)).toBe(true);
     });
 });

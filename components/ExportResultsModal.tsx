@@ -3,6 +3,7 @@ import WorkspaceModalFrame from './WorkspaceModalFrame';
 import { WORKSPACE_OVERLAY_Z_INDEX } from '../constants/workspaceOverlays';
 import { GeneratedImage } from '../types';
 import { exportWorkspaceResults, browseExportFolder } from '../services/geminiService';
+import { buildSavedImageFilenameStem, buildResultPartFilenameStem } from '../utils/savedImageFilename';
 import type { EmbeddedNanoBananaMeta } from '../plugins/utils/imageMetadataEmbedder';
 
 export interface ExportResultsModalProps {
@@ -20,6 +21,53 @@ function normalizeExportSourceKey(rawUrlOrFilename: string): string {
     const match = trimmed.match(/[?&]filename=([^&]+)/);
     if (match) return decodeURIComponent(match[1]).split(/[\\/]/).pop() || trimmed;
     return trimmed.split(/[\\/]/).pop() || trimmed;
+}
+
+function extractFilenameCandidate(rawUrlOrFilename: string): string {
+    const trimmed = (rawUrlOrFilename || '').trim();
+    if (!trimmed || trimmed.startsWith('data:')) return '';
+    const match = trimmed.match(/[?&]filename=([^&]+)/);
+    if (match) return decodeURIComponent(match[1]).split(/[\\/]/).pop() || '';
+    return trimmed.split(/[\\/]/).pop() || '';
+}
+
+function resolveItemBaseFilename(options: {
+    turn: GeneratedImage;
+    turnMeta: Record<string, any>;
+    rawUrlOrFilename: string;
+    kind: 'main' | 'variant' | 'thought';
+    sequence?: number;
+    baseMainStem?: string;
+}): string {
+    const { turn, turnMeta, rawUrlOrFilename, kind, sequence = 1, baseMainStem } = options;
+    const candidate = extractFilenameCandidate(rawUrlOrFilename);
+    if (candidate && /\.(png|jpe?g|webp)$/i.test(candidate)) {
+        return candidate.replace(/\.[^.]+$/, '');
+    }
+
+    const slotIndex = typeof turnMeta.batchResultIndex === 'number' ? turnMeta.batchResultIndex : 0;
+    const createdAt = turn.createdAt ? new Date(turn.createdAt) : new Date();
+    const requestId = turn.id || crypto.randomUUID();
+
+    if (kind === 'main') {
+        return buildSavedImageFilenameStem({
+            model: turn.model || '',
+            mode: turn.mode,
+            slotIndex,
+            createdAt,
+            requestId,
+        });
+    }
+
+    return buildResultPartFilenameStem({
+        model: turn.model || '',
+        mode: turn.mode,
+        slotIndex,
+        createdAt,
+        requestId,
+        sequence,
+        sourceSavedFilename: baseMainStem,
+    });
 }
 
 export default function ExportResultsModal({
@@ -48,25 +96,29 @@ export default function ExportResultsModal({
         }> = [];
         const seenSources = new Set<string>();
 
-        history.forEach((turn, turnIdx) => {
+        history.forEach((turn) => {
             if (turn.status === 'failed' && !turn.url && !turn.savedFilename) {
                 return;
             }
 
-            const cleanPrompt = (turn.prompt || 'image').slice(0, 30).replace(/[^a-zA-Z0-9_\u4e00-\u9fa5-]/g, '_');
-            const baseId = turn.id ? turn.id.slice(0, 8) : `turn_${turnIdx + 1}`;
             const turnAny = turn as any;
             const turnMeta = (turn.metadata || {}) as Record<string, any>;
 
             // 1. Main product image (exclude thumbnail)
             const mainUrl = turn.savedFilename || turn.url || turnAny.displayUrl;
             const mainKey = normalizeExportSourceKey(mainUrl);
+            const baseMainStem = resolveItemBaseFilename({
+                turn,
+                turnMeta,
+                rawUrlOrFilename: mainUrl,
+                kind: 'main',
+            });
 
             if (mainUrl && !mainUrl.includes('-thumbnail') && !seenSources.has(mainKey)) {
                 seenSources.add(mainKey);
                 items.push({
                     imageUrl: mainUrl,
-                    baseFilename: `${baseId}_${cleanPrompt}`,
+                    baseFilename: baseMainStem,
                     metadata: {
                         id: turn.id,
                         prompt: turn.prompt || '',
@@ -111,9 +163,18 @@ export default function ExportResultsModal({
                 if (vUrl && !vUrl.includes('-thumbnail') && vKey !== mainKey && !seenSources.has(vKey)) {
                     seenSources.add(vKey);
                     variantIndexCounter += 1;
+                    const vSequence = typeof v.sequence === 'number' ? v.sequence : variantIndexCounter;
+                    const vBaseFilename = resolveItemBaseFilename({
+                        turn,
+                        turnMeta,
+                        rawUrlOrFilename: vUrl,
+                        kind: 'variant',
+                        sequence: vSequence,
+                        baseMainStem,
+                    });
                     items.push({
                         imageUrl: vUrl,
-                        baseFilename: `${baseId}_v${variantIndexCounter}_${cleanPrompt}`,
+                        baseFilename: vBaseFilename,
                         metadata: {
                             id: v.id || `${turn.id}_v${variantIndexCounter}`,
                             prompt: turn.prompt || '',
@@ -154,9 +215,18 @@ export default function ExportResultsModal({
                     if (thUrl && !thUrl.includes('-thumbnail') && !seenSources.has(thKey)) {
                         seenSources.add(thKey);
                         thoughtIndexCounter += 1;
+                        const thSequence = typeof th.sequence === 'number' ? th.sequence : thoughtIndexCounter;
+                        const thBaseFilename = resolveItemBaseFilename({
+                            turn,
+                            turnMeta,
+                            rawUrlOrFilename: thUrl,
+                            kind: 'thought',
+                            sequence: thSequence,
+                            baseMainStem,
+                        });
                         items.push({
                             imageUrl: thUrl,
-                            baseFilename: `${baseId}_thought${thoughtIndexCounter}_${cleanPrompt}`,
+                            baseFilename: thBaseFilename,
                             metadata: {
                                 id: th.id || `${turn.id}_thought${thoughtIndexCounter}`,
                                 prompt: turn.prompt || '',
@@ -220,6 +290,10 @@ export default function ExportResultsModal({
                 .replace('{0}', String(res.exportedCount))
                 .replace('{1}', res.outputDir);
             showNotification?.(successMsg, 'info');
+
+            if (res.success && (!res.errors || res.errors.length === 0)) {
+                onClose();
+            }
         } catch (err: any) {
             const failMsg = err?.message || 'Failed to export results.';
             showNotification?.(failMsg, 'error');

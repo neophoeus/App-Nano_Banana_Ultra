@@ -300,14 +300,32 @@ export function parseParametersString(rawParameters: string): ParsedParametersDa
     };
 }
 
+export function mergeSidecarMetadata(
+    primary?: Record<string, any> | null,
+    fallbackParent?: Record<string, any> | null,
+): Record<string, any> | null {
+    if (!primary && !fallbackParent) return null;
+    if (!fallbackParent) return primary || null;
+    if (!primary) return fallbackParent;
+    return {
+        ...fallbackParent,
+        ...primary,
+        actualOutput: primary.actualOutput || fallbackParent.actualOutput,
+        kind: primary.kind || fallbackParent.kind,
+        sequence: primary.sequence !== undefined ? primary.sequence : fallbackParent.sequence,
+        slotIndex: primary.slotIndex !== undefined ? primary.slotIndex : fallbackParent.slotIndex,
+        filename: primary.filename || fallbackParent.filename,
+    };
+}
+
 /**
  * Extract unified Nano Banana metadata from raw ArrayBuffer, with optional sidecar JSON fallback.
  */
 export function extractNanoBananaMetadata(
-    arrayBuffer: ArrayBuffer,
+    arrayBuffer?: ArrayBuffer | null,
     sidecarJson?: Record<string, unknown> | null,
 ): NanoBananaMetadataPayload | null {
-    const rawMap = parseImageEmbeddedMetadata(arrayBuffer);
+    const rawMap = arrayBuffer && arrayBuffer.byteLength >= 4 ? parseImageEmbeddedMetadata(arrayBuffer) : {};
 
     let embeddedMeta: NanoBananaMetadataPayload | null = null;
 
@@ -335,14 +353,30 @@ export function extractNanoBananaMetadata(
         };
     }
 
-    if (!embeddedMeta && sidecarJson && typeof sidecarJson === 'object') {
-        embeddedMeta = { ...(sidecarJson as NanoBananaMetadataPayload) };
-    } else if (embeddedMeta && sidecarJson && typeof sidecarJson === 'object') {
-        // Merge sidecar if embedded meta is missing critical properties
-        embeddedMeta = {
-            ...(sidecarJson as NanoBananaMetadataPayload),
-            ...embeddedMeta,
+    if (sidecarJson && typeof sidecarJson === 'object') {
+        const sidecarAny = sidecarJson as Record<string, any>;
+        const normalizedSidecar: Partial<NanoBananaMetadataPayload> = {
+            ...sidecarAny,
+            createdAt: sidecarAny.createdAt || sidecarAny.timestamp,
+            mode: sidecarAny.mode || sidecarAny.generationMode,
+            size: sidecarAny.size || sidecarAny.requestedImageSize,
+            exportSourceType:
+                sidecarAny.exportSourceType ||
+                (sidecarAny.kind === 'thought-image' ? 'thought' : sidecarAny.kind === 'output-image' ? 'product' : undefined),
         };
+
+        if (!embeddedMeta) {
+            embeddedMeta = normalizedSidecar as NanoBananaMetadataPayload;
+        } else {
+            embeddedMeta = {
+                ...(normalizedSidecar as NanoBananaMetadataPayload),
+                ...embeddedMeta,
+                createdAt: embeddedMeta.createdAt || normalizedSidecar.createdAt,
+                mode: embeddedMeta.mode || normalizedSidecar.mode,
+                size: embeddedMeta.size || normalizedSidecar.size,
+                exportSourceType: embeddedMeta.exportSourceType || normalizedSidecar.exportSourceType,
+            };
+        }
     }
 
     return embeddedMeta;

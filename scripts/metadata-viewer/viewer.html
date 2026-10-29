@@ -504,8 +504,8 @@
                 const imageFiles = fileList.filter((f) => /\.(png|jpe?g)$/i.test(f.name));
                 const jsonFiles = fileList.filter((f) => /\.json$/i.test(f.name));
 
-                if (imageFiles.length === 0) {
-                    alert('請選取 PNG 或 JPEG (.jpg/.jpeg) 圖片檔案！');
+                if (imageFiles.length === 0 && jsonFiles.length === 0) {
+                    alert('請選取 PNG 或 JPEG (.jpg/.jpeg) 圖片檔案，或 JSON 側車檔案！');
                     return;
                 }
 
@@ -522,18 +522,51 @@
 
                 revokeLoadedImageUrls();
                 loadedImages = [];
+
+                const processedStems = new Set();
                 for (const file of imageFiles) {
                     const buffer = await file.arrayBuffer();
                     const metadata = parseImageMetadata(buffer);
                     const url = URL.createObjectURL(file);
                     const stem = file.name.replace(/\.[^.]+$/, '');
-                    const sidecar = sidecarMap.get(stem) || null;
+                    processedStems.add(stem);
+
+                    let sidecar = sidecarMap.get(stem) || null;
+                    const partMatch = stem.match(/^(.+)-part-\d+$/);
+                    if (partMatch && sidecarMap.has(partMatch[1])) {
+                        const parent = sidecarMap.get(partMatch[1]);
+                        sidecar = { ...parent, ...sidecar };
+                    }
 
                     loadedImages.push({
                         file,
                         name: file.name,
                         url,
                         metadata,
+                        sidecar,
+                    });
+                }
+
+                // Handle standalone json sidecars
+                for (const jf of jsonFiles) {
+                    const stem = jf.name.replace(/\.json$/i, '');
+                    if (processedStems.has(stem)) continue;
+                    processedStems.add(stem);
+
+                    let sidecar = sidecarMap.get(stem) || null;
+                    const partMatch = stem.match(/^(.+)-part-\d+$/);
+                    if (partMatch && sidecarMap.has(partMatch[1])) {
+                        const parent = sidecarMap.get(partMatch[1]);
+                        sidecar = { ...parent, ...sidecar };
+                    }
+
+                    const dummySvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="400" height="300" fill="%231e293b"/><text x="200" y="140" fill="%2394a3b8" font-size="48" text-anchor="middle" dominant-baseline="middle">📄</text><text x="200" y="190" fill="%23cbd5e1" font-size="14" font-family="sans-serif" text-anchor="middle">${encodeURIComponent(jf.name)}</text></svg>`;
+
+                    loadedImages.push({
+                        file: jf,
+                        name: jf.name,
+                        url: dummySvg,
+                        metadata: {},
                         sidecar,
                     });
                 }
@@ -781,13 +814,14 @@
                         '實際產出 (Actual Output)',
                         typeof meta.actualOutput === 'object' ? JSON.stringify(meta.actualOutput) : meta.actualOutput,
                     );
-                    addGridItem('生成模式 (Mode)', meta.mode);
+                    addGridItem('生成模式 (Mode)', meta.mode || meta.generationMode);
                     addGridItem('執行方式 (Execution Mode)', meta.executionMode);
                     addGridItem('溫度 (Temperature)', meta.temperature);
                     addGridItem('思考層級 (Thinking Level)', meta.thinkingLevel);
                     addGridItem('搜尋增強 (Grounding)', meta.groundingMode);
-                    if (meta.createdAt) {
-                        addGridItem('生成時間', new Date(meta.createdAt).toLocaleString('zh-TW'));
+                    const timeStamp = meta.createdAt || meta.timestamp;
+                    if (timeStamp) {
+                        addGridItem('生成時間', new Date(timeStamp).toLocaleString('zh-TW'));
                     }
 
                     if (meta.text && meta.text.trim()) {

@@ -5,6 +5,14 @@ import { createRoot, Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useWorkspaceResetActions } from '../hooks/useWorkspaceResetActions';
 
+const { clearWorkspaceOutputFilesMock } = vi.hoisted(() => ({
+    clearWorkspaceOutputFilesMock: vi.fn(),
+}));
+
+vi.mock('../services/geminiService', () => ({
+    clearWorkspaceOutputFiles: clearWorkspaceOutputFilesMock,
+}));
+
 type HookHandle = ReturnType<typeof useWorkspaceResetActions>;
 
 describe('useWorkspaceResetActions', () => {
@@ -109,5 +117,14 @@ describe('useWorkspaceResetActions', () => {
         expect(clearTerminalListener).toHaveBeenCalledTimes(1);
 
         window.removeEventListener('nbu_clear_debug_terminal', clearTerminalListener);
+    });
+
+    it('clears output files when clearOutput option is true', async () => {
+        renderHook();
+        clearWorkspaceOutputFilesMock.mockResolvedValueOnce({ success: true, deletedCount: 5, errors: [] });
+
+        await latestHook!.handleClearGalleryHistory({ clearOutput: true });
+
+        expect(clearWorkspaceOutputFilesMock).toHaveBeenCalledTimes(1);
     });
 });

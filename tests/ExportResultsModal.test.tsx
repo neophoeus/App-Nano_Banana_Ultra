@@ -147,7 +147,7 @@ describe('ExportResultsModal', () => {
         expect(input?.value).toBe('D:\\MyCustomOutputs');
     });
 
-    it('executes export with embedded metadata and displays success state', async () => {
+    it('executes export with embedded metadata, closes modal on success, and aligns base filenames', async () => {
         exportWorkspaceResultsMock.mockResolvedValueOnce({
             success: true,
             outputDir: 'D:\\MyCustomOutputs',
@@ -157,13 +157,14 @@ describe('ExportResultsModal', () => {
         });
 
         const showNotification = vi.fn();
+        const onClose = vi.fn();
         const mockT = (key: string) => (key === 'exportResultsSuccessNotice' ? 'Exported {0} images to {1}' : key);
 
         act(() => {
             root.render(
                 <ExportResultsModal
                     isOpen={true}
-                    onClose={vi.fn()}
+                    onClose={onClose}
                     history={sampleHistory}
                     t={mockT}
                     showNotification={showNotification}
@@ -185,14 +186,50 @@ describe('ExportResultsModal', () => {
                 items: expect.arrayContaining([
                     expect.objectContaining({
                         imageUrl: 'img1.png',
+                        baseFilename: 'img1',
                     }),
                     expect.objectContaining({
                         imageUrl: 'var1.png',
+                        baseFilename: 'var1',
                     }),
                 ]),
             }),
         );
 
         expect(showNotification).toHaveBeenCalledWith(expect.stringContaining('2'), 'info');
+        expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not close modal when export produces errors', async () => {
+        exportWorkspaceResultsMock.mockResolvedValueOnce({
+            success: false,
+            outputDir: 'D:\\MyCustomOutputs',
+            exportedCount: 0,
+            skippedCount: 1,
+            errors: ['Disk full'],
+        });
+
+        const showNotification = vi.fn();
+        const onClose = vi.fn();
+
+        act(() => {
+            root.render(
+                <ExportResultsModal
+                    isOpen={true}
+                    onClose={onClose}
+                    history={sampleHistory}
+                    t={(k) => k}
+                    showNotification={showNotification}
+                />,
+            );
+        });
+
+        const confirmBtn = container.querySelector<HTMLButtonElement>('[data-testid="export-results-confirm-btn"]');
+        await act(async () => {
+            confirmBtn?.click();
+        });
+
+        expect(exportWorkspaceResultsMock).toHaveBeenCalledTimes(1);
+        expect(onClose).not.toHaveBeenCalled();
     });
 });

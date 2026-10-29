@@ -15,6 +15,7 @@ import { registerGenerateRoutes } from './routes/generateRoutes';
 import { registerPromptRoutes } from './routes/promptRoutes';
 import { registerWorkspaceRoutes } from './routes/workspaceRoutes';
 import { normalizeImageSidecarMetadata } from '../utils/imageSidecarMetadata';
+import { embedImageMetadata } from './utils/imageMetadataEmbedder';
 
 type ImageSavePluginOptions = {
     outputDir?: string;
@@ -157,7 +158,43 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
                                 : requestedFilename;
                         const filePath = resolveSafeOutputFilePath(resolvedDir, safeFilename);
 
-                        fs.writeFileSync(filePath, buffer);
+                        let finalBuffer = buffer;
+                        if (metadata && typeof metadata === 'object' && !safeFilename.includes('-thumbnail')) {
+                            try {
+                                finalBuffer = embedImageMetadata(buffer, {
+                                    id: metadata.id || safeFilename,
+                                    prompt: metadata.prompt || '',
+                                    model: metadata.model || '',
+                                    aspectRatio: metadata.aspectRatio || '',
+                                    size: metadata.size || metadata.requestedImageSize || '',
+                                    style: metadata.style || '',
+                                    mode: metadata.mode || metadata.generationMode || '',
+                                    executionMode: metadata.executionMode,
+                                    lineageAction: metadata.lineageAction,
+                                    outputFormat: metadata.outputFormat,
+                                    actualOutput: imageDetails?.dimensions
+                                        ? `${imageDetails.dimensions.width}x${imageDetails.dimensions.height}`
+                                        : undefined,
+                                    groundingMode: metadata.groundingMode,
+                                    groundingSources: metadata.groundingSources,
+                                    temperature: metadata.temperature,
+                                    thinkingLevel: metadata.thinkingLevel,
+                                    includeThoughts: metadata.includeThoughts,
+                                    googleSearch: metadata.googleSearch,
+                                    imageSearch: metadata.imageSearch,
+                                    status: metadata.status || 'success',
+                                    text: metadata.text,
+                                    thoughts: metadata.thoughts,
+                                    createdAt: metadata.createdAt || metadata.timestamp || new Date().toISOString(),
+                                    exportSourceType: metadata.kind === 'thought-image' ? 'thought' : 'product',
+                                    parentHistoryId: metadata.parentHistoryId,
+                                });
+                            } catch {
+                                finalBuffer = buffer;
+                            }
+                        }
+
+                        fs.writeFileSync(filePath, finalBuffer);
 
                         // F5: Write metadata sidecar JSON if provided
                         if (metadata && typeof metadata === 'object') {
@@ -343,7 +380,10 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
 
                 const safeFilename = path.basename(filename);
                 const filePath = resolveSafeOutputFilePath(resolvedDir, safeFilename);
-                const sidecarPath = resolveSidecarPath(filePath);
+                let sidecarPath = resolveSidecarPath(filePath);
+                if (!fs.existsSync(sidecarPath) && safeFilename.endsWith('.json')) {
+                    sidecarPath = filePath;
+                }
 
                 if (!fs.existsSync(sidecarPath) || !sidecarPath.startsWith(resolvedDir)) {
                     sendJson(
@@ -360,7 +400,30 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
                 }
 
                 try {
-                    const sidecar = JSON.parse(fs.readFileSync(sidecarPath, 'utf-8'));
+                    let sidecar = JSON.parse(fs.readFileSync(sidecarPath, 'utf-8'));
+                    const stem = path.parse(safeFilename).name;
+                    const partMatch = stem.match(/^(.+)-part-\d+$/);
+                    if (partMatch) {
+                        const parentPath = path.join(resolvedDir, `${partMatch[1]}.json`);
+                        if (fs.existsSync(parentPath)) {
+                            try {
+                                const parentSidecar = JSON.parse(fs.readFileSync(parentPath, 'utf-8'));
+                                if (parentSidecar && typeof parentSidecar === 'object') {
+                                    sidecar = {
+                                        ...parentSidecar,
+                                        ...sidecar,
+                                        actualOutput: sidecar.actualOutput || parentSidecar.actualOutput,
+                                        kind: sidecar.kind || parentSidecar.kind,
+                                        sequence: sidecar.sequence !== undefined ? sidecar.sequence : parentSidecar.sequence,
+                                        slotIndex: sidecar.slotIndex !== undefined ? sidecar.slotIndex : parentSidecar.slotIndex,
+                                        filename: sidecar.filename || safeFilename,
+                                    };
+                                }
+                            } catch {
+                                // ignore parent read error
+                            }
+                        }
+                    }
                     sendJson(res, 200, sidecar, {
                         requestContext,
                         summary: safeFilename,

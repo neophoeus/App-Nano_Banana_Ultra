@@ -14,12 +14,19 @@ const slugifyMode = (mode?: string | null): string => {
     return compactSlug || 'image';
 };
 
-const formatUtcTimestamp = (value: Date): string => {
-    const iso = value.toISOString();
-    const date = iso.slice(0, 10).replace(/-/g, '');
-    const time = iso.slice(11, 19).replace(/:/g, '');
-    return `${date}-${time}`;
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+export const formatLocalTimestamp = (value: Date): string => {
+    const year = value.getFullYear();
+    const month = pad2(value.getMonth() + 1);
+    const day = pad2(value.getDate());
+    const hours = pad2(value.getHours());
+    const minutes = pad2(value.getMinutes());
+    const seconds = pad2(value.getSeconds());
+    return `${year}${month}${day}-${hours}${minutes}${seconds}`;
 };
+
+export const formatUtcTimestamp = formatLocalTimestamp;
 
 export const normalizeSavedImageModelId = (model: string): string => {
     const normalized = model.trim().replace(/^models\//, '');

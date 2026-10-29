@@ -200,21 +200,55 @@ function findSidecarJson(imagePath) {
         path.join(process.cwd(), 'output', `${stem}.json`),
     ];
 
+    let sidecar = null;
     for (const candidate of candidates) {
         if (fs.existsSync(candidate)) {
             try {
                 const content = fs.readFileSync(candidate, 'utf8');
-                return JSON.parse(content);
+                sidecar = JSON.parse(content);
+                break;
             } catch {
                 // Ignore parse errors
             }
         }
     }
-    return null;
+
+    if (sidecar) {
+        const partMatch = stem.match(/^(.+)-part-\d+$/);
+        if (partMatch) {
+            const parentCandidates = [
+                path.join(dir, `${partMatch[1]}.json`),
+                path.join(dir, 'output', `${partMatch[1]}.json`),
+                path.join(process.cwd(), 'output', `${partMatch[1]}.json`),
+            ];
+            for (const pc of parentCandidates) {
+                if (fs.existsSync(pc)) {
+                    try {
+                        const parentContent = fs.readFileSync(pc, 'utf8');
+                        const parentObj = JSON.parse(parentContent);
+                        if (parentObj && typeof parentObj === 'object') {
+                            sidecar = {
+                                ...parentObj,
+                                ...sidecar,
+                                actualOutput: sidecar.actualOutput || parentObj.actualOutput,
+                                kind: sidecar.kind || parentObj.kind,
+                                sequence: sidecar.sequence !== undefined ? sidecar.sequence : parentObj.sequence,
+                                slotIndex: sidecar.slotIndex !== undefined ? sidecar.slotIndex : parentObj.slotIndex,
+                                filename: sidecar.filename || path.basename(imagePath),
+                            };
+                            break;
+                        }
+                    } catch {}
+                }
+            }
+        }
+    }
+
+    return sidecar;
 }
 
 /**
- * Display formatted metadata of an image file.
+ * Display formatted metadata of an image file or sidecar JSON file.
  * @param {string} imagePath
  */
 function inspectImageFile(imagePath) {
@@ -230,25 +264,58 @@ function inspectImageFile(imagePath) {
     console.log('================================================================');
     console.log(`檔案: ${filename}`);
 
-    let buf;
-    try {
-        buf = fs.readFileSync(fullPath);
-    } catch (err) {
-        console.error(`讀取檔案失敗: ${err.message}`);
-        return;
-    }
+    const ext = path.extname(fullPath).toLowerCase();
+    let metaMap = {};
+    let sidecar = null;
 
-    let metaMap;
-    try {
-        metaMap = readImageMetadata(buf);
-    } catch (err) {
-        console.error(`解析失敗: ${err.message}`);
-        return;
-    }
+    if (ext === '.json') {
+        try {
+            const jsonText = fs.readFileSync(fullPath, 'utf8');
+            sidecar = JSON.parse(jsonText);
+            console.log(`  (直接解析 Sidecar JSON 檔案)`);
 
-    const sidecar = findSidecarJson(fullPath);
-    if (sidecar) {
-        console.log(`  (已自動結合側車檔案 sidecar JSON: ${filename.replace(/\.[^.]+$/, '.json')})`);
+            const stem = path.basename(fullPath, ext);
+            const partMatch = stem.match(/^(.+)-part-\d+$/);
+            if (partMatch) {
+                const dir = path.dirname(fullPath);
+                const parentPath = path.join(dir, `${partMatch[1]}.json`);
+                if (fs.existsSync(parentPath)) {
+                    try {
+                        const parentObj = JSON.parse(fs.readFileSync(parentPath, 'utf8'));
+                        sidecar = {
+                            ...parentObj,
+                            ...sidecar,
+                            actualOutput: sidecar.actualOutput || parentObj.actualOutput,
+                            kind: sidecar.kind || parentObj.kind,
+                        };
+                        console.log(`  (已自動結合主檔案資訊: ${partMatch[1]}.json)`);
+                    } catch {}
+                }
+            }
+        } catch (err) {
+            console.error(`JSON 解析失敗: ${err.message}`);
+            return;
+        }
+    } else {
+        let buf;
+        try {
+            buf = fs.readFileSync(fullPath);
+        } catch (err) {
+            console.error(`讀取檔案失敗: ${err.message}`);
+            return;
+        }
+
+        try {
+            metaMap = readImageMetadata(buf);
+        } catch (err) {
+            console.error(`解析失敗: ${err.message}`);
+            return;
+        }
+
+        sidecar = findSidecarJson(fullPath);
+        if (sidecar) {
+            console.log(`  (已自動結合側車檔案 sidecar JSON: ${filename.replace(/\.[^.]+$/, '.json')})`);
+        }
     }
 
     let parsedMeta = null;
@@ -263,6 +330,13 @@ function inspectImageFile(imagePath) {
     if (!parsedMeta && sidecar) {
         parsedMeta = { ...sidecar };
     } else if (parsedMeta && sidecar) {
+        parsedMeta = { ...sidecar, ...parsedMeta };
+    }
+
+    if (parsedMeta) {
+        parsedMeta.createdAt = parsedMeta.createdAt || parsedMeta.timestamp;
+        parsedMeta.mode = parsedMeta.mode || parsedMeta.generationMode;
+        parsedMeta.size = parsedMeta.size || parsedMeta.requestedImageSize;
         parsedMeta = { ...sidecar, ...parsedMeta };
     }
 

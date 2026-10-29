@@ -290,6 +290,9 @@ export const en = {
         'Clear this workspace back to its default empty state? History, stage, prompt, and session context will be removed. Shared queued batch jobs stay available separately. We recommend using Export Workspace first. This cannot be undone.',
     clearHistoryConfirm: 'Reset Workspace',
     clearHistoryCancel: 'Cancel',
+    clearHistoryExportReminder: 'Reminder: Before resetting, make sure to back up your desired images and metadata via "Export Results".',
+    clearHistoryIncludeOutputLabel: 'Also delete image files and sidecar JSONs in the output folder',
+    clearHistoryIncludeOutputHint: 'Permanently removes all generated images and metadata files in the output directory (queued jobs are preserved).',
 
     // Sketch Pad
     sketchTitle: 'Sketch Pad',

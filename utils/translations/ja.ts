@@ -292,6 +292,9 @@ export const ja = {
         'このワークスペースを既定の空の状態に戻しますか？履歴、ステージ、プロンプト、セッション文脈は削除されます。共有のキュー済みバッチジョブは別枠で利用できます。先にワークスペースを書き出しを使うことをおすすめします。この操作は取り消せません。',
     clearHistoryConfirm: 'ワークスペースを消去',
     clearHistoryCancel: 'キャンセル',
+    clearHistoryExportReminder: 'リマインダー: リセットする前に、「完成品のエクスポート (Export Results)」で必要な画像とメタデータをバックアップしたか確認してください。',
+    clearHistoryIncludeOutputLabel: 'output フォルダ内の画像と sidecar JSON も一括削除する',
+    clearHistoryIncludeOutputHint: 'チェックすると、output ディレクトリ内のすべての生成画像とメタデータが完全に削除されます（バッチキューは保持されます）。',
 
     // Sketch Pad
     sketchTitle: 'スケッチパッド',

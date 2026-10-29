@@ -298,6 +298,9 @@ export const es = {
         '¿Restablecer este espacio de trabajo a su estado vacío predeterminado? Se eliminarán el historial, el escenario, el prompt y el contexto de la sesión. Los trabajos por lotes en cola compartidos seguirán disponibles por separado. Recomendamos usar primero Exportar espacio de trabajo. No se puede deshacer.',
     clearHistoryConfirm: 'Borrar espacio de trabajo',
     clearHistoryCancel: 'Cancelar',
+    clearHistoryExportReminder: 'Recordatorio: antes de reiniciar, asegúrese de hacer una copia de seguridad de las imágenes y metadatos deseados a través de "Exportar resultados (Export Results)".',
+    clearHistoryIncludeOutputLabel: 'Eliminar también archivos de imagen y sidecar JSON en la carpeta output',
+    clearHistoryIncludeOutputHint: 'Elimina permanentemente todas las imágenes generadas y archivos de metadatos del directorio output (los trabajos en cola se conservan).',
 
     // Sketch Pad
     sketchTitle: 'Bloc de Dibujo',

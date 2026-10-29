@@ -109,6 +109,7 @@ async function persistResultParts(
         primaryOutputImageUrl?: string;
         primaryOutputDisplayUrl?: string;
         primaryOutputSavedFilename?: string;
+        baseSidecarMetadata?: ImageSidecarMetadata;
     },
 ): Promise<ResultPart[] | undefined> {
     if (!resultParts?.length) {
@@ -135,6 +136,7 @@ async function persistResultParts(
                 imagePart.imageUrl,
                 `${options.prefix}-thought`,
                 {
+                    ...(options.baseSidecarMetadata || {}),
                     kind: imagePart.kind,
                     slotIndex: options.slotIndex,
                     sequence: imagePart.sequence,
@@ -593,6 +595,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                             primaryOutputImageUrl: res.url,
                             primaryOutputDisplayUrl: res.displayUrl,
                             primaryOutputSavedFilename: res.savedFilename,
+                            baseSidecarMetadata: sidecarMetadata,
                         });
                         if (res.status === 'success' && res.url) {
                             const persistedThumbnail = await persistHistoryThumbnail(

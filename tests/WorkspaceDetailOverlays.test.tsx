@@ -136,6 +136,14 @@ describe('WorkspaceDetailOverlays', () => {
         });
         const confirmModal = container.querySelector('[data-testid="workspace-unified-history-clear-confirm"]');
         expect(confirmModal).not.toBeNull();
+        expect(confirmModal?.textContent).toContain('clearHistoryExportReminder');
+        expect(confirmModal?.textContent).toContain('clearHistoryIncludeOutputLabel');
+
+        const checkbox = container.querySelector<HTMLInputElement>(
+            '[data-testid="workspace-clear-output-checkbox"]',
+        );
+        expect(checkbox).not.toBeNull();
+        expect(checkbox?.checked).toBe(false);
 
         const confirmBtn = container.querySelector<HTMLButtonElement>(
             '[data-testid="workspace-unified-history-clear-confirm-action"]',
@@ -144,6 +152,18 @@ describe('WorkspaceDetailOverlays', () => {
             confirmBtn?.click();
         });
         expect(onConfirmClear).toHaveBeenCalledTimes(1);
+        expect(onConfirmClear).toHaveBeenCalledWith(false);
+
+        // Test with checkbox checked
+        act(() => {
+            checkbox?.click();
+        });
+        expect(checkbox?.checked).toBe(true);
+        act(() => {
+            confirmBtn?.click();
+        });
+        expect(onConfirmClear).toHaveBeenCalledTimes(2);
+        expect(onConfirmClear).toHaveBeenLastCalledWith(true);
 
         const cancelBtn = container.querySelector<HTMLButtonElement>(
             '[data-testid="workspace-unified-history-clear-cancel"]',

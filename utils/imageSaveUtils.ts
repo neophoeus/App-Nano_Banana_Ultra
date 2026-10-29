@@ -10,6 +10,7 @@ import {
     emitDebugTerminalEvent,
 } from './debugTerminalEvents';
 import { normalizeImageSidecarMetadata } from './imageSidecarMetadata';
+import { formatLocalTimestamp } from './savedImageFilename';
 
 const THUMBNAIL_MAX_DIM = 200; // Max width or height for lightweight preview thumbnails
 const LOAD_IMAGE_ENDPOINT = '/api/load-image';
@@ -112,7 +113,7 @@ const getDataUrlExtension = (dataUrl: string): string =>
             : 'png';
 
 const buildGeneratedFilenameStem = (prefix: string): string => {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const timestamp = formatLocalTimestamp(new Date());
     return `${prefix}_${timestamp}_${crypto.randomUUID().slice(0, 8)}`;
 };
 

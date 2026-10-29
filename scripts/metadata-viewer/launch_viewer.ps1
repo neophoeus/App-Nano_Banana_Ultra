@@ -42,6 +42,12 @@ foreach ($p in $Paths) {
         $item = Get-Item -LiteralPath $cleanPath
         if ($item.Extension -match '^\.(png|jpe?g)$') {
             $imageFiles.Add($item)
+        } elseif ($item.Extension -match '^\.json$') {
+            $stem = [System.IO.Path]::GetFileNameWithoutExtension($item.FullName)
+            $companion = Get-ChildItem -LiteralPath $item.DirectoryName -File | Where-Object { $_.BaseName -eq $stem -and $_.Extension -match '^\.(png|jpe?g)$' } | Select-Object -First 1
+            if ($companion) {
+                $imageFiles.Add($companion)
+            }
         }
     }
 }
@@ -78,6 +84,20 @@ foreach ($file in $imageFiles) {
         try {
             $jsonRaw = [System.IO.File]::ReadAllText($sidecarPath, [System.Text.Encoding]::UTF8)
             $sidecarObj = ConvertFrom-Json $jsonRaw
+            if ($stem -match '^(.+)-part-\d+$') {
+                $parentSidecarPath = Join-Path $dir "$($Matches[1]).json"
+                if (Test-Path -LiteralPath $parentSidecarPath -PathType Leaf) {
+                    try {
+                        $parentRaw = [System.IO.File]::ReadAllText($parentSidecarPath, [System.Text.Encoding]::UTF8)
+                        $parentObj = ConvertFrom-Json $parentRaw
+                        foreach ($prop in $parentObj.PSObject.Properties) {
+                            if (-not $sidecarObj.PSObject.Properties[$prop.Name]) {
+                                $sidecarObj | Add-Member -MemberType NoteProperty -Name $prop.Name -Value $prop.Value
+                            }
+                        }
+                    } catch {}
+                }
+            }
         } catch {
             $sidecarObj = $null
         }

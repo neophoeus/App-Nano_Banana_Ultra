@@ -346,4 +346,50 @@ describe('MetadataViewerDrawer component', () => {
         });
         expect(onApplyPrompt).toHaveBeenCalledWith('Uploaded PNG prompt');
     });
+
+    it('handles standalone sidecar JSON file upload and extracts metadata', async () => {
+        const onApplyPrompt = vi.fn();
+
+        act(() => {
+            root.render(
+                <MetadataViewerDrawer
+                    isOpen={true}
+                    onClose={vi.fn()}
+                    currentLanguage="zh_TW"
+                    t={(key) => getTranslation('zh_TW', key as any)}
+                    onApplyPrompt={onApplyPrompt}
+                />,
+            );
+        });
+
+        const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+        const sidecarContent = JSON.stringify({
+            prompt: 'Prompt from standalone JSON',
+            model: 'gemini-3.1-flash-lite-image',
+            generationMode: 'Text to Image',
+            timestamp: '2026-10-29T08:53:34.587Z',
+        });
+        const jsonFile = new File([sidecarContent], 'gemini_test.json', { type: 'application/json' });
+        Object.defineProperty(jsonFile, 'text', {
+            value: () => Promise.resolve(sidecarContent),
+        });
+
+        await act(async () => {
+            Object.defineProperty(fileInput, 'files', {
+                value: [jsonFile],
+                configurable: true,
+            });
+            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+
+        const applyPromptBtn = container.querySelector(
+            '[data-testid="metadata-viewer-apply-prompt"]',
+        ) as HTMLButtonElement;
+        expect(applyPromptBtn).toBeTruthy();
+
+        act(() => {
+            applyPromptBtn.click();
+        });
+        expect(onApplyPrompt).toHaveBeenCalledWith('Prompt from standalone JSON');
+    });
 });

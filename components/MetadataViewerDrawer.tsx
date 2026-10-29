@@ -3,6 +3,7 @@ import { ViewerComposerSettingsSnapshot } from '../types';
 import {
     convertMetadataToViewerSnapshot,
     extractNanoBananaMetadata,
+    mergeSidecarMetadata,
     NanoBananaMetadataPayload,
     parseImageEmbeddedMetadata,
     RawImageEmbeddedMetadata,
@@ -266,13 +267,41 @@ export default function MetadataViewerDrawer({
         }
 
         const newItems: LoadedImageItem[] = [];
+        const processedStems = new Set<string>();
+
         for (const file of imageFiles) {
             try {
                 const buffer = await file.arrayBuffer();
                 const stem = file.name.replace(/\.[^.]+$/, '');
-                const sidecar = sidecarMap.get(stem) || null;
+                processedStems.add(stem);
+
+                let sidecar = sidecarMap.get(stem) || null;
+                const partMatch = stem.match(/^(.+)-part-\d+$/);
+                if (partMatch) {
+                    const parentSidecar = sidecarMap.get(partMatch[1]);
+                    if (parentSidecar) {
+                        sidecar = mergeSidecarMetadata(sidecar, parentSidecar);
+                    }
+                }
+
                 const rawMeta = parseImageEmbeddedMetadata(buffer);
-                const parsedMeta = extractNanoBananaMetadata(buffer, sidecar);
+                let parsedMeta = extractNanoBananaMetadata(buffer, sidecar);
+
+                if (!parsedMeta || (!parsedMeta.prompt && !parsedMeta.model)) {
+                    try {
+                        const res = await fetch(`/api/load-image-metadata?filename=${encodeURIComponent(file.name)}`);
+                        if (res.ok) {
+                            const remoteSidecar = await res.json();
+                            if (remoteSidecar && typeof remoteSidecar === 'object') {
+                                sidecar = mergeSidecarMetadata(sidecar, remoteSidecar);
+                                parsedMeta = extractNanoBananaMetadata(buffer, sidecar);
+                            }
+                        }
+                    } catch {
+                        // ignore network error
+                    }
+                }
+
                 const url = URL.createObjectURL(file);
 
                 newItems.push({
@@ -285,6 +314,47 @@ export default function MetadataViewerDrawer({
                 });
             } catch (err) {
                 console.error('Failed reading image metadata:', file.name, err);
+            }
+        }
+
+        // Process standalone JSON sidecars (not matching any selected imageFile)
+        for (const jf of jsonFiles) {
+            const stem = jf.name.replace(/\.json$/i, '');
+            if (processedStems.has(stem)) continue;
+            processedStems.add(stem);
+
+            try {
+                let sidecar = sidecarMap.get(stem) || null;
+                const partMatch = stem.match(/^(.+)-part-\d+$/);
+                if (partMatch) {
+                    const parentSidecar = sidecarMap.get(partMatch[1]);
+                    if (parentSidecar) {
+                        sidecar = mergeSidecarMetadata(sidecar, parentSidecar);
+                    } else {
+                        try {
+                            const res = await fetch(`/api/load-image-metadata?filename=${encodeURIComponent(partMatch[1] + '.json')}`);
+                            if (res.ok) {
+                                const remoteParent = await res.json();
+                                sidecar = mergeSidecarMetadata(sidecar, remoteParent);
+                            }
+                        } catch {}
+                    }
+                }
+
+                const parsedMeta = extractNanoBananaMetadata(new ArrayBuffer(0), sidecar);
+                const candidateFilename = (sidecar as any)?.filename || `${stem}.png`;
+                const previewUrl = `/api/load-image?filename=${encodeURIComponent(candidateFilename)}`;
+
+                newItems.push({
+                    file: jf,
+                    name: jf.name,
+                    url: previewUrl,
+                    rawMeta: {},
+                    parsedMeta,
+                    sidecar,
+                });
+            } catch (err) {
+                console.error('Failed reading standalone sidecar json:', jf.name, err);
             }
         }
 
@@ -474,10 +544,14 @@ export default function MetadataViewerDrawer({
                             {currentItem && (
                                 <div className="flex max-h-[460px] w-full items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-900/40 p-2 shadow-inner dark:border-slate-800">
                                     <img
+                                        key={currentItem.url}
                                         data-testid="metadata-viewer-preview-image"
                                         src={currentItem.url}
                                         alt={currentItem.name}
                                         className="max-h-[440px] max-w-full rounded-lg object-contain"
+                                        onError={(e) => {
+                                            (e.currentTarget as HTMLElement).style.display = 'none';
+                                        }}
                                     />
                                 </div>
                             )}
@@ -505,6 +579,9 @@ export default function MetadataViewerDrawer({
                                                     src={img.url}
                                                     alt={img.name}
                                                     className="h-full w-full object-cover"
+                                                    onError={(e) => {
+                                                        (e.currentTarget as HTMLElement).style.opacity = '0.3';
+                                                    }}
                                                 />
                                             </button>
                                         );

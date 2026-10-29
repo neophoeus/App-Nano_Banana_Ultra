@@ -610,4 +610,70 @@ export function registerWorkspaceRoutes(server: any, { geminiApiKey, resolvedDir
             sendJson(res, 200, { cancelled: true }, { requestContext, summary: 'Folder browser exception' });
         }
     });
+
+    server.use('/api/clear-output', async (req: any, res: any) => {
+        const requestContext = createApiRequestContext(req, '/api/clear-output');
+        if (req.method !== 'POST') {
+            sendJson(res, 405, { success: false, error: 'Method not allowed' }, { requestContext, summary: 'Method not allowed' });
+            return;
+        }
+
+        try {
+            if (!fs.existsSync(resolvedDir)) {
+                sendJson(res, 200, { success: true, deletedCount: 0, errors: [] }, { requestContext, summary: 'Output dir does not exist' });
+                return;
+            }
+
+            const entries = fs.readdirSync(resolvedDir, { withFileTypes: true });
+            let deletedCount = 0;
+            const errors: string[] = [];
+
+            for (const entry of entries) {
+                if (!entry.isFile()) continue;
+                const name = entry.name;
+
+                // Protect batch space file and its tmp
+                if (name === 'queued_batch_space.json' || name === 'queued_batch_space.json.tmp') {
+                    continue;
+                }
+
+                const isImage = /\.(png|jpe?g|webp)$/i.test(name);
+                const isSidecarJson = /\.json$/i.test(name);
+                const isTmp = /\.tmp$/i.test(name);
+
+                if (isImage || isSidecarJson || isTmp) {
+                    try {
+                        const targetPath = path.join(resolvedDir, name);
+                        fs.unlinkSync(targetPath);
+                        deletedCount += 1;
+                    } catch (unlinkErr: any) {
+                        errors.push(`Failed to delete ${name}: ${unlinkErr.message}`);
+                    }
+                }
+            }
+
+            sendJson(
+                res,
+                200,
+                {
+                    success: errors.length === 0,
+                    deletedCount,
+                    errors,
+                },
+                {
+                    requestContext,
+                    summary: `Cleared ${deletedCount} output files`,
+                    details: { source: 'workspace', deletedCount, errorsCount: errors.length },
+                },
+            );
+        } catch (err: any) {
+            logApiError('/api/clear-output', err, { source: 'workspace' }, requestContext);
+            sendJson(
+                res,
+                500,
+                { success: false, error: err?.message || 'Failed to clear output files', deletedCount: 0, errors: [err?.message || 'Unknown error'] },
+                { requestContext, summary: 'Clear output failed' },
+            );
+        }
+    });
 }

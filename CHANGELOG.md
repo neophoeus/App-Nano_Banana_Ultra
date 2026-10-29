@@ -1,5 +1,24 @@
 # Changelog
 
+## v5.2.0 - 2026-10-29
+
+- Release title: Nano Banana Ultra 5.2.0 - Export Results Auto-Close & Filename Local Timestamp Alignment, Output Directory Selective Clear, and Workspace Metadata Viewer Compatibility
+- Release summary:
+    - **Export Results Auto-Close & Filename Local Timestamp Alignment (`components/ExportResultsModal.tsx`, `utils/savedImageFilename.ts`, `utils/imageSaveUtils.ts`, `utils/workspacePersistence.ts`, `tests/*`)**:
+        - Automatic modal close: Upon successful export with zero errors, `ExportResultsModal` displays the completion toast notification and automatically calls `onClose()` to dismiss the dialog.
+        - Machine local time timestamps: Replaced legacy UTC timestamps (`toISOString()`) with local machine time (`YYYYMMDD-HHmmss`) across workspace output filenames, export filenames, and workspace snapshot export filenames.
+        - Workspace & Extractor filename alignment: Replaced legacy prompt-slug filename generation (`${baseId}_${cleanPrompt}`) with unified workspace filename stems (`buildSavedImageFilenameStem` / `buildResultPartFilenameStem` or stem of existing `savedFilename`), guaranteeing consistent `${normalizedModelId}_${localTimestamp}_${slotNumber}-${shortId}_${workflowSlug}` naming and `-part-XX` numbering across variants and thought images.
+    - **Image Metadata Viewer Workspace Compatibility & Standalone JSON Support (`plugins/imageSavePlugin.ts`, `hooks/usePerformGeneration.ts`, `components/MetadataViewerDrawer.tsx`, `utils/imageEmbeddedMetadataReader.ts`, `scripts/metadata-viewer/*`, `tests/*`)**:
+        - Native embedded metadata on workspace save: Server `/api/save-image` now writes embedded PNG `iTXt` / JPEG `COM` metadata directly into newly generated image buffers, while `usePerformGeneration` injects complete `baseSidecarMetadata` into result parts and thought images.
+        - Workspace output directory integration: In-app `MetadataViewerDrawer` automatically queries `/api/load-image-metadata` when images without embedded metadata are dropped, and supports dropping standalone `.json` sidecar files (with dynamic preview link to `/api/load-image`).
+        - Thought/variant parent sidecar inheritance: Result parts (`-part-XX`) missing prompt or model automatically inherit and merge metadata from parent base stem (`<baseStem>.json`) across backend API, in-app drawer, and offline visual tools (`viewer.html`, `reader.cjs`, `launch_viewer.ps1`).
+        - Preview re-mount safety: Added `key={currentItem.url}` to preview image elements to prevent hidden preview states from persisting across filmstrip item switches.
+    - **Clear Workspace Output Directory Cleanup & Export Reminder (`plugins/routes/workspaceRoutes.ts`, `services/geminiService.ts`, `hooks/useWorkspaceResetActions.ts`, `components/WorkspaceDetailOverlays.tsx`, `App.tsx`, `utils/translations/*`, `tests/*`)**:
+        - Export Results safety reminder: The Clear Workspace confirmation modal features a prominent warning banner reminding users to back up their creations via "Export Results" prior to resetting.
+        - Selective `./output` directory clearing: Added an optional checkbox allowing users to permanently clear image files and sidecar JSONs in the output folder alongside the workspace reset, backed by a secure backend endpoint (`POST /api/clear-output`).
+        - Queued batch job protection: Path traversal guards, file extension whitelisting, and strict protection for `queued_batch_space.json` ensure scheduled batch queues remain untouched during output resets.
+        - Multilingual alignment: 100% key parity across all 9 localized language dictionaries (`zh_TW`, `en`, `zh_CN`, `ja`, `ko`, `de`, `es`, `fr`, `ru`).
+
 ## v5.1.0 - 2026-10-28
 
 - Release title: Nano Banana Ultra 5.1.0 - Dual-Mode Image Metadata Viewer Integration, Workspace Extractor Retirement, and Composer Round Count Layout Refactor

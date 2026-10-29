@@ -284,6 +284,9 @@ export const zh_TW = {
         '確定要把這個工作區重設回預設空白狀態嗎？歷史、舞台、提示詞與工作階段脈絡都會清除。共用的佇列批次工作會另外保留。建議先使用匯出工作區。這個動作無法復原。',
     clearHistoryConfirm: '直接清除',
     clearHistoryCancel: '取消',
+    clearHistoryExportReminder: '提醒：重置前請確認是否已透過「匯出成品（Export Results）」備份所需圖片與參數。',
+    clearHistoryIncludeOutputLabel: '一併刪除 output 資料夾內的圖檔與 sidecar json',
+    clearHistoryIncludeOutputHint: '勾選後將永久清除 output 目錄下所有生成圖片與中繼資料檔案（批次佇列將保留）。',
 
     // Sketch Pad
     sketchTitle: '手繪畫板',

@@ -2299,3 +2299,24 @@ export const browseExportFolder = async (): Promise<{ cancelled: boolean; path?:
         return { cancelled: true };
     }
 };
+
+export interface ClearWorkspaceOutputResponse {
+    success: boolean;
+    deletedCount: number;
+    errors: string[];
+}
+
+export const clearWorkspaceOutputFiles = async (): Promise<ClearWorkspaceOutputResponse> => {
+    try {
+        const response = await fetch('/api/clear-output', {
+            method: 'POST',
+            headers: jsonHeaders,
+        });
+        if (!response.ok) {
+            return { success: false, deletedCount: 0, errors: ['Failed to clear output files'] };
+        }
+        return await response.json().catch(() => ({ success: false, deletedCount: 0, errors: ['Invalid response'] }));
+    } catch (err: any) {
+        return { success: false, deletedCount: 0, errors: [err?.message || 'Network error'] };
+    }
+};

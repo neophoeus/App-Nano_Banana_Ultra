@@ -332,6 +332,9 @@ export const zh_CN = {
         '您确定要将这个工作区重置为默认空白状态吗？历史、舞台、提示词与会话上下文都会被清除。共享的队列批处理任务会另外保留。建议先使用导出工作区。此操作无法撤销。',
     clearHistoryConfirm: '直接清除',
     clearHistoryCancel: '取消',
+    clearHistoryExportReminder: '提醒：重置前请确认是否已通过“导出成品（Export Results）”备份所需图片与参数。',
+    clearHistoryIncludeOutputLabel: '一并删除 output 文件夹内的图档与 sidecar json',
+    clearHistoryIncludeOutputHint: '勾选后将永久清除 output 目录下所有生成图片与元数据文件（批次队列将保留）。',
 
     // Sketch Pad
     sketchTitle: '手绘画板',

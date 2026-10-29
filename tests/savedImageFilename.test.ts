@@ -2,11 +2,17 @@ import { describe, expect, it } from 'vitest';
 import {
     buildResultPartFilenameStem,
     buildSavedImageFilenameStem,
+    formatLocalTimestamp,
     getSavedImageWorkflowSlug,
     normalizeSavedImageModelId,
 } from '../utils/savedImageFilename';
 
 describe('savedImageFilename helpers', () => {
+    it('formats local timestamp using local time components', () => {
+        const d = new Date(2026, 9, 29, 8, 53, 23);
+        expect(formatLocalTimestamp(d)).toBe('20261029-085323');
+    });
+
     it('normalizes remote model resource names before building stems', () => {
         expect(normalizeSavedImageModelId('models/gemini-3.1-flash-image')).toBe('gemini-3.1-flash-image');
     });
@@ -27,7 +33,7 @@ describe('savedImageFilename helpers', () => {
                 model: 'gemini-3.1-flash-image',
                 mode: 'Image to Image/Mixing',
                 slotIndex: 2,
-                createdAt: new Date('2026-05-06T14:35:22.000Z'),
+                createdAt: new Date(2026, 4, 6, 14, 35, 22),
                 requestId: 'A7C9F2E1-1234-5678-9999-000000000000',
             }),
         ).toBe('gemini-3.1-flash-image_20260506-143522_03-a7c9f2e1_ref2img');
@@ -39,7 +45,7 @@ describe('savedImageFilename helpers', () => {
                 model: 'gemini-3-pro-image',
                 mode: 'Text to Image',
                 slotIndex: 0,
-                createdAt: new Date('2026-05-06T14:35:22.000Z'),
+                createdAt: new Date(2026, 4, 6, 14, 35, 22),
                 requestId: 'fedcba98-1234-5678-9999-000000000000',
                 sequence: 7,
                 sourceSavedFilename: 'gemini-3-pro-image_20260506-143522_01-fedcba98_txt2img.jpg',

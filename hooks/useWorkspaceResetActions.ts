@@ -1,6 +1,7 @@
 import { Dispatch, MutableRefObject, SetStateAction, useCallback } from 'react';
 import type { WorkspaceDetailModalState } from './useWorkspaceShellOwnerState';
 import { clearDebugTerminalEvents } from '../utils/debugTerminalEvents';
+import { clearWorkspaceOutputFiles } from '../services/geminiService';
 
 type UseWorkspaceResetActionsArgs = {
     lastPromotedHistoryIdRef: MutableRefObject<string | null>;
@@ -34,7 +35,14 @@ export function useWorkspaceResetActions({
         clearAssetRoles(['stage-source']);
     }, [clearAssetRoles, handleClearResults]);
 
-    const handleClearGalleryHistory = useCallback(() => {
+    const handleClearGalleryHistory = useCallback(async (options?: { clearOutput?: boolean }) => {
+        if (options?.clearOutput) {
+            try {
+                await clearWorkspaceOutputFiles();
+            } catch {
+                // Ignore output clear errors during history reset
+            }
+        }
         applyEmptyWorkspaceSnapshot();
         void clearSharedWorkspaceSnapshot();
         setActiveWorkspaceDetailModal(null);
