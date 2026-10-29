@@ -35,35 +35,38 @@ export function useWorkspaceResetActions({
         clearAssetRoles(['stage-source']);
     }, [clearAssetRoles, handleClearResults]);
 
-    const handleClearGalleryHistory = useCallback(async (options?: { clearOutput?: boolean }) => {
-        if (options?.clearOutput) {
-            try {
-                await clearWorkspaceOutputFiles();
-            } catch {
-                // Ignore output clear errors during history reset
+    const handleClearGalleryHistory = useCallback(
+        async (options?: { clearOutput?: boolean }) => {
+            if (options?.clearOutput) {
+                try {
+                    await clearWorkspaceOutputFiles();
+                } catch {
+                    // Ignore output clear errors during history reset
+                }
             }
-        }
-        applyEmptyWorkspaceSnapshot();
-        void clearSharedWorkspaceSnapshot();
-        setActiveWorkspaceDetailModal(null);
-        setIsAdvancedSettingsOpen(false);
-        setIsSketchPadOpen(false);
-        setShowSketchReplaceConfirm(false);
-        clearSettingsSession();
-        setSurfaceSharedControlsBottom(null);
-        lastPromotedHistoryIdRef.current = null;
-        clearDebugTerminalEvents();
-    }, [
-        applyEmptyWorkspaceSnapshot,
-        clearSettingsSession,
-        clearSharedWorkspaceSnapshot,
-        lastPromotedHistoryIdRef,
-        setActiveWorkspaceDetailModal,
-        setIsAdvancedSettingsOpen,
-        setIsSketchPadOpen,
-        setShowSketchReplaceConfirm,
-        setSurfaceSharedControlsBottom,
-    ]);
+            applyEmptyWorkspaceSnapshot();
+            void clearSharedWorkspaceSnapshot();
+            setActiveWorkspaceDetailModal(null);
+            setIsAdvancedSettingsOpen(false);
+            setIsSketchPadOpen(false);
+            setShowSketchReplaceConfirm(false);
+            clearSettingsSession();
+            setSurfaceSharedControlsBottom(null);
+            lastPromotedHistoryIdRef.current = null;
+            clearDebugTerminalEvents();
+        },
+        [
+            applyEmptyWorkspaceSnapshot,
+            clearSettingsSession,
+            clearSharedWorkspaceSnapshot,
+            lastPromotedHistoryIdRef,
+            setActiveWorkspaceDetailModal,
+            setIsAdvancedSettingsOpen,
+            setIsSketchPadOpen,
+            setShowSketchReplaceConfirm,
+            setSurfaceSharedControlsBottom,
+        ],
+    );
 
     return {
         handleClearCurrentStage,

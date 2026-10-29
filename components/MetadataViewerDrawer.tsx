@@ -332,7 +332,9 @@ export default function MetadataViewerDrawer({
                         sidecar = mergeSidecarMetadata(sidecar, parentSidecar);
                     } else {
                         try {
-                            const res = await fetch(`/api/load-image-metadata?filename=${encodeURIComponent(partMatch[1] + '.json')}`);
+                            const res = await fetch(
+                                `/api/load-image-metadata?filename=${encodeURIComponent(partMatch[1] + '.json')}`,
+                            );
                             if (res.ok) {
                                 const remoteParent = await res.json();
                                 sidecar = mergeSidecarMetadata(sidecar, remoteParent);

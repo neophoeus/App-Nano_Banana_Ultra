@@ -39,7 +39,10 @@ type UseWorkspaceAssetsReturn = {
     setStyleImages: (nextImages: string[] | ((prev: string[]) => string[])) => void;
     addWorkspaceAsset: (asset: AddWorkspaceAssetArgs) => void;
     clearAssetRoles: (roles: StageAssetRole[]) => void;
-    removeAssetAtRoleIndex: (role: Extract<StageAssetRole, 'object' | 'character' | 'style'>, indexToRemove: number) => void;
+    removeAssetAtRoleIndex: (
+        role: Extract<StageAssetRole, 'object' | 'character' | 'style'>,
+        indexToRemove: number,
+    ) => void;
     upsertViewerStageSource: (args: {
         url: string;
         origin: StageAssetOrigin;

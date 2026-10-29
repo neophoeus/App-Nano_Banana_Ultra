@@ -453,8 +453,7 @@ export const createGaussianPointCloudFromImage = (
     options: PointCloudGenerationOptions = {},
 ): GaussianPointCloud => {
     const density = options.sampleDensity ?? 'draft';
-    const targetSteps =
-        typeof density === 'number' ? density : DENSITY_MAP[density] ?? DENSITY_MAP.draft;
+    const targetSteps = typeof density === 'number' ? density : (DENSITY_MAP[density] ?? DENSITY_MAP.draft);
 
     const aspect = width / Math.max(1, height);
     let sampleW: number;
@@ -578,8 +577,10 @@ export const projectAndSortSplats = (
         // Anisotropic tangent stretch to bridge disocclusion gaps on slanted surfaces
         const gradX = s.depthGradX ?? 0;
         const gradY = s.depthGradY ?? 0;
-        const stretchX = Math.sqrt(Math.cos(yawRad) ** 2 + (gradX * Math.sin(yawRad)) ** 2) + sinYaw * Math.abs(gradX) * 0.65;
-        const stretchY = Math.sqrt(Math.cos(pitchRad) ** 2 + (gradY * Math.sin(pitchRad)) ** 2) + sinPitch * Math.abs(gradY) * 0.65;
+        const stretchX =
+            Math.sqrt(Math.cos(yawRad) ** 2 + (gradX * Math.sin(yawRad)) ** 2) + sinYaw * Math.abs(gradX) * 0.65;
+        const stretchY =
+            Math.sqrt(Math.cos(pitchRad) ** 2 + (gradY * Math.sin(pitchRad)) ** 2) + sinPitch * Math.abs(gradY) * 0.65;
         const maxStretch = s.isEdge ? 1.35 : 4.0;
         const stretch = Math.min(maxStretch, Math.max(1.0, Math.max(stretchX, stretchY)));
         const screenRadius = baseRadius * stretch;

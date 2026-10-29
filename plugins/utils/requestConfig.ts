@@ -2,10 +2,7 @@ import type { AspectRatio, ImageModel, ImageSize } from '../../types';
 import { buildGroundingToolConfig, deriveGroundingMode } from '../../utils/groundingMode';
 import { MODEL_CAPABILITIES } from '../../utils/modelCapabilities';
 import { normalizeTemperature } from '../../utils/temperature';
-import {
-    buildGeminiResponseModalities,
-    toGeminiThinkingLevel,
-} from './geminiApiConfig';
+import { buildGeminiResponseModalities, toGeminiThinkingLevel } from './geminiApiConfig';
 
 type ImageGenerateBodyLike = {
     model?: string;

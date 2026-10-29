@@ -63,6 +63,13 @@ vi.mock('@google/genai/node', () => {
         },
         Modality: { IMAGE: 'IMAGE', TEXT: 'TEXT' },
         ThinkingLevel: { MINIMAL: 'MINIMAL', LOW: 'LOW', MEDIUM: 'MEDIUM', HIGH: 'HIGH' },
+        PartMediaResolutionLevel: {
+            MEDIA_RESOLUTION_UNSPECIFIED: 'MEDIA_RESOLUTION_UNSPECIFIED',
+            MEDIA_RESOLUTION_LOW: 'MEDIA_RESOLUTION_LOW',
+            MEDIA_RESOLUTION_MEDIUM: 'MEDIA_RESOLUTION_MEDIUM',
+            MEDIA_RESOLUTION_HIGH: 'MEDIA_RESOLUTION_HIGH',
+            MEDIA_RESOLUTION_ULTRA_HIGH: 'MEDIA_RESOLUTION_ULTRA_HIGH',
+        },
     };
 });
 
@@ -186,6 +193,13 @@ describe('imageSavePlugin official conversation integration', () => {
                 },
             ],
             promptFeedback: {},
+            usageMetadata: {
+                promptTokenCount: 2240,
+                candidatesTokenCount: 1290,
+                thoughtsTokenCount: 310,
+                totalTokenCount: 3840,
+                cachedContentTokenCount: 0,
+            },
         });
         chatCreateMock.mockReturnValue({
             sendMessage: chatSendMessageMock,
@@ -364,6 +378,9 @@ describe('imageSavePlugin official conversation integration', () => {
                                     mimeType: 'image/gif',
                                     data: 'R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
                                 },
+                                mediaResolution: {
+                                    level: 'MEDIA_RESOLUTION_HIGH',
+                                },
                             },
                             { text: 'Official chat follow-up turn' },
                         ],
@@ -402,6 +419,130 @@ describe('imageSavePlugin official conversation integration', () => {
         });
         expect(response.body.sessionHints.officialConversationUsed).toBe(true);
         expect(response.body.imageUrl).toBe('data:image/png;base64,AAA');
+    });
+
+    it('deduplicates redundant editingInput matching previous turn model output when prompt does not cite [Edit_1]', async () => {
+        const { imageSavePlugin } = await import('../plugins/imageSavePlugin');
+        const handlers = new Map<string, MiddlewareHandler>();
+        const plugin = imageSavePlugin({ geminiApiKey: 'test-key' });
+        const configureServer =
+            typeof plugin.configureServer === 'function' ? plugin.configureServer : plugin.configureServer?.handler;
+
+        configureServer?.({
+            middlewares: {
+                use(route: string, handler: MiddlewareHandler) {
+                    handlers.set(route, handler);
+                },
+            },
+        } as any);
+
+        const generateHandler = handlers.get('/api/images/generate');
+        expect(generateHandler).toBeTruthy();
+
+        const response = await invokeJsonRoute(generateHandler!, {
+            prompt: 'Make the character eyes glow brighter',
+            editingInput: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
+            model: 'gemini-3.1-flash-image',
+            executionMode: 'chat-continuation',
+            conversationContext: {
+                conversationId: 'chatconv-dedupe',
+                branchOriginId: 'chat-root',
+                activeSourceHistoryId: 'turn-1',
+                priorTurns: [
+                    {
+                        historyId: 'turn-1',
+                        prompt: 'First turn',
+                        sourceImage: {
+                            dataUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
+                            mimeType: 'image/gif',
+                        },
+                        outputImage: {
+                            dataUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
+                            mimeType: 'image/gif',
+                        },
+                        text: 'Turn 1 done',
+                        thoughts: null,
+                        thoughtSignature: 'sig-1',
+                    },
+                ],
+            },
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body.sessionHints.deduplicatedCurrentEditInput).toBe(true);
+        expect(chatSendMessageMock).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+                message: [{ text: 'Make the character eyes glow brighter' }],
+            }),
+        );
+    });
+
+    it('preserves editingInput even if matching previous turn output when prompt explicitly references [Edit_1]', async () => {
+        const { imageSavePlugin } = await import('../plugins/imageSavePlugin');
+        const handlers = new Map<string, MiddlewareHandler>();
+        const plugin = imageSavePlugin({ geminiApiKey: 'test-key' });
+        const configureServer =
+            typeof plugin.configureServer === 'function' ? plugin.configureServer : plugin.configureServer?.handler;
+
+        configureServer?.({
+            middlewares: {
+                use(route: string, handler: MiddlewareHandler) {
+                    handlers.set(route, handler);
+                },
+            },
+        } as any);
+
+        const generateHandler = handlers.get('/api/images/generate');
+        expect(generateHandler).toBeTruthy();
+
+        const response = await invokeJsonRoute(generateHandler!, {
+            prompt: 'Modify [Edit_1] to add golden wings',
+            editingInput: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
+            model: 'gemini-3.1-flash-image',
+            executionMode: 'chat-continuation',
+            conversationContext: {
+                conversationId: 'chatconv-explicit-edit',
+                branchOriginId: 'chat-root',
+                activeSourceHistoryId: 'turn-1',
+                priorTurns: [
+                    {
+                        historyId: 'turn-1',
+                        prompt: 'First turn',
+                        sourceImage: {
+                            dataUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
+                            mimeType: 'image/gif',
+                        },
+                        outputImage: {
+                            dataUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
+                            mimeType: 'image/gif',
+                        },
+                        text: 'Turn 1 done',
+                        thoughts: null,
+                        thoughtSignature: 'sig-1',
+                    },
+                ],
+            },
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body.sessionHints.deduplicatedCurrentEditInput).toBe(false);
+        expect(chatSendMessageMock).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+                message: [
+                    { text: '[Edit_1]' },
+                    {
+                        inlineData: {
+                            mimeType: 'image/gif',
+                            data: 'R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
+                        },
+                        mediaResolution: {
+                            level: 'MEDIA_RESOLUTION_HIGH',
+                        },
+                    },
+                    { text: 'Modify [Edit_1] to add golden wings' },
+                ],
+            }),
+        );
     });
 
     it('creates and imports official queued batch jobs through the backend routes', async () => {
@@ -1253,6 +1394,9 @@ describe('imageSavePlugin official conversation integration', () => {
                     mimeType: 'image/png',
                     data: ONE_BY_ONE_PNG_BASE64,
                 }),
+                mediaResolution: {
+                    level: 'MEDIA_RESOLUTION_ULTRA_HIGH',
+                },
             }),
         );
         expect(imageToPromptCall?.contents?.[1]).toEqual(
@@ -1389,6 +1533,13 @@ describe('imageSavePlugin official conversation integration', () => {
                 },
             ],
             promptFeedback: {},
+            usageMetadata: {
+                promptTokenCount: 2240,
+                candidatesTokenCount: 1290,
+                thoughtsTokenCount: 310,
+                totalTokenCount: 3840,
+                cachedContentTokenCount: 0,
+            },
         });
 
         const outputDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nano-banana-plugin-'));
@@ -1436,6 +1587,17 @@ describe('imageSavePlugin official conversation integration', () => {
                     height: 1,
                     mimeType: 'image/png',
                 },
+                tokenUsage: {
+                    promptTokenCount: 2240,
+                    candidatesTokenCount: 1290,
+                    thoughtsTokenCount: 310,
+                    totalTokenCount: 3840,
+                    cachedContentTokenCount: 0,
+                },
+                mediaResolutionOptimization: expect.objectContaining({
+                    perPartEnabled: true,
+                    supportsPerPartMediaResolution: true,
+                }),
             }),
         );
         expect(response.body.sessionHints).toEqual(
@@ -1445,6 +1607,13 @@ describe('imageSavePlugin official conversation integration', () => {
                 actualImageHeight: 1,
                 actualImageDimensions: '1x1',
                 responseModalitiesActual: 'IMAGE+TEXT',
+                tokenUsage: {
+                    promptTokenCount: 2240,
+                    candidatesTokenCount: 1290,
+                    thoughtsTokenCount: 310,
+                    totalTokenCount: 3840,
+                    cachedContentTokenCount: 0,
+                },
             }),
         );
 

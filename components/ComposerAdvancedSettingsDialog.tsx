@@ -4,12 +4,7 @@ import WorkspaceModalFrame from './WorkspaceModalFrame';
 import ComposerAdvancedSettingsContent from './ComposerAdvancedSettingsContent';
 import { MODEL_CAPABILITIES } from '../constants';
 import { WORKSPACE_OVERLAY_Z_INDEX } from '../constants/workspaceOverlays';
-import {
-    type GroundingMode,
-    type ImageModel,
-    type OutputFormat,
-    type ThinkingLevel,
-} from '../types';
+import { type GroundingMode, type ImageModel, type OutputFormat, type ThinkingLevel } from '../types';
 import { getTranslation, type Language } from '../utils/translations';
 
 type ComposerAdvancedSettingsDialogProps = {

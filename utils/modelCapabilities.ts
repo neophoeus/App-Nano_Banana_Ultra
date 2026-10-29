@@ -13,6 +13,7 @@ export interface ModelCapability {
     supportsIncludeThoughts: boolean;
     supportsGoogleSearch: boolean;
     supportsImageSearch: boolean;
+    supportsPerPartMediaResolution?: boolean;
 }
 
 export const IMAGE_MODELS: ImageModel[] = [
@@ -57,6 +58,7 @@ export const MODEL_CAPABILITIES: Record<ImageModel, ModelCapability> = {
         supportsIncludeThoughts: true,
         supportsGoogleSearch: true,
         supportsImageSearch: true,
+        supportsPerPartMediaResolution: true,
     },
     'gemini-3.1-flash-image': {
         supportedSizes: ['512', '1K', '2K', '4K'],
@@ -86,6 +88,7 @@ export const MODEL_CAPABILITIES: Record<ImageModel, ModelCapability> = {
         supportsIncludeThoughts: true,
         supportsGoogleSearch: true,
         supportsImageSearch: true,
+        supportsPerPartMediaResolution: true,
     },
     'gemini-3.1-flash-lite-image': {
         supportedSizes: ['1K'],
@@ -115,6 +118,7 @@ export const MODEL_CAPABILITIES: Record<ImageModel, ModelCapability> = {
         supportsIncludeThoughts: true,
         supportsGoogleSearch: false,
         supportsImageSearch: false,
+        supportsPerPartMediaResolution: true,
     },
     'gemini-3-pro-image': {
         supportedSizes: ['1K', '2K', '4K'],
@@ -129,6 +133,7 @@ export const MODEL_CAPABILITIES: Record<ImageModel, ModelCapability> = {
         supportsIncludeThoughts: true,
         supportsGoogleSearch: true,
         supportsImageSearch: false,
+        supportsPerPartMediaResolution: true,
     },
     'gemini-2.5-flash-image': {
         supportedSizes: [],
@@ -143,6 +148,7 @@ export const MODEL_CAPABILITIES: Record<ImageModel, ModelCapability> = {
         supportsIncludeThoughts: false,
         supportsGoogleSearch: false,
         supportsImageSearch: false,
+        supportsPerPartMediaResolution: false,
     },
 };
 

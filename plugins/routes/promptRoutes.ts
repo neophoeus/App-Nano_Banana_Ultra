@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai/node';
+import type { PartMediaResolutionLevel } from '@google/genai';
 import {
     cleanResponseText,
     createApiRequestContext,
@@ -14,9 +15,8 @@ import {
     buildRandomPromptRequest,
     normalizePromptToolLanguage,
 } from '../utils/promptHelpers';
-import {
-    toPromptGeminiThinkingLevel,
-} from '../utils/geminiApiConfig';
+import { extractUsageMetadata, PART_MEDIA_RESOLUTION_LEVEL } from '../utils/mediaResolution';
+import { toPromptGeminiThinkingLevel } from '../utils/geminiApiConfig';
 
 type PromptRequestBody = {
     currentPrompt?: string;
@@ -203,7 +203,10 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                     },
                 },
                 contents: [
-                    { inlineData: inlineImage },
+                    {
+                        inlineData: inlineImage,
+                        mediaResolution: { level: PART_MEDIA_RESOLUTION_LEVEL.ULTRA_HIGH as PartMediaResolutionLevel },
+                    },
                     {
                         text: 'Analyze this image carefully and generate a highly detailed, extremely accurate image prompt in the requested language describing it. Focus on absolute forensic precision, documenting every single detail, object, texture, color shade, camera setting, and art medium characteristic without summarization. Output only the prompt itself without any headings, labels, sections, or commentary.',
                     },
@@ -211,10 +214,11 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
             });
 
             const text = cleanResponseText(response.text, '');
+            const tokenUsage = extractUsageMetadata(response);
             sendJson(
                 res,
                 200,
-                { text },
+                { text, tokenUsage: tokenUsage || undefined },
                 {
                     requestContext,
                     summary: `${lang} image-to-prompt`,
@@ -222,6 +226,7 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                         source: 'prompt-tools',
                         textLength: text.length,
                         mimeType: inlineImage.mimeType,
+                        tokenUsage,
                     },
                 },
             );

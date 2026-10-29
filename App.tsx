@@ -1988,10 +1988,13 @@ const App: React.FC = () => {
     const handleCloseClearWorkspaceConfirm = useCallback(() => {
         setShowClearWorkspaceConfirm(false);
     }, [setShowClearWorkspaceConfirm]);
-    const handleConfirmClearWorkspace = useCallback((clearOutput?: boolean) => {
-        setShowClearWorkspaceConfirm(false);
-        void handleClearGalleryHistory({ clearOutput });
-    }, [handleClearGalleryHistory, setShowClearWorkspaceConfirm]);
+    const handleConfirmClearWorkspace = useCallback(
+        (clearOutput?: boolean) => {
+            setShowClearWorkspaceConfirm(false);
+            void handleClearGalleryHistory({ clearOutput });
+        },
+        [handleClearGalleryHistory, setShowClearWorkspaceConfirm],
+    );
     const historySurface = useMemo(
         () => (
             <WorkspaceUnifiedHistoryPanel

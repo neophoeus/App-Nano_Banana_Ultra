@@ -292,9 +292,11 @@ export const ja = {
         'このワークスペースを既定の空の状態に戻しますか？履歴、ステージ、プロンプト、セッション文脈は削除されます。共有のキュー済みバッチジョブは別枠で利用できます。先にワークスペースを書き出しを使うことをおすすめします。この操作は取り消せません。',
     clearHistoryConfirm: 'ワークスペースを消去',
     clearHistoryCancel: 'キャンセル',
-    clearHistoryExportReminder: 'リマインダー: リセットする前に、「完成品のエクスポート (Export Results)」で必要な画像とメタデータをバックアップしたか確認してください。',
+    clearHistoryExportReminder:
+        'リマインダー: リセットする前に、「完成品のエクスポート (Export Results)」で必要な画像とメタデータをバックアップしたか確認してください。',
     clearHistoryIncludeOutputLabel: 'output フォルダ内の画像と sidecar JSON も一括削除する',
-    clearHistoryIncludeOutputHint: 'チェックすると、output ディレクトリ内のすべての生成画像とメタデータが完全に削除されます（バッチキューは保持されます）。',
+    clearHistoryIncludeOutputHint:
+        'チェックすると、output ディレクトリ内のすべての生成画像とメタデータが完全に削除されます（バッチキューは保持されます）。',
 
     // Sketch Pad
     sketchTitle: 'スケッチパッド',
@@ -1064,19 +1066,20 @@ export const ja = {
     generationFailureDetailQuota:
         'リクエストがレート制限されたか、一時的にクォータが枯渇しました。リクエストの間隔を空けるか、ローリングウィンドウのリセットをお待ちください。',
 
-    workspaceToolbarActionExportResults: "成果物をエクスポート",
-    workspaceToolbarExportResultsTitle: "すべての生成画像とメタデータを埋め込んでエクスポート",
-    exportResultsTitle: "すべての生成結果をエクスポート",
-    exportResultsDesc: "生成画像のみを抽出し、パラメータをメタデータとして埋め込んで保存します（Workspace Extractor 互換）。",
-    exportResultsFolderLabel: "エクスポート先フォルダー",
-    exportResultsBrowseBtn: "参照...",
-    exportResultsFolderHint: "相対パス（例: ./export）または絶対パス（例: D:\\AI_Outputs）をサポートします。",
-    exportResultsIncludeThoughts: "思考プロセスの画像を含める",
-    exportResultsIncludeThoughtsDesc: "生成途中の推論画像・下書き画像が存在する場合、一緒にエクスポートします。",
-    exportResultsEstimatedCount: "エクスポート予定枚数",
-    exportResultsSuccessCount: "{0} 枚の画像を正常にエクスポートしました",
-    exportResultsConfirm: "エクスポート開始",
-    exportResultsRunning: "エクスポート中...",
-    exportResultsEmptyNotice: "現在のワークスペースにはエクスポート可能な生成画像がありません。",
-    exportResultsSuccessNotice: "{0} 枚のメタデータ付き画像を {1} に正常にエクスポートしました",
+    workspaceToolbarActionExportResults: '成果物をエクスポート',
+    workspaceToolbarExportResultsTitle: 'すべての生成画像とメタデータを埋め込んでエクスポート',
+    exportResultsTitle: 'すべての生成結果をエクスポート',
+    exportResultsDesc:
+        '生成画像のみを抽出し、パラメータをメタデータとして埋め込んで保存します（Workspace Extractor 互換）。',
+    exportResultsFolderLabel: 'エクスポート先フォルダー',
+    exportResultsBrowseBtn: '参照...',
+    exportResultsFolderHint: '相対パス（例: ./export）または絶対パス（例: D:\\AI_Outputs）をサポートします。',
+    exportResultsIncludeThoughts: '思考プロセスの画像を含める',
+    exportResultsIncludeThoughtsDesc: '生成途中の推論画像・下書き画像が存在する場合、一緒にエクスポートします。',
+    exportResultsEstimatedCount: 'エクスポート予定枚数',
+    exportResultsSuccessCount: '{0} 枚の画像を正常にエクスポートしました',
+    exportResultsConfirm: 'エクスポート開始',
+    exportResultsRunning: 'エクスポート中...',
+    exportResultsEmptyNotice: '現在のワークスペースにはエクスポート可能な生成画像がありません。',
+    exportResultsSuccessNotice: '{0} 枚のメタデータ付き画像を {1} に正常にエクスポートしました',
 } as const;

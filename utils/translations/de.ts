@@ -300,9 +300,11 @@ export const de = {
         'Diesen Arbeitsbereich auf den leeren Standardzustand zurücksetzen? Verlauf, Buhne, Prompt und Sitzungskontext werden entfernt. Geteilte Batch-Jobs in der Warteschlange bleiben separat verfugbar. Wir empfehlen, zuerst Arbeitsbereich exportieren zu verwenden. Dies kann nicht ruckgangig gemacht werden.',
     clearHistoryConfirm: 'Arbeitsbereich leeren',
     clearHistoryCancel: 'Abbrechen',
-    clearHistoryExportReminder: 'Erinnerung: Bitte sichern Sie vor dem Zurücksetzen Ihre gewünschten Bilder und Metadaten über "Ergebnisse exportieren (Export Results)".',
+    clearHistoryExportReminder:
+        'Erinnerung: Bitte sichern Sie vor dem Zurücksetzen Ihre gewünschten Bilder und Metadaten über "Ergebnisse exportieren (Export Results)".',
     clearHistoryIncludeOutputLabel: 'Auch Bilddateien und Sidecar-JSONs im Ordner output löschen',
-    clearHistoryIncludeOutputHint: 'Entfernt dauerhaft alle generierten Bilder und Metadatendateien im Ordner output (Warteschlangenjobs bleiben erhalten).',
+    clearHistoryIncludeOutputHint:
+        'Entfernt dauerhaft alle generierten Bilder und Metadatendateien im Ordner output (Warteschlangenjobs bleiben erhalten).',
 
     // Sketch Pad
     sketchTitle: 'Skizzenblock',
@@ -1092,19 +1094,20 @@ export const de = {
     generationFailureDetailQuota:
         'Die Anfrage wurde ratenbegrenzt oder Ihr Kontingent ist vorübergehend erschöpft. Das Vergrößern der Abstände zwischen Anfragen oder Warten auf das Zurücksetzen des Zeitfensters kann helfen.',
 
-    workspaceToolbarActionExportResults: "Ergebnisse exportieren",
-    workspaceToolbarExportResultsTitle: "Alle generierten Bilder mit eingebetteten Metadaten exportieren",
-    exportResultsTitle: "Alle Generierungsergebnisse exportieren",
-    exportResultsDesc: "Extrahiert nur generierte Bilder mit eingebetteten Parametern (kompatibel mit Workspace Extractor).",
-    exportResultsFolderLabel: "Zielordner exportieren",
-    exportResultsBrowseBtn: "Durchsuchen...",
-    exportResultsFolderHint: "Unterstützt relativen Pfad (z. B. ./export) oder absoluten Pfad (z. B. D:\\AI_Outputs).",
-    exportResultsIncludeThoughts: "Gedankenprozess-Bilder einschließen",
-    exportResultsIncludeThoughtsDesc: "Exportiert auch Zwischenentwürfe/Denkbilder, falls vorhanden.",
-    exportResultsEstimatedCount: "Zu exportierende Bilder",
-    exportResultsSuccessCount: "{0} Bilder erfolgreich exportiert",
-    exportResultsConfirm: "Export starten",
-    exportResultsRunning: "Exportieren...",
-    exportResultsEmptyNotice: "Im aktuellen Arbeitsbereich sind keine generierten Bilder zum Exportieren vorhanden.",
-    exportResultsSuccessNotice: "{0} Bilder mit eingebetteten Metadaten erfolgreich nach {1} exportiert",
+    workspaceToolbarActionExportResults: 'Ergebnisse exportieren',
+    workspaceToolbarExportResultsTitle: 'Alle generierten Bilder mit eingebetteten Metadaten exportieren',
+    exportResultsTitle: 'Alle Generierungsergebnisse exportieren',
+    exportResultsDesc:
+        'Extrahiert nur generierte Bilder mit eingebetteten Parametern (kompatibel mit Workspace Extractor).',
+    exportResultsFolderLabel: 'Zielordner exportieren',
+    exportResultsBrowseBtn: 'Durchsuchen...',
+    exportResultsFolderHint: 'Unterstützt relativen Pfad (z. B. ./export) oder absoluten Pfad (z. B. D:\\AI_Outputs).',
+    exportResultsIncludeThoughts: 'Gedankenprozess-Bilder einschließen',
+    exportResultsIncludeThoughtsDesc: 'Exportiert auch Zwischenentwürfe/Denkbilder, falls vorhanden.',
+    exportResultsEstimatedCount: 'Zu exportierende Bilder',
+    exportResultsSuccessCount: '{0} Bilder erfolgreich exportiert',
+    exportResultsConfirm: 'Export starten',
+    exportResultsRunning: 'Exportieren...',
+    exportResultsEmptyNotice: 'Im aktuellen Arbeitsbereich sind keine generierten Bilder zum Exportieren vorhanden.',
+    exportResultsSuccessNotice: '{0} Bilder mit eingebetteten Metadaten erfolgreich nach {1} exportiert',
 } as const;

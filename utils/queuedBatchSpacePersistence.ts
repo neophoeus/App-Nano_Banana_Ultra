@@ -159,7 +159,6 @@ export const loadQueuedBatchSpaceSnapshot = (): QueuedBatchSpaceSnapshot => {
 };
 
 export const loadSharedQueuedBatchSpaceSnapshot = async (): Promise<SharedQueuedBatchSpaceLoadResult> => {
-
     const correlationId = createDebugTerminalCorrelationId('batchspace');
 
     emitQueuedBatchSpaceDebugEvent({
@@ -290,7 +289,6 @@ export const saveSharedQueuedBatchSpaceSnapshot = async (
     snapshot: QueuedBatchSpaceSnapshot,
     options?: { allowClearing?: boolean },
 ): Promise<void> => {
-
     const normalized = sanitizeQueuedBatchSpaceSnapshot(snapshot);
 
     if (normalized.queuedJobs.length === 0 && !options?.allowClearing) {

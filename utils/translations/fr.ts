@@ -104,12 +104,12 @@ export const fr = {
     geminiErrorCategoryDailyQuota: 'Quota quotidien épuisé',
     geminiErrorCategoryRateLimit: 'Limite de taux temporaire (RPM/TPM)',
     geminiErrorCategoryPoolCongestion: 'Congestion du pool de calcul partagé',
-    geminiErrorCategoryTransientAuth: 'Synchronisation temporaire d\'authentification',
+    geminiErrorCategoryTransientAuth: "Synchronisation temporaire d'authentification",
     geminiStrategyServerCooldown: 'Refroidissement dicté par le serveur',
     geminiStrategyAdaptiveBackoff: 'Régulation adaptative par seau fuyant',
     geminiStrategyCongestionDesync: 'Nouvelle tentative désynchronisée anti-résonance',
     geminiStrategyAbort: 'Interruption immédiate (aucun réessai)',
-    debugTerminalDeepErrorCardTitle: 'Inspection approfondie du paquet d\'erreur Gemini',
+    debugTerminalDeepErrorCardTitle: "Inspection approfondie du paquet d'erreur Gemini",
     debugTerminalOpen: 'Ouvrir le terminal de diagnostic',
     debugTerminalClose: 'Fermer',
     debugTerminalEyebrow: 'Surface de diagnostic cachée',
@@ -297,9 +297,11 @@ export const fr = {
         "Réinitialiser cet espace de travail à son état vide par défaut ? L'historique, la scène, le prompt et le contexte de session seront supprimés. Les lots en file d'attente partagés resteront disponibles séparément. Nous recommandons d'utiliser d'abord Exporter l espace de travail. Cette action est irréversible.",
     clearHistoryConfirm: "Effacer l'espace de travail",
     clearHistoryCancel: 'Annuler',
-    clearHistoryExportReminder: 'Rappel : Avant de réinitialiser, assurez-vous de sauvegarder vos images et métadonnées via « Exporter les résultats (Export Results) ».',
+    clearHistoryExportReminder:
+        'Rappel : Avant de réinitialiser, assurez-vous de sauvegarder vos images et métadonnées via « Exporter les résultats (Export Results) ».',
     clearHistoryIncludeOutputLabel: 'Supprimer également les fichiers image et les JSON sidecar dans le dossier output',
-    clearHistoryIncludeOutputHint: 'Supprime définitivement toutes les images générées et les fichiers de métadonnées dans le dossier output (les tâches en file d\'attente sont conservées).',
+    clearHistoryIncludeOutputHint:
+        "Supprime définitivement toutes les images générées et les fichiers de métadonnées dans le dossier output (les tâches en file d'attente sont conservées).",
 
     // Sketch Pad
     sketchTitle: 'Bloc-notes',
@@ -666,8 +668,7 @@ export const fr = {
     workspaceConstraintTrimObjects: "Les images d'objets ont ete reduites a {0} a cause des contraintes du modele.",
     workspaceConstraintTrimCharacters:
         'Les images de personnages ont ete reduites a {0} a cause des contraintes du modele.',
-    workspaceConstraintTrimStyles:
-        'Les références de style ont été réduites à {0} à cause des contraintes du modèle.',
+    workspaceConstraintTrimStyles: 'Les références de style ont été réduites à {0} à cause des contraintes du modèle.',
     workspacePickerSharedPrompt: 'Prompt partage',
     workspacePickerSharedPromptPlaceholder: 'Mettez a jour ici le prompt partage du compositeur.',
     workspacePickerFullGallery: 'Galerie complete',
@@ -1089,19 +1090,20 @@ export const fr = {
     generationFailureDetailQuota:
         'La requête a été limitée par le taux ou votre quota est temporairement épuisé. Espacer les requêtes ou attendre la réinitialisation de la fenêtre glissante peut aider.',
 
-    workspaceToolbarActionExportResults: "Exporter les Résultats",
-    workspaceToolbarExportResultsTitle: "Exporter toutes les images générées avec métadonnées intégrées",
-    exportResultsTitle: "Exporter Tous les Résultats Générés",
-    exportResultsDesc: "Extrait uniquement les images générées avec métadonnées intégrées (compatible avec Workspace Extractor).",
-    exportResultsFolderLabel: "Dossier de Destination",
-    exportResultsBrowseBtn: "Parcourir...",
-    exportResultsFolderHint: "Prend en charge les chemins relatifs (ex. ./export) ou absolus (ex. D:\\AI_Outputs).",
-    exportResultsIncludeThoughts: "Inclure les Images de Réflexion",
-    exportResultsIncludeThoughtsDesc: "Exporte également les images intermédiaires de raisonnement si disponibles.",
-    exportResultsEstimatedCount: "Images à Exporter",
-    exportResultsSuccessCount: "{0} images exportées avec succès",
+    workspaceToolbarActionExportResults: 'Exporter les Résultats',
+    workspaceToolbarExportResultsTitle: 'Exporter toutes les images générées avec métadonnées intégrées',
+    exportResultsTitle: 'Exporter Tous les Résultats Générés',
+    exportResultsDesc:
+        'Extrait uniquement les images générées avec métadonnées intégrées (compatible avec Workspace Extractor).',
+    exportResultsFolderLabel: 'Dossier de Destination',
+    exportResultsBrowseBtn: 'Parcourir...',
+    exportResultsFolderHint: 'Prend en charge les chemins relatifs (ex. ./export) ou absolus (ex. D:\\AI_Outputs).',
+    exportResultsIncludeThoughts: 'Inclure les Images de Réflexion',
+    exportResultsIncludeThoughtsDesc: 'Exporte également les images intermédiaires de raisonnement si disponibles.',
+    exportResultsEstimatedCount: 'Images à Exporter',
+    exportResultsSuccessCount: '{0} images exportées avec succès',
     exportResultsConfirm: "Démarrer l'exportation",
-    exportResultsRunning: "Exportation en cours...",
-    exportResultsEmptyNotice: "Aucune image générée disponible à exporter dans cet espace.",
-    exportResultsSuccessNotice: "{0} images avec métadonnées intégrées exportées avec succès vers {1}",
+    exportResultsRunning: 'Exportation en cours...',
+    exportResultsEmptyNotice: 'Aucune image générée disponible à exporter dans cet espace.',
+    exportResultsSuccessNotice: '{0} images avec métadonnées intégrées exportées avec succès vers {1}',
 } as const;

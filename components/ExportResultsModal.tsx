@@ -70,13 +70,7 @@ function resolveItemBaseFilename(options: {
     });
 }
 
-export default function ExportResultsModal({
-    isOpen,
-    onClose,
-    history,
-    t,
-    showNotification,
-}: ExportResultsModalProps) {
+export default function ExportResultsModal({ isOpen, onClose, history, t, showNotification }: ExportResultsModalProps) {
     const [targetDir, setTargetDir] = useState('./export');
     const [includeThoughtImages, setIncludeThoughtImages] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
@@ -154,7 +148,7 @@ export default function ExportResultsModal({
             // 2. Variants (either in turn.variants or turn.resultParts with kind === 'output-image', EXCLUDING main image!)
             const rawVariantList: any[] = Array.isArray(turnAny.variants)
                 ? turnAny.variants
-                : (turn.resultParts?.filter((p) => p.kind === 'output-image') || []);
+                : turn.resultParts?.filter((p) => p.kind === 'output-image') || [];
 
             let variantIndexCounter = 0;
             rawVariantList.forEach((v: any) => {
@@ -206,7 +200,7 @@ export default function ExportResultsModal({
             if (includeThoughtImages) {
                 const thoughtList: any[] = Array.isArray(turnAny.thoughtImages)
                     ? turnAny.thoughtImages
-                    : (turn.resultParts?.filter((p) => p.kind === 'thought-image') || []);
+                    : turn.resultParts?.filter((p) => p.kind === 'thought-image') || [];
 
                 let thoughtIndexCounter = 0;
                 thoughtList.forEach((th: any) => {
@@ -286,7 +280,9 @@ export default function ExportResultsModal({
                 errors: res.errors,
             });
 
-            const successMsg = (t('exportResultsSuccessNotice') || 'Successfully exported {0} images with embedded metadata to {1}')
+            const successMsg = (
+                t('exportResultsSuccessNotice') || 'Successfully exported {0} images with embedded metadata to {1}'
+            )
                 .replace('{0}', String(res.exportedCount))
                 .replace('{1}', res.outputDir);
             showNotification?.(successMsg, 'info');
@@ -313,7 +309,10 @@ export default function ExportResultsModal({
             onClose={onClose}
             closeLabel={t('clearHistoryCancel')}
             title={t('exportResultsTitle') || 'Export All Generated Results'}
-            description={t('exportResultsDesc') || 'Extract generated images with embedded metadata into a dedicated folder, 100% compatible with Workspace Extractor.'}
+            description={
+                t('exportResultsDesc') ||
+                'Extract generated images with embedded metadata into a dedicated folder, 100% compatible with Workspace Extractor.'
+            }
             panelClassName="nbu-modal-shell"
             headerClassName="px-6 pt-5 pb-3 border-b border-gray-100 dark:border-gray-800"
         >
@@ -340,11 +339,12 @@ export default function ExportResultsModal({
                             disabled={isExporting || isBrowsing}
                             className="rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 font-semibold text-slate-700 transition-colors hover:bg-white hover:border-gray-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                         >
-                            {isBrowsing ? '...' : (t('exportResultsBrowseBtn') || 'Browse...')}
+                            {isBrowsing ? '...' : t('exportResultsBrowseBtn') || 'Browse...'}
                         </button>
                     </div>
                     <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
-                        {t('exportResultsFolderHint') || 'Supports relative path (e.g. ./export) or absolute path (e.g. D:\\AI_Outputs).'}
+                        {t('exportResultsFolderHint') ||
+                            'Supports relative path (e.g. ./export) or absolute path (e.g. D:\\AI_Outputs).'}
                     </p>
                 </div>
 
@@ -363,7 +363,8 @@ export default function ExportResultsModal({
                                 {t('exportResultsIncludeThoughts') || 'Include Thought Process Images'}
                             </span>
                             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                                {t('exportResultsIncludeThoughtsDesc') || 'Export intermediate reasoning/draft images if available.'}
+                                {t('exportResultsIncludeThoughtsDesc') ||
+                                    'Export intermediate reasoning/draft images if available.'}
                             </p>
                         </div>
                     </label>
@@ -372,9 +373,7 @@ export default function ExportResultsModal({
                 {/* Count summary preview */}
                 <div className="flex items-center justify-between rounded-xl bg-amber-500/10 px-3.5 py-2.5 text-[11px] font-medium text-amber-900 dark:text-amber-200">
                     <span>{t('exportResultsEstimatedCount') || 'Images to Export'}:</span>
-                    <span className="font-bold text-amber-600 dark:text-amber-400 text-sm">
-                        {exportItems.length}
-                    </span>
+                    <span className="font-bold text-amber-600 dark:text-amber-400 text-sm">{exportItems.length}</span>
                 </div>
 
                 {/* Progress / Status feedback */}
@@ -382,7 +381,11 @@ export default function ExportResultsModal({
                     <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
                         {exportStatus.exportedCount !== undefined && (
                             <p className="font-semibold text-emerald-600 dark:text-emerald-400">
-                                ✓ {(t('exportResultsSuccessCount') || 'Successfully exported {0} images').replace('{0}', String(exportStatus.exportedCount))}
+                                ✓{' '}
+                                {(t('exportResultsSuccessCount') || 'Successfully exported {0} images').replace(
+                                    '{0}',
+                                    String(exportStatus.exportedCount),
+                                )}
                             </p>
                         )}
                         {exportStatus.outputDir && (
@@ -418,7 +421,9 @@ export default function ExportResultsModal({
                     disabled={isExporting || exportItems.length === 0}
                     className="flex-1 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-white shadow-md shadow-amber-500/20 transition-all hover:bg-amber-600 disabled:opacity-50"
                 >
-                    {isExporting ? (t('exportResultsRunning') || 'Exporting...') : (t('exportResultsConfirm') || 'Start Export')}
+                    {isExporting
+                        ? t('exportResultsRunning') || 'Exporting...'
+                        : t('exportResultsConfirm') || 'Start Export'}
                 </button>
             </div>
         </WorkspaceModalFrame>

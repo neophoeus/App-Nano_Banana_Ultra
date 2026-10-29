@@ -1,5 +1,28 @@
 # Changelog
 
+## v5.3.0 - 2026-10-29
+
+- Release title: Nano Banana Ultra 5.3.0 - Role-Aware Per-Part MediaResolution, Multi-Turn Lossless Token Optimization, and Token Usage Telemetry
+- Release summary:
+    - **Role-Aware Per-Part MediaResolution Architecture (`plugins/utils/mediaResolution.ts`, `plugins/utils/imageReferences.ts`, `plugins/routes/promptRoutes.ts`, `types.ts`, `utils/modelCapabilities.ts`, `tests/*`)**:
+        - Automatic per-part resolution mapping: Characters (`[Char_N]`) and forensic Image-to-Prompt analysis are elevated to `MEDIA_RESOLUTION_ULTRA_HIGH` (2,240 tokens/image) ensuring zero micro-detail loss on 4K character face, eye, hair, and clothing references.
+        - 4K edit & source base resolution: Auto-maps to `MEDIA_RESOLUTION_ULTRA_HIGH` for 4K outputs, and `MEDIA_RESOLUTION_HIGH` (1,120 tokens) for 1K/2K outputs.
+        - Object & Style optimization: Object references (`[Obj_N]`) maintain `MEDIA_RESOLUTION_HIGH` (1,120 tokens); style references (`[Style_N]`) are mapped to `MEDIA_RESOLUTION_MEDIUM` (560 tokens, 50% token savings with zero aesthetic/stylistic degradation).
+        - Video input control: Fixed at `MEDIA_RESOLUTION_LOW` (70 tokens/frame) to prevent frame context explosion.
+        - Model compatibility gate: Gemini 3/4 image models natively enable per-part resolution, while legacy `gemini-2.5-flash-image` cleanly omits the parameter to prevent API argument errors.
+    - **Multi-Turn Conversation Deduplication & Tiered Decay (`plugins/utils/conversationHistory.ts`, `plugins/routes/generateRoutes.ts`, `tests/*`)**:
+        - Adjacent-turn redundant source image deduplication: Automatically omits re-uploading identical source images matching the previous turn's model output, saving 1,120–2,240 tokens per turn.
+        - Follow-up edit input deduplication: In official conversation mode, turn 2+ edit inputs matching preceding model output without explicit `[Edit_1]` citations are automatically omitted from request parts.
+        - Tiered history resolution decay: Latest conversation anchor turn maintains `MEDIA_RESOLUTION_HIGH`, while older turns decay to `MEDIA_RESOLUTION_MEDIUM` (560 tokens).
+        - Thought text replay omission: Retains official `thoughtSignature` cryptographic state carrier while suppressing redundant `thought: true` human-readable reasoning clause replays.
+        - Broken-chain gap & empty prompt guards: Resets deduplication benchmarks across missing-file skipped turns and provides safe fallback prompt text (`'Continue editing.'`) for empty deduplicated turns.
+    - **Token Usage Telemetry Observability (`plugins/utils/mediaResolution.ts`, `plugins/routes/generateRoutes.ts`, `plugins/utils/batchHelpers.ts`, `plugins/routes/promptRoutes.ts`, `types.ts`)**:
+        - Full telemetry pipeline: Normalizes and propagates `usageMetadata` (`promptTokenCount`, `candidatesTokenCount`, `thoughtsTokenCount`, `totalTokenCount`, `cachedContentTokenCount`) across unary/stream generation routes, prompt tools, and batch job import payloads.
+        - Structured payload integration: Surfaces token usage metrics into response `metadata.tokenUsage`, `sessionHints`, and backend API logs.
+    - **4K Client Micro-Detail Preservation (`hooks/usePromptTools.ts`, `utils/imageSaveUtils.ts`, `tests/*`)**:
+        - Image-to-Prompt resolution upgrade: Raised `IMAGE_TO_PROMPT_MAX_DIMENSION` from `2048` to `3072` to feed maximum high-frequency detail into `ULTRA_HIGH` prompt generation.
+        - Preserved 4K canvas limit: Retained `EDITOR_IMAGE_MAX_DIMENSION = 4096` in `imageSaveUtils.ts` without downscaling destruction.
+
 ## v5.2.0 - 2026-10-29
 
 - Release title: Nano Banana Ultra 5.2.0 - Export Results Auto-Close & Filename Local Timestamp Alignment, Output Directory Selective Clear, and Workspace Metadata Viewer Compatibility

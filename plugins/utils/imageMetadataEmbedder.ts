@@ -9,7 +9,7 @@ const CRC_TABLE = new Uint32Array(256);
 for (let i = 0; i < 256; i++) {
     let c = i;
     for (let k = 0; k < 8; k++) {
-        c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
     }
     CRC_TABLE[i] = c >>> 0;
 }
@@ -18,12 +18,12 @@ for (let i = 0; i < 256; i++) {
  * Calculate CRC-32 checksum.
  */
 export function crc32(buf: Buffer | Uint8Array, offset = 0, length = buf.length): number {
-    let c = 0xFFFFFFFF;
+    let c = 0xffffffff;
     const end = offset + length;
     for (let i = offset; i < end; i++) {
-        c = CRC_TABLE[(c ^ buf[i]) & 0xFF] ^ (c >>> 8);
+        c = CRC_TABLE[(c ^ buf[i]) & 0xff] ^ (c >>> 8);
     }
-    return (c ^ 0xFFFFFFFF) >>> 0;
+    return (c ^ 0xffffffff) >>> 0;
 }
 
 export interface EmbeddedNanoBananaMeta {
@@ -149,7 +149,7 @@ export function formatParametersText(meta: EmbeddedNanoBananaMeta): string {
  */
 export function stripExistingPngMetadataChunks(pngBuffer: Buffer): Buffer {
     if (!pngBuffer || pngBuffer.length < 8) return pngBuffer;
-    if (pngBuffer[0] !== 0x89 || pngBuffer[1] !== 0x50 || pngBuffer[2] !== 0x4E || pngBuffer[3] !== 0x47) {
+    if (pngBuffer[0] !== 0x89 || pngBuffer[1] !== 0x50 || pngBuffer[2] !== 0x4e || pngBuffer[3] !== 0x47) {
         return pngBuffer;
     }
     const chunks: Buffer[] = [pngBuffer.subarray(0, 8)];
@@ -187,7 +187,7 @@ export function stripExistingPngMetadataChunks(pngBuffer: Buffer): Buffer {
  */
 export function embedPngMetadata(pngBuffer: Buffer, meta: EmbeddedNanoBananaMeta): Buffer {
     if (!pngBuffer || pngBuffer.length < 8) return pngBuffer;
-    if (pngBuffer[0] !== 0x89 || pngBuffer[1] !== 0x50 || pngBuffer[2] !== 0x4E || pngBuffer[3] !== 0x47) {
+    if (pngBuffer[0] !== 0x89 || pngBuffer[1] !== 0x50 || pngBuffer[2] !== 0x4e || pngBuffer[3] !== 0x47) {
         return pngBuffer; // Not a PNG
     }
 
@@ -207,11 +207,7 @@ export function embedPngMetadata(pngBuffer: Buffer, meta: EmbeddedNanoBananaMeta
     }
     const iendPos = iendTypePos - 4; // Start of IEND chunk (length field)
 
-    return Buffer.concat([
-        cleanBuffer.subarray(0, iendPos),
-        combinedChunks,
-        cleanBuffer.subarray(iendPos),
-    ]);
+    return Buffer.concat([cleanBuffer.subarray(0, iendPos), combinedChunks, cleanBuffer.subarray(iendPos)]);
 }
 
 /**
@@ -220,16 +216,16 @@ export function embedPngMetadata(pngBuffer: Buffer, meta: EmbeddedNanoBananaMeta
 export function truncateUtf8BufferSafely(buf: Buffer, maxBytes: number): Buffer {
     if (!buf || buf.length <= maxBytes) return buf;
     let end = maxBytes;
-    while (end > 0 && (buf[end] & 0xC0) === 0x80) {
+    while (end > 0 && (buf[end] & 0xc0) === 0x80) {
         end--;
     }
     if (end > 0) {
         const lead = buf[end - 1];
         let charLen = 1;
-        if ((lead & 0xE0) === 0xC0) charLen = 2;
-        else if ((lead & 0xF0) === 0xE0) charLen = 3;
-        else if ((lead & 0xF8) === 0xF0) charLen = 4;
-        if (charLen > 1 && (end - 1 + charLen) > maxBytes) {
+        if ((lead & 0xe0) === 0xc0) charLen = 2;
+        else if ((lead & 0xf0) === 0xe0) charLen = 3;
+        else if ((lead & 0xf8) === 0xf0) charLen = 4;
+        if (charLen > 1 && end - 1 + charLen > maxBytes) {
             end = end - 1;
         }
     }
@@ -250,7 +246,9 @@ export function serializeMetaForJpegCom(meta: EmbeddedNanoBananaMeta, maxJsonByt
     if (trimmed.thoughts && typeof trimmed.thoughts === 'string') {
         const thoughtBuf = Buffer.from(trimmed.thoughts, 'utf8');
         const targetBytes = Math.max(0, thoughtBuf.length - (buf.length - maxJsonBytes) - 64);
-        trimmed.thoughts = (targetBytes > 0 ? truncateUtf8BufferSafely(thoughtBuf, targetBytes).toString('utf8') : '') + '... [truncated]';
+        trimmed.thoughts =
+            (targetBytes > 0 ? truncateUtf8BufferSafely(thoughtBuf, targetBytes).toString('utf8') : '') +
+            '... [truncated]';
         jsonStr = JSON.stringify(trimmed);
         buf = Buffer.from(jsonStr, 'utf8');
         if (buf.length <= maxJsonBytes) return jsonStr;
@@ -259,7 +257,9 @@ export function serializeMetaForJpegCom(meta: EmbeddedNanoBananaMeta, maxJsonByt
     if (trimmed.text && typeof trimmed.text === 'string') {
         const textBuf = Buffer.from(trimmed.text, 'utf8');
         const targetBytes = Math.max(0, textBuf.length - (buf.length - maxJsonBytes) - 64);
-        trimmed.text = (targetBytes > 0 ? truncateUtf8BufferSafely(textBuf, targetBytes).toString('utf8') : '') + '... [truncated]';
+        trimmed.text =
+            (targetBytes > 0 ? truncateUtf8BufferSafely(textBuf, targetBytes).toString('utf8') : '') +
+            '... [truncated]';
         jsonStr = JSON.stringify(trimmed);
         buf = Buffer.from(jsonStr, 'utf8');
         if (buf.length <= maxJsonBytes) return jsonStr;
@@ -302,8 +302,8 @@ export function createJpegComSegment(prefix: string, text: string): Buffer {
     const segLen = combinedData.length + 2;
 
     const segBuf = Buffer.alloc(4 + combinedData.length);
-    segBuf[0] = 0xFF;
-    segBuf[1] = 0xFE; // COM marker
+    segBuf[0] = 0xff;
+    segBuf[1] = 0xfe; // COM marker
     segBuf.writeUInt16BE(segLen, 2);
     combinedData.copy(segBuf, 4);
     return segBuf;
@@ -313,14 +313,14 @@ export function createJpegComSegment(prefix: string, text: string): Buffer {
  * Strip existing parameters and nano_banana_meta COM segments from JPEG buffer for idempotency.
  */
 export function stripExistingJpegMetadataSegments(jpegBuffer: Buffer): Buffer {
-    if (!jpegBuffer || jpegBuffer.length < 4 || jpegBuffer[0] !== 0xFF || jpegBuffer[1] !== 0xD8) {
+    if (!jpegBuffer || jpegBuffer.length < 4 || jpegBuffer[0] !== 0xff || jpegBuffer[1] !== 0xd8) {
         return jpegBuffer;
     }
     const chunks: Buffer[] = [jpegBuffer.subarray(0, 2)];
     let pos = 2;
-    while (pos + 4 <= jpegBuffer.length && jpegBuffer[pos] === 0xFF) {
+    while (pos + 4 <= jpegBuffer.length && jpegBuffer[pos] === 0xff) {
         const marker = jpegBuffer[pos + 1];
-        if (marker === 0xDA || marker === 0xD9) {
+        if (marker === 0xda || marker === 0xd9) {
             break;
         }
         const segLen = jpegBuffer.readUInt16BE(pos + 2);
@@ -328,7 +328,7 @@ export function stripExistingJpegMetadataSegments(jpegBuffer: Buffer): Buffer {
         if (nextPos > jpegBuffer.length) {
             break;
         }
-        if (marker === 0xFE) {
+        if (marker === 0xfe) {
             const textStart = pos + 4;
             const textSample = jpegBuffer.subarray(textStart, Math.min(nextPos, textStart + 24)).toString('utf8');
             if (textSample.startsWith('parameters\n') || textSample.startsWith('nano_banana_meta\n')) {
@@ -350,7 +350,7 @@ export function stripExistingJpegMetadataSegments(jpegBuffer: Buffer): Buffer {
  */
 export function embedJpegMetadata(jpegBuffer: Buffer, meta: EmbeddedNanoBananaMeta): Buffer {
     if (!jpegBuffer || jpegBuffer.length < 4) return jpegBuffer;
-    if (jpegBuffer[0] !== 0xFF || jpegBuffer[1] !== 0xD8) return jpegBuffer; // Not a JPEG
+    if (jpegBuffer[0] !== 0xff || jpegBuffer[1] !== 0xd8) return jpegBuffer; // Not a JPEG
 
     const cleanBuffer = stripExistingJpegMetadataSegments(jpegBuffer);
     const paramsText = formatParametersText(meta);
@@ -362,9 +362,9 @@ export function embedJpegMetadata(jpegBuffer: Buffer, meta: EmbeddedNanoBananaMe
 
     // Insert after APP0 (0xFFE0) or APP1 (0xFFE1) if present at start, otherwise immediately after SOI (0xFF 0xD8)
     let insertPos = 2;
-    while (insertPos + 4 <= cleanBuffer.length && cleanBuffer[insertPos] === 0xFF) {
+    while (insertPos + 4 <= cleanBuffer.length && cleanBuffer[insertPos] === 0xff) {
         const marker = cleanBuffer[insertPos + 1];
-        if (marker === 0xE0 || marker === 0xE1) {
+        if (marker === 0xe0 || marker === 0xe1) {
             const appLen = cleanBuffer.readUInt16BE(insertPos + 2);
             if (insertPos + 2 + appLen <= cleanBuffer.length) {
                 insertPos += 2 + appLen;
@@ -374,11 +374,7 @@ export function embedJpegMetadata(jpegBuffer: Buffer, meta: EmbeddedNanoBananaMe
         break;
     }
 
-    return Buffer.concat([
-        cleanBuffer.subarray(0, insertPos),
-        combined,
-        cleanBuffer.subarray(insertPos),
-    ]);
+    return Buffer.concat([cleanBuffer.subarray(0, insertPos), combined, cleanBuffer.subarray(insertPos)]);
 }
 
 /**
@@ -389,7 +385,7 @@ export function readImageMetadata(imageBuffer: Buffer): Record<string, string> {
     if (!imageBuffer || imageBuffer.length < 4) return result;
 
     // PNG
-    if (imageBuffer[0] === 0x89 && imageBuffer[1] === 0x50 && imageBuffer[2] === 0x4E && imageBuffer[3] === 0x47) {
+    if (imageBuffer[0] === 0x89 && imageBuffer[1] === 0x50 && imageBuffer[2] === 0x4e && imageBuffer[3] === 0x47) {
         let pos = 8;
         while (pos + 12 <= imageBuffer.length) {
             const len = imageBuffer.readUInt32BE(pos);
@@ -429,16 +425,16 @@ export function readImageMetadata(imageBuffer: Buffer): Record<string, string> {
     }
 
     // JPEG
-    if (imageBuffer[0] === 0xFF && imageBuffer[1] === 0xD8) {
+    if (imageBuffer[0] === 0xff && imageBuffer[1] === 0xd8) {
         let pos = 2;
-        while (pos + 4 <= imageBuffer.length && imageBuffer[pos] === 0xFF) {
+        while (pos + 4 <= imageBuffer.length && imageBuffer[pos] === 0xff) {
             const marker = imageBuffer[pos + 1];
-            if (marker === 0xDA || marker === 0xD9) break;
+            if (marker === 0xda || marker === 0xd9) break;
             const segLen = imageBuffer.readUInt16BE(pos + 2);
             const nextPos = pos + 2 + segLen;
             if (nextPos > imageBuffer.length) break;
 
-            if (marker === 0xFE) {
+            if (marker === 0xfe) {
                 const text = imageBuffer.toString('utf8', pos + 4, nextPos);
                 const nlIndex = text.indexOf('\n');
                 if (nlIndex !== -1) {
@@ -464,12 +460,12 @@ export function embedImageMetadata(imageBuffer: Buffer, meta: EmbeddedNanoBanana
     if (!imageBuffer || imageBuffer.length < 4) return imageBuffer;
 
     // Check PNG signature: 89 50 4E 47
-    if (imageBuffer[0] === 0x89 && imageBuffer[1] === 0x50 && imageBuffer[2] === 0x4E && imageBuffer[3] === 0x47) {
+    if (imageBuffer[0] === 0x89 && imageBuffer[1] === 0x50 && imageBuffer[2] === 0x4e && imageBuffer[3] === 0x47) {
         return embedPngMetadata(imageBuffer, meta);
     }
 
     // Check JPEG signature: FF D8
-    if (imageBuffer[0] === 0xFF && imageBuffer[1] === 0xD8) {
+    if (imageBuffer[0] === 0xff && imageBuffer[1] === 0xd8) {
         return embedJpegMetadata(imageBuffer, meta);
     }
 

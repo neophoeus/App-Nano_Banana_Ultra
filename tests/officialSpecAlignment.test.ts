@@ -79,7 +79,8 @@ describe('Official Gemini Nano Banana Spec Alignment', () => {
     });
 
     describe('Style and Video Reference Capability Validation', () => {
-        const dummyImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+        const dummyImage =
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
         it('accepts up to 3 style images on gemini-3-pro-image in capability validation', () => {
             const error = serverValidateCapabilityRequest('gemini-3-pro-image', {
@@ -145,7 +146,8 @@ describe('Official Gemini Nano Banana Spec Alignment', () => {
     });
 
     describe('Parts Construction for Style and Video', () => {
-        const dummyDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+        const dummyDataUrl =
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
         it('buildGenerateParts injects [Style_N] tag and inlineData for styles', () => {
             const parts = buildGenerateParts(
@@ -175,7 +177,9 @@ describe('Official Gemini Nano Banana Spec Alignment', () => {
                 process.cwd(),
             );
 
-            const videoFilePart = parts.find((p) => (p as any).fileData?.fileUri === 'https://www.youtube.com/watch?v=sample');
+            const videoFilePart = parts.find(
+                (p) => (p as any).fileData?.fileUri === 'https://www.youtube.com/watch?v=sample',
+            );
             expect(videoFilePart).toBeDefined();
             expect((videoFilePart as any).fileData?.mimeType).toBe('video/mp4');
 

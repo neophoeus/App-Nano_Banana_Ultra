@@ -135,8 +135,7 @@ export const PromptReferenceChips: React.FC<PromptReferenceChipsProps> = ({
     const objectLabel = getTranslation(currentLanguage, 'objectRefs') || (isZh ? '物件參考' : 'Object Reference');
     const characterLabel =
         getTranslation(currentLanguage, 'characterRefs') || (isZh ? '角色參考' : 'Character Reference');
-    const styleLabel =
-        getTranslation(currentLanguage, 'styleRefs') || (isZh ? '風格參考' : 'Style Reference');
+    const styleLabel = getTranslation(currentLanguage, 'styleRefs') || (isZh ? '風格參考' : 'Style Reference');
     const insertHint = isZh ? '點擊插入提示詞' : 'Click to insert';
 
     // Synchronize lightweight cached thumbnails for images
@@ -308,8 +307,7 @@ export const PromptReferencedBadges: React.FC<PromptReferencedBadgesProps> = ({
     const objectLabel = getTranslation(currentLanguage, 'objectRefs') || (isZh ? '物件參考' : 'Object Reference');
     const characterLabel =
         getTranslation(currentLanguage, 'characterRefs') || (isZh ? '角色參考' : 'Character Reference');
-    const styleLabel =
-        getTranslation(currentLanguage, 'styleRefs') || (isZh ? '風格參考' : 'Style Reference');
+    const styleLabel = getTranslation(currentLanguage, 'styleRefs') || (isZh ? '風格參考' : 'Style Reference');
     const referencedTitle = isZh ? '提示詞已引用:' : 'Prompt cited:';
     const notUploadedTitle = isZh ? '未上傳' : 'Not uploaded';
     const removeTitle = isZh ? '從提示詞移除' : 'Remove from prompt';

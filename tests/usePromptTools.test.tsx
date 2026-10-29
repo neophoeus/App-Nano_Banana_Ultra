@@ -206,12 +206,8 @@ describe('usePromptTools', () => {
             await latestHook?.handleImageToPrompt(imageFile);
         });
 
-        expect(prepareImageAssetFromFileMock).toHaveBeenCalledWith(imageFile, 2048);
-        expect(generatePromptFromImageMock).toHaveBeenCalledWith(
-            'data:image/png;base64,AAA',
-            'es',
-            'low',
-        );
+        expect(prepareImageAssetFromFileMock).toHaveBeenCalledWith(imageFile, 3072);
+        expect(generatePromptFromImageMock).toHaveBeenCalledWith('data:image/png;base64,AAA', 'es', 'low');
         expect(prompt).toBe(imagePrompt);
         expect(logs).toEqual(['Image prompt ok.']);
     });

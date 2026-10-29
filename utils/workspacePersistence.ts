@@ -1459,10 +1459,7 @@ export const saveWorkspaceSnapshot = (snapshot: WorkspacePersistenceSnapshot): v
             correlationId,
             phase: 'compact-fallback',
         });
-        console.warn(
-            '[workspacePersistence] Failed to persist compact workspace snapshot to localStorage.',
-            error,
-        );
+        console.warn('[workspacePersistence] Failed to persist compact workspace snapshot to localStorage.', error);
     }
 };
 
@@ -1478,7 +1475,6 @@ export const clearStoredWorkspaceSnapshot = (): void => {
 };
 
 export const loadSharedWorkspaceSnapshot = async (): Promise<WorkspacePersistenceSnapshot | null> => {
-
     const correlationId = createDebugTerminalCorrelationId('workspace');
 
     emitWorkspaceSnapshotDebugEvent({
@@ -1564,7 +1560,6 @@ export const saveSharedWorkspaceSnapshot = async (
     snapshot: WorkspacePersistenceSnapshot,
     options?: { allowClearing?: boolean },
 ): Promise<void> => {
-
     const normalized = sanitizeWorkspaceSnapshot(snapshot);
     const persistableSnapshot = buildPersistableWorkspaceSnapshot(normalized);
     const hasContent = Boolean(

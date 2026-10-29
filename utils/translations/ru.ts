@@ -295,9 +295,11 @@ export const ru = {
         'Очистить это рабочее пространство до исходного пустого состояния? История, сцена, промпт и контекст сессии будут удалены. Общие задания пакетной очереди останутся доступными отдельно. Сначала рекомендуем использовать Экспортировать рабочее пространство. Это необратимо.',
     clearHistoryConfirm: 'Очистить рабочее пространство',
     clearHistoryCancel: 'Отмена',
-    clearHistoryExportReminder: 'Напоминание: перед сбросом убедитесь, что вы сохранили нужные изображения и метаданные с помощью функции «Экспорт результатов (Export Results)».',
+    clearHistoryExportReminder:
+        'Напоминание: перед сбросом убедитесь, что вы сохранили нужные изображения и метаданные с помощью функции «Экспорт результатов (Export Results)».',
     clearHistoryIncludeOutputLabel: 'Также удалить файлы изображений и sidecar JSON в папке output',
-    clearHistoryIncludeOutputHint: 'Безвозвратно удаляет все сгенерированные изображения и файлы метаданных в каталоге output (задачи очереди сохраняются).',
+    clearHistoryIncludeOutputHint:
+        'Безвозвратно удаляет все сгенерированные изображения и файлы метаданных в каталоге output (задачи очереди сохраняются).',
 
     // Sketch Pad
     sketchTitle: 'Скетчпад',
@@ -1080,19 +1082,21 @@ export const ru = {
     generationFailureDetailQuota:
         'Запрос ограничен по частоте или ваша квота временно исчерпана. Попробуйте увеличить интервал между запросами или подождать сброса скользящего окна.',
 
-    workspaceToolbarActionExportResults: "Экспорт результатов",
-    workspaceToolbarExportResultsTitle: "Экспортировать все сгенерированные изображения со встроенными метаданными",
-    exportResultsTitle: "Экспорт всех результатов генерации",
-    exportResultsDesc: "Извлекает только созданные изображения со встроенными параметрами (совместимо с Workspace Extractor).",
-    exportResultsFolderLabel: "Папка назначения",
-    exportResultsBrowseBtn: "Обзор...",
-    exportResultsFolderHint: "Поддерживает относительный путь (например, ./export) или абсолютный путь (например, D:\\AI_Outputs).",
-    exportResultsIncludeThoughts: "Включать изображения процесса размышления",
-    exportResultsIncludeThoughtsDesc: "Экспортирует промежуточные эскизы/образы размышлений, если они доступны.",
-    exportResultsEstimatedCount: "Количество изображений для экспорта",
-    exportResultsSuccessCount: "Успешно экспортировано {0} изображений",
-    exportResultsConfirm: "Начать экспорт",
-    exportResultsRunning: "Экспорт...",
-    exportResultsEmptyNotice: "В текущей рабочей области нет созданных изображений для экспорта.",
-    exportResultsSuccessNotice: "Успешно экспортировано {0} изображений со встроенными метаданными в {1}",
+    workspaceToolbarActionExportResults: 'Экспорт результатов',
+    workspaceToolbarExportResultsTitle: 'Экспортировать все сгенерированные изображения со встроенными метаданными',
+    exportResultsTitle: 'Экспорт всех результатов генерации',
+    exportResultsDesc:
+        'Извлекает только созданные изображения со встроенными параметрами (совместимо с Workspace Extractor).',
+    exportResultsFolderLabel: 'Папка назначения',
+    exportResultsBrowseBtn: 'Обзор...',
+    exportResultsFolderHint:
+        'Поддерживает относительный путь (например, ./export) или абсолютный путь (например, D:\\AI_Outputs).',
+    exportResultsIncludeThoughts: 'Включать изображения процесса размышления',
+    exportResultsIncludeThoughtsDesc: 'Экспортирует промежуточные эскизы/образы размышлений, если они доступны.',
+    exportResultsEstimatedCount: 'Количество изображений для экспорта',
+    exportResultsSuccessCount: 'Успешно экспортировано {0} изображений',
+    exportResultsConfirm: 'Начать экспорт',
+    exportResultsRunning: 'Экспорт...',
+    exportResultsEmptyNotice: 'В текущей рабочей области нет созданных изображений для экспорта.',
+    exportResultsSuccessNotice: 'Успешно экспортировано {0} изображений со встроенными метаданными в {1}',
 } as const;

@@ -1056,8 +1056,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         const submission = buildEditorSubmissionPayload();
         if (!submission) return;
 
-        const sourceImageInput =
-            mode === 'revolve' ? initialImageUrl || undefined : undefined;
+        const sourceImageInput = mode === 'revolve' ? initialImageUrl || undefined : undefined;
 
         onGenerate(
             submission.finalPrompt,
@@ -1078,8 +1077,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         const submission = buildEditorSubmissionPayload();
         if (!submission) return;
 
-        const sourceImageInput =
-            mode === 'revolve' ? initialImageUrl || undefined : undefined;
+        const sourceImageInput = mode === 'revolve' ? initialImageUrl || undefined : undefined;
 
         onQueueBatch(
             submission.finalPrompt,
@@ -2102,11 +2100,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
                                 className="relative shadow-2xl"
                                 style={{ width: originalDims.w, height: originalDims.h }}
                             >
-                                <img
-                                    src={initialImageUrl || undefined}
-                                    className="w-full h-full block"
-                                    alt="Source"
-                                />
+                                <img src={initialImageUrl || undefined} className="w-full h-full block" alt="Source" />
                                 <canvas
                                     ref={overlayCanvasRef}
                                     width={originalDims.w}

@@ -940,7 +940,6 @@ const executeBlockingImageAttemptWithTransientRetry = async (
 
 // Helper to ensure we get the key
 export const checkApiKey = async (): Promise<boolean> => {
-
     try {
         const payload = await fetchJson<{ hasApiKey: boolean }>('/api/runtime-config', undefined, {
             source: 'runtime',
@@ -1667,10 +1666,7 @@ export type BrowserOnlyTestGeminiServiceOverrides = {
         lang?: Language,
         thinkingLevel?: PromptThinkingLevel,
     ) => Promise<string> | string;
-    generateRandomPrompt?: (
-        lang?: Language,
-        thinkingLevel?: PromptThinkingLevel,
-    ) => Promise<string> | string;
+    generateRandomPrompt?: (lang?: Language, thinkingLevel?: PromptThinkingLevel) => Promise<string> | string;
     generatePromptFromImage?: (
         imageDataUrl: string,
         lang?: Language,

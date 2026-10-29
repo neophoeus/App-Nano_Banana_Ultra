@@ -362,7 +362,11 @@ export function extractNanoBananaMetadata(
             size: sidecarAny.size || sidecarAny.requestedImageSize,
             exportSourceType:
                 sidecarAny.exportSourceType ||
-                (sidecarAny.kind === 'thought-image' ? 'thought' : sidecarAny.kind === 'output-image' ? 'product' : undefined),
+                (sidecarAny.kind === 'thought-image'
+                    ? 'thought'
+                    : sidecarAny.kind === 'output-image'
+                      ? 'product'
+                      : undefined),
         };
 
         if (!embeddedMeta) {

@@ -139,9 +139,7 @@ describe('WorkspaceDetailOverlays', () => {
         expect(confirmModal?.textContent).toContain('clearHistoryExportReminder');
         expect(confirmModal?.textContent).toContain('clearHistoryIncludeOutputLabel');
 
-        const checkbox = container.querySelector<HTMLInputElement>(
-            '[data-testid="workspace-clear-output-checkbox"]',
-        );
+        const checkbox = container.querySelector<HTMLInputElement>('[data-testid="workspace-clear-output-checkbox"]');
         expect(checkbox).not.toBeNull();
         expect(checkbox?.checked).toBe(false);
 

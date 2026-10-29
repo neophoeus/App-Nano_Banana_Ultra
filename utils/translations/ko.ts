@@ -292,9 +292,11 @@ export const ko = {
         '이 작업공간을 기본 빈 상태로 되돌릴까요? 기록, 스테이지, 프롬프트, 세션 문맥은 삭제됩니다. 공유 대기열 배치 작업은 별도로 계속 사용할 수 있습니다. 먼저 워크스페이스 내보내기를 사용하는 것을 권장합니다. 이 작업은 되돌릴 수 없습니다.',
     clearHistoryConfirm: '작업공간 비우기',
     clearHistoryCancel: '취소',
-    clearHistoryExportReminder: '알림: 재설정하기 전에 "결과 내보내기 (Export Results)"를 통해 필요한 이미지와 메타데이터를 백업했는지 확인하세요.',
+    clearHistoryExportReminder:
+        '알림: 재설정하기 전에 "결과 내보내기 (Export Results)"를 통해 필요한 이미지와 메타데이터를 백업했는지 확인하세요.',
     clearHistoryIncludeOutputLabel: 'output 폴더의 이미지 파일 및 sidecar JSON도 함께 삭제',
-    clearHistoryIncludeOutputHint: '선택 시 output 디렉터리의 모든 생성된 이미지와 메타데이터 파일이 영구 삭제됩니다(대기열 작업은 보존됨).',
+    clearHistoryIncludeOutputHint:
+        '선택 시 output 디렉터리의 모든 생성된 이미지와 메타데이터 파일이 영구 삭제됩니다(대기열 작업은 보존됨).',
 
     // Sketch Pad
     sketchTitle: '스케치 패드',
@@ -1053,19 +1055,20 @@ export const ko = {
     generationFailureDetailQuota:
         '요청 속도가 제한되었거나 할당량이 일시적으로 소진되었습니다. 요청 간격을 늘리거나 롤링 윈도우가 재설정될 때까지 기다려 보십시오.',
 
-    workspaceToolbarActionExportResults: "완성작 내보내기",
-    workspaceToolbarExportResultsTitle: "모든 생성 결과 이미지 및 메타데이터 포함 내보내기",
-    exportResultsTitle: "모든 생성 결과 내보내기",
-    exportResultsDesc: "생성된 이미지만 추출하여 메타데이터를 내장한 후 지정 폴더에 저장합니다 (Workspace Extractor 호환).",
-    exportResultsFolderLabel: "내보낼 대상 폴더",
-    exportResultsBrowseBtn: "찾아보기...",
-    exportResultsFolderHint: "상대 경로(예: ./export) 또는 절대 경로(예: D:\\AI_Outputs) 지원.",
-    exportResultsIncludeThoughts: "사고 과정 이미지 포함",
-    exportResultsIncludeThoughtsDesc: "생성 과정 중 중간 추론/초안 이미지가 있는 경우 함께 내보냅니다.",
-    exportResultsEstimatedCount: "내보낼 예상 이미지 수",
-    exportResultsSuccessCount: "{0}개의 이미지를 성공적으로 내보냈습니다",
-    exportResultsConfirm: "내보내기 시작",
-    exportResultsRunning: "내보내는 중...",
-    exportResultsEmptyNotice: "현재 워크스페이스에 내보낼 수 있는 생성 이미지가 없습니다.",
-    exportResultsSuccessNotice: "{0}개의 메타데이터가 내장된 이미지를 {1} 경로로 성공적으로 내보냈습니다",
+    workspaceToolbarActionExportResults: '완성작 내보내기',
+    workspaceToolbarExportResultsTitle: '모든 생성 결과 이미지 및 메타데이터 포함 내보내기',
+    exportResultsTitle: '모든 생성 결과 내보내기',
+    exportResultsDesc:
+        '생성된 이미지만 추출하여 메타데이터를 내장한 후 지정 폴더에 저장합니다 (Workspace Extractor 호환).',
+    exportResultsFolderLabel: '내보낼 대상 폴더',
+    exportResultsBrowseBtn: '찾아보기...',
+    exportResultsFolderHint: '상대 경로(예: ./export) 또는 절대 경로(예: D:\\AI_Outputs) 지원.',
+    exportResultsIncludeThoughts: '사고 과정 이미지 포함',
+    exportResultsIncludeThoughtsDesc: '생성 과정 중 중간 추론/초안 이미지가 있는 경우 함께 내보냅니다.',
+    exportResultsEstimatedCount: '내보낼 예상 이미지 수',
+    exportResultsSuccessCount: '{0}개의 이미지를 성공적으로 내보냈습니다',
+    exportResultsConfirm: '내보내기 시작',
+    exportResultsRunning: '내보내는 중...',
+    exportResultsEmptyNotice: '현재 워크스페이스에 내보낼 수 있는 생성 이미지가 없습니다.',
+    exportResultsSuccessNotice: '{0}개의 메타데이터가 내장된 이미지를 {1} 경로로 성공적으로 내보냈습니다',
 } as const;

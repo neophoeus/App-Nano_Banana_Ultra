@@ -410,10 +410,16 @@ export default function DebugTerminalPanel({
                                         </div>
                                         <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] text-slate-300">
                                             <div>
-                                                Strategy: <span className="font-semibold text-cyan-200">{deepErrorAnalysis.strategy}</span>
+                                                Strategy:{' '}
+                                                <span className="font-semibold text-cyan-200">
+                                                    {deepErrorAnalysis.strategy}
+                                                </span>
                                             </div>
                                             <div>
-                                                Wait: <span className="font-semibold text-amber-300">{deepErrorAnalysis.recommendedWaitMs}ms</span>
+                                                Wait:{' '}
+                                                <span className="font-semibold text-amber-300">
+                                                    {deepErrorAnalysis.recommendedWaitMs}ms
+                                                </span>
                                             </div>
                                             {deepErrorAnalysis.extractedRetryDelayMs !== null ? (
                                                 <div>
@@ -435,7 +441,10 @@ export default function DebugTerminalPanel({
                                             ) : null}
                                             {deepErrorAnalysis.quotaMetric ? (
                                                 <div className="col-span-2">
-                                                    Quota Metric: <span className="font-mono text-slate-200">{deepErrorAnalysis.quotaMetric}</span>
+                                                    Quota Metric:{' '}
+                                                    <span className="font-mono text-slate-200">
+                                                        {deepErrorAnalysis.quotaMetric}
+                                                    </span>
                                                 </div>
                                             ) : null}
                                         </div>

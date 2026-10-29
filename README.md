@@ -142,7 +142,7 @@ Nano Banana Ultra provides two complementary ways to export and manage your crea
 
 ## Version Overview
 
-### Latest Release: 5.2.0
+### Latest Release: 5.3.0
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
 
@@ -152,6 +152,7 @@ Version 5.x focuses on **architectural purification in alignment with Google AI 
 
 #### 5.x Release History
 
+- **v5.3.0** (2026-10-29): Role-Aware Per-Part MediaResolution, Multi-Turn Lossless Token Optimization, and Token Usage Telemetry
 - **v5.2.0** (2026-10-29): Export Results Auto-Close & Filename Local Timestamp Alignment, Output Directory Selective Clear, and Workspace Metadata Viewer Compatibility
 - **v5.1.0** (2026-10-28): Dual-Mode Image Metadata Viewer Integration, Workspace Extractor Retirement, and Composer Round Count Layout Refactor
 - **v5.0.1** (2026-10-28): Deep Forensic Architecture Purification, Dual-Engine Provider & Virtual Image Layer Elimination, Frontend Key Isolation

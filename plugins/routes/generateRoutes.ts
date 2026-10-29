@@ -36,10 +36,16 @@ import {
     startNdjsonStream,
     writeNdjsonEvent,
 } from '../utils/apiHelpers';
-import { buildConversationHistory } from '../utils/conversationHistory';
+import { buildConversationHistory, buildConversationHistoryWithMetadata } from '../utils/conversationHistory';
+import {
+    extractUsageMetadata,
+    isSameInlineImage,
+    promptReferencesTag,
+    supportsModelPerPartMediaResolution,
+} from '../utils/mediaResolution';
 import { extractGroundingDetails } from '../utils/groundingExtraction';
 import { extractImageDimensionsFromBase64, getImageArea, type ImageDimensions } from '../utils/imageDimensions';
-import { buildGenerateParts, normalizeReferenceImages } from '../utils/imageReferences';
+import { buildGenerateParts, normalizeReferenceImages, resolveInlineImageInput } from '../utils/imageReferences';
 import { identifyBlockKeywords } from '../utils/promptHelpers';
 import { buildImageRequestConfig, validateCapabilityRequest } from '../utils/requestConfig';
 
@@ -173,6 +179,9 @@ type PreparedGenerateRequest = {
     parts: any[];
     conversationHistory: ReturnType<typeof buildConversationHistory>;
     useOfficialConversation: boolean;
+    deduplicatedCurrentEditInput?: boolean;
+    deduplicatedHistorySourceCount?: number;
+    omittedHistoryThoughtTurnCount?: number;
 };
 
 type ValidationErrorResult = {
@@ -807,9 +816,28 @@ function buildPreparedGenerateRequest(
 ): PreparedGenerateRequest {
     const { requestConfig, resolvedResponseModalities, groundingMode, effectiveThinkingLevel, shouldIncludeThoughts } =
         buildImageRequestConfig(model, body);
-    const parts = buildGenerateParts(body, resolvedDir);
-    const conversationHistory = buildConversationHistory(body.conversationContext, resolvedDir);
     const useOfficialConversation = body.executionMode === 'chat-continuation' && Boolean(body.conversationContext);
+    const {
+        history: conversationHistory,
+        lastModelOutputImage,
+        deduplicatedSourceImageCount,
+        omittedThoughtTextTurnCount,
+    } = buildConversationHistoryWithMetadata(body.conversationContext, resolvedDir, { model });
+
+    let effectiveBody: ImageGenerateBody = { ...body, model, imageSize: body.imageSize };
+    let deduplicatedCurrentEditInput = false;
+
+    if (useOfficialConversation && conversationHistory.length > 0 && body.editingInput && lastModelOutputImage) {
+        if (!promptReferencesTag(body.prompt, '[Edit_1]')) {
+            const resolvedEdit = resolveInlineImageInput(body.editingInput, resolvedDir);
+            if (resolvedEdit && isSameInlineImage(resolvedEdit, lastModelOutputImage)) {
+                effectiveBody = { ...effectiveBody, editingInput: undefined };
+                deduplicatedCurrentEditInput = true;
+            }
+        }
+    }
+
+    const parts = buildGenerateParts(effectiveBody, resolvedDir);
 
     return {
         model,
@@ -821,6 +849,9 @@ function buildPreparedGenerateRequest(
         parts,
         conversationHistory,
         useOfficialConversation,
+        deduplicatedCurrentEditInput,
+        deduplicatedHistorySourceCount: deduplicatedSourceImageCount,
+        omittedHistoryThoughtTurnCount: omittedThoughtTextTurnCount,
     };
 }
 
@@ -881,7 +912,9 @@ function buildGeneratedResponsePayload(
     extracted: ExtractedGeneratedContent,
     groundingDetails: ReturnType<typeof extractGroundingDetails>,
     streamSummary?: ReturnType<typeof summarizeLiveProgressTruthfulness>,
+    rawResponse?: unknown,
 ): GeneratedResponsePayload {
+    const tokenUsage = extractUsageMetadata(rawResponse);
     return {
         imageUrl: extracted.imageUrl,
         text: extracted.text,
@@ -903,6 +936,14 @@ function buildGeneratedResponsePayload(
                       mimeType: extracted.imageMimeType || 'image/png',
                   }
                 : null,
+            tokenUsage: tokenUsage || undefined,
+            mediaResolutionOptimization: {
+                perPartEnabled: supportsModelPerPartMediaResolution(model),
+                supportsPerPartMediaResolution: supportsModelPerPartMediaResolution(model),
+                deduplicatedCurrentEditInput: Boolean(prepared.deduplicatedCurrentEditInput),
+                deduplicatedHistorySourceCount: prepared.deduplicatedHistorySourceCount || 0,
+                omittedHistoryThoughtTurnCount: prepared.omittedHistoryThoughtTurnCount || 0,
+            },
         },
         grounding: {
             enabled: Boolean(body.googleSearch || body.imageSearch),
@@ -928,6 +969,7 @@ function buildGeneratedResponsePayload(
             actualImageDimensions: extracted.imageDimensions
                 ? `${extracted.imageDimensions.width}x${extracted.imageDimensions.height}`
                 : undefined,
+            tokenUsage: tokenUsage || undefined,
             groundingMode: prepared.groundingMode,
             groundingMetadataReturned: Boolean(
                 groundingDetails.searchEntryPointAvailable || groundingDetails.sources.length,
@@ -943,6 +985,9 @@ function buildGeneratedResponsePayload(
             imageQueriesReturned: groundingDetails.imageQueries.length,
             groundingSupportsReturned: groundingDetails.supports.length,
             officialConversationUsed: prepared.useOfficialConversation,
+            deduplicatedCurrentEditInput: Boolean(prepared.deduplicatedCurrentEditInput),
+            deduplicatedHistorySourceCount: prepared.deduplicatedHistorySourceCount || 0,
+            omittedHistoryThoughtTurnCount: prepared.omittedHistoryThoughtTurnCount || 0,
             liveProgressTruthfulnessOutcome: streamSummary?.truthfulnessOutcome,
             liveProgressOrderingStable: streamSummary?.orderingStable,
             liveProgressPreCompletionArtifactCount: streamSummary?.preCompletionArtifactCount,
@@ -1225,6 +1270,8 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                     prepared,
                     extracted,
                     groundingDetails,
+                    undefined,
+                    response,
                 );
                 if (!requestAbortState.isWritable()) {
                     return;
@@ -1240,6 +1287,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                         hasThoughts: Boolean(payload.thoughts),
                         resultPartCount: payload.resultParts?.length ?? 0,
                         hasGrounding: Boolean(payload.grounding),
+                        tokenUsage: payload.metadata?.tokenUsage,
                     },
                 });
                 return;
@@ -1343,7 +1391,8 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                     body.thinkingLevel ||
                     (validated.model === 'gemini-nano-banana-2.1'
                         ? 'medium'
-                        : validated.model === 'gemini-3.1-flash-image' || validated.model === 'gemini-3.1-flash-lite-image'
+                        : validated.model === 'gemini-3.1-flash-image' ||
+                            validated.model === 'gemini-3.1-flash-lite-image'
                           ? 'minimal'
                           : 'disabled'),
                 includeThoughts: Boolean(body.includeThoughts),
@@ -1385,6 +1434,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 sessionId,
             });
 
+            let lastUsageChunk: unknown = null;
             const startTime = Date.now();
             for await (const chunk of stream) {
                 throwIfAborted(requestAbortState.signal);
@@ -1392,6 +1442,9 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
 
                 if (chunk?.candidates?.[0]?.groundingMetadata) {
                     lastGroundingChunk = chunk;
+                }
+                if (extractUsageMetadata(chunk)) {
+                    lastUsageChunk = chunk;
                 }
 
                 const applied = applyLiveProgressChunkToAccumulator(liveState, chunk);
@@ -1444,6 +1497,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                     extracted,
                     groundingDetails,
                     summary,
+                    lastUsageChunk || lastChunk,
                 );
                 if (!requestAbortState.isWritable()) {
                     return;
@@ -1458,6 +1512,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                     hasThoughts: Boolean(payload.thoughts),
                     resultPartCount: payload.resultParts?.length ?? 0,
                     truthfulnessOutcome: summary.truthfulnessOutcome,
+                    tokenUsage: payload.metadata?.tokenUsage,
                 });
                 writeNdjsonEvent<StreamCompleteEvent>(res, {
                     type: 'complete',

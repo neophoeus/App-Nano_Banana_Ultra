@@ -414,8 +414,12 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
                                         ...sidecar,
                                         actualOutput: sidecar.actualOutput || parentSidecar.actualOutput,
                                         kind: sidecar.kind || parentSidecar.kind,
-                                        sequence: sidecar.sequence !== undefined ? sidecar.sequence : parentSidecar.sequence,
-                                        slotIndex: sidecar.slotIndex !== undefined ? sidecar.slotIndex : parentSidecar.slotIndex,
+                                        sequence:
+                                            sidecar.sequence !== undefined ? sidecar.sequence : parentSidecar.sequence,
+                                        slotIndex:
+                                            sidecar.slotIndex !== undefined
+                                                ? sidecar.slotIndex
+                                                : parentSidecar.slotIndex,
                                         filename: sidecar.filename || safeFilename,
                                     };
                                 }

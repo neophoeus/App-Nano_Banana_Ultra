@@ -15,8 +15,8 @@ import {
 // Minimal valid PNG buffer (1x1 pixel)
 const create1x1PngBuffer = (): Buffer => {
     // 8 bytes signature + IHDR chunk (13 bytes data + 12 header/crc) + IDAT chunk (12 bytes) + IEND chunk (12 bytes)
-    const signature = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
-    
+    const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
     // IHDR
     const ihdrData = Buffer.alloc(13);
     ihdrData.writeUInt32BE(1, 0); // width 1
@@ -31,7 +31,7 @@ const create1x1PngBuffer = (): Buffer => {
     ihdrChunk.writeUInt32BE(ihdrCrc, 8 + 13);
 
     // IDAT (minimal empty/dummy)
-    const idatData = Buffer.from([0x78, 0x9C, 0x62, 0x60, 0x00, 0x00, 0x00, 0x02, 0x00, 0x01]);
+    const idatData = Buffer.from([0x78, 0x9c, 0x62, 0x60, 0x00, 0x00, 0x00, 0x02, 0x00, 0x01]);
     const idatTypeAndData = Buffer.concat([Buffer.from('IDAT', 'ascii'), idatData]);
     const idatCrc = crc32(idatTypeAndData);
     const idatChunk = Buffer.alloc(8 + idatData.length + 4);
@@ -40,7 +40,7 @@ const create1x1PngBuffer = (): Buffer => {
     idatChunk.writeUInt32BE(idatCrc, 8 + idatData.length);
 
     // IEND
-    const iendChunk = Buffer.from([0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82]);
+    const iendChunk = Buffer.from([0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82]);
 
     return Buffer.concat([signature, ihdrChunk, idatChunk, iendChunk]);
 };
@@ -49,10 +49,28 @@ const create1x1PngBuffer = (): Buffer => {
 const createMinimalJpegBuffer = (): Buffer => {
     // SOI (FF D8) + APP0 (FF E0 00 10 4A 46 49 46 ...) + DQT / SOF0 / EOI (FF D9)
     return Buffer.from([
-        0xFF, 0xD8, // SOI
-        0xFF, 0xE0, 0x00, 0x10, // APP0 len 16
-        0x4A, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00,
-        0xFF, 0xD9, // EOI
+        0xff,
+        0xd8, // SOI
+        0xff,
+        0xe0,
+        0x00,
+        0x10, // APP0 len 16
+        0x4a,
+        0x46,
+        0x49,
+        0x46,
+        0x00,
+        0x01,
+        0x01,
+        0x00,
+        0x00,
+        0x01,
+        0x00,
+        0x01,
+        0x00,
+        0x00,
+        0xff,
+        0xd9, // EOI
     ]);
 };
 
@@ -77,7 +95,7 @@ describe('imageMetadataEmbedder', () => {
 
     it('calculates standard CRC-32 checksum correctly', () => {
         const testBuf = Buffer.from('123456789', 'ascii');
-        expect(crc32(testBuf)).toBe(0xCBF43926);
+        expect(crc32(testBuf)).toBe(0xcbf43926);
     });
 
     it('creates well-formed PNG iTXt chunk', () => {
@@ -124,16 +142,16 @@ describe('imageMetadataEmbedder', () => {
 
         expect(modifiedJpeg.length).toBeGreaterThan(originalJpeg.length);
         // SOI check
-        expect(modifiedJpeg[0]).toBe(0xFF);
-        expect(modifiedJpeg[1]).toBe(0xD8);
+        expect(modifiedJpeg[0]).toBe(0xff);
+        expect(modifiedJpeg[1]).toBe(0xd8);
         // EOI check
-        expect(modifiedJpeg[modifiedJpeg.length - 2]).toBe(0xFF);
-        expect(modifiedJpeg[modifiedJpeg.length - 1]).toBe(0xD9);
+        expect(modifiedJpeg[modifiedJpeg.length - 2]).toBe(0xff);
+        expect(modifiedJpeg[modifiedJpeg.length - 1]).toBe(0xd9);
 
         // Check COM markers (0xFF 0xFE)
         let foundCom = false;
         for (let i = 0; i < modifiedJpeg.length - 4; i++) {
-            if (modifiedJpeg[i] === 0xFF && modifiedJpeg[i + 1] === 0xFE) {
+            if (modifiedJpeg[i] === 0xff && modifiedJpeg[i + 1] === 0xfe) {
                 foundCom = true;
                 break;
             }

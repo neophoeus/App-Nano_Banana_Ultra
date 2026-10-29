@@ -16,6 +16,32 @@ export type AspectRatio =
 export type EditorMode = 'inpaint' | 'outpaint' | 'revolve';
 export type ImageSize = '512' | '512px' | '1K' | '2K' | '4K';
 
+export type PartMediaResolutionLevelValue =
+    | 'MEDIA_RESOLUTION_UNSPECIFIED'
+    | 'MEDIA_RESOLUTION_LOW'
+    | 'MEDIA_RESOLUTION_MEDIUM'
+    | 'MEDIA_RESOLUTION_HIGH'
+    | 'MEDIA_RESOLUTION_ULTRA_HIGH';
+
+export type MediaResolutionRole =
+    | 'character'
+    | 'edit'
+    | 'source'
+    | 'object'
+    | 'style'
+    | 'video'
+    | 'history-anchor'
+    | 'history-decay'
+    | 'forensic-prompt';
+
+export interface TokenUsageMetadata {
+    promptTokenCount: number;
+    candidatesTokenCount: number;
+    thoughtsTokenCount: number;
+    totalTokenCount: number;
+    cachedContentTokenCount: number;
+}
+
 export type ImageStyleCategory =
     | 'All'
     | 'PhotoFilm'

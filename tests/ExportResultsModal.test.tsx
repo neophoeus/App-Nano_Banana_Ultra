@@ -88,12 +88,7 @@ describe('ExportResultsModal', () => {
     it('returns null when isOpen is false', () => {
         act(() => {
             root.render(
-                <ExportResultsModal
-                    isOpen={false}
-                    onClose={vi.fn()}
-                    history={sampleHistory}
-                    t={(key) => key}
-                />,
+                <ExportResultsModal isOpen={false} onClose={vi.fn()} history={sampleHistory} t={(key) => key} />,
             );
         });
         expect(container.firstChild).toBeNull();
@@ -102,12 +97,7 @@ describe('ExportResultsModal', () => {
     it('renders modal with default export directory and deduplicates primary output from variants', () => {
         act(() => {
             root.render(
-                <ExportResultsModal
-                    isOpen={true}
-                    onClose={vi.fn()}
-                    history={sampleHistory}
-                    t={(key) => key}
-                />,
+                <ExportResultsModal isOpen={true} onClose={vi.fn()} history={sampleHistory} t={(key) => key} />,
             );
         });
 
@@ -126,12 +116,7 @@ describe('ExportResultsModal', () => {
 
         act(() => {
             root.render(
-                <ExportResultsModal
-                    isOpen={true}
-                    onClose={vi.fn()}
-                    history={sampleHistory}
-                    t={(key) => key}
-                />,
+                <ExportResultsModal isOpen={true} onClose={vi.fn()} history={sampleHistory} t={(key) => key} />,
             );
         });
 

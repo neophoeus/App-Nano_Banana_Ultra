@@ -1,5 +1,6 @@
 import { getBlockedSafetyCategories, resolveGenerationFailureInfo } from '../../utils/generationFailure';
 import { extractGroundingDetails, type GroundingSource, type GroundingSupport } from './groundingExtraction';
+import { extractUsageMetadata } from './mediaResolution';
 
 export type BatchJobResponsePayload = {
     name: string;
@@ -251,6 +252,7 @@ function buildBatchImportResultFromResponse(
         },
         sessionHints: {
             requestKey: options?.requestKey,
+            tokenUsage: extractUsageMetadata(response) || undefined,
             groundingMetadataReturned: resolveGroundingMetadataReturned(response, groundingDetails),
             textReturned: Boolean(extracted.text),
             thoughtsReturned: Boolean(extracted.thoughts),

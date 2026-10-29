@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import { type PartMediaResolutionPayload, resolveRoleMediaResolution } from './mediaResolution';
 
 const LOAD_IMAGE_ENDPOINT = '/api/load-image';
 const RAW_BASE64_PATTERN = /^[A-Za-z0-9+/=]+$/u;
@@ -21,12 +22,14 @@ export type ResolvedFileImage = {
     mimeType: string;
 };
 
-type InlineGeneratePart = {
+export type InlineGeneratePart = {
     text?: string;
     inlineData?: { data: string; mimeType: string };
+    fileData?: ResolvedFileImage | { fileUri: string; mimeType: string };
+    mediaResolution?: PartMediaResolutionPayload;
 };
 
-type FileGeneratePart = {
+export type FileGeneratePart = {
     text?: string;
     fileData?: ResolvedFileImage;
 };
@@ -37,7 +40,9 @@ type ReferenceImage = {
     savedFilename?: string | null;
 };
 
-type GenerateImageBodyLike = {
+export type GenerateImageBodyLike = {
+    model?: string;
+    imageSize?: string;
     prompt?: string;
     editingInput?: string;
     sourceImageInput?: string;
@@ -221,6 +226,7 @@ export function pushImagesToParts(
     images: string[] | undefined,
     prefix: string,
     resolvedDir: string,
+    mediaResolution?: PartMediaResolutionPayload,
 ): void {
     if (!images?.length) {
         return;
@@ -233,7 +239,11 @@ export function pushImagesToParts(
         }
 
         parts.push({ text: `[${prefix}_${index + 1}]` });
-        parts.push({ inlineData: resolveInlineImageInput(image, resolvedDir) });
+        const part: InlineGeneratePart = {
+            inlineData: resolveInlineImageInput(image, resolvedDir),
+            ...(mediaResolution ? { mediaResolution } : {}),
+        };
+        parts.push(part);
     }
 }
 
@@ -280,14 +290,48 @@ export function buildGenerateParts(body: GenerateImageBodyLike, resolvedDir: str
     const parts: InlineGeneratePart[] = [];
     const prompt = String(body.prompt || 'A creative image.');
 
+    const editResolution = resolveRoleMediaResolution({
+        model: body.model,
+        role: 'edit',
+        imageSize: body.imageSize,
+    });
+    const srcResolution = resolveRoleMediaResolution({
+        model: body.model,
+        role: 'source',
+        imageSize: body.imageSize,
+    });
+    const charResolution = resolveRoleMediaResolution({
+        model: body.model,
+        role: 'character',
+        imageSize: body.imageSize,
+    });
+    const objResolution = resolveRoleMediaResolution({
+        model: body.model,
+        role: 'object',
+        imageSize: body.imageSize,
+    });
+    const styleResolution = resolveRoleMediaResolution({
+        model: body.model,
+        role: 'style',
+        imageSize: body.imageSize,
+    });
+    const videoResolution = resolveRoleMediaResolution({
+        model: body.model,
+        role: 'video',
+        imageSize: body.imageSize,
+    });
+
     if (videoInput) {
-        parts.push({ fileData: { fileUri: videoInput, mimeType: 'video/mp4' } });
+        parts.push({
+            fileData: { fileUri: videoInput, mimeType: 'video/mp4' },
+            ...(videoResolution ? { mediaResolution: videoResolution } : {}),
+        });
     }
-    pushImagesToParts(parts, body.editingInput ? [body.editingInput] : [], 'Edit', resolvedDir);
-    pushImagesToParts(parts, body.sourceImageInput ? [body.sourceImageInput] : [], 'Src', resolvedDir);
-    pushImagesToParts(parts, objectImageInputs, 'Obj', resolvedDir);
-    pushImagesToParts(parts, characterImageInputs, 'Char', resolvedDir);
-    pushImagesToParts(parts, styleImageInputs, 'Style', resolvedDir);
+    pushImagesToParts(parts, body.editingInput ? [body.editingInput] : [], 'Edit', resolvedDir, editResolution);
+    pushImagesToParts(parts, body.sourceImageInput ? [body.sourceImageInput] : [], 'Src', resolvedDir, srcResolution);
+    pushImagesToParts(parts, objectImageInputs, 'Obj', resolvedDir, objResolution);
+    pushImagesToParts(parts, characterImageInputs, 'Char', resolvedDir, charResolution);
+    pushImagesToParts(parts, styleImageInputs, 'Style', resolvedDir, styleResolution);
     parts.push({
         text: prompt,
     });

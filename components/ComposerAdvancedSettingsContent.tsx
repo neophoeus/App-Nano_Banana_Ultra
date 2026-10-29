@@ -5,12 +5,7 @@ import {
     OUTPUT_FORMATS,
     THINKING_LEVELS,
 } from '../constants';
-import {
-    GroundingMode,
-    ImageModel,
-    OutputFormat,
-    ThinkingLevel,
-} from '../types';
+import { GroundingMode, ImageModel, OutputFormat, ThinkingLevel } from '../types';
 import { getGroundingModeTranslationKey } from '../utils/groundingMode';
 import { DEFAULT_TEMPERATURE, formatTemperature, normalizeTemperature, TEMPERATURE_STEP } from '../utils/temperature';
 import { getTranslation, Language } from '../utils/translations';
@@ -52,9 +47,7 @@ export default function ComposerAdvancedSettingsContent({
     );
     const hasGroundingCard = availableGroundingModes.length > 1;
     const hasLeftColumnContent =
-        capability.outputFormats.length > 1 ||
-        supportsThinkingLevelControl ||
-        capability.supportsTemperature;
+        capability.outputFormats.length > 1 || supportsThinkingLevelControl || capability.supportsTemperature;
     const hasRightColumnContent = hasGroundingCard;
     const showGroundingResolutionWarning =
         (imageModel === 'gemini-nano-banana-2.1' || imageModel === 'gemini-3.1-flash-image') &&

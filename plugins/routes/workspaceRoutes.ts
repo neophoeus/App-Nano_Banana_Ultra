@@ -394,7 +394,10 @@ export function registerWorkspaceRoutes(server: any, { geminiApiKey, resolvedDir
                 }>;
             }>(req);
 
-            const rawTargetDir = (body?.targetDir || '').trim().replace(/^["']+|["']+$/g, '').trim();
+            const rawTargetDir = (body?.targetDir || '')
+                .trim()
+                .replace(/^["']+|["']+$/g, '')
+                .trim();
             const pathWithoutDrive = rawTargetDir.replace(/^[a-zA-Z]:/, '');
             if (/[<>:"|?*\x00-\x1F]/.test(pathWithoutDrive)) {
                 sendJson(
@@ -407,7 +410,9 @@ export function registerWorkspaceRoutes(server: any, { geminiApiKey, resolvedDir
             }
 
             const outputDir = rawTargetDir
-                ? (path.isAbsolute(rawTargetDir) ? path.normalize(rawTargetDir) : path.resolve(process.cwd(), rawTargetDir))
+                ? path.isAbsolute(rawTargetDir)
+                    ? path.normalize(rawTargetDir)
+                    : path.resolve(process.cwd(), rawTargetDir)
                 : path.resolve(process.cwd(), 'export');
 
             if (path.resolve(outputDir).toLowerCase() === path.resolve(resolvedDir).toLowerCase()) {
@@ -488,7 +493,8 @@ export function registerWorkspaceRoutes(server: any, { geminiApiKey, resolvedDir
                                                     ? `${sidecarMeta.actualOutput.width}x${sidecarMeta.actualOutput.height}${sidecarMeta.actualOutput.mimeType ? ` (${sidecarMeta.actualOutput.mimeType})` : ''}`
                                                     : undefined),
                                             groundingMode: item.metadata.groundingMode || sidecarMeta.groundingMode,
-                                            groundingSources: item.metadata.groundingSources || sidecarMeta.groundingSources,
+                                            groundingSources:
+                                                item.metadata.groundingSources || sidecarMeta.groundingSources,
                                             temperature:
                                                 item.metadata.temperature !== undefined
                                                     ? item.metadata.temperature
@@ -512,19 +518,30 @@ export function registerWorkspaceRoutes(server: any, { geminiApiKey, resolvedDir
                         continue;
                     }
 
-                    if (imageBuffer[0] === 0x89 && imageBuffer[1] === 0x50 && imageBuffer[2] === 0x4E && imageBuffer[3] === 0x47) {
+                    if (
+                        imageBuffer[0] === 0x89 &&
+                        imageBuffer[1] === 0x50 &&
+                        imageBuffer[2] === 0x4e &&
+                        imageBuffer[3] === 0x47
+                    ) {
                         ext = '.png';
-                    } else if (imageBuffer[0] === 0xFF && imageBuffer[1] === 0xD8) {
+                    } else if (imageBuffer[0] === 0xff && imageBuffer[1] === 0xd8) {
                         ext = '.jpg';
-                    } else if (imageBuffer[0] === 0x52 && imageBuffer[1] === 0x49 && imageBuffer[2] === 0x46 && imageBuffer[3] === 0x46) {
+                    } else if (
+                        imageBuffer[0] === 0x52 &&
+                        imageBuffer[1] === 0x49 &&
+                        imageBuffer[2] === 0x46 &&
+                        imageBuffer[3] === 0x46
+                    ) {
                         ext = '.webp';
                     }
 
                     const taggedBuffer = embedImageMetadata(imageBuffer, item.metadata);
 
-                    const rawBaseName = (item.baseFilename || path.parse(item.metadata?.id || 'image').name || 'export')
-                        .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
-                        .trim() || 'export';
+                    const rawBaseName =
+                        (item.baseFilename || path.parse(item.metadata?.id || 'image').name || 'export')
+                            .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
+                            .trim() || 'export';
 
                     let finalFilename = `${rawBaseName}${ext}`;
                     let counter = 1;
@@ -596,12 +613,22 @@ export function registerWorkspaceRoutes(server: any, { geminiApiKey, resolvedDir
 
             exec(psCommand, { windowsHide: true }, (err, stdout) => {
                 if (err) {
-                    sendJson(res, 200, { cancelled: true }, { requestContext, summary: 'Folder browser cancelled or failed' });
+                    sendJson(
+                        res,
+                        200,
+                        { cancelled: true },
+                        { requestContext, summary: 'Folder browser cancelled or failed' },
+                    );
                     return;
                 }
                 const selectedPath = (stdout || '').trim();
                 if (selectedPath) {
-                    sendJson(res, 200, { cancelled: false, path: selectedPath }, { requestContext, summary: 'Folder selected' });
+                    sendJson(
+                        res,
+                        200,
+                        { cancelled: false, path: selectedPath },
+                        { requestContext, summary: 'Folder selected' },
+                    );
                 } else {
                     sendJson(res, 200, { cancelled: true }, { requestContext, summary: 'Folder browser cancelled' });
                 }
@@ -614,13 +641,23 @@ export function registerWorkspaceRoutes(server: any, { geminiApiKey, resolvedDir
     server.use('/api/clear-output', async (req: any, res: any) => {
         const requestContext = createApiRequestContext(req, '/api/clear-output');
         if (req.method !== 'POST') {
-            sendJson(res, 405, { success: false, error: 'Method not allowed' }, { requestContext, summary: 'Method not allowed' });
+            sendJson(
+                res,
+                405,
+                { success: false, error: 'Method not allowed' },
+                { requestContext, summary: 'Method not allowed' },
+            );
             return;
         }
 
         try {
             if (!fs.existsSync(resolvedDir)) {
-                sendJson(res, 200, { success: true, deletedCount: 0, errors: [] }, { requestContext, summary: 'Output dir does not exist' });
+                sendJson(
+                    res,
+                    200,
+                    { success: true, deletedCount: 0, errors: [] },
+                    { requestContext, summary: 'Output dir does not exist' },
+                );
                 return;
             }
 
@@ -671,7 +708,12 @@ export function registerWorkspaceRoutes(server: any, { geminiApiKey, resolvedDir
             sendJson(
                 res,
                 500,
-                { success: false, error: err?.message || 'Failed to clear output files', deletedCount: 0, errors: [err?.message || 'Unknown error'] },
+                {
+                    success: false,
+                    error: err?.message || 'Failed to clear output files',
+                    deletedCount: 0,
+                    errors: [err?.message || 'Unknown error'],
+                },
                 { requestContext, summary: 'Clear output failed' },
             );
         }

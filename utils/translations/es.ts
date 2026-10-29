@@ -298,9 +298,11 @@ export const es = {
         '¿Restablecer este espacio de trabajo a su estado vacío predeterminado? Se eliminarán el historial, el escenario, el prompt y el contexto de la sesión. Los trabajos por lotes en cola compartidos seguirán disponibles por separado. Recomendamos usar primero Exportar espacio de trabajo. No se puede deshacer.',
     clearHistoryConfirm: 'Borrar espacio de trabajo',
     clearHistoryCancel: 'Cancelar',
-    clearHistoryExportReminder: 'Recordatorio: antes de reiniciar, asegúrese de hacer una copia de seguridad de las imágenes y metadatos deseados a través de "Exportar resultados (Export Results)".',
+    clearHistoryExportReminder:
+        'Recordatorio: antes de reiniciar, asegúrese de hacer una copia de seguridad de las imágenes y metadatos deseados a través de "Exportar resultados (Export Results)".',
     clearHistoryIncludeOutputLabel: 'Eliminar también archivos de imagen y sidecar JSON en la carpeta output',
-    clearHistoryIncludeOutputHint: 'Elimina permanentemente todas las imágenes generadas y archivos de metadatos del directorio output (los trabajos en cola se conservan).',
+    clearHistoryIncludeOutputHint:
+        'Elimina permanentemente todas las imágenes generadas y archivos de metadatos del directorio output (los trabajos en cola se conservan).',
 
     // Sketch Pad
     sketchTitle: 'Bloc de Dibujo',
@@ -1089,19 +1091,20 @@ export const es = {
     generationFailureDetailQuota:
         'La solicitud fue limitada por velocidad o su cuota se agotó temporalmente. Ampliar el intervalo entre solicitudes o esperar a que se restablezca la ventana móvil puede ayudar.',
 
-    workspaceToolbarActionExportResults: "Exportar Resultados",
-    workspaceToolbarExportResultsTitle: "Exportar todas las imágenes generadas con metadatos incrustados",
-    exportResultsTitle: "Exportar Todos los Resultados Generados",
-    exportResultsDesc: "Extrae solo imágenes generadas con parámetros incrustados (compatible con Workspace Extractor).",
-    exportResultsFolderLabel: "Carpeta de Destino",
-    exportResultsBrowseBtn: "Examinar...",
-    exportResultsFolderHint: "Admite ruta relativa (ej. ./export) o ruta absoluta (ej. D:\\AI_Outputs).",
-    exportResultsIncludeThoughts: "Incluir Imágenes de Proceso de Pensamiento",
-    exportResultsIncludeThoughtsDesc: "Exporta imágenes intermedias de razonamiento si están disponibles.",
-    exportResultsEstimatedCount: "Imágenes a Exportar",
-    exportResultsSuccessCount: "Se exportaron correctamente {0} imágenes",
-    exportResultsConfirm: "Iniciar Exportación",
-    exportResultsRunning: "Exportando...",
-    exportResultsEmptyNotice: "No hay imágenes generadas disponibles para exportar en el espacio actual.",
-    exportResultsSuccessNotice: "Se exportaron correctamente {0} imágenes con metadatos a {1}",
+    workspaceToolbarActionExportResults: 'Exportar Resultados',
+    workspaceToolbarExportResultsTitle: 'Exportar todas las imágenes generadas con metadatos incrustados',
+    exportResultsTitle: 'Exportar Todos los Resultados Generados',
+    exportResultsDesc:
+        'Extrae solo imágenes generadas con parámetros incrustados (compatible con Workspace Extractor).',
+    exportResultsFolderLabel: 'Carpeta de Destino',
+    exportResultsBrowseBtn: 'Examinar...',
+    exportResultsFolderHint: 'Admite ruta relativa (ej. ./export) o ruta absoluta (ej. D:\\AI_Outputs).',
+    exportResultsIncludeThoughts: 'Incluir Imágenes de Proceso de Pensamiento',
+    exportResultsIncludeThoughtsDesc: 'Exporta imágenes intermedias de razonamiento si están disponibles.',
+    exportResultsEstimatedCount: 'Imágenes a Exportar',
+    exportResultsSuccessCount: 'Se exportaron correctamente {0} imágenes',
+    exportResultsConfirm: 'Iniciar Exportación',
+    exportResultsRunning: 'Exportando...',
+    exportResultsEmptyNotice: 'No hay imágenes generadas disponibles para exportar en el espacio actual.',
+    exportResultsSuccessNotice: 'Se exportaron correctamente {0} imágenes con metadatos a {1}',
 } as const;

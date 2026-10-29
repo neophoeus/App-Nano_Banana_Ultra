@@ -251,7 +251,8 @@ export const trimDebugTerminalEvents = (events: DebugTerminalEvent[]): DebugTerm
         const isRoutineWorkspaceCurrent =
             current.source === 'workspace' &&
             current.kind !== 'error' &&
-            (current.operation === 'workspace-snapshot.save' || current.label.toLowerCase().includes('workspace snapshot'));
+            (current.operation === 'workspace-snapshot.save' ||
+                current.label.toLowerCase().includes('workspace snapshot'));
 
         const isRoutineWorkspacePrev =
             prev !== null &&

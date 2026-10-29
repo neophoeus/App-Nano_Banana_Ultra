@@ -4,7 +4,7 @@ import type { PromptThinkingLevel } from '../types';
 import { prepareImageAssetFromFile } from '../utils/imageSaveUtils';
 import { Language } from '../utils/translations';
 
-const IMAGE_TO_PROMPT_MAX_DIMENSION = 2048;
+const IMAGE_TO_PROMPT_MAX_DIMENSION = 3072;
 type PromptToolId = 'image-to-prompt' | 'inspiration' | 'rewrite';
 
 interface UsePromptToolsOptions {
@@ -60,11 +60,7 @@ export function usePromptTools({
         setActivePromptTool('rewrite');
         setIsEnhancingPrompt(true);
         try {
-            const enhanced = await enhancePromptWithGemini(
-                prompt,
-                currentLanguage,
-                promptThinkingLevel,
-            );
+            const enhanced = await enhancePromptWithGemini(prompt, currentLanguage, promptThinkingLevel);
             setPrompt(enhanced);
             addLog(t('logRewriteOk'));
         } catch (e) {
@@ -108,15 +104,7 @@ export function usePromptTools({
             setIsEnhancingPrompt(false);
             setActivePromptTool(null);
         }
-    }, [
-        apiKeyReady,
-        currentLanguage,
-        handleApiKeyConnect,
-        addLog,
-        promptThinkingLevel,
-        setPrompt,
-        t,
-    ]);
+    }, [apiKeyReady, currentLanguage, handleApiKeyConnect, addLog, promptThinkingLevel, setPrompt, t]);
 
     const handleImageToPrompt = useCallback(
         async (file: File) => {

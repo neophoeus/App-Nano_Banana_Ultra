@@ -1,8 +1,5 @@
 import { Modality, ThinkingLevel } from '@google/genai/node';
-import {
-    type OutputFormat,
-    type ThinkingLevel as AppThinkingLevel,
-} from '../../types';
+import { type OutputFormat, type ThinkingLevel as AppThinkingLevel } from '../../types';
 
 export function toGeminiThinkingLevel(thinkingLevel: AppThinkingLevel): ThinkingLevel | undefined {
     switch (thinkingLevel) {
