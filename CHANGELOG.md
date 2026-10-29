@@ -2,8 +2,14 @@
 
 ## v5.4.0 - 2026-10-29
 
-- Release title: Nano Banana Ultra 5.4.0 - Quality/Eco Optimization Modes, Global Flat Icon System, High-Contrast Read Metadata, and Seamless Viewport Ambient Lighting
+- Release title: Nano Banana Ultra 5.4.0 - Quality/Eco Optimization Modes, Global Flat Icon System, High-Contrast Read Metadata, Seamless Viewport Ambient Lighting, .gitignore Purification, and E2E Workspace Snapshot Isolation
 - Release summary:
+    - **Repository Hygiene & Single-Worker Playwright E2E Isolation (`.gitignore`, `README*`, `playwright.config.ts`, `e2e/*`, `tests/*`)**:
+        - `.gitignore` purification: Pruned 15 obsolete and non-applicable ignore rules (legacy build/export artifacts, outdated log conventions, VS templates, retired zip packaging remnants, and unused local-scratch test paths), reducing root `.gitignore` from 49 to 32 clean, active rules with 100% protection for local secrets (`.env*`, `!.env.example`) and active output directories.
+        - Synchronized repository scope documentation: Aligned `Repository Scope` across `README.md` and `README.zh-TW.md` to reflect the updated repository boundaries without stale path references.
+        - Single-worker Playwright serialization: Configured `workers: 1` in `playwright.config.ts` to serialize multi-spec Playwright runs against the single local dev server (`127.0.0.1:22301`), eliminating cross-file worker race conditions on the shared `output-test/workspace_snapshot.json` file.
+        - Shared workspace snapshot & storage isolation helper: Introduced `e2e/utils/playwrightWorkspaceIsolation.ts` with `resetPlaywrightOutputSnapshots()` (including Windows `EBUSY`/`EPERM` retry backoff) and `installCleanBrowserStorageInitScript()` across smoke and diagnostics E2E suites.
+        - History card locator double-counting resolution: Hardened smoke test selectors to `[role="button"][data-testid^="history-card-"]`, explicitly filtering out child `-deferred-media` and `-missing-media` placeholder elements to prevent false assertion counts during lazy image hydration.
     - **Quality / Eco Optimization Mode System (`components/OptimizationModeToggle.tsx`, `utils/optimizationMode.ts`, `hooks/*`, `plugins/*`, `tests/*`)**:
         - Sliding pill mode toggle: Integrated beside the theme button in the top header with a smooth 50%/50% equal-width sliding thumb (`inline-grid grid-cols-[1fr_1fr]`), featuring warm flame and eco leaf icons.
         - Comprehensive 9-language floating explanation dialog: Accessible via a circular `(i)` trigger button with smart anchored placement and backdrop blur portal, detailing the precise settings, token behavior, and use cases across all supported locales (`zh_TW`, `en`, `zh_CN`, `ja`, `ko`, `es`, `fr`, `de`, `ru`).

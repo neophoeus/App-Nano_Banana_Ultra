@@ -152,7 +152,7 @@ Version 5.x focuses on **architectural purification in alignment with Google AI 
 
 #### 5.x Release History
 
-- **v5.4.0** (2026-10-29): Quality/Eco Optimization Modes, Global Flat Icon System, High-Contrast Read Metadata, and Seamless Viewport Ambient Lighting
+- **v5.4.0** (2026-10-29): Quality/Eco Optimization Modes, Global Flat Icon System, High-Contrast Read Metadata, Seamless Viewport Ambient Lighting, .gitignore Purification, and E2E Workspace Snapshot Isolation
 - **v5.3.0** (2026-10-29): Role-Aware Per-Part MediaResolution, Multi-Turn Lossless Token Optimization, and Token Usage Telemetry
 - **v5.2.0** (2026-10-29): Export Results Auto-Close & Filename Local Timestamp Alignment, Output Directory Selective Clear, and Workspace Metadata Viewer Compatibility
 - **v5.1.0** (2026-10-28): Dual-Mode Image Metadata Viewer Integration, Workspace Extractor Retirement, and Composer Round Count Layout Refactor
