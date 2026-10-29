@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai/node';
 import type {
     ConversationRequestContext,
+    OptimizationMode,
     ResultPart,
     ResultTextPart,
     GroundingMetadata,
@@ -9,6 +10,7 @@ import type {
     ResultImagePart,
 } from '../../types';
 import { deriveGroundingMode } from '../../utils/groundingMode';
+import { normalizeOptimizationMode, resolveEffectiveGenerationThinking } from '../../utils/optimizationMode';
 import {
     getGenerationFailureHttpStatus,
     isSafetyBlockedFinishReason,
@@ -68,6 +70,7 @@ type ImageGenerateBody = {
     imageSearch?: boolean;
     executionMode?: 'single-turn' | 'interactive-batch-variants' | 'chat-continuation' | 'queued-batch-job';
     conversationContext?: ConversationRequestContext | null;
+    optimizationMode?: OptimizationMode;
 };
 
 type GeneratedResponsePayload = {
@@ -182,6 +185,8 @@ type PreparedGenerateRequest = {
     deduplicatedCurrentEditInput?: boolean;
     deduplicatedHistorySourceCount?: number;
     omittedHistoryThoughtTurnCount?: number;
+    truncatedHistoryTurnCount?: number;
+    optimizationMode: OptimizationMode;
 };
 
 type ValidationErrorResult = {
@@ -814,17 +819,22 @@ function buildPreparedGenerateRequest(
     body: ImageGenerateBody,
     resolvedDir: string,
 ): PreparedGenerateRequest {
+    const mode = normalizeOptimizationMode(body.optimizationMode);
     const { requestConfig, resolvedResponseModalities, groundingMode, effectiveThinkingLevel, shouldIncludeThoughts } =
-        buildImageRequestConfig(model, body);
+        buildImageRequestConfig(model, { ...body, optimizationMode: mode });
     const useOfficialConversation = body.executionMode === 'chat-continuation' && Boolean(body.conversationContext);
     const {
         history: conversationHistory,
         lastModelOutputImage,
         deduplicatedSourceImageCount,
         omittedThoughtTextTurnCount,
-    } = buildConversationHistoryWithMetadata(body.conversationContext, resolvedDir, { model });
+        truncatedTurnCount,
+    } = buildConversationHistoryWithMetadata(body.conversationContext, resolvedDir, {
+        model,
+        optimizationMode: mode,
+    });
 
-    let effectiveBody: ImageGenerateBody = { ...body, model, imageSize: body.imageSize };
+    let effectiveBody: ImageGenerateBody = { ...body, model, imageSize: body.imageSize, optimizationMode: mode };
     let deduplicatedCurrentEditInput = false;
 
     if (useOfficialConversation && conversationHistory.length > 0 && body.editingInput && lastModelOutputImage) {
@@ -852,6 +862,8 @@ function buildPreparedGenerateRequest(
         deduplicatedCurrentEditInput,
         deduplicatedHistorySourceCount: deduplicatedSourceImageCount,
         omittedHistoryThoughtTurnCount: omittedThoughtTextTurnCount,
+        truncatedHistoryTurnCount: truncatedTurnCount,
+        optimizationMode: mode,
     };
 }
 
@@ -940,9 +952,11 @@ function buildGeneratedResponsePayload(
             mediaResolutionOptimization: {
                 perPartEnabled: supportsModelPerPartMediaResolution(model),
                 supportsPerPartMediaResolution: supportsModelPerPartMediaResolution(model),
+                optimizationMode: prepared.optimizationMode,
                 deduplicatedCurrentEditInput: Boolean(prepared.deduplicatedCurrentEditInput),
                 deduplicatedHistorySourceCount: prepared.deduplicatedHistorySourceCount || 0,
                 omittedHistoryThoughtTurnCount: prepared.omittedHistoryThoughtTurnCount || 0,
+                truncatedHistoryTurnCount: prepared.truncatedHistoryTurnCount || 0,
             },
         },
         grounding: {
@@ -988,6 +1002,8 @@ function buildGeneratedResponsePayload(
             deduplicatedCurrentEditInput: Boolean(prepared.deduplicatedCurrentEditInput),
             deduplicatedHistorySourceCount: prepared.deduplicatedHistorySourceCount || 0,
             omittedHistoryThoughtTurnCount: prepared.omittedHistoryThoughtTurnCount || 0,
+            truncatedHistoryTurnCount: prepared.truncatedHistoryTurnCount || 0,
+            optimizationMode: prepared.optimizationMode,
             liveProgressTruthfulnessOutcome: streamSummary?.truthfulnessOutcome,
             liveProgressOrderingStable: streamSummary?.orderingStable,
             liveProgressPreCompletionArtifactCount: streamSummary?.preCompletionArtifactCount,
@@ -1383,19 +1399,18 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 return;
             }
 
+            const effectiveThinking = resolveEffectiveGenerationThinking({
+                model: validated.model,
+                thinkingLevel: body.thinkingLevel,
+                includeThoughts: body.includeThoughts,
+                optimizationMode: body.optimizationMode,
+            });
             const liveProgressError = describeLiveProgressIneligibility({
                 model: validated.model as LiveProgressCapabilityCell['model'],
                 executionMode: body.executionMode || 'single-turn',
                 outputFormat: body.outputFormat || 'images-only',
-                thinkingLevel:
-                    body.thinkingLevel ||
-                    (validated.model === 'gemini-nano-banana-2.1'
-                        ? 'medium'
-                        : validated.model === 'gemini-3.1-flash-image' ||
-                            validated.model === 'gemini-3.1-flash-lite-image'
-                          ? 'minimal'
-                          : 'disabled'),
-                includeThoughts: Boolean(body.includeThoughts),
+                thinkingLevel: effectiveThinking.thinkingLevel,
+                includeThoughts: effectiveThinking.includeThoughts,
                 batchSize: 1,
             });
             if (liveProgressError) {

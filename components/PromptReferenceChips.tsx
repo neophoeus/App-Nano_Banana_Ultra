@@ -6,6 +6,83 @@ import {
     getReferencePreviewDataUrl,
 } from '../utils/imageSaveUtils';
 
+function UserIcon({ className = 'w-2.5 h-2.5' }: { className?: string }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+        </svg>
+    );
+}
+
+function PaletteIcon({ className = 'w-2.5 h-2.5' }: { className?: string }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+            <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+            <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+            <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
+        </svg>
+    );
+}
+
+function ImageIcon({ className = 'w-2.5 h-2.5' }: { className?: string }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+            <circle cx="9" cy="9" r="2" />
+            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+        </svg>
+    );
+}
+
+function AlertTriangleIcon({ className = 'w-3 h-3' }: { className?: string }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+    );
+}
+
 export interface ReferenceChipItem {
     id: string;
     tag: string;
@@ -257,8 +334,14 @@ export const PromptReferenceChips: React.FC<PromptReferenceChipsProps> = ({
                                             loading="lazy"
                                         />
                                     ) : (
-                                        <span className="flex h-full w-full items-center justify-center bg-slate-200 text-[8px] dark:bg-slate-700">
-                                            {isChar ? '👤' : isStyle ? '🎨' : '🖼️'}
+                                        <span className="flex h-full w-full items-center justify-center bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                                            {isChar ? (
+                                                <UserIcon className="h-2.5 w-2.5" />
+                                            ) : isStyle ? (
+                                                <PaletteIcon className="h-2.5 w-2.5" />
+                                            ) : (
+                                                <ImageIcon className="h-2.5 w-2.5" />
+                                            )}
                                         </span>
                                     )}
                                 </span>
@@ -400,7 +483,10 @@ export const PromptReferencedBadges: React.FC<PromptReferencedBadgesProps> = ({
                                 className="inline-flex items-center gap-1 rounded-md border border-amber-300/80 bg-amber-50 px-1.5 py-0.5 font-mono text-[10px] text-amber-800 dark:border-amber-500/40 dark:bg-amber-950/40 dark:text-amber-200"
                                 data-testid={`composer-orphan-tag-${item.tag}`}
                             >
-                                <span title={labelText}>⚠️ {item.tag}</span>
+                                <span title={labelText} className="inline-flex items-center gap-1">
+                                    <AlertTriangleIcon className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                                    <span>{item.tag}</span>
+                                </span>
                                 <span className="text-[9px] opacity-75 font-sans">({notUploadedTitle})</span>
                                 {onRemoveTag && (
                                     <button
@@ -457,8 +543,12 @@ export const PromptReferencedBadges: React.FC<PromptReferencedBadgesProps> = ({
                                             loading="lazy"
                                         />
                                     ) : (
-                                        <span className="flex h-full w-full items-center justify-center bg-slate-200 text-[6px] dark:bg-slate-700">
-                                            {isChar ? '👤' : '🖼️'}
+                                        <span className="flex h-full w-full items-center justify-center bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                                            {isChar ? (
+                                                <UserIcon className="h-2.5 w-2.5" />
+                                            ) : (
+                                                <ImageIcon className="h-2.5 w-2.5" />
+                                            )}
                                         </span>
                                     )}
                                 </span>

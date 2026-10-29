@@ -11,6 +11,46 @@ import {
 import { Language } from '../utils/translations';
 import WorkspaceSupportDetailSurface from './WorkspaceSupportDetailSurface';
 
+function ImageIcon({ className = 'w-7 h-7' }: { className?: string }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.75}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+            <circle cx="9" cy="9" r="2" />
+            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+        </svg>
+    );
+}
+
+function SparklesIcon({ className = 'w-3.5 h-3.5' }: { className?: string }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+            <path d="M5 3v4" />
+            <path d="M19 17v4" />
+            <path d="M3 5h4" />
+            <path d="M17 19h4" />
+        </svg>
+    );
+}
+
 export type MetadataViewerDrawerProps = {
     isOpen: boolean;
     onClose: () => void;
@@ -530,7 +570,9 @@ export default function MetadataViewerDrawer({
                         className="hidden"
                         onChange={handleFileInputChange}
                     />
-                    <div className="text-2xl">🖼️</div>
+                    <div className="flex justify-center text-slate-400 dark:text-slate-500">
+                        <ImageIcon className="h-8 w-8" />
+                    </div>
                     <div className="text-sm font-semibold">{labels.dropPrompt}</div>
                     <div className="text-xs text-slate-500 dark:text-slate-400">{labels.dropSubtext}</div>
                 </div>
@@ -603,7 +645,7 @@ export default function MetadataViewerDrawer({
                                     disabled={!currentPrompt && !currentMeta}
                                     className="nbu-control-button flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 shadow-sm transition-all hover:brightness-105 disabled:opacity-40"
                                 >
-                                    <span>✨</span>
+                                    <SparklesIcon className="h-3.5 w-3.5" />
                                     <span>{labels.applyBoth}</span>
                                 </button>
                                 <button

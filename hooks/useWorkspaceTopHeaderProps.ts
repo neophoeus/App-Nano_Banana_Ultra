@@ -1,5 +1,6 @@
 import { ReactNode, useMemo } from 'react';
 import WorkspaceTopHeader from '../components/WorkspaceTopHeader';
+import { OptimizationMode } from '../types';
 import { Language } from '../utils/translations';
 
 type WorkspaceTopHeaderProps = React.ComponentProps<typeof WorkspaceTopHeader>;
@@ -9,6 +10,8 @@ type UseWorkspaceTopHeaderPropsArgs = {
     currentLanguage: Language;
     onLanguageChange: (language: Language) => void;
     supportRail?: ReactNode;
+    optimizationMode?: OptimizationMode;
+    onOptimizationModeChange?: (mode: OptimizationMode) => void;
 };
 
 export function useWorkspaceTopHeaderProps({
@@ -16,6 +19,8 @@ export function useWorkspaceTopHeaderProps({
     currentLanguage,
     onLanguageChange,
     supportRail,
+    optimizationMode,
+    onOptimizationModeChange,
 }: UseWorkspaceTopHeaderPropsArgs): WorkspaceTopHeaderProps {
     return useMemo(
         () => ({
@@ -23,7 +28,9 @@ export function useWorkspaceTopHeaderProps({
             currentLanguage,
             onLanguageChange,
             supportRail,
+            optimizationMode,
+            onOptimizationModeChange,
         }),
-        [headerConsole, currentLanguage, onLanguageChange, supportRail],
+        [headerConsole, currentLanguage, onLanguageChange, supportRail, optimizationMode, onOptimizationModeChange],
     );
 }

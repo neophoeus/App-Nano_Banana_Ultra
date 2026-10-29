@@ -29,9 +29,9 @@ export const de = {
     promptThinkingLevelLow: 'Niedrig',
     promptThinkingLevelMedium: 'Mittel',
     promptThinkingLevelHigh: 'Hoch',
-    promptThinkingLevelLowTooltip: '⚡ Niedrig (Low): Ultraschnelle Antwort, minimaler Token-Verbrauch',
-    promptThinkingLevelMediumTooltip: '🧠 Mittel (Med): Standard-Schlussfolgerung, ausgewogene Kreativität',
-    promptThinkingLevelHighTooltip: '🔬 Hoch (High): Tiefgehende Detailanalyse',
+    promptThinkingLevelLowTooltip: 'Niedrig (Low): Ultraschnelle Antwort, minimaler Token-Verbrauch',
+    promptThinkingLevelMediumTooltip: 'Mittel (Med): Standard-Schlussfolgerung, ausgewogene Kreativität',
+    promptThinkingLevelHighTooltip: 'Hoch (High): Tiefgehende Detailanalyse',
     groundingModeOff: 'Aus',
     groundingModeGoogleSearch: 'Websuche',
     groundingModeImageSearch: 'Bildsuche',
@@ -94,7 +94,7 @@ export const de = {
     batchSize: 'Menge',
     aspectRatio: 'Format',
     style: 'Stil',
-    generate: 'Generieren ✨',
+    generate: 'Generieren',
     uploadEdit: 'Upload & Neu malen',
     history: 'Galerie',
     footerDesigned: 'Entworfen von Neophoeus Art',
@@ -233,7 +233,7 @@ export const de = {
     editorErrorTitle: 'Render fehlgeschlagen',
     editorErrorRetry: 'Nochmal',
     editorErrorReturn: 'Zurück',
-    btnRender: 'Neu malen ✨',
+    btnRender: 'Neu malen',
     btnReset: 'Zurücksetzen',
     btnFit: 'Einpassen',
     btnFill: 'Füllen',
@@ -354,9 +354,9 @@ export const de = {
     logAddedToRef: 'Zu Refs hinzugefügt.',
     logHistoryLoaded: 'Aus Verlauf geladen',
     logFatalError: 'Fehler: {0}',
-    logCancelled: '🛑 Generierung abgebrochen',
-    logSaved: '💾 Gespeichert: {0}',
-    logAutoSaveFailed: '⚠️ Automatisches Speichern fehlgeschlagen',
+    logCancelled: 'Generierung abgebrochen',
+    logSaved: 'Gespeichert: {0}',
+    logAutoSaveFailed: 'Automatisches Speichern fehlgeschlagen',
 
     // --- P7: Enter to Send ---
     enterToSend: 'Enter = Senden',
@@ -1086,7 +1086,7 @@ export const de = {
     historyFilmstripSummary: '{0} Zuge · {1} Zweige',
     historyFilmstripEmpty: 'Erzeugen oder laden Sie ein Bild, um den Zugstreifen aufzubauen.',
     composerAdvancedHighThinkingHighTempWarning:
-        '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
+        'When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
     generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
     generationFailureDetailThinkingLoop:
         'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
@@ -1110,4 +1110,18 @@ export const de = {
     exportResultsRunning: 'Exportieren...',
     exportResultsEmptyNotice: 'Im aktuellen Arbeitsbereich sind keine generierten Bilder zum Exportieren vorhanden.',
     exportResultsSuccessNotice: '{0} Bilder mit eingebetteten Metadaten erfolgreich nach {1} exportiert',
+    optimizationModeQuality: 'Qualität',
+    optimizationModeEco: 'Sparsam',
+    optimizationModeInfoTitle: 'Optimierungsmodi',
+    optimizationModeUseCasesLabel: 'Einsatzbereich:',
+    optimizationModeQualityTitle: 'Qualitätsmodus (Standard)',
+    optimizationModeQualityDesc:
+        'Behält maximale MediaResolution (ULTRA_HIGH für Charaktere & 4K), vollständigen Gesprächsverlauf und tiefes Reasoning für maximale Detailtreue und nahtlose Konsistenz bei.',
+    optimizationModeQualityUseCases: 'Optimal für finale Renderings, Porträtsynthese und mehrstufige Bearbeitung.',
+    optimizationModeEcoTitle: 'Sparmodus (Token-Sparer)',
+    optimizationModeEcoDesc:
+        'Minimiert Token-Verbrauch: Komprimiert Referenzbilder, kürzt den Gesprächsverlauf auf die letzten 2 Runden und begrenzt die Denktiefe auf minimal / disabled.',
+    optimizationModeEcoOutputSizeNotice:
+        'Behält Ihre gewählte Ausgabeauflösung (1K/2K/4K) bei; stellen Sie manuell auf 1K für maximale Einsparung.',
+    optimizationModeEcoUseCases: 'Perfekt für Brainstorming, schnelle Konzeptentwürfe und kostengünstige Batches.',
 } as const;

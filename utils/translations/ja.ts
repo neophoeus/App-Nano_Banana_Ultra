@@ -29,9 +29,9 @@ export const ja = {
     promptThinkingLevelLow: '低',
     promptThinkingLevelMedium: '中',
     promptThinkingLevelHigh: '高',
-    promptThinkingLevelLowTooltip: '⚡ 低 (Low): 高速レスポンス・低トークン消費',
-    promptThinkingLevelMediumTooltip: '🧠 中 (Med): 標準的な推論・バランス重視',
-    promptThinkingLevelHighTooltip: '🔬 高 (High): 詳細な分析・長文思考',
+    promptThinkingLevelLowTooltip: '低 (Low): 高速レスポンス・低トークン消費',
+    promptThinkingLevelMediumTooltip: '中 (Med): 標準的な推論・バランス重視',
+    promptThinkingLevelHighTooltip: '高 (High): 詳細な分析・長文思考',
     groundingModeOff: 'オフ',
     groundingModeGoogleSearch: 'ウェブ検索',
     groundingModeImageSearch: '画像検索',
@@ -91,7 +91,7 @@ export const ja = {
     batchSize: '枚数',
     aspectRatio: 'アスペクト比',
     style: 'アートスタイル',
-    generate: '生成 ✨',
+    generate: '生成',
     uploadEdit: 'アップロード＆再描画',
     history: 'ギャラリー',
     footerDesigned: 'Neophoeus Art によるデザイン',
@@ -225,7 +225,7 @@ export const ja = {
     editorErrorTitle: '生成エラー',
     editorErrorRetry: '再試行',
     editorErrorReturn: 'エディタに戻る',
-    btnRender: 'リペイント ✨',
+    btnRender: 'リペイント',
     btnReset: 'リセット',
     btnFit: '全体を表示',
     btnFill: '画面一杯',
@@ -346,9 +346,9 @@ export const ja = {
     logAddedToRef: '参照画像に追加しました。',
     logHistoryLoaded: '履歴から読み込み',
     logFatalError: 'エラー: {0}',
-    logCancelled: '🛑 生成がキャンセルされました',
-    logSaved: '💾 保存済み: {0}',
-    logAutoSaveFailed: '⚠️ 自動保存に失敗しました',
+    logCancelled: '生成がキャンセルされました',
+    logSaved: '保存済み: {0}',
+    logAutoSaveFailed: '自動保存に失敗しました',
 
     // --- P7: Enter to Send ---
     enterToSend: 'Enter で送信',
@@ -1058,7 +1058,7 @@ export const ja = {
     historyFilmstripSummary: '{0} ターン・{1} ブランチ',
     historyFilmstripEmpty: 'ターンストリップの蓄積を始めるには、まず画像を生成または読み込んでください。',
     composerAdvancedHighThinkingHighTempWarning:
-        '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
+        'When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
     generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
     generationFailureDetailThinkingLoop:
         'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
@@ -1082,4 +1082,18 @@ export const ja = {
     exportResultsRunning: 'エクスポート中...',
     exportResultsEmptyNotice: '現在のワークスペースにはエクスポート可能な生成画像がありません。',
     exportResultsSuccessNotice: '{0} 枚のメタデータ付き画像を {1} に正常にエクスポートしました',
+    optimizationModeQuality: '品質',
+    optimizationModeEco: '節約',
+    optimizationModeInfoTitle: '最適化モードの説明',
+    optimizationModeUseCasesLabel: '利用シーン：',
+    optimizationModeQualityTitle: '品質モード（デフォルト）',
+    optimizationModeQualityDesc:
+        '高規格 MediaResolution（キャラクター・4K参照は ULTRA_HIGH）、完全なマルチターン対話履歴、フル思考推論を維持し、極めて繊細な人物造形と質感を再現します。',
+    optimizationModeQualityUseCases: '本番制作、高精度なポートレート合成、一貫した対話編集に最適です。',
+    optimizationModeEcoTitle: '節約モード',
+    optimizationModeEcoDesc:
+        'トークン消費を大幅抑制：参照画像の解像度階層を圧縮、対話履歴を最新2ターンに自動短縮、思考深度を minimal / disabled に収束させます。',
+    optimizationModeEcoOutputSizeNotice:
+        '選択した出力解像度（1K／2K／4K）は維持されます。極限までトークンを節約したい場合は手動で1Kに変更してください。',
+    optimizationModeEcoUseCases: '初期アイデア出し、迅速なコンセプト探索、大量バッチ生成に最適です。',
 } as const;

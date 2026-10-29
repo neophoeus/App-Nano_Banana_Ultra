@@ -29,9 +29,9 @@ export const en = {
     promptThinkingLevelLow: 'Low',
     promptThinkingLevelMedium: 'Med',
     promptThinkingLevelHigh: 'High',
-    promptThinkingLevelLowTooltip: '⚡ Low: Sub-second fast response, lowest token cost',
-    promptThinkingLevelMediumTooltip: '🧠 Med: Standard reasoning, balanced creativity',
-    promptThinkingLevelHighTooltip: '🔬 High: Deep forensic detail extraction & long analysis',
+    promptThinkingLevelLowTooltip: 'Low: Sub-second fast response, lowest token cost',
+    promptThinkingLevelMediumTooltip: 'Med: Standard reasoning, balanced creativity',
+    promptThinkingLevelHighTooltip: 'High: Deep forensic detail extraction & long analysis',
     groundingModeOff: 'Off',
     groundingModeGoogleSearch: 'Google Search',
     groundingModeImageSearch: 'Image Search',
@@ -93,7 +93,7 @@ export const en = {
     batchSize: 'Quantity',
     aspectRatio: 'Aspect Ratio',
     style: 'Art Style',
-    generate: 'Generate ✨',
+    generate: 'Generate',
     uploadEdit: 'Upload & Repaint',
     history: 'Gallery',
     footerDesigned: 'Designed by Neophoeus Art',
@@ -234,7 +234,7 @@ export const en = {
     editorErrorTitle: 'Render Failed',
     editorErrorRetry: 'Retry',
     editorErrorReturn: 'Back to Editor',
-    btnRender: 'Repaint ✨',
+    btnRender: 'Repaint',
     btnReset: 'Reset',
     btnFit: 'Fit View',
     btnFill: 'Fill View',
@@ -344,9 +344,9 @@ export const en = {
     logAddedToRef: 'Added to references.',
     logHistoryLoaded: 'Loaded from history',
     logFatalError: 'Error: {0}',
-    logCancelled: '🛑 Generation cancelled by user',
-    logSaved: '💾 Saved: {0}',
-    logAutoSaveFailed: '⚠️ Auto-save failed',
+    logCancelled: 'Generation cancelled by user',
+    logSaved: 'Saved: {0}',
+    logAutoSaveFailed: 'Auto-save failed',
 
     // --- P7: Enter to Send ---
     enterToSend: 'Enter = Send',
@@ -884,7 +884,7 @@ export const en = {
     composerAdvancedTemperatureGuideLower:
         'Below 1.0 makes results more stable and literal, but usually less exploratory.',
     composerAdvancedHighThinkingHighTempWarning:
-        '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
+        'When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
     stageGroundingResultStatus: 'Grounding result',
     stageGroundingResultSummary: '{0} · Requested {1} · Actual {2}',
     stageGeneratedImageAlt: 'Generated image',
@@ -1077,4 +1077,19 @@ export const en = {
     exportResultsRunning: 'Exporting...',
     exportResultsEmptyNotice: 'No generated images available to export in current workspace.',
     exportResultsSuccessNotice: 'Successfully exported {0} images with embedded metadata to {1}',
+    optimizationModeQuality: 'Quality',
+    optimizationModeEco: 'Eco',
+    optimizationModeInfoTitle: 'Optimization Modes',
+    optimizationModeUseCasesLabel: 'Best for:',
+    optimizationModeQualityTitle: 'Quality Mode (Default)',
+    optimizationModeQualityDesc:
+        'Preserves top-tier MediaResolution (ULTRA_HIGH for character & 4K references), complete multi-turn conversation history, and full reasoning thinking for lifelike likeness, rich textures, and seamless coherence.',
+    optimizationModeQualityUseCases:
+        'Best for final production, portrait synthesis, multi-turn consistency, and 4K mastering.',
+    optimizationModeEcoTitle: 'Eco Mode (Token Saver)',
+    optimizationModeEcoDesc:
+        'Maximizes token efficiency by compressing reference media resolutions, truncating conversation history to the latest 2 turns, and converging thinking depth to minimal / disabled.',
+    optimizationModeEcoOutputSizeNotice:
+        'Does not alter your chosen output resolution (1K/2K/4K); switch manually to 1K for maximum token savings.',
+    optimizationModeEcoUseCases: 'Ideal for early brainstorming, rapid concept exploration, and low-cost batch runs.',
 } as const;

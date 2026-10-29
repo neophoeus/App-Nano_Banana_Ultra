@@ -7,6 +7,24 @@ import {
 } from '../utils/imageSaveUtils';
 import LazyHistoryImage from './LazyHistoryImage';
 
+function PencilIcon({ className = 'w-2.5 h-2.5' }: { className?: string }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+            <path d="m15 5 4 4" />
+        </svg>
+    );
+}
+
 interface ImageUploaderProps {
     images: string[];
     onImagesChange: (images: string[]) => void;
@@ -358,7 +376,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                                 className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-[9px] font-bold border border-amber-200 dark:border-amber-500/30 transition-all"
                                 title={t('sketchTitle')}
                             >
-                                <span className="text-[10px]">✏️</span> {t('btnSketch')}
+                                <PencilIcon className="h-2.5 w-2.5" />
+                                <span>{t('btnSketch')}</span>
                             </button>
                         )}
                     </div>

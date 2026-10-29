@@ -27,6 +27,121 @@ const DEFAULT_PROMPT_FONT_SIZE = 14;
 const MIN_PROMPT_FONT_SIZE = 12;
 const MAX_PROMPT_FONT_SIZE = 24;
 
+function LockIcon({ className = 'w-3 h-3' }: { className?: string }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+    );
+}
+
+function SearchIcon({ className = 'w-3.5 h-3.5' }: { className?: string }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+        </svg>
+    );
+}
+
+function LightningIcon({ className = 'w-3 h-3' }: { className?: string }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        </svg>
+    );
+}
+
+function BrainIcon({ className = 'w-3 h-3' }: { className?: string }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
+            <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
+            <path d="M12 5v13" />
+        </svg>
+    );
+}
+
+function MicroscopeIcon({ className = 'w-3 h-3' }: { className?: string }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <path d="M6 18h8" />
+            <path d="M3 22h18" />
+            <path d="M14 22a7 7 0 1 0 0-14h-1" />
+            <path d="M9 14h2" />
+            <path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z" />
+            <path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3" />
+        </svg>
+    );
+}
+
+function SparklesIcon({ className = 'w-4 h-4' }: { className?: string }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+            <path d="M5 3v4" />
+            <path d="M19 17v4" />
+            <path d="M3 5h4" />
+            <path d="M17 19h4" />
+        </svg>
+    );
+}
+
 export type ComposerSettingsPanelProps = {
     promptThinkingLevel?: PromptThinkingLevel;
     onPromptThinkingLevelChange?: (level: PromptThinkingLevel) => void;
@@ -588,8 +703,8 @@ function ComposerSettingsPanel({
                         >
                             {resolveIntentText('composerSendIntentSetBatchToOne', '將數量改為 1')}
                             {settingsLocked && (
-                                <span className="ml-1" title={t('settingsLocked')}>
-                                    🔒
+                                <span className="ml-1 inline-flex items-center" title={t('settingsLocked')}>
+                                    <LockIcon className="h-3 w-3" />
                                 </span>
                             )}
                         </button>
@@ -861,8 +976,8 @@ function ComposerSettingsPanel({
                 <span className={summaryStripAnchorClassName}>
                     {t('composerToolbarAdvancedSettings')}
                     {settingsLocked && (
-                        <span className="ml-1" title={t('settingsLocked')}>
-                            🔒
+                        <span className="ml-1 inline-flex items-center" title={t('settingsLocked')}>
+                            <LockIcon className="h-3 w-3" />
                         </span>
                     )}
                 </span>
@@ -894,8 +1009,8 @@ function ComposerSettingsPanel({
                         <span className={summaryStripAnchorClassName}>
                             {t('workspaceSheetTitleGenerationSettings')}
                             {settingsLocked && (
-                                <span className="ml-1" title={t('settingsLocked')}>
-                                    🔒
+                                <span className="ml-1 inline-flex items-center" title={t('settingsLocked')}>
+                                    <LockIcon className="h-3 w-3" />
                                 </span>
                             )}
                         </span>
@@ -922,8 +1037,8 @@ function ComposerSettingsPanel({
                         <span className={composerStyleLabelClassName}>
                             {t('workspaceViewerStyle')}
                             {settingsLocked && (
-                                <span className="ml-1" title={t('settingsLocked')}>
-                                    🔒
+                                <span className="ml-1 inline-flex items-center" title={t('settingsLocked')}>
+                                    <LockIcon className="h-3 w-3" />
                                 </span>
                             )}
                         </span>
@@ -1029,7 +1144,11 @@ function ComposerSettingsPanel({
                                                 : level === 'medium'
                                                   ? t('promptThinkingLevelMediumTooltip')
                                                   : t('promptThinkingLevelHighTooltip');
-                                        const icon = level === 'low' ? '⚡' : level === 'medium' ? '🧠' : '🔬';
+                                        const renderIcon = () => {
+                                            if (level === 'low') return <LightningIcon className="h-3 w-3" />;
+                                            if (level === 'medium') return <BrainIcon className="h-3 w-3" />;
+                                            return <MicroscopeIcon className="h-3 w-3" />;
+                                        };
 
                                         return (
                                             <button
@@ -1047,7 +1166,7 @@ function ComposerSettingsPanel({
                                                         : 'text-slate-600 hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-200'
                                                 } ${isEnhancingPrompt ? 'cursor-not-allowed opacity-50' : ''}`}
                                             >
-                                                <span className="text-[10px]">{icon}</span>
+                                                <span className="flex items-center justify-center">{renderIcon()}</span>
                                                 <span>{label}</span>
                                             </button>
                                         );
@@ -1343,11 +1462,9 @@ function ComposerSettingsPanel({
                                         aria-label={METADATA_VIEWER_BUTTON_LABELS[currentLanguage] || '讀取參數'}
                                         title={METADATA_VIEWER_BUTTON_LABELS[currentLanguage] || '讀取參數'}
                                         onClick={onOpenMetadataViewer}
-                                        className="nbu-inline-panel group flex min-h-10 shrink-0 items-center gap-1.5 rounded-[20px] px-3 py-2 text-xs font-semibold text-slate-700 transition-all hover:-translate-y-0.5 hover:shadow-md dark:text-slate-200"
+                                        className="group flex min-h-10 shrink-0 items-center gap-1.5 rounded-[20px] border border-sky-300/90 bg-sky-50/95 px-3.5 py-2 text-xs font-bold text-sky-800 shadow-sm shadow-sky-200/60 transition-all hover:-translate-y-0.5 hover:border-sky-400 hover:bg-sky-100/95 hover:text-sky-950 hover:shadow-md hover:shadow-sky-200/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-1 active:translate-y-0 dark:border-sky-400/50 dark:bg-sky-500/15 dark:text-sky-200 dark:shadow-[0_8px_20px_rgba(14,165,233,0.16)] dark:hover:border-sky-300/80 dark:hover:bg-sky-500/25 dark:hover:text-sky-100 dark:hover:shadow-[0_10px_24px_rgba(14,165,233,0.24)] dark:focus-visible:ring-sky-300 dark:focus-visible:ring-offset-slate-900"
                                     >
-                                        <span aria-hidden="true" className="text-sm">
-                                            🔍
-                                        </span>
+                                        <SearchIcon className="h-3.5 w-3.5 shrink-0 text-sky-600 transition-transform duration-200 group-hover:scale-110 dark:text-sky-300" />
                                         <span>{METADATA_VIEWER_BUTTON_LABELS[currentLanguage] || '讀取參數'}</span>
                                     </button>
                                 )}
@@ -1390,7 +1507,10 @@ function ComposerSettingsPanel({
                                 title={primaryGenerateTitle}
                                 className="btn-shimmer min-h-[64px] rounded-[28px] text-[15px]"
                             >
-                                {primaryGenerateLabel}
+                                <span className="inline-flex items-center justify-center gap-1.5">
+                                    <span>{primaryGenerateLabel}</span>
+                                    <SparklesIcon className="h-4 w-4 shrink-0" />
+                                </span>
                             </Button>
                         )}
                         {showSecondaryGenerateButton ? (
@@ -1399,7 +1519,10 @@ function ComposerSettingsPanel({
                                 onClick={onGenerate}
                                 className="min-h-[64px] min-w-0 rounded-[28px] px-3.5 text-[14px]"
                             >
-                                {generateLabel}
+                                <span className="inline-flex items-center justify-center gap-1.5">
+                                    <span>{generateLabel}</span>
+                                    <SparklesIcon className="h-4 w-4 shrink-0" />
+                                </span>
                             </Button>
                         ) : null}
                     </div>

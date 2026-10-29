@@ -11,6 +11,7 @@ import {
     ImageSize,
     ImageStyle,
     ImageModel,
+    OptimizationMode,
     GeneratedImage as GeneratedImageType,
     OutputFormat,
     ResultPart,
@@ -222,6 +223,7 @@ interface UsePerformGenerationProps {
     onLiveProgressEvent?: (event: GenerationLiveProgressEvent) => void;
     onLiveProgressReset?: () => void;
     roundCount?: number;
+    optimizationMode?: OptimizationMode;
 }
 
 export function usePerformGeneration(options: UsePerformGenerationProps) {
@@ -267,6 +269,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
         onLiveProgressEvent,
         onLiveProgressReset,
         roundCount,
+        optimizationMode,
     } = options;
 
     const performGeneration = useCallback(
@@ -708,6 +711,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                             executionMode: currentExecutionMode,
                             conversationContext,
                             liveProgressBatchSessionId: roundBatchSessionId,
+                            optimizationMode,
                         },
                         currentBatchSize,
                         handleImageReceived,

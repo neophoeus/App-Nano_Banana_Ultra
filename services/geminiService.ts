@@ -2,6 +2,7 @@ import {
     GenerateOptions,
     GenerateResponse,
     ImageReceivedResult,
+    OptimizationMode,
     QueuedBatchJobStats,
     ResultPart,
     ResultImagePart,
@@ -24,6 +25,7 @@ import {
     summarizeDebugTerminalPayload,
     type DebugTerminalSource,
 } from '../utils/debugTerminalEvents';
+import { normalizeOptimizationMode, resolveEffectiveGenerationThinking } from '../utils/optimizationMode';
 import { buildStyleAwareImagePrompt } from '../utils/stylePromptBuilder';
 import { Language } from '../utils/translations';
 
@@ -67,6 +69,7 @@ type ImageGenerateRequestBody = {
     imageSearch: GenerateOptions['imageSearch'];
     executionMode: GenerateOptions['executionMode'];
     conversationContext: GenerateOptions['conversationContext'];
+    optimizationMode?: OptimizationMode;
 };
 
 function isAbortLikeError(error: unknown): boolean {
@@ -185,26 +188,36 @@ const emitServiceDebugEvent = ({
     });
 };
 
-const buildImageGenerateRequestBody = (options: GenerateOptions, finalPrompt: string): ImageGenerateRequestBody => ({
-    prompt: finalPrompt,
-    model: options.model,
-    aspectRatio: options.aspectRatio,
-    imageSize: options.model === 'gemini-2.5-flash-image' ? undefined : options.imageSize,
-    editingInput: options.editingInput,
-    sourceImageInput: options.sourceImageInput,
-    objectImageInputs: options.objectImageInputs,
-    characterImageInputs: options.characterImageInputs,
-    styleImageInputs: options.styleImageInputs,
-    videoInput: options.videoInput,
-    outputFormat: options.outputFormat,
-    temperature: options.temperature,
-    thinkingLevel: options.thinkingLevel,
-    includeThoughts: options.includeThoughts,
-    googleSearch: options.googleSearch,
-    imageSearch: options.imageSearch,
-    executionMode: options.executionMode,
-    conversationContext: options.conversationContext,
-});
+const buildImageGenerateRequestBody = (options: GenerateOptions, finalPrompt: string): ImageGenerateRequestBody => {
+    const effectiveThinking = resolveEffectiveGenerationThinking({
+        model: options.model,
+        thinkingLevel: options.thinkingLevel,
+        includeThoughts: options.includeThoughts,
+        optimizationMode: options.optimizationMode,
+    });
+
+    return {
+        prompt: finalPrompt,
+        model: options.model,
+        aspectRatio: options.aspectRatio,
+        imageSize: options.model === 'gemini-2.5-flash-image' ? undefined : options.imageSize,
+        editingInput: options.editingInput,
+        sourceImageInput: options.sourceImageInput,
+        objectImageInputs: options.objectImageInputs,
+        characterImageInputs: options.characterImageInputs,
+        styleImageInputs: options.styleImageInputs,
+        videoInput: options.videoInput,
+        outputFormat: options.outputFormat,
+        temperature: options.temperature,
+        thinkingLevel: effectiveThinking.thinkingLevel,
+        includeThoughts: effectiveThinking.includeThoughts,
+        googleSearch: options.googleSearch,
+        imageSearch: options.imageSearch,
+        executionMode: options.executionMode,
+        conversationContext: options.conversationContext,
+        optimizationMode: normalizeOptimizationMode(options.optimizationMode),
+    };
+};
 
 const buildGenerateRequestSummary = (requestBody: ImageGenerateRequestBody, imgIndex: number): string =>
     `Image #${imgIndex} | ${requestBody.model} | ${requestBody.executionMode || 'single-turn'} | ${requestBody.outputFormat || 'images-only'}`;
@@ -754,26 +767,42 @@ const delayWithAbort = async (delayMs: number, abortSignal?: AbortSignal): Promi
     });
 };
 
-const shouldUseLiveProgressStream = (options: GenerateOptions, batchSize: number): boolean =>
-    isLiveProgressEligibleRequest({
+const shouldUseLiveProgressStream = (options: GenerateOptions, batchSize: number): boolean => {
+    const effectiveThinking = resolveEffectiveGenerationThinking({
+        model: options.model,
+        thinkingLevel: options.thinkingLevel,
+        includeThoughts: options.includeThoughts,
+        optimizationMode: options.optimizationMode,
+    });
+    return isLiveProgressEligibleRequest({
         model: options.model,
         executionMode: options.executionMode || 'single-turn',
         outputFormat: options.outputFormat || 'images-only',
-        thinkingLevel: options.thinkingLevel || (options.model === 'gemini-3.1-flash-image' ? 'minimal' : 'disabled'),
-        includeThoughts: Boolean(options.includeThoughts),
+        thinkingLevel: effectiveThinking.thinkingLevel,
+        includeThoughts: effectiveThinking.includeThoughts,
         batchSize,
     });
+};
 
-const shouldUseLiveProgressFanOut = (options: GenerateOptions, batchSize: number): boolean =>
-    options.executionMode === 'interactive-batch-variants' &&
-    isLiveProgressFanOutEligibleRequest({
+const shouldUseLiveProgressFanOut = (options: GenerateOptions, batchSize: number): boolean => {
+    const effectiveThinking = resolveEffectiveGenerationThinking({
         model: options.model,
-        executionMode: options.executionMode,
-        outputFormat: options.outputFormat || 'images-only',
-        thinkingLevel: options.thinkingLevel || (options.model === 'gemini-3.1-flash-image' ? 'minimal' : 'disabled'),
-        includeThoughts: Boolean(options.includeThoughts),
-        batchSize,
+        thinkingLevel: options.thinkingLevel,
+        includeThoughts: options.includeThoughts,
+        optimizationMode: options.optimizationMode,
     });
+    return (
+        options.executionMode === 'interactive-batch-variants' &&
+        isLiveProgressFanOutEligibleRequest({
+            model: options.model,
+            executionMode: options.executionMode,
+            outputFormat: options.outputFormat || 'images-only',
+            thinkingLevel: effectiveThinking.thinkingLevel,
+            includeThoughts: effectiveThinking.includeThoughts,
+            batchSize,
+        })
+    );
+};
 
 const isRetryableImageAbsenceFailure = (failure?: GenerateResponse['failure']): boolean =>
     failure?.code === 'no-image-data' || failure?.code === 'text-only';
@@ -1359,14 +1388,20 @@ export const enhancePromptWithGemini = async (
     currentPrompt: string,
     lang: Language,
     thinkingLevel: PromptThinkingLevel = 'low',
+    optimizationMode?: OptimizationMode,
 ): Promise<string> => {
     const testOverride = getBrowserOnlyTestGeminiServiceOverrides()?.enhancePromptWithGemini;
     if (testOverride) {
-        return await testOverride(currentPrompt, lang, thinkingLevel);
+        return await testOverride(currentPrompt, lang, thinkingLevel, optimizationMode);
     }
 
     const correlationId = createDebugTerminalCorrelationId('prompt');
-    const requestPayload = { currentPrompt, lang, thinkingLevel };
+    const requestPayload = {
+        currentPrompt,
+        lang,
+        thinkingLevel,
+        optimizationMode: normalizeOptimizationMode(optimizationMode),
+    };
     const response = await retryOperation(
         () =>
             fetchJson<{ text: string }>(
@@ -1428,14 +1463,19 @@ export const enhancePromptWithGemini = async (
 export const generateRandomPrompt = async (
     lang: Language,
     thinkingLevel: PromptThinkingLevel = 'low',
+    optimizationMode?: OptimizationMode,
 ): Promise<string> => {
     const testOverride = getBrowserOnlyTestGeminiServiceOverrides()?.generateRandomPrompt;
     if (testOverride) {
-        return await testOverride(lang, thinkingLevel);
+        return await testOverride(lang, thinkingLevel, optimizationMode);
     }
 
     const correlationId = createDebugTerminalCorrelationId('prompt');
-    const requestPayload = { lang, thinkingLevel };
+    const requestPayload = {
+        lang,
+        thinkingLevel,
+        optimizationMode: normalizeOptimizationMode(optimizationMode),
+    };
     const response = await retryOperation(
         () =>
             fetchJson<{ text: string }>(
@@ -1498,14 +1538,20 @@ export const generatePromptFromImage = async (
     imageDataUrl: string,
     lang: Language,
     thinkingLevel: PromptThinkingLevel = 'low',
+    optimizationMode?: OptimizationMode,
 ): Promise<string> => {
     const testOverride = getBrowserOnlyTestGeminiServiceOverrides()?.generatePromptFromImage;
     if (testOverride) {
-        return await testOverride(imageDataUrl, lang, thinkingLevel);
+        return await testOverride(imageDataUrl, lang, thinkingLevel, optimizationMode);
     }
 
     const correlationId = createDebugTerminalCorrelationId('prompt');
-    const requestPayload = { imageDataUrl, lang, thinkingLevel };
+    const requestPayload = {
+        imageDataUrl,
+        lang,
+        thinkingLevel,
+        optimizationMode: normalizeOptimizationMode(optimizationMode),
+    };
     const response = await retryOperation(
         () =>
             fetchJson<{ text: string }>(
@@ -1665,12 +1711,18 @@ export type BrowserOnlyTestGeminiServiceOverrides = {
         currentPrompt: string,
         lang?: Language,
         thinkingLevel?: PromptThinkingLevel,
+        optimizationMode?: OptimizationMode,
     ) => Promise<string> | string;
-    generateRandomPrompt?: (lang?: Language, thinkingLevel?: PromptThinkingLevel) => Promise<string> | string;
+    generateRandomPrompt?: (
+        lang?: Language,
+        thinkingLevel?: PromptThinkingLevel,
+        optimizationMode?: OptimizationMode,
+    ) => Promise<string> | string;
     generatePromptFromImage?: (
         imageDataUrl: string,
         lang?: Language,
         thinkingLevel?: PromptThinkingLevel,
+        optimizationMode?: OptimizationMode,
     ) => Promise<string> | string;
     generateImageWithGemini?: (
         options: GenerateOptions,
@@ -1931,7 +1983,7 @@ const retryOperation = async <T>(
             // Add a small randomized stagger to avoid thundering herd when release happens
             const releaseJitter = Math.random() * 1000;
             const totalWait = extraWait + releaseJitter;
-            onLog?.(`⏳ Rate limit backoff active, stalling request for ${(totalWait / 1000).toFixed(1)}s...`);
+            onLog?.(`Rate limit backoff active, stalling request for ${(totalWait / 1000).toFixed(1)}s...`);
             await delayWithAbort(totalWait, abortSignal);
         }
         return await operation();
@@ -1994,7 +2046,7 @@ const retryOperation = async <T>(
                     ? Math.max(calculatedWaitMs, globalRateLimitBackoffUntil - Date.now())
                     : calculatedWaitMs;
 
-                onLog?.(`⏳ Retrying in ${(waitMs / 1000).toFixed(1)}s... (${retries} left)`);
+                onLog?.(`Retrying in ${(waitMs / 1000).toFixed(1)}s... (${retries} left)`);
                 emitServiceDebugEvent({
                     kind: 'retry',
                     label: 'Retry scheduled',

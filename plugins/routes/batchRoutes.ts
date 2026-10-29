@@ -2,7 +2,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { GoogleGenAI } from '@google/genai/node';
-import type { ConversationRequestContext, ImageModel, ImageSize } from '../../types';
+import type { ConversationRequestContext, ImageModel, ImageSize, OptimizationMode } from '../../types';
 import { VALID_IMAGE_MODELS, VALID_IMAGE_SIZES } from '../../utils/modelCapabilities';
 import {
     createApiRequestContext,
@@ -33,6 +33,7 @@ type ImageGenerateBody = {
     includeThoughts?: boolean;
     googleSearch?: boolean;
     imageSearch?: boolean;
+    optimizationMode?: OptimizationMode;
     executionMode?: 'single-turn' | 'interactive-batch-variants' | 'chat-continuation' | 'queued-batch-job';
     conversationContext?: ConversationRequestContext | null;
 };

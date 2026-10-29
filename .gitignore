@@ -2,19 +2,13 @@
 logs/
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
 # Generated dependencies and runtime/build artifacts
 node_modules/
 dist/
-dist-ssr/
 output/
 output-test/
 export/
-export-test/
 test-results/
 playwright-report/
 coverage/
@@ -23,27 +17,16 @@ coverage/
 .prettierignore
 prettier.config.mjs
 
-# Local-only scratch test assets
-tests-local/
-e2e-local/
-playwright.local.config.ts
-
-# Local secrets and generated internal reports
+# Local secrets
 .env
 .env.*
 !.env.example
-e2e-global-log-focus.txt
 
 # Editor directories and files
 .vscode/
 .idea/
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
 *.sw?
 
-# Metadata viewer runtime session data and archives
+# Metadata viewer runtime session data
 scripts/metadata-viewer/session_data.js
-*.zip

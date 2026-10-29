@@ -1,5 +1,9 @@
 // @ts-nocheck -- Local Playwright specs resolve runtime tooling from dev-environment/ rather than the root product manifest.
 import playwrightTest from '@playwright/test';
+import {
+    installCleanBrowserStorageInitScript,
+    resetPlaywrightOutputSnapshots,
+} from './utils/playwrightWorkspaceIsolation';
 
 const { expect, test } = playwrightTest;
 
@@ -29,6 +33,15 @@ const buildMockGenerateStreamBody = (responsePayload, sessionId) =>
     ].join('\n');
 
 test.describe('diagnostics terminal', () => {
+    test.beforeEach(async ({ page }) => {
+        resetPlaywrightOutputSnapshots();
+        await installCleanBrowserStorageInitScript(page);
+    });
+
+    test.afterEach(() => {
+        resetPlaywrightOutputSnapshots();
+    });
+
     test('captures a correlated generate request and response', async ({ page }) => {
         let usedRoute = '';
         let capturedRequestId = '';

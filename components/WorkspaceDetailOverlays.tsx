@@ -17,6 +17,25 @@ const WorkspaceEvidenceDetailPanel = lazy(() => import('./WorkspaceEvidenceDetai
 const WorkspaceVersionsDetailPanel = lazy(() => import('./WorkspaceVersionsDetailPanel'));
 const QueuedBatchJobsPanel = lazy(() => import('./QueuedBatchJobsPanel'));
 
+function AlertTriangleIcon({ className = 'w-4 h-4' }: { className?: string }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+    );
+}
+
 export interface WorkspaceDetailOverlaysProps {
     activeWorkspaceDetailModal: WorkspaceDetailModalState;
     isQueuedBatchSpaceOpen: boolean;
@@ -312,7 +331,7 @@ export const WorkspaceDetailOverlays: React.FC<WorkspaceDetailOverlaysProps> = R
                 <div className="space-y-3 px-6 pb-4 text-left">
                     <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs leading-relaxed text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300">
                         <div className="flex items-start gap-2">
-                            <span className="text-base leading-none">⚠️</span>
+                            <AlertTriangleIcon className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
                             <span>{t('clearHistoryExportReminder')}</span>
                         </div>
                     </div>

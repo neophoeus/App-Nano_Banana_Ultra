@@ -29,9 +29,9 @@ export const es = {
     promptThinkingLevelLow: 'Bajo',
     promptThinkingLevelMedium: 'Medio',
     promptThinkingLevelHigh: 'Alto',
-    promptThinkingLevelLowTooltip: '⚡ Bajo (Low): Respuesta ultrarrápida, menor coste de tokens',
-    promptThinkingLevelMediumTooltip: '🧠 Medio (Med): Razonamiento estándar, creatividad equilibrada',
-    promptThinkingLevelHighTooltip: '🔬 Alto (High): Análisis forense profundo y detallado',
+    promptThinkingLevelLowTooltip: 'Bajo (Low): Respuesta ultrarrápida, menor coste de tokens',
+    promptThinkingLevelMediumTooltip: 'Medio (Med): Razonamiento estándar, creatividad equilibrada',
+    promptThinkingLevelHighTooltip: 'Alto (High): Análisis forense profundo y detallado',
     groundingModeOff: 'Desactivado',
     groundingModeGoogleSearch: 'Busqueda web',
     groundingModeImageSearch: 'Busqueda de imagenes',
@@ -94,7 +94,7 @@ export const es = {
     batchSize: 'Cantidad',
     aspectRatio: 'Relación de Aspecto',
     style: 'Estilo',
-    generate: 'Generar ✨',
+    generate: 'Generar',
     uploadEdit: 'Subir y Repintar',
     history: 'Galería',
     footerDesigned: 'Diseñado por Neophoeus Art',
@@ -231,7 +231,7 @@ export const es = {
     editorErrorTitle: 'Fallo de Render',
     editorErrorRetry: 'Reintentar',
     editorErrorReturn: 'Volver',
-    btnRender: 'Repintar ✨',
+    btnRender: 'Repintar',
     btnReset: 'Reiniciar',
     btnFit: 'Ajustar',
     btnFill: 'Rellenar',
@@ -352,9 +352,9 @@ export const es = {
     logAddedToRef: 'Añadido a referencias.',
     logHistoryLoaded: 'Cargado del historial',
     logFatalError: 'Error: {0}',
-    logCancelled: '🛑 Generación cancelada',
-    logSaved: '💾 Guardado: {0}',
-    logAutoSaveFailed: '⚠️ Guardado automático fallido',
+    logCancelled: 'Generación cancelada',
+    logSaved: 'Guardado: {0}',
+    logAutoSaveFailed: 'Guardado automático fallido',
 
     // --- P7: Enter to Send ---
     enterToSend: 'Enter = Enviar',
@@ -1083,7 +1083,7 @@ export const es = {
     historyFilmstripSummary: '{0} turnos · {1} ramas',
     historyFilmstripEmpty: 'Genera o carga una imagen para empezar a construir la tira de turnos.',
     composerAdvancedHighThinkingHighTempWarning:
-        '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
+        'When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
     generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
     generationFailureDetailThinkingLoop:
         'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
@@ -1107,4 +1107,18 @@ export const es = {
     exportResultsRunning: 'Exportando...',
     exportResultsEmptyNotice: 'No hay imágenes generadas disponibles para exportar en el espacio actual.',
     exportResultsSuccessNotice: 'Se exportaron correctamente {0} imágenes con metadatos a {1}',
+    optimizationModeQuality: 'Calidad',
+    optimizationModeEco: 'Ahorro',
+    optimizationModeInfoTitle: 'Modos de Optimización',
+    optimizationModeUseCasesLabel: 'Casos de uso:',
+    optimizationModeQualityTitle: 'Modo Calidad (Predeterminado)',
+    optimizationModeQualityDesc:
+        'Mantiene MediaResolution de alto nivel (ULTRA_HIGH para personajes y 4K), historial completo de conversación y razonamiento profundo para máxima fidelidad y texturas detalladas.',
+    optimizationModeQualityUseCases: 'Ideal para producción final, retratos fotorrealistas y edición continua.',
+    optimizationModeEcoTitle: 'Modo Ahorro (Eco)',
+    optimizationModeEcoDesc:
+        'Maximiza el ahorro de tokens: comprime la resolución de imágenes de referencia, trunca el historial a los últimos 2 turnos y converge el pensamiento a minimal / disabled.',
+    optimizationModeEcoOutputSizeNotice:
+        'No modifica la resolución de salida elegida (1K/2K/4K); cambie manualmente a 1K para un ahorro extremo.',
+    optimizationModeEcoUseCases: 'Ideal para lluvia de ideas, exploración rápida de conceptos y lotes económicos.',
 } as const;

@@ -1,4 +1,5 @@
-import type { ConversationRequestContext } from '../../types';
+import type { ConversationRequestContext, OptimizationMode } from '../../types';
+import { ECO_MAX_CONVERSATION_TURNS, normalizeOptimizationMode } from '../../utils/optimizationMode';
 import { type ResolvedInlineImage, readInlineImageFromReference } from './imageReferences';
 import { isSameInlineImage, resolveRoleMediaResolution } from './mediaResolution';
 
@@ -6,6 +7,7 @@ const THOUGHT_SIGNATURE_VALIDATOR_BYPASS = 'skip_thought_signature_validator';
 
 export interface BuildConversationHistoryOptions {
     model?: string | null;
+    optimizationMode?: OptimizationMode | string | null;
 }
 
 export interface BuiltConversationHistoryResult {
@@ -13,6 +15,7 @@ export interface BuiltConversationHistoryResult {
     lastModelOutputImage: ResolvedInlineImage | null;
     deduplicatedSourceImageCount: number;
     omittedThoughtTextTurnCount: number;
+    truncatedTurnCount: number;
 }
 
 export function buildConversationHistoryWithMetadata(
@@ -26,6 +29,7 @@ export function buildConversationHistoryWithMetadata(
             lastModelOutputImage: null,
             deduplicatedSourceImageCount: 0,
             omittedThoughtTextTurnCount: 0,
+            truncatedTurnCount: 0,
         };
     }
 
@@ -56,22 +60,29 @@ export function buildConversationHistoryWithMetadata(
             lastModelOutputImage: null,
             deduplicatedSourceImageCount: 0,
             omittedThoughtTextTurnCount: 0,
+            truncatedTurnCount: 0,
         };
     }
+
+    const mode = normalizeOptimizationMode(options?.optimizationMode);
+    const lastModelOutputImage = hasGap ? null : validTurns[validTurns.length - 1].outputImage;
+
+    const selectedTurns = mode === 'eco' ? validTurns.slice(-ECO_MAX_CONVERSATION_TURNS) : validTurns;
+    const truncatedTurnCount = validTurns.length - selectedTurns.length;
 
     let deduplicatedSourceImageCount = 0;
     let omittedThoughtTextTurnCount = 0;
     const history: Array<{ role: 'user' | 'model'; parts: Array<Record<string, unknown>> }> = [];
-    const totalValid = validTurns.length;
-    const lastModelOutputImage = hasGap ? null : validTurns[totalValid - 1].outputImage;
+    const totalTurns = selectedTurns.length;
 
-    for (let index = 0; index < totalValid; index += 1) {
-        const { turn, sourceImage, outputImage, hasPrecedingGap } = validTurns[index];
-        const isLatestAnchorTurn = index === totalValid - 1;
+    for (let index = 0; index < totalTurns; index += 1) {
+        const { turn, sourceImage, outputImage, hasPrecedingGap } = selectedTurns[index];
+        const isLatestAnchorTurn = index === totalTurns - 1;
         const resolutionRole = isLatestAnchorTurn ? 'history-anchor' : 'history-decay';
         const mediaResolution = resolveRoleMediaResolution({
             model: options?.model,
             role: resolutionRole,
+            optimizationMode: options?.optimizationMode,
         });
 
         const replayThoughtSignature = turn.thoughtSignature || THOUGHT_SIGNATURE_VALIDATOR_BYPASS;
@@ -79,7 +90,7 @@ export function buildConversationHistoryWithMetadata(
 
         // Check if the current turn's sourceImage is identical to the adjacent previous turn's outputImage
         const isDuplicateOfPreviousModelOutput =
-            index > 0 && !hasPrecedingGap && isSameInlineImage(sourceImage, validTurns[index - 1].outputImage);
+            index > 0 && !hasPrecedingGap && isSameInlineImage(sourceImage, selectedTurns[index - 1].outputImage);
 
         if (isDuplicateOfPreviousModelOutput) {
             deduplicatedSourceImageCount += 1;
@@ -118,6 +129,7 @@ export function buildConversationHistoryWithMetadata(
         lastModelOutputImage,
         deduplicatedSourceImageCount,
         omittedThoughtTextTurnCount,
+        truncatedTurnCount,
     };
 }
 

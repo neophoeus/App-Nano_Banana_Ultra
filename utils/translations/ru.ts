@@ -29,9 +29,9 @@ export const ru = {
     promptThinkingLevelLow: 'Низкий',
     promptThinkingLevelMedium: 'Средний',
     promptThinkingLevelHigh: 'Высокий',
-    promptThinkingLevelLowTooltip: '⚡ Низкий (Low): Быстрый ответ, минимальный расход токенов',
-    promptThinkingLevelMediumTooltip: '🧠 Средний (Med): Стандартное рассуждение, баланс креативности',
-    promptThinkingLevelHighTooltip: '🔬 Высокий (High): Глубокий анализ деталей',
+    promptThinkingLevelLowTooltip: 'Низкий (Low): Быстрый ответ, минимальный расход токенов',
+    promptThinkingLevelMediumTooltip: 'Средний (Med): Стандартное рассуждение, баланс креативности',
+    promptThinkingLevelHighTooltip: 'Высокий (High): Глубокий анализ деталей',
     groundingModeOff: 'Выключено',
     groundingModeGoogleSearch: 'Веб-поиск',
     groundingModeImageSearch: 'Поиск по изображениям',
@@ -93,7 +93,7 @@ export const ru = {
     batchSize: 'Количество',
     aspectRatio: 'Формат',
     style: 'Стиль',
-    generate: 'Генерировать ✨',
+    generate: 'Генерировать',
     uploadEdit: 'Загрузить и Перерисовать',
     history: 'Галерея',
     footerDesigned: 'Разработано Neophoeus Art',
@@ -228,7 +228,7 @@ export const ru = {
     editorErrorTitle: 'Сбой Рендера',
     editorErrorRetry: 'Повторить',
     editorErrorReturn: 'Назад',
-    btnRender: 'Перерисовка ✨',
+    btnRender: 'Перерисовка',
     btnReset: 'Сброс',
     btnFit: 'Вписать',
     btnFill: 'Заполнить',
@@ -349,9 +349,9 @@ export const ru = {
     logAddedToRef: 'Добавлено в рефы.',
     logHistoryLoaded: 'Загружено из истории',
     logFatalError: 'Ошибка: {0}',
-    logCancelled: '🛑 Генерация отменена',
-    logSaved: '💾 Сохранено: {0}',
-    logAutoSaveFailed: '⚠️ Автосохранение не удалось',
+    logCancelled: 'Генерация отменена',
+    logSaved: 'Сохранено: {0}',
+    logAutoSaveFailed: 'Автосохранение не удалось',
 
     // --- P7: Enter to Send ---
     enterToSend: 'Enter = Отпр.',
@@ -1074,7 +1074,7 @@ export const ru = {
     historyFilmstripSummary: '{0} ходов · {1} веток',
     historyFilmstripEmpty: 'Сгенерируйте или загрузите изображение, чтобы начать собирать ленту ходов.',
     composerAdvancedHighThinkingHighTempWarning:
-        '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
+        'When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
     generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
     generationFailureDetailThinkingLoop:
         'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
@@ -1099,4 +1099,18 @@ export const ru = {
     exportResultsRunning: 'Экспорт...',
     exportResultsEmptyNotice: 'В текущей рабочей области нет созданных изображений для экспорта.',
     exportResultsSuccessNotice: 'Успешно экспортировано {0} изображений со встроенными метаданными в {1}',
+    optimizationModeQuality: 'Качество',
+    optimizationModeEco: 'Эко',
+    optimizationModeInfoTitle: 'Режимы оптимизации',
+    optimizationModeUseCasesLabel: 'Сценарии:',
+    optimizationModeQualityTitle: 'Режим качества (По умолчанию)',
+    optimizationModeQualityDesc:
+        'Сохраняет наивысшее разрешение MediaResolution (ULTRA_HIGH для персонажей и 4K), полную историю диалога и детальное мышление для максимальной точности и реализма.',
+    optimizationModeQualityUseCases: 'Подходит для финальной генерации, портретов и связного редактирования.',
+    optimizationModeEcoTitle: 'Эко-режим (Экономия токенов)',
+    optimizationModeEcoDesc:
+        'Максимальная экономия токенов: сжатие разрешения референсов, усечение истории диалога до 2 последних реплик и сведение мышления к minimal / disabled.',
+    optimizationModeEcoOutputSizeNotice:
+        'Не изменяет выбранное вами разрешение вывода (1K/2K/4K); переключитесь на 1K вручную для максимальной экономии.',
+    optimizationModeEcoUseCases: 'Идеально для мозгового штурма, быстрой проверки идей и недорогих пакетов.',
 } as const;

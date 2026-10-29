@@ -1,6 +1,7 @@
-import type { AspectRatio, ImageModel, ImageSize } from '../../types';
+import type { AspectRatio, ImageModel, ImageSize, OptimizationMode } from '../../types';
 import { buildGroundingToolConfig, deriveGroundingMode } from '../../utils/groundingMode';
 import { MODEL_CAPABILITIES } from '../../utils/modelCapabilities';
+import { resolveEffectiveGenerationThinking } from '../../utils/optimizationMode';
 import { normalizeTemperature } from '../../utils/temperature';
 import { buildGeminiResponseModalities, toGeminiThinkingLevel } from './geminiApiConfig';
 
@@ -16,6 +17,7 @@ type ImageGenerateBodyLike = {
     includeThoughts?: boolean;
     googleSearch?: boolean;
     imageSearch?: boolean;
+    optimizationMode?: OptimizationMode | string | null;
 };
 
 type AppThinkingLevel = NonNullable<ImageGenerateBodyLike['thinkingLevel']>;
@@ -114,13 +116,14 @@ export function buildImageRequestConfig(
             : {}),
     };
 
-    const defaultThinking: AppThinkingLevel = capability?.thinkingLevels.includes('medium')
-        ? 'medium'
-        : capability?.thinkingLevels.includes('minimal')
-          ? 'minimal'
-          : 'disabled';
-    const effectiveThinkingLevel: AppThinkingLevel = body.thinkingLevel || defaultThinking;
-    const shouldIncludeThoughts = Boolean(body.includeThoughts) && capability.supportsIncludeThoughts;
+    const effectiveThinking = resolveEffectiveGenerationThinking({
+        model,
+        thinkingLevel: body.thinkingLevel,
+        includeThoughts: body.includeThoughts,
+        optimizationMode: body.optimizationMode,
+    });
+    const effectiveThinkingLevel: AppThinkingLevel = effectiveThinking.thinkingLevel;
+    const shouldIncludeThoughts = effectiveThinking.includeThoughts;
     const geminiThinkingLevel = toGeminiThinkingLevel(effectiveThinkingLevel);
     if (geminiThinkingLevel || shouldIncludeThoughts) {
         requestConfig.thinkingConfig = {

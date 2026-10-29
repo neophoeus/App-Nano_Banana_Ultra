@@ -1,6 +1,8 @@
 import React from 'react';
+import { OptimizationMode } from '../types';
 import { Language } from '../utils/translations';
 import LanguageSelector from './LanguageSelector';
+import OptimizationModeToggle from './OptimizationModeToggle';
 import ThemeToggle from './ThemeToggle';
 
 type WorkspaceTopHeaderProps = {
@@ -8,6 +10,8 @@ type WorkspaceTopHeaderProps = {
     currentLanguage: Language;
     onLanguageChange: (language: Language) => void;
     supportRail?: React.ReactNode;
+    optimizationMode?: OptimizationMode;
+    onOptimizationModeChange?: (mode: OptimizationMode) => void;
 };
 
 function BananaMark() {
@@ -28,6 +32,8 @@ function WorkspaceTopHeader({
     currentLanguage,
     onLanguageChange,
     supportRail,
+    optimizationMode,
+    onOptimizationModeChange,
 }: WorkspaceTopHeaderProps) {
     const supportRailItems = React.Children.toArray(supportRail).flatMap((child) => {
         if (React.isValidElement<{ children?: React.ReactNode }>(child) && child.type === React.Fragment) {
@@ -65,6 +71,11 @@ function WorkspaceTopHeader({
                             </div>
                             <div className="min-w-0 flex-1" />
                             <div className="flex shrink-0 items-center gap-2">
+                                <OptimizationModeToggle
+                                    optimizationMode={optimizationMode || 'quality'}
+                                    onOptimizationModeChange={onOptimizationModeChange || (() => {})}
+                                    currentLanguage={currentLanguage}
+                                />
                                 <ThemeToggle currentLanguage={currentLanguage} className="h-8 w-8 shadow-none" />
                                 <LanguageSelector
                                     currentLanguage={currentLanguage}

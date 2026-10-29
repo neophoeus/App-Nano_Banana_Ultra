@@ -4,6 +4,7 @@ import {
     BranchNameOverrides,
     GeneratedImage as GeneratedImageType,
     ImageModel,
+    OptimizationMode,
     PromptThinkingLevel,
     ResultPart,
     ViewerComposerSettingsSnapshot,
@@ -45,6 +46,11 @@ import { loadQueuedBatchSpaceSnapshot } from './utils/queuedBatchSpacePersistenc
 import { hasRestorableWorkspaceContent } from './utils/workspaceSnapshotState';
 import { deriveGroundingMode, getAvailableGroundingModes } from './utils/groundingMode';
 import { EMPTY_WORKSPACE_CONVERSATION_STATE } from './utils/conversationState';
+import {
+    DEFAULT_OPTIMIZATION_MODE,
+    normalizeOptimizationMode,
+    OPTIMIZATION_MODE_STORAGE_KEY,
+} from './utils/optimizationMode';
 import { useImageGeneration } from './hooks/useImageGeneration';
 import { usePerformGeneration } from './hooks/usePerformGeneration';
 import { GenerationLiveProgressEvent } from './services/geminiService';
@@ -790,6 +796,28 @@ const App: React.FC = () => {
         ],
     );
 
+    const [optimizationMode, setOptimizationMode] = useState<OptimizationMode>(() => {
+        try {
+            const saved = localStorage.getItem(OPTIMIZATION_MODE_STORAGE_KEY);
+            if (saved) {
+                return normalizeOptimizationMode(saved);
+            }
+        } catch {
+            // Ignore localStorage errors
+        }
+        return DEFAULT_OPTIMIZATION_MODE;
+    });
+
+    const handleOptimizationModeChange = useCallback((mode: OptimizationMode) => {
+        const normalized = normalizeOptimizationMode(mode);
+        setOptimizationMode(normalized);
+        try {
+            localStorage.setItem(OPTIMIZATION_MODE_STORAGE_KEY, normalized);
+        } catch {
+            // Ignore localStorage errors
+        }
+    }, []);
+
     const { performGeneration } = usePerformGeneration({
         t,
         apiKeyReady,
@@ -831,6 +859,7 @@ const App: React.FC = () => {
         onLiveProgressEvent: handleLiveProgressEvent,
         onLiveProgressReset: handleLiveProgressReset,
         roundCount,
+        optimizationMode,
     });
 
     const [promptThinkingLevel, setPromptThinkingLevel] = useState<PromptThinkingLevel>(() => {
@@ -864,6 +893,7 @@ const App: React.FC = () => {
         currentLanguage: currentLang,
         prompt,
         promptThinkingLevel,
+        optimizationMode,
         setPrompt,
         addLog,
         showNotification,
@@ -875,6 +905,7 @@ const App: React.FC = () => {
         currentLanguage: currentLang,
         prompt: editorPrompt,
         promptThinkingLevel,
+        optimizationMode,
         setPrompt: setEditorPrompt,
         addLog,
         showNotification,
@@ -1048,6 +1079,7 @@ const App: React.FC = () => {
         canQueueEditorBatch: showEditorQueueBatch,
         editorQueueDisabledReason,
         t,
+        optimizationMode,
     });
     useQueuedBatchSpacePersistence({ queuedJobs, setQueuedJobs });
 
@@ -2077,6 +2109,8 @@ const App: React.FC = () => {
         currentLanguage: currentLang,
         onLanguageChange: handleLanguageChange,
         supportRail,
+        optimizationMode,
+        onOptimizationModeChange: handleOptimizationModeChange,
     });
     const canRepaintCurrentImage = Boolean(getActiveImageUrl());
     const sideToolPanel = useMemo(
@@ -2263,8 +2297,15 @@ const App: React.FC = () => {
 
     return (
         <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(180deg,_#fffaf2_0%,_#f8fafc_38%,_#eef3f8_100%)] text-gray-900 transition-colors duration-500 dark:bg-[linear-gradient(180deg,_#111315_0%,_#090b10_46%,_#030405_100%)] dark:text-gray-100">
-            <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="absolute inset-x-0 top-0 h-[320px] bg-[radial-gradient(circle_at_12%_18%,rgba(251,191,36,0.24),transparent_24%),radial-gradient(circle_at_84%_10%,rgba(56,189,248,0.14),transparent_20%),radial-gradient(circle_at_56%_0%,rgba(255,255,255,0.72),transparent_34%)] dark:bg-[radial-gradient(circle_at_14%_16%,rgba(245,158,11,0.20),transparent_22%),radial-gradient(circle_at_82%_14%,rgba(14,165,233,0.12),transparent_18%),radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.06),transparent_34%)]" />
+            <div
+                aria-hidden="true"
+                data-testid="workspace-ambient-backdrop"
+                className="pointer-events-none absolute inset-0 overflow-hidden"
+            >
+                <div
+                    data-testid="workspace-ambient-glow"
+                    className="absolute inset-0 bg-[radial-gradient(ellipse_38vw_560px_at_12%_58px,rgba(251,191,36,0.22)_0%,rgba(251,191,36,0.09)_38%,rgba(251,191,36,0.025)_68%,transparent_100%),radial-gradient(ellipse_34vw_480px_at_84%_36px,rgba(56,189,248,0.14)_0%,rgba(56,189,248,0.06)_38%,rgba(56,189,248,0.015)_68%,transparent_100%),radial-gradient(ellipse_48vw_420px_at_56%_0px,rgba(255,255,255,0.72)_0%,rgba(255,255,255,0.26)_44%,transparent_100%)] dark:bg-[radial-gradient(ellipse_38vw_560px_at_14%_56px,rgba(245,158,11,0.18)_0%,rgba(245,158,11,0.075)_38%,rgba(245,158,11,0.02)_68%,transparent_100%),radial-gradient(ellipse_34vw_480px_at_82%_48px,rgba(14,165,233,0.12)_0%,rgba(14,165,233,0.05)_38%,rgba(14,165,233,0.012)_68%,transparent_100%),radial-gradient(ellipse_48vw_420px_at_50%_0px,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.022)_44%,transparent_100%)]"
+                />
                 <div className="absolute left-[-8%] top-[20%] h-64 w-64 rounded-full bg-amber-200/20 blur-3xl dark:bg-amber-500/10" />
                 <div className="absolute right-[-5%] top-[32%] h-72 w-72 rounded-full bg-sky-200/20 blur-3xl dark:bg-sky-500/10" />
             </div>

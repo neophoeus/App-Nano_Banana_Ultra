@@ -42,7 +42,7 @@ The workspace runs on a high-performance local backend architecture powered by N
 - reusable prompt context from current results when you want to push the next pass forward
 - **Integrated Image Metadata Viewer & Reuser**:
     - **Serverless Standalone Mode**: Drag images or folders directly onto `run_read_metadata.bat` or open `scripts/metadata-viewer/viewer.html` in any browser. 100% offline client-side parsing without running Node/Vite dev servers. Automatically pairs `<stem>.json` sidecars in the same directory or `./output`. Node.js CLI also available via `npm run read:metadata <image>`.
-    - **In-App Slide-out Drawer**: Click **`🔍 Read Metadata`** next to Advanced Settings below the prompt box to open the slide-out inspector. Supports multi-image/sidecar drop, filmstrip navigation, and 1-click **"Apply Prompt"**, **"Apply Settings"**, or **"Apply Both"** into the active composer.
+    - **In-App Slide-out Drawer**: Click **`Read Metadata`** next to Advanced Settings below the prompt box to open the slide-out inspector. Supports multi-image/sidecar drop, filmstrip navigation, and 1-click **"Apply Prompt"**, **"Apply Settings"**, or **"Apply Both"** into the active composer.
 
 ### Recover
 
@@ -152,6 +152,7 @@ Version 5.x focuses on **architectural purification in alignment with Google AI 
 
 #### 5.x Release History
 
+- **v5.4.0** (2026-10-29): Quality/Eco Optimization Modes, Global Flat Icon System, High-Contrast Read Metadata, and Seamless Viewport Ambient Lighting
 - **v5.3.0** (2026-10-29): Role-Aware Per-Part MediaResolution, Multi-Turn Lossless Token Optimization, and Token Usage Telemetry
 - **v5.2.0** (2026-10-29): Export Results Auto-Close & Filename Local Timestamp Alignment, Output Directory Selective Clear, and Workspace Metadata Viewer Compatibility
 - **v5.1.0** (2026-10-28): Dual-Mode Image Metadata Viewer Integration, Workspace Extractor Retirement, and Composer Round Count Layout Refactor
@@ -329,7 +330,7 @@ This repository currently tracks the product runtime, UI, build surface, and sta
 
 Tracked test source now includes `tests/`, `e2e/`, and `playwright.config.ts`, so clean clones receive the same unit and Playwright verification contracts that the tracked wrapper scripts and dev-environment manifest already advertise.
 
-Local-only development assets such as `docs/`, `.prettierignore`, and `prettier.config.mjs` remain intentionally excluded from the formal tracked repo surface. If you need personal scratch tests or temporary debug-only Playwright flows, keep them in `tests-local/`, `e2e-local/`, or `playwright.local.config.ts` so they stay outside the shared product contract.
+Local-only development assets such as `.prettierignore` and `prettier.config.mjs` remain intentionally excluded from the formal tracked repo surface.
 
 Generated local artifacts such as `output/`, `test-results/`, `playwright-report/`, and `coverage/` are also intentionally kept out of version control.
 

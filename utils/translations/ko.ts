@@ -29,9 +29,9 @@ export const ko = {
     promptThinkingLevelLow: '낮음',
     promptThinkingLevelMedium: '중간',
     promptThinkingLevelHigh: '높음',
-    promptThinkingLevelLowTooltip: '⚡ 낮음 (Low): 빠른 응답 속도 및 최소 토큰 소모',
-    promptThinkingLevelMediumTooltip: '🧠 중간 (Med): 표준 추론 및 균형 잡힌 창의성',
-    promptThinkingLevelHighTooltip: '🔬 높음 (High): 심층 디테일 분석 및 장문 추론',
+    promptThinkingLevelLowTooltip: '낮음 (Low): 빠른 응답 속도 및 최소 토큰 소모',
+    promptThinkingLevelMediumTooltip: '중간 (Med): 표준 추론 및 균형 잡힌 창의성',
+    promptThinkingLevelHighTooltip: '높음 (High): 심층 디테일 분석 및 장문 추론',
     groundingModeOff: '사용 안 함',
     groundingModeGoogleSearch: '웹 검색',
     groundingModeImageSearch: '이미지 검색',
@@ -91,7 +91,7 @@ export const ko = {
     batchSize: '수량',
     aspectRatio: '화면 비율',
     style: '아트 스타일',
-    generate: '생성 ✨',
+    generate: '생성',
     uploadEdit: '업로드 & 리페인트',
     history: '갤러리',
     footerDesigned: 'Neophoeus Art 디자인',
@@ -225,7 +225,7 @@ export const ko = {
     editorErrorTitle: '렌더링 실패',
     editorErrorRetry: '재시도',
     editorErrorReturn: '에디터로 복귀',
-    btnRender: '리페인트 ✨',
+    btnRender: '리페인트',
     btnReset: '초기화',
     btnFit: '화면 맞춤',
     btnFill: '화면 채움',
@@ -346,9 +346,9 @@ export const ko = {
     logAddedToRef: '참조 이미지 추가됨.',
     logHistoryLoaded: '기록에서 불러옴',
     logFatalError: '오류: {0}',
-    logCancelled: '🛑 생성이 취소되었습니다',
-    logSaved: '💾 저장됨: {0}',
-    logAutoSaveFailed: '⚠️ 자동 저장 실패',
+    logCancelled: '생성이 취소되었습니다',
+    logSaved: '저장됨: {0}',
+    logAutoSaveFailed: '자동 저장 실패',
 
     // --- P7: Enter to Send ---
     enterToSend: 'Enter 전송',
@@ -1047,7 +1047,7 @@ export const ko = {
     historyFilmstripSummary: '{0}개 턴 · {1}개 분기',
     historyFilmstripEmpty: '턴 스트립을 쌓기 시작하려면 먼저 이미지를 생성하거나 불러오세요.',
     composerAdvancedHighThinkingHighTempWarning:
-        '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
+        'When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
     generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
     generationFailureDetailThinkingLoop:
         'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
@@ -1071,4 +1071,18 @@ export const ko = {
     exportResultsRunning: '내보내는 중...',
     exportResultsEmptyNotice: '현재 워크스페이스에 내보낼 수 있는 생성 이미지가 없습니다.',
     exportResultsSuccessNotice: '{0}개의 메타데이터가 내장된 이미지를 {1} 경로로 성공적으로 내보냈습니다',
+    optimizationModeQuality: '품질',
+    optimizationModeEco: '절약',
+    optimizationModeInfoTitle: '최적화 모드 안내',
+    optimizationModeUseCasesLabel: '활용 상황:',
+    optimizationModeQualityTitle: '품질 모드 (기본값)',
+    optimizationModeQualityDesc:
+        '최고 수준 MediaResolution(캐릭터 및 4K 이미지는 ULTRA_HIGH), 전체 대화 기록 컨텍스트, 심층 사고 추론을 유지하여 섬세한 인물 묘사와 일관성을 제공합니다.',
+    optimizationModeQualityUseCases: '최종 제작, 고정밀 인물 합성, 일관된 멀티턴 편집에 적합합니다.',
+    optimizationModeEcoTitle: '절약 모드',
+    optimizationModeEcoDesc:
+        '토큰 소모를 대폭 절감: 참조 이미지 해상도 압축, 대화 기록을 최신 2회로 자동 단축, 사고 깊이를 minimal / disabled로 수렴합니다.',
+    optimizationModeEcoOutputSizeNotice:
+        '선택하신 출력 해상도(1K/2K/4K)는 변경되지 않습니다. 극대화된 절약을 원하시면 수동으로 1K로 설정하세요.',
+    optimizationModeEcoUseCases: '초기 브레인스토밍, 빠른 컨셉 탐색, 저비용 배치 작업에 적합합니다.',
 } as const;

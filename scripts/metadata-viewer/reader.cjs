@@ -254,7 +254,7 @@ function findSidecarJson(imagePath) {
 function inspectImageFile(imagePath) {
     const fullPath = path.resolve(imagePath);
     if (!fs.existsSync(fullPath)) {
-        console.error(`\n❌ [錯誤] 找不到檔案: "${imagePath}"\n`);
+        console.error(`\n[ERROR] [錯誤] 找不到檔案: "${imagePath}"\n`);
         return;
     }
 

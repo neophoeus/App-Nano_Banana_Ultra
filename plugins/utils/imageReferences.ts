@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import type { OptimizationMode } from '../../types';
 import { type PartMediaResolutionPayload, resolveRoleMediaResolution } from './mediaResolution';
 
 const LOAD_IMAGE_ENDPOINT = '/api/load-image';
@@ -50,6 +51,7 @@ export type GenerateImageBodyLike = {
     characterImageInputs?: string[];
     styleImageInputs?: string[];
     videoInput?: string;
+    optimizationMode?: OptimizationMode | string | null;
 };
 
 const inferExtensionFromMimeType = (mimeType: string): string => {
@@ -294,31 +296,37 @@ export function buildGenerateParts(body: GenerateImageBodyLike, resolvedDir: str
         model: body.model,
         role: 'edit',
         imageSize: body.imageSize,
+        optimizationMode: body.optimizationMode,
     });
     const srcResolution = resolveRoleMediaResolution({
         model: body.model,
         role: 'source',
         imageSize: body.imageSize,
+        optimizationMode: body.optimizationMode,
     });
     const charResolution = resolveRoleMediaResolution({
         model: body.model,
         role: 'character',
         imageSize: body.imageSize,
+        optimizationMode: body.optimizationMode,
     });
     const objResolution = resolveRoleMediaResolution({
         model: body.model,
         role: 'object',
         imageSize: body.imageSize,
+        optimizationMode: body.optimizationMode,
     });
     const styleResolution = resolveRoleMediaResolution({
         model: body.model,
         role: 'style',
         imageSize: body.imageSize,
+        optimizationMode: body.optimizationMode,
     });
     const videoResolution = resolveRoleMediaResolution({
         model: body.model,
         role: 'video',
         imageSize: body.imageSize,
+        optimizationMode: body.optimizationMode,
     });
 
     if (videoInput) {

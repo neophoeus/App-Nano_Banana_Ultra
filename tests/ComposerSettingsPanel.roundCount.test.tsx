@@ -267,6 +267,15 @@ describe('ComposerSettingsPanel round count controls', () => {
         const metaBtn = container.querySelector('[data-testid="composer-open-metadata-viewer"]') as HTMLButtonElement;
         expect(metaBtn).toBeTruthy();
         expect(metaBtn.textContent).toContain('讀取參數');
+        expect(metaBtn.className).toContain('border-sky-300/90');
+        expect(metaBtn.className).toContain('bg-sky-50/95');
+        expect(metaBtn.className).toContain('dark:border-sky-400/50');
+        expect(metaBtn.className).toContain('dark:bg-sky-500/15');
+        expect(metaBtn.className).not.toContain('nbu-inline-panel');
+
+        const icon = metaBtn.querySelector('svg');
+        expect(icon).toBeTruthy();
+        expect(icon?.getAttribute('class')).toContain('text-sky-600');
 
         act(() => {
             metaBtn.click();

@@ -1,5 +1,25 @@
 # Changelog
 
+## v5.4.0 - 2026-10-29
+
+- Release title: Nano Banana Ultra 5.4.0 - Quality/Eco Optimization Modes, Global Flat Icon System, High-Contrast Read Metadata, and Seamless Viewport Ambient Lighting
+- Release summary:
+    - **Quality / Eco Optimization Mode System (`components/OptimizationModeToggle.tsx`, `utils/optimizationMode.ts`, `hooks/*`, `plugins/*`, `tests/*`)**:
+        - Sliding pill mode toggle: Integrated beside the theme button in the top header with a smooth 50%/50% equal-width sliding thumb (`inline-grid grid-cols-[1fr_1fr]`), featuring warm flame and eco leaf icons.
+        - Comprehensive 9-language floating explanation dialog: Accessible via a circular `(i)` trigger button with smart anchored placement and backdrop blur portal, detailing the precise settings, token behavior, and use cases across all supported locales (`zh_TW`, `en`, `zh_CN`, `ja`, `ko`, `es`, `fr`, `de`, `ru`).
+        - Token efficiency & output resolution protection: Eco mode reduces reference media resolutions to `MEDIA_RESOLUTION_LOW` (70 tokens) and truncates older conversation history to the latest 2 turns (`ECO_MAX_CONVERSATION_TURNS`) while strictly preserving the user's chosen output resolution (1K/2K/4K).
+        - Thinking depth convergence: Automatically converges thinking level to minimal/disabled in Eco mode across text rewrite, image-to-prompt analysis, and image generation routes.
+        - Robust state persistence: Remembers optimization mode preference across sessions via `localStorage` (`OPTIMIZATION_MODE_STORAGE_KEY`).
+    - **Global Flat SVG Icon Unification & Strict Emoji Policy (`components/*`, `scripts/*`, `tests/emojiPolicy.test.ts`)**:
+        - Emoji retirement: Replaced all legacy emoji iconography across the interface (`⚡ Low`, `🧠 Med`, `🔬 High`, `🔍 Read Metadata`, `🔒 Settings Locked`, `✨ Generate`, `Image Metadata Viewer` header chips) with dedicated, crisp monochrome/accented Flat SVG icons.
+        - Strict emoji whitelist guardrail: Automated regression test suite (`tests/emojiPolicy.test.ts`) and static AST scanner enforce that only the brand banana logo (`🍌`) is permitted across the entire application surface.
+    - **Read Metadata Visual Prominence & Semantic Color Contrasting (`components/ComposerSettingsPanel.tsx`, `tests/*`)**:
+        - Cool-vs-warm visual hierarchy: Upgraded the Read Metadata (`讀取參數`) button from a neutral gray card surface to a prominent cool Sky Blue (`sky-*`) surface with high-contrast colored borders and cyan ambient glow, visually distinguishing "Read / Inspect" from warm amber "Generate / Mutate" controls.
+        - Responsive label protection: Guaranteed `shrink-0` geometry and keyboard `focus-visible` accessibility across Light and Dark themes.
+    - **Seamless Viewport Ambient Lighting (`App.tsx`, `tests/AppAmbientBackdrop.test.tsx`)**:
+        - Elimination of 320px horizontal seam: Removed the fixed `h-[320px]` container that previously clipped wide-aspect radial gradients at the bottom of the top header.
+        - Full-bleed 4-stop eased radial gradients: Re-engineered ambient lighting to full-bleed `inset-0` with viewport-proportional elliptical gradients (`ellipse 38vw 560px`, `ellipse 34vw 480px`, `ellipse 48vw 420px`) anchored at fixed top pixel coordinates, guaranteeing seamless, banding-free lighting across all displays up to 4K ultrawide.
+
 ## v5.3.0 - 2026-10-29
 
 - Release title: Nano Banana Ultra 5.3.0 - Role-Aware Per-Part MediaResolution, Multi-Turn Lossless Token Optimization, and Token Usage Telemetry

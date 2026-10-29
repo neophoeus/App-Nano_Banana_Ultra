@@ -1,8 +1,17 @@
 // @ts-nocheck -- Local Playwright specs resolve runtime tooling from dev-environment/ rather than the root product manifest.
 import type { Page } from '@playwright/test';
 import playwrightTest from '@playwright/test';
+import {
+    installCleanBrowserStorageInitScript,
+    resetPlaywrightOutputSnapshots,
+} from './utils/playwrightWorkspaceIsolation';
 
 const { expect, test } = playwrightTest;
+
+const getVisibleHistoryCards = (page: Page) =>
+    page.locator(
+        '[role="button"][data-testid^="history-card-"]:visible:not([data-testid$="-image"]):not([data-testid$="-deferred-media"]):not([data-testid$="-missing-media"])',
+    );
 
 const setComposerBatchSize = async (page: Page, batchSize: number) => {
     await page.getByTestId('composer-settings-button').click();
@@ -109,14 +118,23 @@ const installBrowserOnlyCancelBeforeFirstPreviewOverride = async (page: Page) =>
 };
 
 test.describe('workspace generation smoke', () => {
+    test.beforeEach(async ({ page }) => {
+        resetPlaywrightOutputSnapshots();
+        await installCleanBrowserStorageInitScript(page);
+    });
+
+    test.afterEach(() => {
+        resetPlaywrightOutputSnapshots();
+    });
+
     test('ready preview stays preview-only until cancel commits the completed result', async ({ page }) => {
         await installBrowserOnlyBatchCancelOverride(page, { postAbortDelayMs: 1500 });
 
         await page.goto('/');
         await expect(page.locator('.nbu-composer-dock-textarea textarea').first()).toBeVisible();
-        const initialVisibleHistoryCardCount = await page
-            .locator('[data-testid^="history-card-"]:visible:not([data-testid$="-image"])')
-            .count();
+        await expect(page.getByTestId('workspace-unified-history-count')).toContainText('0 items');
+        const initialVisibleHistoryCardCount = await getVisibleHistoryCards(page).count();
+        expect(initialVisibleHistoryCardCount).toBe(0);
 
         await setComposerBatchSize(page, 2);
 
@@ -145,9 +163,7 @@ test.describe('workspace generation smoke', () => {
         await page.getByTestId('generation-settings-apply').click();
         await expect(page.getByTestId('workspace-picker-sheet')).toHaveCount(0);
 
-        await expect(page.locator('[data-testid^="history-card-"]:visible:not([data-testid$="-image"])')).toHaveCount(
-            initialVisibleHistoryCardCount + 1,
-        );
+        await expect(getVisibleHistoryCards(page)).toHaveCount(initialVisibleHistoryCardCount + 1);
         await expect(page.locator('[data-testid^="history-preview-tile-"]:visible')).toHaveCount(0);
         await expect(page.getByTestId('composer-cancel-finalizing-button')).toHaveCount(0);
         await expect(page.getByTestId('stage-top-right-action-open-viewer')).toBeVisible();
@@ -161,9 +177,9 @@ test.describe('workspace generation smoke', () => {
 
         await page.goto('/');
         await expect(page.locator('.nbu-composer-dock-textarea textarea').first()).toBeVisible();
-        const initialVisibleHistoryCardCount = await page
-            .locator('[data-testid^="history-card-"]:visible:not([data-testid$="-image"])')
-            .count();
+        await expect(page.getByTestId('workspace-unified-history-count')).toContainText('0 items');
+        const initialVisibleHistoryCardCount = await getVisibleHistoryCards(page).count();
+        expect(initialVisibleHistoryCardCount).toBe(0);
 
         await setComposerBatchSize(page, 2);
 
@@ -182,9 +198,7 @@ test.describe('workspace generation smoke', () => {
         await page.waitForTimeout(1000);
 
         await expect(page.locator('[data-testid^="history-preview-tile-"]:visible')).toHaveCount(0);
-        await expect(page.locator('[data-testid^="history-card-"]:visible:not([data-testid$="-image"])')).toHaveCount(
-            initialVisibleHistoryCardCount,
-        );
+        await expect(getVisibleHistoryCards(page)).toHaveCount(initialVisibleHistoryCardCount);
         await expect(page.locator('[data-testid="stage-top-right-action-open-viewer"]:visible')).toHaveCount(0);
     });
 });

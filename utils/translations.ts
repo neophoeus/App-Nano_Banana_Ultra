@@ -6,16 +6,16 @@ export type TranslationDictionary = Record<string, string>;
 
 export const LANGUAGE_STORAGE_KEY = 'nbu_language';
 
-export const SUPPORTED_LANGUAGES: { value: Language; label: string; flag: string; shortLabel: string }[] = [
-    { value: 'en', label: 'English', flag: '🇺🇸', shortLabel: 'En' },
-    { value: 'zh_TW', label: '繁體中文', flag: '🇹🇼', shortLabel: '繁' },
-    { value: 'zh_CN', label: '简体中文', flag: '🇨🇳', shortLabel: '简' },
-    { value: 'ja', label: '日本語', flag: '🇯🇵', shortLabel: '日' },
-    { value: 'ko', label: '한국어', flag: '🇰🇷', shortLabel: '한' },
-    { value: 'es', label: 'Español', flag: '🇪🇸', shortLabel: 'Es' },
-    { value: 'fr', label: 'Français', flag: '🇫🇷', shortLabel: 'Fr' },
-    { value: 'de', label: 'Deutsch', flag: '🇩🇪', shortLabel: 'De' },
-    { value: 'ru', label: 'Русский', flag: '🇷🇺', shortLabel: 'Ru' },
+export const SUPPORTED_LANGUAGES: { value: Language; label: string; shortLabel: string }[] = [
+    { value: 'en', label: 'English', shortLabel: 'En' },
+    { value: 'zh_TW', label: '繁體中文', shortLabel: '繁' },
+    { value: 'zh_CN', label: '简体中文', shortLabel: '简' },
+    { value: 'ja', label: '日本語', shortLabel: '日' },
+    { value: 'ko', label: '한국어', shortLabel: '한' },
+    { value: 'es', label: 'Español', shortLabel: 'Es' },
+    { value: 'fr', label: 'Français', shortLabel: 'Fr' },
+    { value: 'de', label: 'Deutsch', shortLabel: 'De' },
+    { value: 'ru', label: 'Русский', shortLabel: 'Ru' },
 ];
 
 type NonEnglishLanguage = Exclude<Language, 'en'>;

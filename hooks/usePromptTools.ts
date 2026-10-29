@@ -1,16 +1,17 @@
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { enhancePromptWithGemini, generatePromptFromImage, generateRandomPrompt } from '../services/geminiService';
-import type { PromptThinkingLevel } from '../types';
+import type { OptimizationMode, PromptThinkingLevel } from '../types';
 import { prepareImageAssetFromFile } from '../utils/imageSaveUtils';
+import { resolveEffectivePromptThinkingLevel, resolveImageToPromptMaxDimension } from '../utils/optimizationMode';
 import { Language } from '../utils/translations';
 
-const IMAGE_TO_PROMPT_MAX_DIMENSION = 3072;
 type PromptToolId = 'image-to-prompt' | 'inspiration' | 'rewrite';
 
 interface UsePromptToolsOptions {
     currentLanguage: Language;
     prompt: string;
     promptThinkingLevel?: PromptThinkingLevel;
+    optimizationMode?: OptimizationMode;
     setPrompt: Dispatch<SetStateAction<string>>;
     addLog: (msg: string) => void;
     showNotification: (msg: string, type: 'info' | 'error') => void;
@@ -35,6 +36,7 @@ export function usePromptTools({
     currentLanguage,
     prompt,
     promptThinkingLevel = 'low',
+    optimizationMode,
     setPrompt,
     addLog,
     showNotification,
@@ -60,7 +62,11 @@ export function usePromptTools({
         setActivePromptTool('rewrite');
         setIsEnhancingPrompt(true);
         try {
-            const enhanced = await enhancePromptWithGemini(prompt, currentLanguage, promptThinkingLevel);
+            const effectiveThinkingLevel = resolveEffectivePromptThinkingLevel(promptThinkingLevel, optimizationMode);
+            const enhanced =
+                optimizationMode !== undefined
+                    ? await enhancePromptWithGemini(prompt, currentLanguage, effectiveThinkingLevel, optimizationMode)
+                    : await enhancePromptWithGemini(prompt, currentLanguage, effectiveThinkingLevel);
             setPrompt(enhanced);
             addLog(t('logRewriteOk'));
         } catch (e) {
@@ -76,6 +82,7 @@ export function usePromptTools({
         currentLanguage,
         handleApiKeyConnect,
         addLog,
+        optimizationMode,
         prompt,
         promptThinkingLevel,
         setPrompt,
@@ -93,7 +100,11 @@ export function usePromptTools({
         setActivePromptTool('inspiration');
         setIsEnhancingPrompt(true);
         try {
-            const randomPrompt = await generateRandomPrompt(currentLanguage, promptThinkingLevel);
+            const effectiveThinkingLevel = resolveEffectivePromptThinkingLevel(promptThinkingLevel, optimizationMode);
+            const randomPrompt =
+                optimizationMode !== undefined
+                    ? await generateRandomPrompt(currentLanguage, effectiveThinkingLevel, optimizationMode)
+                    : await generateRandomPrompt(currentLanguage, effectiveThinkingLevel);
             setPrompt(randomPrompt);
             addLog(t('logRandomOk'));
         } catch (e) {
@@ -104,7 +115,16 @@ export function usePromptTools({
             setIsEnhancingPrompt(false);
             setActivePromptTool(null);
         }
-    }, [apiKeyReady, currentLanguage, handleApiKeyConnect, addLog, promptThinkingLevel, setPrompt, t]);
+    }, [
+        apiKeyReady,
+        currentLanguage,
+        handleApiKeyConnect,
+        addLog,
+        optimizationMode,
+        promptThinkingLevel,
+        setPrompt,
+        t,
+    ]);
 
     const handleImageToPrompt = useCallback(
         async (file: File) => {
@@ -123,12 +143,21 @@ export function usePromptTools({
             setActivePromptTool('image-to-prompt');
             setIsEnhancingPrompt(true);
             try {
-                const preparedImage = await prepareImageAssetFromFile(file, IMAGE_TO_PROMPT_MAX_DIMENSION);
-                const generatedPrompt = await generatePromptFromImage(
-                    preparedImage.dataUrl,
-                    currentLanguage,
+                const maxDimension = resolveImageToPromptMaxDimension(optimizationMode);
+                const preparedImage = await prepareImageAssetFromFile(file, maxDimension);
+                const effectiveThinkingLevel = resolveEffectivePromptThinkingLevel(
                     promptThinkingLevel,
+                    optimizationMode,
                 );
+                const generatedPrompt =
+                    optimizationMode !== undefined
+                        ? await generatePromptFromImage(
+                              preparedImage.dataUrl,
+                              currentLanguage,
+                              effectiveThinkingLevel,
+                              optimizationMode,
+                          )
+                        : await generatePromptFromImage(preparedImage.dataUrl, currentLanguage, effectiveThinkingLevel);
                 setPrompt(generatedPrompt);
                 addLog(t('logImageToPromptOk'));
             } catch (error) {
@@ -149,6 +178,7 @@ export function usePromptTools({
             currentLanguage,
             handleApiKeyConnect,
             addLog,
+            optimizationMode,
             promptThinkingLevel,
             setPrompt,
             showNotification,

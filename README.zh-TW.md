@@ -42,7 +42,7 @@ Nano Banana Ultra 是一個以 Google Gemini 影像模型為核心的影像創�
 - 可直接把目前結果中的 prompt 脈絡帶進下一輪
 - **整合式圖片中繼資料檢視器 (Metadata Viewer)**：
     - **純離線免伺服器模式**：直接將圖片或資料夾拖曳至根目錄的 `run_read_metadata.bat`，或在瀏覽器開啟 `scripts/metadata-viewer/viewer.html`，純前端解析，完全不用啟動 Node/Vite 伺服器即可離線查看。支援自動識別同目錄或 `./output` 下同檔名的 `<stem>.json` 側車檔案，亦可使用 CLI 指令 `npm run read:metadata <image>`。
-    - **App 內建抽屜檢視器**：在提示詞輸入區底部的「進階設定」旁，點擊 **`🔍 讀取參數`** 即可從右側呼叫出檢視抽屜。支援多圖與側車 JSON 拖放、鍵盤左右切換與底片軸預覽，並可一鍵 **「套用提示詞」**、**「套用設定」** 或 **「同時套用」** 至目前編輯區。
+    - **App 內建抽屜檢視器**：在提示詞輸入區底部的「進階設定」旁，點擊 **`讀取參數`** 即可從右側呼叫出檢視抽屜。支援多圖與側車 JSON 拖放、鍵盤左右切換與底片軸預覽，並可一鍵 **「套用提示詞」**、**「套用設定」** 或 **「同時套用」** 至目前編輯區。
 
 ### 回復
 
@@ -151,6 +151,7 @@ Nano Banana Ultra 提供兩種靈活互補的成果匯出與歸檔管道：
 
 #### 5.x 版本紀錄
 
+- **v5.4.0** (2026-10-29)：品質／節流最佳化模式（Quality/Eco Modes）、全域 Flat SVG 圖示系統、讀取參數按鈕高對比視覺強化與全幅無接縫光暈
 - **v5.3.0** (2026-10-29)：角色感知每圖元解析度（Role-Aware Per-Part MediaResolution）、多輪對話無損 Token 最佳化與用量遙測
 - **v5.2.0** (2026-10-29)：成品匯出自動關閉與檔名本機時間戳記對齊、支援工作區 output 資料夾選擇性清理與重置提醒、圖片中繼資料檢視器全面相容工作區儲存架構與單獨 JSON 檢視。
 - **v5.1.0** (2026-10-28)：整合離線獨立版與編輯區抽屜之雙模圖片中繼資料檢視器（正式廢除 Workspace Extractor），並將生成回合數重構至右下動作列。
@@ -328,7 +329,7 @@ Nano Banana Ultra 提供兩種靈活互補的成果匯出與歸檔管道：
 
 現在 `tests/`、`e2e/`、`playwright.config.ts` 已經納入正式追蹤，讓 clean clone 下來的人可以直接拿到和 repo 內 wrapper scripts、dev-environment manifest 一致的測試驗證契約。
 
-像 `docs/`、`.prettierignore`、`prettier.config.mjs` 這類本機開發資產，仍然刻意不納入正式追蹤範圍。如果你需要個人 scratch 測試或一次性 debug 用的 Playwright 流程，請放在 `tests-local/`、`e2e-local/` 或 `playwright.local.config.ts`，不要混進共享的正式測試面。
+像 `.prettierignore`、`prettier.config.mjs` 這類本機開發資產，仍然刻意不納入正式追蹤範圍。
 
 `output/`、`test-results/`、`playwright-report/`、`coverage/` 這類本機產物也同樣刻意不納入版本控制。
 

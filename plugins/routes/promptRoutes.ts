@@ -8,6 +8,7 @@ import {
     sendClassifiedApiError,
     sendJson,
 } from '../utils/apiHelpers';
+import type { OptimizationMode } from '../../types';
 import {
     buildImageToPromptInstruction,
     buildPromptEnhancerInstruction,
@@ -15,14 +16,16 @@ import {
     buildRandomPromptRequest,
     normalizePromptToolLanguage,
 } from '../utils/promptHelpers';
-import { extractUsageMetadata, PART_MEDIA_RESOLUTION_LEVEL } from '../utils/mediaResolution';
+import { extractUsageMetadata, resolveRoleMediaResolution } from '../utils/mediaResolution';
 import { toPromptGeminiThinkingLevel } from '../utils/geminiApiConfig';
+import { resolveEffectivePromptThinkingLevel } from '../../utils/optimizationMode';
 
 type PromptRequestBody = {
     currentPrompt?: string;
     imageDataUrl?: string;
     lang?: string;
     thinkingLevel?: 'low' | 'medium' | 'high';
+    optimizationMode?: OptimizationMode;
 };
 
 function parseInlineImageFromDataUrl(imageDataUrl: string): { data: string; mimeType: string } | null {
@@ -56,12 +59,15 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 currentPrompt = '',
                 lang: requestedLang,
                 thinkingLevel,
+                optimizationMode,
             } = await readJsonBody<PromptRequestBody>(req);
             const lang = normalizePromptToolLanguage(requestedLang);
+            const effectiveThinkingLevel = resolveEffectivePromptThinkingLevel(thinkingLevel, optimizationMode);
             logApiRequest(requestContext, {
                 source: 'prompt-tools',
                 lang,
-                thinkingLevel: thinkingLevel || 'low',
+                thinkingLevel: effectiveThinkingLevel,
+                optimizationMode,
                 promptLength: currentPrompt.trim().length,
             });
             const response = await ai.models.generateContent({
@@ -69,7 +75,7 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 config: {
                     systemInstruction: buildPromptEnhancerInstruction(lang),
                     thinkingConfig: {
-                        thinkingLevel: toPromptGeminiThinkingLevel(thinkingLevel),
+                        thinkingLevel: toPromptGeminiThinkingLevel(effectiveThinkingLevel),
                     },
                 },
                 contents: `Original prompt to rewrite: "${currentPrompt || 'A creative image'}"`,
@@ -110,19 +116,21 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
 
         try {
             const ai = getAIClient();
-            const { lang: requestedLang, thinkingLevel } = await readJsonBody<PromptRequestBody>(req);
+            const { lang: requestedLang, thinkingLevel, optimizationMode } = await readJsonBody<PromptRequestBody>(req);
             const lang = normalizePromptToolLanguage(requestedLang);
+            const effectiveThinkingLevel = resolveEffectivePromptThinkingLevel(thinkingLevel, optimizationMode);
             logApiRequest(requestContext, {
                 source: 'prompt-tools',
                 lang,
-                thinkingLevel: thinkingLevel || 'low',
+                thinkingLevel: effectiveThinkingLevel,
+                optimizationMode,
             });
             const response = await ai.models.generateContent({
                 model: 'gemini-3.8-flash',
                 config: {
                     systemInstruction: buildRandomPromptInstruction(lang),
                     thinkingConfig: {
-                        thinkingLevel: toPromptGeminiThinkingLevel(thinkingLevel),
+                        thinkingLevel: toPromptGeminiThinkingLevel(effectiveThinkingLevel),
                     },
                 },
                 contents: buildRandomPromptRequest(),
@@ -167,13 +175,16 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 imageDataUrl = '',
                 lang: requestedLang,
                 thinkingLevel,
+                optimizationMode,
             } = await readJsonBody<PromptRequestBody>(req);
             const lang = normalizePromptToolLanguage(requestedLang);
+            const effectiveThinkingLevel = resolveEffectivePromptThinkingLevel(thinkingLevel, optimizationMode);
             const inlineImage = parseInlineImageFromDataUrl(String(imageDataUrl || ''));
             logApiRequest(requestContext, {
                 source: 'prompt-tools',
                 lang,
-                thinkingLevel: thinkingLevel || 'low',
+                thinkingLevel: effectiveThinkingLevel,
+                optimizationMode,
                 hasImageDataUrl: Boolean(imageDataUrl),
             });
 
@@ -194,18 +205,26 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 return;
             }
 
+            const mediaResolution = resolveRoleMediaResolution({
+                model: 'gemini-3.8-flash',
+                role: 'forensic-prompt',
+                optimizationMode,
+            });
+
             const response = await ai.models.generateContent({
                 model: 'gemini-3.8-flash',
                 config: {
                     systemInstruction: buildImageToPromptInstruction(lang),
                     thinkingConfig: {
-                        thinkingLevel: toPromptGeminiThinkingLevel(thinkingLevel),
+                        thinkingLevel: toPromptGeminiThinkingLevel(effectiveThinkingLevel),
                     },
                 },
                 contents: [
                     {
                         inlineData: inlineImage,
-                        mediaResolution: { level: PART_MEDIA_RESOLUTION_LEVEL.ULTRA_HIGH as PartMediaResolutionLevel },
+                        ...(mediaResolution
+                            ? { mediaResolution: { level: mediaResolution.level as PartMediaResolutionLevel } }
+                            : {}),
                     },
                     {
                         text: 'Analyze this image carefully and generate a highly detailed, extremely accurate image prompt in the requested language describing it. Focus on absolute forensic precision, documenting every single detail, object, texture, color shade, camera setting, and art medium characteristic without summarization. Output only the prompt itself without any headings, labels, sections, or commentary.',

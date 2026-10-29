@@ -11,6 +11,25 @@ import { DEFAULT_TEMPERATURE, formatTemperature, normalizeTemperature, TEMPERATU
 import { getTranslation, Language } from '../utils/translations';
 import InfoTooltip from './InfoTooltip';
 
+function AlertTriangleIcon({ className = 'w-4 h-4' }: { className?: string }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+    );
+}
+
 type ComposerAdvancedSettingsContentProps = {
     currentLanguage: Language;
     outputFormat: OutputFormat;
@@ -166,9 +185,10 @@ export default function ComposerAdvancedSettingsContent({
                             {thinkingLevel === 'high' && temperature > 1.0 && (
                                 <div
                                     data-testid="composer-advanced-thinking-temp-warning"
-                                    className="mt-2 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
+                                    className="mt-2 flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
                                 >
-                                    {t('composerAdvancedHighThinkingHighTempWarning')}
+                                    <AlertTriangleIcon className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                                    <span>{t('composerAdvancedHighThinkingHighTempWarning')}</span>
                                 </div>
                             )}
                         </section>

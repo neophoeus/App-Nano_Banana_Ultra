@@ -29,9 +29,9 @@ export const fr = {
     promptThinkingLevelLow: 'Faible',
     promptThinkingLevelMedium: 'Moyen',
     promptThinkingLevelHigh: 'Élevé',
-    promptThinkingLevelLowTooltip: '⚡ Faible (Low): Réponse ultra-rapide, consommation minimale de tokens',
-    promptThinkingLevelMediumTooltip: '🧠 Moyen (Med): Raisonnement standard, créativité équilibrée',
-    promptThinkingLevelHighTooltip: '🔬 Élevé (High): Analyse détaillée approfondie',
+    promptThinkingLevelLowTooltip: 'Faible (Low): Réponse ultra-rapide, consommation minimale de tokens',
+    promptThinkingLevelMediumTooltip: 'Moyen (Med): Raisonnement standard, créativité équilibrée',
+    promptThinkingLevelHighTooltip: 'Élevé (High): Analyse détaillée approfondie',
     groundingModeOff: 'Desactive',
     groundingModeGoogleSearch: 'Recherche web',
     groundingModeImageSearch: 'Recherche d images',
@@ -94,7 +94,7 @@ export const fr = {
     batchSize: 'Quantité',
     aspectRatio: 'Format',
     style: 'Style',
-    generate: 'Générer ✨',
+    generate: 'Générer',
     uploadEdit: 'Upload & Repeindre',
     history: 'Galerie',
     footerDesigned: 'Conçu par Neophoeus Art',
@@ -230,7 +230,7 @@ export const fr = {
     editorErrorTitle: 'Rendu Échoué',
     editorErrorRetry: 'Réessayer',
     editorErrorReturn: 'Retour',
-    btnRender: 'Repeindre ✨',
+    btnRender: 'Repeindre',
     btnReset: 'Réinitialiser',
     btnFit: 'Ajuster',
     btnFill: 'Remplir',
@@ -351,9 +351,9 @@ export const fr = {
     logAddedToRef: 'Ajouté aux refs.',
     logHistoryLoaded: "Chargé de l'historique",
     logFatalError: 'Erreur : {0}',
-    logCancelled: '🛑 Génération annulée',
-    logSaved: '💾 Enregistré : {0}',
-    logAutoSaveFailed: '⚠️ Échec de la sauvegarde auto',
+    logCancelled: 'Génération annulée',
+    logSaved: 'Enregistré : {0}',
+    logAutoSaveFailed: 'Échec de la sauvegarde auto',
 
     // --- P7: Enter to Send ---
     enterToSend: 'Enter = Envoyer',
@@ -1082,7 +1082,7 @@ export const fr = {
     historyFilmstripSummary: '{0} tours · {1} branches',
     historyFilmstripEmpty: 'Generez ou chargez une image pour commencer a construire la bande de tours.',
     composerAdvancedHighThinkingHighTempWarning:
-        '⚠️ When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
+        'When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
     generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
     generationFailureDetailThinkingLoop:
         'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
@@ -1106,4 +1106,19 @@ export const fr = {
     exportResultsRunning: 'Exportation en cours...',
     exportResultsEmptyNotice: 'Aucune image générée disponible à exporter dans cet espace.',
     exportResultsSuccessNotice: '{0} images avec métadonnées intégrées exportées avec succès vers {1}',
+    optimizationModeQuality: 'Qualité',
+    optimizationModeEco: 'Éco',
+    optimizationModeInfoTitle: 'Modes d’Optimisation',
+    optimizationModeUseCasesLabel: 'Cas d’usage :',
+    optimizationModeQualityTitle: 'Mode Qualité (Par défaut)',
+    optimizationModeQualityDesc:
+        'Conserve la MediaResolution maximale (ULTRA_HIGH pour les personnages et le 4K), l’historique complet de la conversation et le raisonnement approfondi pour une fidélité optimale.',
+    optimizationModeQualityUseCases: 'Idéal pour les rendus finaux, les portraits réalistes et l’édition cohérente.',
+    optimizationModeEcoTitle: 'Mode Éco (Économie de tokens)',
+    optimizationModeEcoDesc:
+        'Compresse les tokens au maximum : abaissement de la résolution des références, troncature de l’historique aux 2 derniers tours et convergence de la réflexion vers minimal / disabled.',
+    optimizationModeEcoOutputSizeNotice:
+        'Ne modifie pas votre résolution de sortie (1K/2K/4K) ; passez manuellement en 1K pour une économie maximale.',
+    optimizationModeEcoUseCases:
+        'Idéal pour le remue-méninges, l’exploration rapide de concepts et les séries à faible coût.',
 } as const;

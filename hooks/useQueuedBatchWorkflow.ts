@@ -13,6 +13,7 @@ import {
     GenerationLineageContext,
     ImageModel,
     ImageStyle,
+    OptimizationMode,
     QueuedBatchJob,
     QueuedBatchJobImportDiagnostic,
     QueuedBatchJobImportIssue,
@@ -282,6 +283,7 @@ type UseQueuedBatchWorkflowArgs = {
     canQueueEditorBatch: boolean;
     editorQueueDisabledReason: string | null;
     t: (key: string) => string;
+    optimizationMode?: OptimizationMode;
 };
 
 type QueuedBatchJobGenerationDraft = {
@@ -393,6 +395,7 @@ export function useQueuedBatchWorkflow({
     canQueueEditorBatch,
     editorQueueDisabledReason,
     t,
+    optimizationMode,
 }: UseQueuedBatchWorkflowArgs): UseQueuedBatchWorkflowReturn {
     const formatMessage = useCallback(
         (key: string, ...values: Array<string | number>): string =>
@@ -810,6 +813,7 @@ export function useQueuedBatchWorkflow({
                     imageSearch: queuedDraft.imageSearch,
                     requestCount: requestedBatchSize,
                     displayName: queuedDraft.displayName,
+                    optimizationMode,
                 });
 
                 upsertQueuedJob({

@@ -2,10 +2,12 @@ import type {
     ImageModel,
     ImageSize,
     MediaResolutionRole,
+    OptimizationMode,
     PartMediaResolutionLevelValue,
     TokenUsageMetadata,
 } from '../../types';
 import { MODEL_CAPABILITIES } from '../../utils/modelCapabilities';
+import { normalizeOptimizationMode } from '../../utils/optimizationMode';
 import type { ResolvedInlineImage } from './imageReferences';
 
 export type PartMediaResolutionPayload = {
@@ -55,12 +57,42 @@ export function resolveRoleMediaResolution(params: {
     model?: string | null;
     role: MediaResolutionRole;
     imageSize?: ImageSize | string | null;
+    optimizationMode?: OptimizationMode | string | null;
 }): PartMediaResolutionPayload | undefined {
     if (!supportsModelPerPartMediaResolution(params.model)) {
         return undefined;
     }
 
+    const mode = normalizeOptimizationMode(params.optimizationMode);
     const normalizedSize = params.imageSize === '512px' ? '512' : params.imageSize;
+
+    if (mode === 'eco') {
+        switch (params.role) {
+            case 'character':
+            case 'forensic-prompt':
+                return { level: PART_MEDIA_RESOLUTION_LEVEL.HIGH };
+
+            case 'edit':
+            case 'source':
+                return normalizedSize === '4K'
+                    ? { level: PART_MEDIA_RESOLUTION_LEVEL.HIGH }
+                    : { level: PART_MEDIA_RESOLUTION_LEVEL.MEDIUM };
+
+            case 'object':
+            case 'history-anchor':
+                return { level: PART_MEDIA_RESOLUTION_LEVEL.MEDIUM };
+
+            case 'style':
+            case 'history-decay':
+                return { level: PART_MEDIA_RESOLUTION_LEVEL.LOW };
+
+            case 'video':
+                return { level: PART_MEDIA_RESOLUTION_LEVEL.LOW };
+
+            default:
+                return { level: PART_MEDIA_RESOLUTION_LEVEL.MEDIUM };
+        }
+    }
 
     switch (params.role) {
         case 'character':

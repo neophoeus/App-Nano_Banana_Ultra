@@ -135,6 +135,7 @@ export type ThinkingLevel = 'disabled' | 'minimal' | 'medium' | 'high';
 export type PromptThinkingLevel = 'low' | 'medium' | 'high';
 export type GroundingMode = 'off' | 'google-search' | 'image-search' | 'google-search-plus-image-search';
 export type StickySendIntent = 'independent' | 'memory';
+export type OptimizationMode = 'quality' | 'eco';
 export type WorkspaceSettingsDraft = {
     imageModel: ImageModel;
     aspectRatio: AspectRatio;
@@ -638,4 +639,5 @@ export interface GenerateOptions {
     executionMode?: ExecutionMode;
     conversationContext?: ConversationRequestContext | null;
     liveProgressBatchSessionId?: string;
+    optimizationMode?: OptimizationMode;
 }
