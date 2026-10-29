@@ -13,6 +13,8 @@ dist/
 dist-ssr/
 output/
 output-test/
+export/
+export-test/
 test-results/
 playwright-report/
 coverage/
@@ -27,7 +29,9 @@ e2e-local/
 playwright.local.config.ts
 
 # Local secrets and generated internal reports
-.env*.local
+.env
+.env.*
+!.env.example
 e2e-global-log-focus.txt
 
 # Editor directories and files
@@ -40,9 +44,6 @@ e2e-global-log-focus.txt
 *.sln
 *.sw?
 
-# AI Studio local packaging scripts and archives
-pack_ai_studio.bat
-package_ai_studio.bat
-scripts/pack_ai_studio.ps1
+# Metadata viewer runtime session data and archives
 scripts/metadata-viewer/session_data.js
 *.zip
