@@ -274,6 +274,7 @@ export function useComposerSettingsPanelProps({
             isAdvancedSettingsOpen,
             generateLabel,
             modelLabel: getModelLabel(imageModel),
+            imageModel,
             aspectRatio,
             imageSize,
             batchSize,

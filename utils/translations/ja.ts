@@ -72,6 +72,9 @@ export const ja = {
     videoRefErrorInvalidYoutube: '有効な公開 YouTube 動画 URL を入力してください。',
     videoRefErrorUploadFailed: 'Gemini Files API での動画アップロードまたは処理に失敗しました。',
     videoRefAttachedNotice: '参照動画が添付されました。',
+    videoRefLiteAdvisory:
+        'Nano Banana 2 Lite は動画参照をネイティブでサポートしていますが、入力上限が小さく（65K トークン）、複数参照の融合能力に制限があります。短時間の動画下書き（Eco モード推奨）に適しています。長尺や高精度な生成には Nano Banana 2 または 2.1 をご利用ください。',
+    videoRefLiteChipBadge: 'Lite 簡易対応（短尺／65K）',
     workspaceConstraintClearVideo: '選択したモデルは動画参照に対応していないため、削除されました。',
     unsupportedModel: 'このモデルではサポートされていません',
     modelSelect: 'モデル',

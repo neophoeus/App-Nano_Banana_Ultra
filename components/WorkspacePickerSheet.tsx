@@ -618,6 +618,7 @@ export default function WorkspacePickerSheet({
                                 onWarning={(msg) => showNotification(msg, 'error')}
                                 disabled={isGenerating}
                                 currentLanguage={currentLanguage}
+                                imageModel={imageModel}
                             />
                         </div>
                     )}

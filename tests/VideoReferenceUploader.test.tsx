@@ -2,12 +2,13 @@
 
 import { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import VideoReferenceUploader from '../components/VideoReferenceUploader';
 import { PromptReferenceChips, PromptReferencedBadges } from '../components/PromptReferenceChips';
 import WorkspaceSideToolPanel from '../components/WorkspaceSideToolPanel';
 import { useWorkspaceShellViewModel } from '../hooks/useWorkspaceShellViewModel';
 import { VideoReferenceItem } from '../types';
+import { preloadAllTranslations } from '../utils/translations';
 
 function setInputValue(input: HTMLInputElement, value: string) {
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
@@ -19,6 +20,10 @@ function setInputValue(input: HTMLInputElement, value: string) {
 describe('VideoReferenceUploader', () => {
     let container: HTMLDivElement;
     let root: Root;
+
+    beforeAll(async () => {
+        await preloadAllTranslations();
+    });
 
     beforeEach(() => {
         (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -571,5 +576,177 @@ describe('VideoReferenceUploader', () => {
 
         // 2 objects + 1 character + 2 styles + 1 video = 6
         expect(hookResult?.totalReferenceCount).toBe(6);
+    });
+
+    it('renders lite video advisory notice in VideoReferenceUploader when imageModel is gemini-3.1-flash-lite-image', () => {
+        const onVideoReferenceChange = vi.fn();
+
+        // 1. Unattached / Uploader state
+        act(() => {
+            root.render(
+                <VideoReferenceUploader
+                    currentLanguage="en"
+                    videoReference={null}
+                    onVideoReferenceChange={onVideoReferenceChange}
+                    imageModel="gemini-3.1-flash-lite-image"
+                />,
+            );
+        });
+
+        const unattachedAdvisory = container.querySelector('[data-testid="video-reference-lite-advisory"]');
+        expect(unattachedAdvisory).not.toBeNull();
+        expect(unattachedAdvisory?.textContent).toContain('Nano Banana 2 Lite natively supports video references');
+
+        // 2. Attached / Card state
+        const videoItem: VideoReferenceItem = {
+            sourceType: 'files-api',
+            uri: 'https://generativelanguage.googleapis.com/v1beta/files/test-video',
+            mimeType: 'video/mp4',
+            displayName: 'sample.mp4',
+            fileSizeBytes: 1048576,
+            createdAt: Date.now(),
+        };
+
+        act(() => {
+            root.render(
+                <VideoReferenceUploader
+                    currentLanguage="zh_TW"
+                    videoReference={videoItem}
+                    onVideoReferenceChange={onVideoReferenceChange}
+                    imageModel="gemini-3.1-flash-lite-image"
+                />,
+            );
+        });
+
+        const attachedAdvisory = container.querySelector('[data-testid="video-reference-lite-advisory"]');
+        expect(attachedAdvisory).not.toBeNull();
+        expect(attachedAdvisory?.textContent).toContain('Nano Banana 2 Lite 原生支援視訊參考');
+    });
+
+    it('does not render lite video advisory notice in VideoReferenceUploader for standard models or when imageModel is undefined', () => {
+        const onVideoReferenceChange = vi.fn();
+
+        // Default undefined
+        act(() => {
+            root.render(
+                <VideoReferenceUploader
+                    currentLanguage="en"
+                    videoReference={null}
+                    onVideoReferenceChange={onVideoReferenceChange}
+                />,
+            );
+        });
+        expect(container.querySelector('[data-testid="video-reference-lite-advisory"]')).toBeNull();
+
+        // gemini-nano-banana-2.1
+        act(() => {
+            root.render(
+                <VideoReferenceUploader
+                    currentLanguage="en"
+                    videoReference={null}
+                    onVideoReferenceChange={onVideoReferenceChange}
+                    imageModel="gemini-nano-banana-2.1"
+                />,
+            );
+        });
+        expect(container.querySelector('[data-testid="video-reference-lite-advisory"]')).toBeNull();
+
+        // gemini-3.1-flash-image
+        act(() => {
+            root.render(
+                <VideoReferenceUploader
+                    currentLanguage="en"
+                    videoReference={null}
+                    onVideoReferenceChange={onVideoReferenceChange}
+                    imageModel="gemini-3.1-flash-image"
+                />,
+            );
+        });
+        expect(container.querySelector('[data-testid="video-reference-lite-advisory"]')).toBeNull();
+    });
+
+    it('renders composer-video-lite-advisory badge in PromptReferenceChips when videoReference exists and model is gemini-3.1-flash-lite-image', () => {
+        const onInsertTag = vi.fn();
+        const videoItem: VideoReferenceItem = {
+            sourceType: 'youtube',
+            uri: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            displayName: 'YouTube Video',
+            youtubeVideoId: 'dQw4w9WgXcQ',
+            createdAt: Date.now(),
+        };
+
+        // When imageModel is gemini-3.1-flash-lite-image
+        act(() => {
+            root.render(
+                <PromptReferenceChips
+                    currentLanguage="zh_TW"
+                    videoReference={videoItem}
+                    onInsertTag={onInsertTag}
+                    imageModel="gemini-3.1-flash-lite-image"
+                />,
+            );
+        });
+
+        const liteBadge = container.querySelector('[data-testid="composer-video-lite-advisory"]');
+        expect(liteBadge).not.toBeNull();
+        expect(liteBadge?.textContent).toContain('Lite 輕量支援（限短片／65K）');
+
+        // When imageModel is gemini-nano-banana-2.1, badge should not appear
+        act(() => {
+            root.render(
+                <PromptReferenceChips
+                    currentLanguage="zh_TW"
+                    videoReference={videoItem}
+                    onInsertTag={onInsertTag}
+                    imageModel="gemini-nano-banana-2.1"
+                />,
+            );
+        });
+        expect(container.querySelector('[data-testid="composer-video-lite-advisory"]')).toBeNull();
+    });
+
+    it('propagates imageModel to VideoReferenceUploader inside WorkspaceSideToolPanel', () => {
+        act(() => {
+            root.render(
+                <WorkspaceSideToolPanel
+                    currentLanguage="en"
+                    canEditCurrentImage={false}
+                    onOpenSketchPad={vi.fn()}
+                    onOpenEditor={vi.fn()}
+                    onOpenUploadToRepaint={vi.fn()}
+                    objectImages={[]}
+                    characterImages={[]}
+                    styleImages={[]}
+                    supportsVideo={true}
+                    imageModel="gemini-3.1-flash-lite-image"
+                    videoReference={null}
+                    onVideoReferenceChange={vi.fn()}
+                    onUploadVideoFile={vi.fn()}
+                    maxObjects={6}
+                    maxCharacters={4}
+                    maxStyles={0}
+                    setObjectImages={vi.fn()}
+                    setCharacterImages={vi.fn()}
+                    isGenerating={false}
+                    showNotification={vi.fn()}
+                    handleRemoveObjectReference={vi.fn()}
+                    handleRemoveCharacterReference={vi.fn()}
+                    handleClearAllReferences={vi.fn()}
+                />,
+            );
+        });
+
+        // Open references side drawer
+        const toggleBtn = container.querySelector(
+            '[data-testid="workspace-side-tools-references-toggle"]',
+        ) as HTMLButtonElement;
+        expect(toggleBtn).not.toBeNull();
+        act(() => {
+            toggleBtn.click();
+        });
+
+        const advisory = container.querySelector('[data-testid="video-reference-lite-advisory"]');
+        expect(advisory).not.toBeNull();
+        expect(advisory?.textContent).toContain('Nano Banana 2 Lite natively supports video references');
     });
 });

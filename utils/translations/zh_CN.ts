@@ -72,6 +72,9 @@ export const zh_CN = {
     videoRefErrorInvalidYoutube: '请输入有效的公开 YouTube 视频网址。',
     videoRefErrorUploadFailed: 'Gemini Files API 视频上传或处理失败。',
     videoRefAttachedNotice: '已附加视频参考。',
+    videoRefLiteAdvisory:
+        'Nano Banana 2 Lite 原生支持视频参考，但输入容量较小（65K tokens）且多参考融合能力有限；建议用于短秒数视频草稿（可搭配 Eco 模式），长视频或高精细需求请改用 Nano Banana 2 或 2.1。',
+    videoRefLiteChipBadge: 'Lite 轻量支持（限短片／65K）',
     workspaceConstraintClearVideo: '所选模型不支持视频参考，已自动移除。',
     unsupportedModel: '当前模型不支持',
     modelSelect: '模型',

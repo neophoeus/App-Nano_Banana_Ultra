@@ -22,7 +22,7 @@ The workspace runs on a high-performance local backend architecture powered by N
 ### Create
 
 - text-to-image, image-to-image, and style-guided generation
-- character and object references inside the same workspace flow
+- character, object, style, and multimodal video references (local video upload via Gemini Files API & public YouTube URLs on supported models) inside the same workspace flow
 - prompt tools such as Smart Rewrite, Surprise Me, and Image to Prompt (powered by `gemini-3.8-flash`)
 - single-result generation or batch exploration when you want to compare directions
 
@@ -60,34 +60,34 @@ Nano Banana Ultra currently supports five Gemini image-model paths. The UI expos
 
 - model id: `gemini-nano-banana-2.1`
 - default mainline model in the current product flow
-- upgraded flagship model supporting 1K, 2K, and 4K resolutions, all 14 aspect ratios, up to 14 reference images (up to 10 objects and 4 characters), thinking levels (`minimal`, `medium`, `high`; default `medium`), and grounding capabilities (Web Search and Image Search)
+- upgraded flagship model supporting 1K, 2K, and 4K resolutions, all 14 aspect ratios, up to 14 reference images (up to 10 objects and 4 characters), multimodal video references (Gemini Files API video uploads & public YouTube URLs with 131,072 input token limit), thinking levels (`minimal`, `medium`, `high`; default `medium`), and grounding capabilities (Web Search and Image Search)
 - resolves panoramic 2K/4K grid-tiling artifacts, making it ideal for high-fidelity generation, guided editing, and complex reference-conditioned workflows
 
 ### Nano Banana 2
 
 - model id: `gemini-3.1-flash-image`
-- active model supporting 1K, 2K, and 4K resolutions with broad capability surface across ratio, size, grounding, and thinking controls
+- active model supporting 512px, 1K, 2K, and 4K resolutions, all 14 aspect ratios, up to 14 reference images (up to 10 objects and 4 characters), multimodal video references (Files API & public YouTube URLs with 131,072 input token limit), grounding, and thinking controls (`minimal`, `high`)
 - best fit for flexible generation, iteration, and reference-aware workspace use
 
 ### Nano Banana 2 Lite
 
 - model id: `gemini-3.1-flash-lite-image`
 - efficiency-focused specialist of the image generation family with low end-to-end latency
-- restricted to 1K resolution, supporting 14 aspect ratios, up to 14 object references, 0 character references, and thinking capabilities
-- best fit for high-volume interactive developer use cases and real-time generation needs
+- restricted to 1K resolution, supporting 14 aspect ratios, up to 14 object references, 0 character references, thinking capabilities (`minimal`, `high`), and multimodal video references (Files API & public YouTube URLs)
+- official input token limit is 65,536 tokens (half of 2.1 / 2); engineered for rapid velocity, real-time developer workflows, and low-cost video drafting (video input tokens are 83% cheaper than 2.1, perfectly paired with Eco mode); features dedicated in-app advisory callouts in the uploader and composer chips to guide usage expectations
 
 ### Nano Banana Pro
 
 - model id: `gemini-3-pro-image`
 - quality-focused alternative for higher-end image work
-- tuned for higher-quality results and more deliberate controlled workflows
+- tuned for higher-quality results and deliberate controlled workflows, supporting 1K, 2K, and 4K resolutions, 10 aspect ratios, up to 6 object, 5 character, and 3 style reference images, and Google Web Search grounding (does not support video references)
 - best fit when output quality matters more than having the broadest capability matrix
 
 ### Nano Banana
 
 - model id: `gemini-2.5-flash-image`
 - lighter legacy path kept for lower-latency image generation scenarios
-- uses a narrower capability surface than the newer Gemini 3 family
+- uses a narrower capability surface than the newer Gemini 3 family (10 aspect ratios, up to 3 object references; does not support video references)
 - best fit for simpler, faster generation needs when the full Gemini 3.x surface is not required
 
 ## Typical Workflow
@@ -142,7 +142,7 @@ Nano Banana Ultra provides two complementary ways to export and manage your crea
 
 ## Version Overview
 
-### Latest Release: 5.5.0
+### Latest Release: 5.5.1
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
 
@@ -152,7 +152,8 @@ Version 5.x focuses on **architectural purification in alignment with Google AI 
 
 #### 5.x Release History
 
-- **v5.5.0** (2026-10-29): Reference Video Integration (Gemini Files API & YouTube) for Nano Banana 2/2.1, Default Thought Process Image Export, and Generation Lock Resilience
+- **v5.5.1** (2026-10-30): Nano Banana 2 Lite Video Reference Spec Alignment & Frontend Capability Advisory Notices
+- **v5.5.0** (2026-10-29): Reference Video Integration (Gemini Files API & YouTube) for Nano Banana 2.1 / 2 / 2 Lite, Default Thought Process Image Export, and Generation Lock Resilience
 - **v5.4.0** (2026-10-29): Quality/Eco Optimization Modes, Global Flat Icon System, High-Contrast Read Metadata, Seamless Viewport Ambient Lighting, .gitignore Purification, and E2E Workspace Snapshot Isolation
 - **v5.3.0** (2026-10-29): Role-Aware Per-Part MediaResolution, Multi-Turn Lossless Token Optimization, and Token Usage Telemetry
 - **v5.2.0** (2026-10-29): Export Results Auto-Close & Filename Local Timestamp Alignment, Output Directory Selective Clear, and Workspace Metadata Viewer Compatibility

@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { VideoReferenceItem } from '../types';
+import { ImageModel, VideoReferenceItem } from '../types';
 import { getTranslation, Language } from '../utils/translations';
 import {
     formatVideoFileSize,
@@ -7,6 +7,8 @@ import {
     validateLocalVideoFile,
     VIDEO_FILE_ACCEPT_ATTR,
 } from '../utils/videoReferenceUtils';
+
+export const LITE_VIDEO_CAPABILITY_MODEL: ImageModel = 'gemini-3.1-flash-lite-image';
 
 export interface VideoReferenceUploaderProps {
     videoReference: VideoReferenceItem | null;
@@ -18,6 +20,7 @@ export interface VideoReferenceUploaderProps {
     disabled?: boolean;
     currentLanguage?: Language;
     compact?: boolean;
+    imageModel?: ImageModel;
 }
 
 function FilmIcon({ className = 'h-4 w-4' }: { className?: string }) {
@@ -94,6 +97,25 @@ function SpinnerIcon({ className = 'h-4 w-4' }: { className?: string }) {
     );
 }
 
+function InfoIcon({ className = 'h-3.5 w-3.5' }: { className?: string }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+        </svg>
+    );
+}
+
 export const VideoReferenceUploader: React.FC<VideoReferenceUploaderProps> = ({
     videoReference,
     onVideoReferenceChange,
@@ -104,8 +126,23 @@ export const VideoReferenceUploader: React.FC<VideoReferenceUploaderProps> = ({
     disabled = false,
     currentLanguage = 'en',
     compact = false,
+    imageModel,
 }) => {
     const t = useCallback((key: string) => getTranslation(currentLanguage, key), [currentLanguage]);
+
+    const isLiteVideoModel = imageModel === LITE_VIDEO_CAPABILITY_MODEL;
+    const liteAdvisoryNotice = isLiteVideoModel ? (
+        <div
+            data-testid="video-reference-lite-advisory"
+            role="note"
+            className="flex items-start gap-1.5 rounded-lg border border-amber-300/80 bg-amber-50/80 p-2 text-left text-[11px] leading-relaxed text-amber-900 dark:border-amber-500/30 dark:bg-amber-950/30 dark:text-amber-200"
+        >
+            <InfoIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+            <div className="flex-1 min-w-0">
+                <p className="font-semibold text-[11px]">{t('videoRefLiteAdvisory')}</p>
+            </div>
+        </div>
+    ) : null;
 
     const [activeTab, setActiveTab] = useState<'upload' | 'youtube'>('upload');
     const [youtubeUrlInput, setYoutubeUrlInput] = useState('');
@@ -295,6 +332,11 @@ export const VideoReferenceUploader: React.FC<VideoReferenceUploaderProps> = ({
                         <DismissIcon className="h-3.5 w-3.5" />
                     </button>
                 </div>
+                {liteAdvisoryNotice && (
+                    <div className="mt-2 pt-1 border-t border-amber-200/60 dark:border-amber-500/20">
+                        {liteAdvisoryNotice}
+                    </div>
+                )}
             </div>
         );
     }
@@ -423,6 +465,8 @@ export const VideoReferenceUploader: React.FC<VideoReferenceUploaderProps> = ({
                     </p>
                 </div>
             )}
+
+            {liteAdvisoryNotice}
         </div>
     );
 };

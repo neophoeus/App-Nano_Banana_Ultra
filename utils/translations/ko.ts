@@ -72,6 +72,9 @@ export const ko = {
     videoRefErrorInvalidYoutube: '유효한 공개 YouTube 동영상 URL을 입력하세요.',
     videoRefErrorUploadFailed: 'Gemini Files API 동영상 업로드 또는 처리에 실패했습니다.',
     videoRefAttachedNotice: '참조 동영상이 첨부되었습니다.',
+    videoRefLiteAdvisory:
+        'Nano Banana 2 Lite는 비디오 참조를 기본 지원하지만, 입력 토큰 제한이 작고(65K) 다중 참조 융합 성능이 제한적입니다. 짧은 비디오 초안(Eco 모드 권장)에 적합하며, 긴 비디오나 높은 정밀도가 필요한 경우 Nano Banana 2 또는 2.1을 사용하세요.',
+    videoRefLiteChipBadge: 'Lite 경량 지원 (짧은 영상 / 65K)',
     workspaceConstraintClearVideo: '선택한 모델은 동영상 참조를 지원하지 않아 제거되었습니다.',
     unsupportedModel: '해당 모델에서는 지원하지 않습니다',
     modelSelect: '모델',

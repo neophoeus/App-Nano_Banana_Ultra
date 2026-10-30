@@ -72,6 +72,9 @@ export const ru = {
     videoRefErrorInvalidYoutube: 'Пожалуйста, введите корректную публичную ссылку на видео YouTube.',
     videoRefErrorUploadFailed: 'Не удалось загрузить или обработать видео в Gemini Files API.',
     videoRefAttachedNotice: 'Видео-референс прикреплен.',
+    videoRefLiteAdvisory:
+        'Nano Banana 2 Lite нативно поддерживает видео-референсы, но имеет меньший лимит токенов (65K) и ограниченную многореференсную привязку. Рекомендуется для коротких черновиков (в режиме Eco); для длинных видео или высокой детализации используйте Nano Banana 2 или 2.1.',
+    videoRefLiteChipBadge: 'Lite-поддержка (короткие / 65K)',
     workspaceConstraintClearVideo: 'Видео-референсы не поддерживаются выбранной моделью и были удалены.',
     unsupportedModel: 'Не поддерживается данной моделью',
     modelSelect: 'Модель',

@@ -2263,6 +2263,7 @@ const App: React.FC = () => {
                 handleRemoveStyleReference={handleRemoveStyleReference}
                 handleClearAllReferences={handleClearAllReferences}
                 supportsVideo={capability.supportsVideo}
+                imageModel={imageModel}
                 videoReference={videoReference}
                 onVideoReferenceChange={handleVideoReferenceChange}
                 onUploadVideoFile={handleUploadVideoFile}
@@ -2280,6 +2281,7 @@ const App: React.FC = () => {
             capability.supportsVideo,
             characterImages,
             currentLang,
+            imageModel,
             handleOpenEditor,
             handleOpenSketchPad,
             handleOpenUploadToRepaint,

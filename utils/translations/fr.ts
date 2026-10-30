@@ -73,6 +73,9 @@ export const fr = {
     videoRefErrorInvalidYoutube: 'Veuillez saisir une URL de vidéo YouTube publique valide.',
     videoRefErrorUploadFailed: 'Échec du téléversement et du traitement de la vidéo avec Gemini Files API.',
     videoRefAttachedNotice: 'Vidéo de référence attachée.',
+    videoRefLiteAdvisory:
+        'Nano Banana 2 Lite prend en charge les références vidéo natives, mais dispose d\'une limite d\'entrée réduite (65K tokens) et d\'une adhérence multiréférence plus légère. Idéal pour de courts brouillons (avec mode Éco) ; utilisez Nano Banana 2 ou 2.1 pour des vidéos plus longues ou une fidélité accrue.',
+    videoRefLiteChipBadge: 'Support Lite (clips courts / 65K)',
     workspaceConstraintClearVideo: 'Les références vidéo ne sont pas prises en charge par le modèle sélectionné et ont été supprimées.',
     unsupportedModel: 'Non pris en charge par ce modèle',
     modelSelect: 'Modèle',

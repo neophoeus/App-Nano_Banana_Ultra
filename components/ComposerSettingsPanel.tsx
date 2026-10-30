@@ -157,6 +157,7 @@ export type ComposerSettingsPanelProps = {
     currentLanguage: Language;
     imageStyleLabel: string;
     modelLabel: string;
+    imageModel?: ImageModel;
     aspectRatio: AspectRatio;
     imageSize: ImageSize;
     batchSize: number;
@@ -290,6 +291,7 @@ function ComposerSettingsPanel({
     currentLanguage,
     imageStyleLabel,
     modelLabel,
+    imageModel,
     aspectRatio,
     imageSize,
     batchSize,
@@ -1294,6 +1296,7 @@ function ComposerSettingsPanel({
                                 onInsertTag={handleInsertReferenceTag}
                                 currentLanguage={currentLanguage}
                                 disabled={isActionLocked}
+                                imageModel={imageModel}
                             />
                             <div
                                 className="relative overflow-hidden rounded-[26px] border nbu-composer-dock-textarea transition-all focus-within:border-amber-400/90 focus-within:ring-4 focus-within:ring-amber-100/70 dark:focus-within:border-amber-400/50 dark:focus-within:ring-amber-500/10 xl:flex xl:flex-1 xl:flex-col xl:min-h-[220px]"

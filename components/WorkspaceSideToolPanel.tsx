@@ -1,5 +1,5 @@
 import React from 'react';
-import { VideoReferenceItem } from '../types';
+import { ImageModel, VideoReferenceItem } from '../types';
 import { getTranslation, Language } from '../utils/translations';
 import Button from './Button';
 import ImageUploader from './ImageUploader';
@@ -15,6 +15,7 @@ type WorkspaceSideToolPanelProps = {
     characterImages: string[];
     styleImages?: string[];
     supportsVideo?: boolean;
+    imageModel?: ImageModel;
     videoReference?: VideoReferenceItem | null;
     onVideoReferenceChange?: (next: VideoReferenceItem | null) => void;
     onUploadVideoFile?: (file: File, signal: AbortSignal) => Promise<VideoReferenceItem>;
@@ -44,6 +45,7 @@ function WorkspaceSideToolPanel({
     characterImages,
     styleImages = [],
     supportsVideo = false,
+    imageModel,
     videoReference = null,
     onVideoReferenceChange,
     onUploadVideoFile,
@@ -388,6 +390,7 @@ function WorkspaceSideToolPanel({
                                             onWarning={(message) => showNotification(message, 'error')}
                                             disabled={isGenerating}
                                             currentLanguage={currentLanguage}
+                                            imageModel={imageModel}
                                         />
                                     </div>
                                 )}

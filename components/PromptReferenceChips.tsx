@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { VideoReferenceItem } from '../types';
+import { ImageModel, VideoReferenceItem } from '../types';
 import { Language, getTranslation } from '../utils/translations';
 import {
     buildSavedImageLoadUrl,
@@ -84,6 +84,27 @@ function AlertTriangleIcon({ className = 'w-3 h-3' }: { className?: string }) {
     );
 }
 
+function InfoIcon({ className = 'w-3 h-3' }: { className?: string }) {
+    return (
+        <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+        </svg>
+    );
+}
+
+export const LITE_VIDEO_CAPABILITY_MODEL: ImageModel = 'gemini-3.1-flash-lite-image';
+
 export interface ReferenceChipItem {
     id: string;
     tag: string;
@@ -102,6 +123,7 @@ export interface PromptReferenceChipsProps {
     onInsertTag: (tag: string) => void;
     currentLanguage?: Language;
     disabled?: boolean;
+    imageModel?: ImageModel;
 }
 
 export interface PromptReferencedBadgesProps {
@@ -210,6 +232,7 @@ export const PromptReferenceChips: React.FC<PromptReferenceChipsProps> = ({
     onInsertTag,
     currentLanguage = 'en' as Language,
     disabled = false,
+    imageModel,
 }) => {
     const [hoveredTag, setHoveredTag] = useState<string | null>(null);
     const [, setPreviewVersion] = useState(0);
@@ -331,6 +354,17 @@ export const PromptReferenceChips: React.FC<PromptReferenceChipsProps> = ({
                             </svg>
                         </button>
                     )}
+                </div>
+            )}
+            {videoReference && imageModel === LITE_VIDEO_CAPABILITY_MODEL && (
+                <div
+                    data-testid="composer-video-lite-advisory"
+                    role="note"
+                    title={getTranslation(currentLanguage, 'videoRefLiteAdvisory')}
+                    className="inline-flex items-center gap-1 rounded-full border border-amber-300/80 bg-amber-50/90 py-0.5 px-2 text-[10px] font-semibold text-amber-800 shadow-sm dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-200 cursor-help"
+                >
+                    <InfoIcon className="h-3 w-3 shrink-0 text-amber-600 dark:text-amber-400" />
+                    <span>{getTranslation(currentLanguage, 'videoRefLiteChipBadge')}</span>
                 </div>
             )}
             {chipItems.length > 0 && (

@@ -22,7 +22,7 @@ Nano Banana Ultra 是一個以 Google Gemini 影像模型為核心的影像創�
 ### 創作
 
 - 支援文字生圖、圖生圖、與風格導向生成
-- 可在同一工作區內加入角色與物件參考圖
+- 可在同一工作區內加入角色、物件、風格參考圖，以及多模態視訊參考（支援模型可透過 Gemini Files API 上傳本機影片或貼上公開 YouTube 網址）
 - 內建 Smart Rewrite、Surprise Me、Image to Prompt 等提示工具（由 `gemini-3.8-flash` 驅動）
 - 可單張生成，也可用批次探索快速比較方向
 
@@ -59,34 +59,34 @@ Nano Banana Ultra 目前支援五條 Gemini 影像模型路徑。介面會依模
 
 - 模型 id：`gemini-nano-banana-2.1`
 - 目前產品主流程的預設旗艦模型
-- 支援 1K、2K 與 4K 解析度、全部 14 種長寬比、最多 14 張參考圖（最多 10 個物件與 4 位角色）、思維等級（`minimal`、`medium`、`high`；預設為 `medium`）與 Grounding（網頁搜尋與圖片搜尋）
+- 支援 1K、2K 與 4K 解析度、全部 14 種長寬比、最多 14 張參考圖（最多 10 個物件與 4 位角色）、多模態視訊參考（Gemini Files API 本機影片上傳與公開 YouTube 網址，輸入上限 131,072 tokens）、思維等級（`minimal`、`medium`、`high`；預設為 `medium`）與 Grounding（網頁搜尋與圖片搜尋）
 - 修復了 2K/4K 全景比例的網格拼貼瑕疵，最適合高擬真度多輪創作、編輯與複雜參考圖控制工作流
 
 ### Nano Banana 2
 
 - 模型 id：`gemini-3.1-flash-image`
-- 現行活躍模型，支援 1K、2K 與 4K 解析度，具備完整的比例、尺寸、grounding 與 thinking 控制面
+- 現行活躍模型，支援 512px、1K、2K 與 4K 解析度，全部 14 種長寬比，最多 14 張參考圖（最多 10 個物件與 4 位角色），多模態視訊參考（Files API 與公開 YouTube 網址，輸入上限 131,072 tokens），具備完整的比例、尺寸、grounding 與 thinking（`minimal`、`high`）控制面
 - 適合高彈性、多輪延伸、以及參考圖驅動的工作流
 
 ### Nano Banana 2 Lite
 
 - 模型 id：`gemini-3.1-flash-lite-image`
-- 專注於效率與低延遲的影像生成模型
-- 限制為 1K 解析度，支援 14 種寬高比，最多可輸入 14 個物件參考，不支援角色參考，但支援思維控制
-- 適合高頻率編輯或即時生成的應用情境
+- 專注於效率與極低延遲的影像生成模型
+- 限制為 1K 解析度，支援 14 種寬高比，最多可輸入 14 個物件參考，不支援角色參考，支援思維控制（`minimal`、`high`）與多模態視訊參考（Files API 與公開 YouTube 網址）
+- 官方輸入 Token 上限為 65,536 tokens（為 2.1 / 2 的一半）；專為極速批次與即時開發工作流設計，具備 1/6 極低視訊輸入成本（比 2.1 便宜 83%，搭配 Eco 模式極為合適），並於前端上傳區與快捷標籤提供專屬輔助提示與容量引導
 
 ### Nano Banana Pro
 
 - 模型 id：`gemini-3-pro-image`
 - 偏向高品質輸出的進階路徑
-- 適合高品質輸出與較講究控制感的工作流
+- 適合高品質輸出與較講究控制感的工作流，支援 1K、2K、4K 解析度，10 種長寬比，最多 6 個物件、5 位角色與 3 張風格參考圖，以及 Google 網頁搜尋 Grounding（不支援視訊參考）
 - 適合把成品品質放在能力面廣度之前的使用者
 
 ### Nano Banana
 
 - 模型 id：`gemini-2.5-flash-image`
 - 保留作為較輕量、較低延遲的生成路徑
-- 能力面比 Gemini 3 系列更精簡
+- 能力面比 Gemini 3 系列更精簡（10 種長寬比，最多 3 個物件參考；不支援視訊參考）
 - 適合需求較單純、希望更快完成生成的情境
 
 ## 典型工作流
@@ -141,7 +141,7 @@ Nano Banana Ultra 提供兩種靈活互補的成果匯出與歸檔管道：
 
 ## 版本總覽
 
-### 最新版本：5.5.0
+### 最新版本：5.5.1
 
 版本細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -151,7 +151,8 @@ Nano Banana Ultra 提供兩種靈活互補的成果匯出與歸檔管道：
 
 #### 5.x 版本紀錄
 
-- **v5.5.0** (2026-10-29)：Nano Banana 2/2.1 視訊參考整合（Gemini Files API 影片上傳與 YouTube 網址）、Export Results 預設匯出思考過程圖片，以及動作鎖定狀態健全性強化
+- **v5.5.1** (2026-10-30)：Nano Banana 2 Lite 視訊參考官方規格對齊與前端雙觸點能力輔助提示
+- **v5.5.0** (2026-10-29)：Nano Banana 2.1 / 2 / 2 Lite 視訊參考整合（Gemini Files API 影片上傳與 YouTube 網址）、Export Results 預設匯出思考過程圖片，以及動作鎖定狀態健全性強化
 - **v5.4.0** (2026-10-29)：品質／節流最佳化模式（Quality/Eco Modes）、全域 Flat SVG 圖示系統、讀取參數按鈕高對比視覺強化、全幅無接縫光暈、.gitignore 規則純化與 E2E 工作區快照隔離
 - **v5.3.0** (2026-10-29)：角色感知每圖元解析度（Role-Aware Per-Part MediaResolution）、多輪對話無損 Token 最佳化與用量遙測
 - **v5.2.0** (2026-10-29)：成品匯出自動關閉與檔名本機時間戳記對齊、支援工作區 output 資料夾選擇性清理與重置提醒、圖片中繼資料檢視器全面相容工作區儲存架構與單獨 JSON 檢視。
