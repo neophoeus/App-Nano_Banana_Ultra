@@ -9,13 +9,26 @@ export default defineConfig(({ mode }) => {
     const isTest = mode === 'test';
     const outputDir = isTest ? path.resolve(__dirname, 'output-test') : path.resolve(__dirname, 'output');
     const resolvedApiKey = process.env.API_KEY || env.API_KEY || process.env.GEMINI_API_KEY || env.GEMINI_API_KEY || '';
+    // Dual-key routing: free-eligible models use the Free Tier key, paid-only features use the Paid Tier key.
+    const resolvedPaidApiKey = process.env.GEMINI_PAID_API_KEY || env.GEMINI_PAID_API_KEY || '';
+    const resolvedFreeApiKey = process.env.GEMINI_FREE_API_KEY || env.GEMINI_FREE_API_KEY || '';
+    const resolvedFreeTierModels = process.env.GEMINI_FREE_TIER_MODELS || env.GEMINI_FREE_TIER_MODELS || '';
 
     return {
         server: {
             port: Number.isNaN(devPort) ? 22287 : devPort,
             host: '0.0.0.0',
         },
-        plugins: [react(), imageSavePlugin({ geminiApiKey: resolvedApiKey, outputDir })],
+        plugins: [
+            react(),
+            imageSavePlugin({
+                geminiApiKey: resolvedApiKey,
+                geminiPaidApiKey: resolvedPaidApiKey,
+                geminiFreeApiKey: resolvedFreeApiKey,
+                freeTierModels: resolvedFreeTierModels,
+                outputDir,
+            }),
+        ],
         resolve: {
             alias: {
                 '@': path.resolve(__dirname, '.'),

@@ -1,5 +1,24 @@
 # Changelog
 
+## v5.6.0 - 2026-11-02
+
+- Release title: Nano Banana Ultra 5.6.0 - Dual Free/Paid API Key Smart Routing Architecture, Batch History Commit Race Guard, and Workspace Restore Outpaint Boundary Hardening
+- Release summary:
+    - **Dual Free / Paid Tier API Key Routing Architecture (`plugins/utils/apiKeyRouter.ts`, `plugins/routes/workspaceRoutes.ts`, `plugins/routes/promptRoutes.ts`, `plugins/routes/generateRoutes.ts`, `plugins/routes/batchRoutes.ts`, `plugins/routes/videoRoutes.ts`, `plugins/imageSavePlugin.ts`, `vite.config.ts`, `.env.example`, `tests/apiKeyRouter.test.ts`)**:
+        - Intelligent Tier-Based Routing: Introduced a dedicated API key routing module (`plugins/utils/apiKeyRouter.ts`) with `getApiKeyForTask({ model, task, resolution })` and `resolveApiKeyConfig()` to intelligently select between `GEMINI_FREE_API_KEY` and `GEMINI_PAID_API_KEY`.
+        - Free-Tier Model & Utility Routing: Automatically routes free-tier eligible models (`gemini-2.5-flash-image`, `gemini-3.1-flash-lite-image`), text prompt utilities (`gemini-3.8-flash` Smart Rewrite, Surprise Me), and Image-to-Prompt forensic analysis to `GEMINI_FREE_API_KEY`, maximizing free tier quota and minimizing operational API expenses.
+        - Paid-Tier Priority Routing: Enforces `GEMINI_PAID_API_KEY` for paid-only models (`gemini-3-pro-image`, `gemini-3.1-flash-image`), 4K high-resolution outputs, and large reference video streaming uploads to the Gemini Files API (`/api/videos/upload`).
+        - Graceful Fallback & Full Backward Compatibility: Transparently falls back to the legacy single `GEMINI_API_KEY` whenever split keys are omitted, with complete frontend environment isolation ensuring secret keys are never leaked to client bundles.
+        - Unit Testing & Verification: Added comprehensive routing verification in `tests/apiKeyRouter.test.ts` covering task resolution, missing key fallbacks, and video upload prioritization.
+    - **Batch History Commit Race Guard & State Isolation (`hooks/usePerformGeneration.ts`, `tests/usePerformGeneration.test.tsx`)**:
+        - Live Slot vs. History Settlement Decoupling: Separated live slot progressive canvas updates (`handleLiveSlotResultCallback`) from terminal history persistence settlement (`handleResultCallback`).
+        - Batch State Protection: Strictly enforces `isBatchActiveRef.current` checks within generation result callbacks, guaranteeing that multi-image batch runs never prematurely commit partial or stale turns to workspace history before all batch items complete.
+        - Mutation Testing Guardrail: Added rigorous regression tests in `tests/usePerformGeneration.test.tsx` verifying batch active branch isolation against premature history entries.
+    - **Workspace Restore Outpaint Boundary & Mask E2E Hardening (`e2e/workspace-restore.spec.ts`)**:
+        - Strict Button Matching & Multi-Language Resilience: Replaced ambiguous fuzzy text locators with exact button matching (`exact: true`) across language-agnostic test assertions.
+        - Model Specification Alignment: Aligned the default editor test model to `gemini-nano-banana-2.1` to match production defaults.
+        - Directional Outpaint Mask Refinement: Enhanced inpainting/outpainting prompt contracts (`lime green mask`) and integrated canvas pixel probing (`probeEditorFrameMaskPixels`) to assert precise directional expansion and boundary geometry.
+
 ## v5.5.1 - 2026-10-30
 
 - Release title: Nano Banana Ultra 5.5.1 - Nano Banana 2 Lite Video Reference Spec Alignment & Frontend Capability Advisory

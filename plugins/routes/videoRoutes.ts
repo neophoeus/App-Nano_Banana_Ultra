@@ -2,20 +2,17 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { GoogleGenAI } from '@google/genai/node';
-import {
-    createApiRequestContext,
-    logApiRequest,
-    sendClassifiedApiError,
-    sendJson,
-} from '../utils/apiHelpers';
-import {
-    MAX_VIDEO_UPLOAD_BYTES,
-    normalizeVideoMimeType,
-} from '../../utils/videoReferenceUtils';
+import { createApiRequestContext, logApiRequest, sendClassifiedApiError, sendJson } from '../utils/apiHelpers';
+import type { ApiClientLookupOptions } from '../utils/apiKeyRouter';
+import { MAX_VIDEO_UPLOAD_BYTES, normalizeVideoMimeType } from '../../utils/videoReferenceUtils';
 
 type RegisterVideoRoutesArgs = {
-    getAIClient: () => GoogleGenAI;
+    getAIClient: (options?: ApiClientLookupOptions | string) => GoogleGenAI;
 };
+
+// Uploaded file URIs belong to the uploading project; they are consumed by paid image models,
+// so uploads must use the same paid key as image generation.
+const VIDEO_UPLOAD_CLIENT_OPTIONS: ApiClientLookupOptions = { tier: 'paid', requiresFilesApi: true };
 
 function resolveFileStateName(state: unknown): string {
     if (typeof state === 'string' && state.trim().length > 0) {
@@ -186,7 +183,7 @@ export function registerVideoRoutes(server: any, { getAIClient }: RegisterVideoR
                 return;
             }
 
-            const ai = getAIClient();
+            const ai = getAIClient(VIDEO_UPLOAD_CLIENT_OPTIONS);
             let uploadedFile = await ai.files.upload({
                 file: tempFilePath,
                 config: {

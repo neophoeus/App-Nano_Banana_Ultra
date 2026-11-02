@@ -3,11 +3,13 @@ import path from 'path';
 import { sanitizeQueuedBatchSpaceSnapshot } from '../../utils/queuedBatchSpacePersistence';
 import { sanitizeWorkspaceSnapshot } from '../../utils/workspacePersistence';
 import { createApiRequestContext, logApiError, logApiRequest, readJsonBody, sendJson } from '../utils/apiHelpers';
+import { resolveApiKeyConfig, type ResolvedApiKeyConfig } from '../utils/apiKeyRouter';
 import { embedImageMetadata, type EmbeddedNanoBananaMeta } from '../utils/imageMetadataEmbedder';
 
 type RegisterWorkspaceRoutesArgs = {
     geminiApiKey?: string;
     resolvedDir: string;
+    getApiKeyConfig?: () => ResolvedApiKeyConfig;
 };
 
 type FileBackedSnapshotRouteArgs<T extends object> = {
@@ -18,7 +20,20 @@ type FileBackedSnapshotRouteArgs<T extends object> = {
     writeErrorMessage: string;
 };
 
-export function registerWorkspaceRoutes(server: any, { geminiApiKey, resolvedDir }: RegisterWorkspaceRoutesArgs): void {
+export function registerWorkspaceRoutes(
+    server: any,
+    { geminiApiKey, resolvedDir, getApiKeyConfig }: RegisterWorkspaceRoutesArgs,
+): void {
+    // Only booleans/enums are exposed below; raw API keys must never reach responses or logs.
+    const readApiKeyStatus = () => {
+        const config = getApiKeyConfig ? getApiKeyConfig() : resolveApiKeyConfig({ geminiApiKey });
+        return {
+            hasApiKey: config.hasApiKey,
+            hasPaidApiKey: config.hasPaidApiKey,
+            hasFreeApiKey: config.hasFreeApiKey,
+            apiKeyTierMode: config.apiKeyTierMode,
+        };
+    };
     const registerFileBackedSnapshotRoute = <T extends object>({
         route,
         snapshotPath,
@@ -305,6 +320,7 @@ export function registerWorkspaceRoutes(server: any, { geminiApiKey, resolvedDir
 
     server.use('/api/health', (req: any, res: any) => {
         const requestContext = createApiRequestContext(req, '/api/health');
+        const apiKeyStatus = readApiKeyStatus();
         logApiRequest(requestContext, {
             source: 'workspace',
             outputDir: resolvedDir,
@@ -314,7 +330,7 @@ export function registerWorkspaceRoutes(server: any, { geminiApiKey, resolvedDir
             200,
             {
                 ok: true,
-                hasApiKey: Boolean(geminiApiKey || process.env.GEMINI_API_KEY),
+                ...apiKeyStatus,
                 outputDir: resolvedDir,
                 timestamp: new Date().toISOString(),
             },
@@ -323,7 +339,7 @@ export function registerWorkspaceRoutes(server: any, { geminiApiKey, resolvedDir
                 summary: 'Health check',
                 details: {
                     source: 'workspace',
-                    hasApiKey: Boolean(geminiApiKey || process.env.GEMINI_API_KEY),
+                    ...apiKeyStatus,
                 },
             },
         );
@@ -331,23 +347,19 @@ export function registerWorkspaceRoutes(server: any, { geminiApiKey, resolvedDir
 
     server.use('/api/runtime-config', (req: any, res: any) => {
         const requestContext = createApiRequestContext(req, '/api/runtime-config');
-        const hasApiKey = Boolean(geminiApiKey || process.env.GEMINI_API_KEY);
+        const apiKeyStatus = readApiKeyStatus();
+        const { hasApiKey } = apiKeyStatus;
         logApiRequest(requestContext, {
             source: 'runtime',
         });
-        sendJson(
-            res,
-            200,
-            { hasApiKey },
-            {
-                requestContext,
-                summary: hasApiKey ? 'API key available' : 'API key missing',
-                details: {
-                    source: 'runtime',
-                    hasApiKey,
-                },
+        sendJson(res, 200, apiKeyStatus, {
+            requestContext,
+            summary: hasApiKey ? 'API key available' : 'API key missing',
+            details: {
+                source: 'runtime',
+                ...apiKeyStatus,
             },
-        );
+        });
     });
 
     registerFileBackedSnapshotRoute({

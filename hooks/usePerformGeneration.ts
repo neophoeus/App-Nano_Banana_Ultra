@@ -393,7 +393,11 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
             let currentMode = explicitMode;
             if (!currentMode) {
                 if (editingInput) currentMode = 'Inpainting';
-                else if (objectImages.length > 0 || characterImages.length > 0 || (styleImages && styleImages.length > 0))
+                else if (
+                    objectImages.length > 0 ||
+                    characterImages.length > 0 ||
+                    (styleImages && styleImages.length > 0)
+                )
                     currentMode = 'Image to Image/Mixing';
                 else if (finalVideoInput) currentMode = 'Video to Image';
                 else currentMode = 'Text to Image';
@@ -530,7 +534,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                     };
                     const committedSlotIndices = new Set<number>();
                     const batchHistoryItems: GeneratedImageType[] = [];
-                    const handleResultCallback = async (res: GenerationResult) => {
+                    const handleLiveSlotResultCallback = (res: GenerationResult) => {
                         if (controller.signal.aborted && isCancelledGenerationResult(res)) {
                             return;
                         }
@@ -547,6 +551,13 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                                 },
                             });
                         }
+                    };
+                    const handleResultCallback = async (res: GenerationResult) => {
+                        if (controller.signal.aborted && isCancelledGenerationResult(res)) {
+                            return;
+                        }
+
+                        handleLiveSlotResultCallback(res);
 
                         const batchResultIndex =
                             typeof res.slotIndex === 'number' && Number.isFinite(res.slotIndex) ? res.slotIndex : 0;
@@ -742,7 +753,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                         handleLogCallback,
                         controller.signal,
                         (completed, total) => setBatchProgress({ completed, total, currentRound, totalRounds }),
-                        handleResultCallback,
+                        handleLiveSlotResultCallback,
                         onLiveProgressEvent,
                         handleSlotStart,
                     );

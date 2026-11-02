@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { GoogleGenAI } from '@google/genai/node';
 import type { Plugin } from 'vite';
 import {
     createApiRequestContext,
@@ -9,6 +8,7 @@ import {
     sendClassifiedApiError,
     sendJson,
 } from './utils/apiHelpers';
+import { createApiClientRouter } from './utils/apiKeyRouter';
 import { extractImageDetailsFromDataUrl } from './utils/imageDimensions';
 import { registerBatchRoutes } from './routes/batchRoutes';
 import { registerGenerateRoutes } from './routes/generateRoutes';
@@ -21,6 +21,9 @@ import { embedImageMetadata } from './utils/imageMetadataEmbedder';
 type ImageSavePluginOptions = {
     outputDir?: string;
     geminiApiKey?: string;
+    geminiPaidApiKey?: string;
+    geminiFreeApiKey?: string;
+    freeTierModels?: string[] | string;
 };
 
 const resolveSafeOutputFilePath = (resolvedDir: string, filename: string) =>
@@ -49,25 +52,21 @@ const resolveAvailableOutputFilename = (resolvedDir: string, filename: string): 
     }
 };
 
-function registerMiddlewares(server: any, resolvedDir: string, geminiApiKey?: string): void {
-    let aiClient: GoogleGenAI | null = null;
-
-    const getAIClient = () => {
-        const apiKey = geminiApiKey || process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            throw new Error('Missing GEMINI_API_KEY. Add it to .env.local and restart the dev server.');
-        }
-        if (!aiClient) {
-            aiClient = new GoogleGenAI({ apiKey });
-        }
-        return aiClient;
-    };
+function registerMiddlewares(server: any, resolvedDir: string, options?: ImageSavePluginOptions): void {
+    // Each route asks for a client by model/feature so free-eligible calls use the Free Tier key
+    // and paid-only calls (image models, grounding, batch, files) use the Paid Tier key.
+    const { getAIClient, getConfig } = createApiClientRouter({
+        geminiApiKey: options?.geminiApiKey,
+        geminiPaidApiKey: options?.geminiPaidApiKey,
+        geminiFreeApiKey: options?.geminiFreeApiKey,
+        freeTierModels: options?.freeTierModels,
+    });
 
     if (!fs.existsSync(resolvedDir)) {
         fs.mkdirSync(resolvedDir, { recursive: true });
     }
 
-    registerWorkspaceRoutes(server, { geminiApiKey, resolvedDir });
+    registerWorkspaceRoutes(server, { geminiApiKey: options?.geminiApiKey, resolvedDir, getApiKeyConfig: getConfig });
     registerPromptRoutes(server, { getAIClient });
     registerGenerateRoutes(server, { getAIClient, resolvedDir });
     registerBatchRoutes(server, { getAIClient, resolvedDir });
@@ -88,7 +87,7 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
     return {
         name: 'vite-plugin-image-save',
         configureServer(server) {
-            registerMiddlewares(server.middlewares, resolvedDir, options?.geminiApiKey);
+            registerMiddlewares(server.middlewares, resolvedDir, options);
 
             server.middlewares.use('/api/save-image', (req, res) => {
                 const requestContext = createApiRequestContext(req, '/api/save-image');
@@ -457,7 +456,7 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
             console.log('  🍌 Health check → /api/health');
         },
         configurePreviewServer(server) {
-            registerMiddlewares(server.middlewares, resolvedDir, options?.geminiApiKey);
+            registerMiddlewares(server.middlewares, resolvedDir, options);
         },
     };
 }

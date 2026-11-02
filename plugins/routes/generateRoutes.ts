@@ -38,6 +38,7 @@ import {
     startNdjsonStream,
     writeNdjsonEvent,
 } from '../utils/apiHelpers';
+import type { ApiClientLookupOptions } from '../utils/apiKeyRouter';
 import { buildConversationHistory, buildConversationHistoryWithMetadata } from '../utils/conversationHistory';
 import {
     extractUsageMetadata,
@@ -93,9 +94,41 @@ type GeneratedResponsePayload = {
 };
 
 type RegisterGenerateRoutesArgs = {
-    getAIClient: () => GoogleGenAI;
+    getAIClient: (options?: ApiClientLookupOptions | string) => GoogleGenAI;
     resolvedDir: string;
 };
+
+// Safety keyword analysis runs on gemini-3.8-flash, which is free of charge on the Free Tier.
+const SAFETY_ANALYZER_CLIENT_OPTIONS: ApiClientLookupOptions = { model: 'gemini-3.8-flash', tier: 'free' };
+
+/**
+ * Image models are Paid Tier only. Grounding is unavailable on the Free Tier, and Files API video URIs
+ * are scoped to the paid project that uploaded them, so both force the paid key.
+ */
+function buildGenerationClientOptions(
+    model: string,
+    body: ImageGenerateBody,
+    videoInput?: string,
+): ApiClientLookupOptions {
+    return {
+        model,
+        googleSearch: Boolean(body.googleSearch),
+        imageSearch: Boolean(body.imageSearch),
+        requiresFilesApi: typeof videoInput === 'string' && /\/files\//.test(videoInput),
+    };
+}
+
+function resolveSafetyAnalyzerClient(
+    getAIClient: RegisterGenerateRoutesArgs['getAIClient'],
+    fallbackClient: GoogleGenAI,
+): GoogleGenAI {
+    try {
+        return getAIClient(SAFETY_ANALYZER_CLIENT_OPTIONS);
+    } catch {
+        // Never let the auxiliary analyzer lookup break failure reporting; reuse the generation client.
+        return fallbackClient;
+    }
+}
 
 type NormalizedGeneratedResponsePart = {
     text?: string;
@@ -1227,7 +1260,6 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
         }
 
         try {
-            const ai = getAIClient();
             const body = await readJsonBody<ImageGenerateBody>(req);
             logApiRequest(requestContext, {
                 source: 'generation',
@@ -1255,6 +1287,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 return;
             }
 
+            const ai = getAIClient(buildGenerationClientOptions(validated.model, body, validated.videoInput));
             const prepared = buildPreparedGenerateRequest(validated.model, body, resolvedDir);
             const response = await executeBlockingGenerateRequest(ai, prepared, requestAbortState.signal);
 
@@ -1331,7 +1364,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
             }
 
             const failureResponse = await buildFailureResponse(
-                ai,
+                resolveSafetyAnalyzerClient(getAIClient, ai),
                 '/api/images/generate',
                 String(body.prompt || ''),
                 validated.model,
@@ -1392,7 +1425,6 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
         let lastGroundingChunk: any = null;
 
         try {
-            const ai = getAIClient();
             const body = await readJsonBody<ImageGenerateBody>(req);
             logApiRequest(requestContext, {
                 source: 'generation',
@@ -1448,6 +1480,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                 return;
             }
 
+            const ai = getAIClient(buildGenerationClientOptions(validated.model, body, validated.videoInput));
             const prepared = buildPreparedGenerateRequest(validated.model, body, resolvedDir);
             const stream = await executeStreamingGenerateRequest(ai, prepared, requestAbortState.signal);
 
@@ -1563,7 +1596,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
             }
 
             const failureResponse = await buildFailureResponse(
-                ai,
+                resolveSafetyAnalyzerClient(getAIClient, ai),
                 '/api/images/generate-stream',
                 String(body.prompt || ''),
                 validated.model,
@@ -1667,7 +1700,6 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
         }
 
         try {
-            const ai = getAIClient();
             const body = await readJsonBody<LiveProgressProbeBody>(req);
             const requestedIds = Array.isArray(body.cellIds)
                 ? body.cellIds.filter((value): value is string => typeof value === 'string' && value.length > 0)
@@ -1685,6 +1717,8 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
 
             const results: LiveProgressProbeResult[] = [];
             for (const cell of selectedCells) {
+                // Each probe cell targets its own image model, so resolve the key tier per cell.
+                const ai = getAIClient({ model: cell.model });
                 results.push(await runLiveProgressProbeCell(ai, resolvedDir, cell, prompt));
             }
 

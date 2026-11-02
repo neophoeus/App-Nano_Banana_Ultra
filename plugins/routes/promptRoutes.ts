@@ -8,6 +8,7 @@ import {
     sendClassifiedApiError,
     sendJson,
 } from '../utils/apiHelpers';
+import type { ApiClientLookupOptions } from '../utils/apiKeyRouter';
 import type { OptimizationMode } from '../../types';
 import {
     buildImageToPromptInstruction,
@@ -41,8 +42,12 @@ function parseInlineImageFromDataUrl(imageDataUrl: string): { data: string; mime
 }
 
 type RegisterPromptRoutesArgs = {
-    getAIClient: () => GoogleGenAI;
+    getAIClient: (options?: ApiClientLookupOptions | string) => GoogleGenAI;
 };
+
+// Prompt tools run on gemini-3.8-flash, which is free of charge on the Free Tier, so they prefer the free key.
+const PROMPT_TOOL_MODEL = 'gemini-3.8-flash';
+const PROMPT_TOOL_CLIENT_OPTIONS: ApiClientLookupOptions = { model: PROMPT_TOOL_MODEL, tier: 'free' };
 
 export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromptRoutesArgs): void {
     server.use('/api/prompt/enhance', async (req: any, res: any) => {
@@ -54,7 +59,7 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
         }
 
         try {
-            const ai = getAIClient();
+            const ai = getAIClient(PROMPT_TOOL_CLIENT_OPTIONS);
             const {
                 currentPrompt = '',
                 lang: requestedLang,
@@ -115,7 +120,7 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
         }
 
         try {
-            const ai = getAIClient();
+            const ai = getAIClient(PROMPT_TOOL_CLIENT_OPTIONS);
             const { lang: requestedLang, thinkingLevel, optimizationMode } = await readJsonBody<PromptRequestBody>(req);
             const lang = normalizePromptToolLanguage(requestedLang);
             const effectiveThinkingLevel = resolveEffectivePromptThinkingLevel(thinkingLevel, optimizationMode);
@@ -170,7 +175,7 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
         }
 
         try {
-            const ai = getAIClient();
+            const ai = getAIClient(PROMPT_TOOL_CLIENT_OPTIONS);
             const {
                 imageDataUrl = '',
                 lang: requestedLang,

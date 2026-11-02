@@ -906,7 +906,7 @@ const lineageMapTurn = (page: Page, historyId: string) =>
             `[data-testid="workspace-versions-detail-modal"] [data-testid="lineage-map-turn-${historyId}"]:visible, [data-testid="lineage-map-turn-${historyId}"]:visible`,
         )
         .first();
-const generateButton = (page: Page) => page.getByRole('button', { name: tt('generate') }).first();
+const generateButton = (page: Page) => page.getByRole('button', { name: tt('generate'), exact: true }).first();
 const scopedTestId = (scope: Locator, testId: string) =>
     scope.locator(`[data-testid="${testId}"], [data-testid^="${testId}-"]`).first();
 const isLocatorVisible = async (locator: Locator) => (await locator.count()) > 0 && (await locator.first().isVisible());
@@ -1500,6 +1500,43 @@ const readPersistedHistoryTurnByText = async (
         };
     }, targetText);
 };
+
+// Decodes the submitted editor frame and reports, per normalized (x, y) probe, whether that pixel is the
+// bright-green outpaint mask (#00ff00) rather than real source content. Source fixtures contain no pure green.
+const probeEditorFrameMaskPixels = async (
+    page: Page,
+    editingInputDataUrl: string,
+    probes: Record<string, { x: number; y: number }>,
+) =>
+    page.evaluate(
+        async ({ dataUrl, namedProbes }) => {
+            const image = new Image();
+            await new Promise<void>((resolve, reject) => {
+                image.onload = () => resolve();
+                image.onerror = () => reject(new Error('Failed to decode submitted editor frame.'));
+                image.src = dataUrl;
+            });
+
+            const canvas = document.createElement('canvas');
+            canvas.width = image.naturalWidth;
+            canvas.height = image.naturalHeight;
+            const context = canvas.getContext('2d');
+            if (!context) {
+                throw new Error('Canvas 2D context unavailable.');
+            }
+            context.drawImage(image, 0, 0);
+
+            return Object.fromEntries(
+                Object.entries(namedProbes).map(([name, point]) => {
+                    const pixelX = Math.min(canvas.width - 1, Math.max(0, Math.round(point.x * (canvas.width - 1))));
+                    const pixelY = Math.min(canvas.height - 1, Math.max(0, Math.round(point.y * (canvas.height - 1))));
+                    const [red, green, blue] = context.getImageData(pixelX, pixelY, 1, 1).data;
+                    return [name, red < 40 && green > 215 && blue < 40];
+                }),
+            ) as Record<string, boolean>;
+        },
+        { dataUrl: editingInputDataUrl, namedProbes: probes },
+    );
 
 const readPersistedQueuedJobByName = async (page: Page, targetJobName: string) => {
     await expect
@@ -2570,7 +2607,7 @@ test.describe('workspace restore flows', () => {
         const savedFilename = persistedState?.generatedTurn?.savedFilename;
         const thumbnailSavedFilename = persistedState?.generatedTurn?.thumbnailSavedFilename;
 
-        expect(savedFilename).toMatch(/^gemini-3\.1-flash-image_\d{8}-\d{6}_01-[a-z0-9]{8}_txt2img\.png$/);
+        expect(savedFilename).toMatch(/^gemini-nano-banana-2\.1_\d{8}-\d{6}_01-[a-z0-9]{8}_txt2img\.png$/);
         expect(thumbnailSavedFilename).toBe(`${String(savedFilename).replace(/\.[^.]+$/, '')}-thumbnail.jpg`);
 
         const savedImagePath = resolvePlaywrightAppPath('output-test', String(savedFilename));
@@ -2585,7 +2622,7 @@ test.describe('workspace restore flows', () => {
         expect(sidecar).toEqual(
             expect.objectContaining({
                 filename: savedFilename,
-                model: 'gemini-3.1-flash-image',
+                model: 'gemini-nano-banana-2.1',
                 generationMode: 'Text to Image',
                 batchResultIndex: 0,
             }),
@@ -3517,16 +3554,32 @@ test.describe('workspace restore flows', () => {
         await expect.poll(() => capturedBodies.length).toBe(1);
         const requestPrompt = String(capturedBodies[0]?.prompt || '');
 
-        expect(requestPrompt).toContain('Treat the submitted frame as the approved composition');
-        expect(requestPrompt).toContain('Preserve all currently visible content exactly as shown');
-        expect(requestPrompt).toContain('Regenerate only the transparent or blank regions along the bottom side');
         expect(requestPrompt).toContain(
-            'Do not recenter, zoom out, or recompose the scene unless the prompt explicitly asks for it',
+            'The bright green (R:0, G:255, B:0) areas represent the region to repaint based on the prompt.',
         );
+        expect(requestPrompt).toContain('Preserve everything outside the green areas exactly as shown.');
+        expect(requestPrompt).toContain('Blend the repainted regions seamlessly and ensure no green pixels remain.');
         expect(requestPrompt).not.toContain(
             'Preserve the current zoomed crop, subject placement, and camera framing exactly as shown',
         );
         expect(requestPrompt).not.toContain('Composer prompt stays outside crop zoom editor');
+
+        // The prompt is direction-agnostic now, so verify the real framing on the submitted pixels:
+        // zoomed + top-aligned leaves a blank (green) band only along the bottom edge.
+        const editingInput = String(capturedBodies[0]?.editingInput || '');
+        expect(editingInput).toMatch(/^data:image\/png;base64,/);
+        const maskProbe = await probeEditorFrameMaskPixels(page, editingInput, {
+            bottomCenter: { x: 0.5, y: 0.995 },
+            topCenter: { x: 0.5, y: 0.005 },
+            leftMiddle: { x: 0.005, y: 0.4 },
+            rightMiddle: { x: 0.995, y: 0.4 },
+        });
+        expect(maskProbe).toEqual({
+            bottomCenter: true,
+            topCenter: false,
+            leftMiddle: false,
+            rightMiddle: false,
+        });
 
         const persistedState = await readPersistedHistoryTurnByText(page, responseText);
 
@@ -3589,19 +3642,32 @@ test.describe('workspace restore flows', () => {
         await expect.poll(() => capturedBodies.length).toBe(1);
         const requestPrompt = String(capturedBodies[0]?.prompt || '');
 
-        expect(requestPrompt).toContain('Treat the submitted frame as the approved composition');
-        expect(requestPrompt).toContain('Preserve all currently visible content exactly as shown');
         expect(requestPrompt).toContain(
-            'Regenerate only the transparent or blank regions along the left side and the bottom side',
+            'The bright green (R:0, G:255, B:0) areas represent the region to repaint based on the prompt.',
         );
-        expect(requestPrompt).toContain(
-            'Do not recenter, zoom out, or recompose the scene unless the prompt explicitly asks for it',
-        );
+        expect(requestPrompt).toContain('Preserve everything outside the green areas exactly as shown.');
+        expect(requestPrompt).toContain('Blend the repainted regions seamlessly and ensure no green pixels remain.');
         expect(requestPrompt).not.toContain('Keep the existing crop anchored to the top-right corner of the frame');
         expect(requestPrompt).not.toContain(
             'Keep the existing crop locked to the top edge and the right edge that already touch the frame',
         );
         expect(requestPrompt).not.toContain('Composer prompt stays outside anchored crop zoom editor');
+
+        // Right-aligned + dragged up: only the left and bottom edges expose blank (green) margin.
+        const editingInput = String(capturedBodies[0]?.editingInput || '');
+        expect(editingInput).toMatch(/^data:image\/png;base64,/);
+        const maskProbe = await probeEditorFrameMaskPixels(page, editingInput, {
+            leftMiddle: { x: 0.005, y: 0.5 },
+            bottomCenter: { x: 0.5, y: 0.995 },
+            topCenter: { x: 0.5, y: 0.005 },
+            rightMiddle: { x: 0.995, y: 0.5 },
+        });
+        expect(maskProbe).toEqual({
+            leftMiddle: true,
+            bottomCenter: true,
+            topCenter: false,
+            rightMiddle: false,
+        });
 
         const persistedState = await readPersistedHistoryTurnByText(page, responseText);
 
@@ -3872,8 +3938,16 @@ test.describe('workspace restore flows', () => {
         await assertFilmstripChromeLocalized(page);
 
         await expect(page.getByTestId('history-versions-open-details')).toContainText(tt('workspaceInsightsVersions'));
-        await expect(page.getByTestId('history-import-workspace')).toContainText(tt('composerToolbarImportWorkspace'));
-        await expect(page.getByTestId('history-export-workspace')).toContainText(tt('composerToolbarExportWorkspace'));
+        await expect(page.getByTestId('history-import-workspace')).toContainText(tt('workspaceToolbarActionImport'));
+        await expect(page.getByTestId('history-import-workspace')).toHaveAttribute(
+            'title',
+            tt('composerToolbarImportWorkspace'),
+        );
+        await expect(page.getByTestId('history-export-workspace')).toContainText(tt('workspaceToolbarActionExport'));
+        await expect(page.getByTestId('history-export-workspace')).toHaveAttribute(
+            'title',
+            tt('composerToolbarExportWorkspace'),
+        );
 
         await openVersionsDetailModal(page);
         await expect(activeBranchCard(page).locator('[data-testid="active-branch-open-latest"]')).toHaveCount(0);
@@ -4457,9 +4531,11 @@ test.describe('workspace restore flows', () => {
         expect(String(queuedBatchRequestBody?.editingInput || '')).toMatch(/^data:image\/png;base64,/);
         expect(String(queuedBatchRequestBody?.editingInput || '')).not.toContain('/api/load-image?filename=');
         expect(String(queuedBatchRequestBody?.prompt || '')).toContain(
-            'Treat the submitted image as the approved composition',
+            'The bright green (R:0, G:255, B:0) areas represent the region to repaint based on the prompt.',
         );
-        expect(String(queuedBatchRequestBody?.prompt || '')).toContain('Regenerate only the masked region');
+        expect(String(queuedBatchRequestBody?.prompt || '')).toContain(
+            'Preserve everything outside the green areas exactly as shown.',
+        );
         expect(String(queuedBatchRequestBody?.prompt || '')).not.toContain('Composer prompt stays outside editor');
 
         await expect(page.getByTestId('image-editor')).toHaveCount(0);

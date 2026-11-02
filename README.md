@@ -6,7 +6,7 @@ Nano Banana Ultra is a Gemini-powered image workspace for creation, guided editi
 
 Instead of treating image generation as a disposable one-shot action, Nano Banana Ultra keeps prompting, references, history, editing, reuse, and restore inside one connected workspace flow.
 
-The workspace runs on a high-performance local backend architecture powered by Node.js and the official Google Gemini API. It connects directly with your Gemini API key, providing robust offline image persistence, structured metadata embedding, prompt assistance, and interactive visual generation workflows without third-party proxy dependencies.
+The workspace runs on a high-performance local backend architecture powered by Node.js and the official Google Gemini API. It connects directly with your Gemini API key (supporting single `GEMINI_API_KEY` or dual `GEMINI_FREE_API_KEY` / `GEMINI_PAID_API_KEY` smart tier routing to optimize operational costs), providing robust offline image persistence, structured metadata embedding, prompt assistance, and interactive visual generation workflows without third-party proxy dependencies.
 
 ## At a Glance
 
@@ -142,7 +142,7 @@ Nano Banana Ultra provides two complementary ways to export and manage your crea
 
 ## Version Overview
 
-### Latest Release: 5.5.1
+### Latest Release: 5.6.0
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
 
@@ -152,6 +152,7 @@ Version 5.x focuses on **architectural purification in alignment with Google AI 
 
 #### 5.x Release History
 
+- **v5.6.0** (2026-11-02): Dual Free/Paid API Key Smart Routing Architecture, Batch History Commit Race Guard, and Workspace Restore Outpaint Boundary Hardening
 - **v5.5.1** (2026-10-30): Nano Banana 2 Lite Video Reference Spec Alignment & Frontend Capability Advisory Notices
 - **v5.5.0** (2026-10-29): Reference Video Integration (Gemini Files API & YouTube) for Nano Banana 2.1 / 2 / 2 Lite, Default Thought Process Image Export, and Generation Lock Resilience
 - **v5.4.0** (2026-10-29): Quality/Eco Optimization Modes, Global Flat Icon System, High-Contrast Read Metadata, Seamless Viewport Ambient Lighting, .gitignore Purification, and E2E Workspace Snapshot Isolation

@@ -1201,4 +1201,64 @@ describe('usePerformGeneration', () => {
         expect(latestIsGenerating).toBe(false);
         expect(latestBatchProgress).toEqual({ completed: 0, total: 0 });
     });
+
+    it('keeps a finished slot preview-only until the whole batch resolves, then commits every slot', async () => {
+        let historyLengthMidBatch = -1;
+        let committedTileCountMidBatch = -1;
+
+        generateImageWithGeminiMock.mockImplementation(
+            async (_request, _batchSize, onImageReceived, _onLog, _signal, _onProgress, onResult) => {
+                const firstReceived = await onImageReceived('data:image/png;base64,AAA', 0);
+                const firstResult = {
+                    slotIndex: 0,
+                    status: 'success',
+                    url: 'data:image/png;base64,AAA',
+                    displayUrl: firstReceived?.displayUrl,
+                    savedFilename: firstReceived?.savedFilename,
+                    metadata: { actualOutput: { width: 1024, height: 1024 } },
+                    grounding: null,
+                    sessionHints: null,
+                };
+                // Slot 0 finishes while slot 1 is still pending; the live callback must not commit it yet.
+                onResult?.(firstResult);
+                await new Promise((resolve) => setTimeout(resolve, 20));
+                historyLengthMidBatch = latestHistory.length;
+                committedTileCountMidBatch = latestPreviewTiles.filter(
+                    ({ tile }) => tile.status === 'committed',
+                ).length;
+
+                const secondReceived = await onImageReceived('data:image/png;base64,BBB', 1);
+                const secondResult = {
+                    ...firstResult,
+                    slotIndex: 1,
+                    url: 'data:image/png;base64,BBB',
+                    displayUrl: secondReceived?.displayUrl,
+                    savedFilename: secondReceived?.savedFilename,
+                };
+                onResult?.(secondResult);
+
+                return [firstResult, secondResult];
+            },
+        );
+
+        renderHook();
+
+        await act(async () => {
+            await latestHook!.performGeneration(
+                'Commit only after the batch resolves',
+                '1:1',
+                '1K',
+                'None',
+                'gemini-3.1-flash-image',
+                undefined,
+                2,
+            );
+        });
+
+        expect(historyLengthMidBatch).toBe(0);
+        expect(committedTileCountMidBatch).toBe(0);
+        expect(latestHistory).toHaveLength(2);
+        expect(latestHistory.map((item) => item.metadata?.batchResultIndex)).toEqual([1, 0]);
+        expect(latestPreviewCompletePayload?.historyItems).toHaveLength(2);
+    });
 });

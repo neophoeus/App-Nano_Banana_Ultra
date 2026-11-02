@@ -11,6 +11,7 @@ import {
     sendClassifiedApiError,
     sendJson,
 } from '../utils/apiHelpers';
+import type { ApiClientLookupOptions } from '../utils/apiKeyRouter';
 import { extractBatchImportResults, serializeBatchJob } from '../utils/batchHelpers';
 import { buildGenerateFileParts, normalizeReferenceImages, resolveLocalImageInputFile } from '../utils/imageReferences';
 import { buildImageRequestConfig, validateCapabilityRequest } from '../utils/requestConfig';
@@ -45,9 +46,13 @@ type BatchCreateBody = ImageGenerateBody & {
 };
 
 type RegisterBatchRoutesArgs = {
-    getAIClient: () => GoogleGenAI;
+    getAIClient: (options?: ApiClientLookupOptions | string) => GoogleGenAI;
     resolvedDir: string;
 };
+
+// Batch API is Paid Tier only, and batch jobs/files are scoped to the creating project,
+// so every batch route must use the same paid key.
+const BATCH_CLIENT_OPTIONS: ApiClientLookupOptions = { tier: 'paid', requiresBatch: true };
 
 type UploadedFileLike = {
     name?: string;
@@ -297,7 +302,7 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
         }
 
         try {
-            const ai = getAIClient();
+            const ai = getAIClient(BATCH_CLIENT_OPTIONS);
             const body = await readJsonBody<BatchCreateBody>(req);
             const model = String(body.model || 'gemini-nano-banana-2.1');
             const displayName = body.displayName || `${model}-queued-${new Date().toISOString()}`;
@@ -480,7 +485,7 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
         }
 
         try {
-            const ai = getAIClient();
+            const ai = getAIClient(BATCH_CLIENT_OPTIONS);
             const body = await readJsonBody<{ name?: string }>(req);
             logApiRequest(requestContext, {
                 source: 'batch',
@@ -532,7 +537,7 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
         }
 
         try {
-            const ai = getAIClient();
+            const ai = getAIClient(BATCH_CLIENT_OPTIONS);
             const body = await readJsonBody<{ name?: string }>(req);
             logApiRequest(requestContext, {
                 source: 'batch',
@@ -585,7 +590,7 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
         }
 
         try {
-            const ai = getAIClient();
+            const ai = getAIClient(BATCH_CLIENT_OPTIONS);
             const body = await readJsonBody<{ name?: string }>(req);
             logApiRequest(requestContext, {
                 source: 'batch',
@@ -674,7 +679,7 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
         }
 
         try {
-            const ai = getAIClient();
+            const ai = getAIClient(BATCH_CLIENT_OPTIONS);
             const body: { pageSize?: number } =
                 req.method === 'POST' ? await readJsonBody<{ pageSize?: number }>(req).catch(() => ({})) : {};
             const pageSize = Math.max(1, Math.min(50, Number(body.pageSize || 20)));
@@ -725,7 +730,7 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
         }
 
         try {
-            const ai = getAIClient();
+            const ai = getAIClient(BATCH_CLIENT_OPTIONS);
             const body = await readJsonBody<{ name?: string }>(req);
             logApiRequest(requestContext, {
                 source: 'batch',
