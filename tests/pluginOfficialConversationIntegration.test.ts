@@ -1639,4 +1639,63 @@ describe('imageSavePlugin official conversation integration', () => {
             }),
         );
     });
+
+    it('routes prompt tools with executionMeta based on optimizationMode and handles 503 fallback', async () => {
+        const { imageSavePlugin } = await import('../plugins/imageSavePlugin');
+        const handlers = new Map<string, MiddlewareHandler>();
+        const plugin = imageSavePlugin({ geminiPaidApiKey: 'test-paid-key', geminiFreeApiKey: 'test-free-key' });
+        const configureServer =
+            typeof plugin.configureServer === 'function' ? plugin.configureServer : plugin.configureServer?.handler;
+
+        configureServer?.({
+            middlewares: {
+                use(route: string, handler: MiddlewareHandler) {
+                    handlers.set(route, handler);
+                },
+            },
+        } as any);
+
+        const enhanceHandler = handlers.get('/api/prompt/enhance')!;
+
+        // Test 1: Quality mode returns executionMeta with paid tier
+        generateContentMock.mockResolvedValueOnce({ text: 'Enhanced quality prompt' });
+        const qualityResponse = await invokeJsonRoute(enhanceHandler, {
+            currentPrompt: 'a concept',
+            lang: 'en',
+            optimizationMode: 'quality',
+        });
+
+        expect(qualityResponse.status).toBe(200);
+        expect(qualityResponse.body.text).toBe('Enhanced quality prompt');
+        expect(qualityResponse.body.executionMeta).toEqual({
+            optimizationMode: 'quality',
+            model: 'gemini-3.8-flash',
+            effectiveTier: 'paid',
+            requestedTier: 'paid',
+            isFallback: false,
+            fallbackReason: 'none',
+        });
+
+        // Test 2: Eco mode with 503 error falls back to gemini-3.5-flash-lite
+        generateContentMock
+            .mockRejectedValueOnce({ status: 503, message: 'This model is currently experiencing high demand.' })
+            .mockResolvedValueOnce({ text: 'Enhanced eco fallback prompt' });
+
+        const ecoFallbackResponse = await invokeJsonRoute(enhanceHandler, {
+            currentPrompt: 'a concept',
+            lang: 'en',
+            optimizationMode: 'eco',
+        });
+
+        expect(ecoFallbackResponse.status).toBe(200);
+        expect(ecoFallbackResponse.body.text).toBe('Enhanced eco fallback prompt');
+        expect(ecoFallbackResponse.body.executionMeta).toEqual({
+            optimizationMode: 'eco',
+            model: 'gemini-3.5-flash-lite',
+            effectiveTier: 'free',
+            requestedTier: 'free',
+            isFallback: true,
+            fallbackReason: 'model-fallback',
+        });
+    });
 });

@@ -1110,12 +1110,16 @@ export const ja = {
     optimizationModeUseCasesLabel: '利用シーン：',
     optimizationModeQualityTitle: '品質モード（デフォルト）',
     optimizationModeQualityDesc:
-        '高規格 MediaResolution（キャラクター・4K参照は ULTRA_HIGH）、完全なマルチターン対話履歴、フル思考推論を維持し、極めて繊細な人物造形と質感を再現します。',
+        '有料 API（専用プール・待機遅延ゼロ）を全面採用、高規格 MediaResolution（キャラクター・4K参照は ULTRA_HIGH）、完全なマルチターン対話履歴、フル思考推論を維持し、極めて繊細な人物造形と質感を再現します。',
     optimizationModeQualityUseCases: '本番制作、高精度なポートレート合成、一貫した対話編集に最適です。',
     optimizationModeEcoTitle: '節約モード',
     optimizationModeEcoDesc:
-        'トークン消費を大幅抑制：参照画像の解像度階層を圧縮、対話履歴を最新2ターンに自動短縮、思考深度を minimal / disabled に収束させます。',
+        '無料 API 優先（スマートフォールバック＆混雑自動救済付き）：トークン消費を大幅抑制、参照画像の解像度階層を圧縮、対話履歴を最新2ターンに自動短縮、思考深度を minimal / disabled に収束させます。',
     optimizationModeEcoOutputSizeNotice:
         '選択した出力解像度（1K／2K／4K）は維持されます。極限までトークンを節約したい場合は手動で1Kに変更してください。',
     optimizationModeEcoUseCases: '初期アイデア出し、迅速なコンセプト探索、大量バッチ生成に最適です。',
+    promptToolFallbackModelNotice:
+        'プライマリモデルが混雑しているため、高スループットな gemini-3.5-flash-lite に自動切り替えしました。',
+    promptToolFallbackPaidTierNotice: '無料 API が混雑または一時的に枯渇したため、有料 API で自動救済しました。',
+    promptToolFallbackPaidLiteNotice: '無料 API が混雑したため、有料 API（gemini-3.5-flash-lite）で自動救済しました。',
 } as const;

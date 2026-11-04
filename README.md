@@ -142,7 +142,7 @@ Nano Banana Ultra provides two complementary ways to export and manage your crea
 
 ## Version Overview
 
-### Latest Release: 5.6.0
+### Latest Release: 5.7.0
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
 
@@ -152,6 +152,7 @@ Version 5.x focuses on **architectural purification in alignment with Google AI 
 
 #### 5.x Release History
 
+- **v5.7.0** (2026-11-04): Quality/Eco Prompt Tools API Routing, Smart 4-Stage Cascading Fallback & Congestion Cooldown, and Live Toast Notification System
 - **v5.6.0** (2026-11-02): Dual Free/Paid API Key Smart Routing Architecture, Batch History Commit Race Guard, and Workspace Restore Outpaint Boundary Hardening
 - **v5.5.1** (2026-10-30): Nano Banana 2 Lite Video Reference Spec Alignment & Frontend Capability Advisory Notices
 - **v5.5.0** (2026-10-29): Reference Video Integration (Gemini Files API & YouTube) for Nano Banana 2.1 / 2 / 2 Lite, Default Thought Process Image Export, and Generation Lock Resilience

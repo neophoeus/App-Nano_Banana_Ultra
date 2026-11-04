@@ -1,6 +1,247 @@
 import { GoogleGenAI } from '@google/genai/node';
+import type { ApiClientLookupOptions, ApiKeyTier } from './apiKeyRouter';
 import { cleanResponseText } from './apiHelpers';
 import { toPromptGeminiThinkingLevel } from './geminiApiConfig';
+import type { OptimizationMode } from '../../types';
+import { normalizeOptimizationMode } from '../../utils/optimizationMode';
+
+export const PROMPT_TOOL_PRIMARY_MODEL = 'gemini-3.8-flash';
+export const PROMPT_TOOL_FALLBACK_MODEL = 'gemini-3.5-flash-lite';
+export const PROMPT_TOOL_CONGESTION_COOLDOWN_MS = 60_000;
+
+export type PromptToolModel = typeof PROMPT_TOOL_PRIMARY_MODEL | typeof PROMPT_TOOL_FALLBACK_MODEL;
+
+export type PromptToolFallbackReason = 'none' | 'model-fallback' | 'tier-fallback' | 'model-and-tier-fallback';
+
+export interface PromptToolAttemptTarget {
+    model: PromptToolModel;
+    tier: ApiKeyTier;
+}
+
+export interface PromptToolAttemptRecord {
+    model: PromptToolModel;
+    tier: ApiKeyTier;
+    status?: number;
+    errorMessage?: string;
+    skippedDueToCooldown?: boolean;
+}
+
+export interface PromptToolExecutionMeta {
+    optimizationMode: OptimizationMode;
+    model: PromptToolModel;
+    effectiveTier: ApiKeyTier;
+    requestedTier: ApiKeyTier;
+    isFallback: boolean;
+    fallbackReason: PromptToolFallbackReason;
+}
+
+export interface PromptToolFallbackResult<T> {
+    value: T;
+    model: PromptToolModel;
+    tier: ApiKeyTier;
+    usedFallback: boolean;
+    executionMeta: PromptToolExecutionMeta;
+    attempts: PromptToolAttemptRecord[];
+}
+
+const congestionCooldownMap = new Map<string, number>();
+
+export function clearPromptToolCongestionCooldowns(): void {
+    congestionCooldownMap.clear();
+}
+
+export function isTransientPromptToolAvailabilityError(error: unknown): boolean {
+    if (!error) return false;
+    const err = error as any;
+    const status = err.status ?? err.statusCode ?? err.code ?? err.error?.code ?? err.error?.status;
+    const statusNum = typeof status === 'number' ? status : Number(status);
+
+    if (statusNum === 503 || statusNum === 502 || statusNum === 504 || statusNum === 429) {
+        return true;
+    }
+
+    const msg = String(err.message || err.error?.message || err.statusText || err).toLowerCase();
+
+    if (statusNum === 400 || (statusNum === 401 && !msg.includes('quota'))) {
+        return false;
+    }
+
+    return (
+        msg.includes('503') ||
+        msg.includes('502') ||
+        msg.includes('504') ||
+        msg.includes('429') ||
+        msg.includes('unavailable') ||
+        msg.includes('resource_exhausted') ||
+        msg.includes('high demand') ||
+        msg.includes('overloaded') ||
+        msg.includes('temporarily unavailable') ||
+        msg.includes('rate limit') ||
+        msg.includes('quota') ||
+        msg.includes('backend error')
+    );
+}
+
+export function resolvePromptToolAttemptChain(optimizationMode?: OptimizationMode): readonly PromptToolAttemptTarget[] {
+    const mode = normalizeOptimizationMode(optimizationMode);
+
+    if (mode === 'quality') {
+        return [
+            { tier: 'paid', model: PROMPT_TOOL_PRIMARY_MODEL },
+            { tier: 'paid', model: PROMPT_TOOL_FALLBACK_MODEL },
+        ];
+    }
+
+    return [
+        { tier: 'free', model: PROMPT_TOOL_PRIMARY_MODEL },
+        { tier: 'free', model: PROMPT_TOOL_FALLBACK_MODEL },
+        { tier: 'paid', model: PROMPT_TOOL_PRIMARY_MODEL },
+        { tier: 'paid', model: PROMPT_TOOL_FALLBACK_MODEL },
+    ];
+}
+
+export async function executePromptToolWithFallback<T>(
+    getAIClient: (options?: ApiClientLookupOptions | string) => GoogleGenAI,
+    operation: (client: GoogleGenAI, target: PromptToolAttemptTarget) => Promise<T>,
+    options?: {
+        optimizationMode?: OptimizationMode;
+        now?: () => number;
+        cooldownMs?: number;
+    },
+): Promise<PromptToolFallbackResult<T>> {
+    const mode = normalizeOptimizationMode(options?.optimizationMode);
+    const requestedTier: ApiKeyTier = mode === 'quality' ? 'paid' : 'free';
+    const chain = resolvePromptToolAttemptChain(mode);
+    const now = options?.now ?? Date.now;
+    const cooldownMs = options?.cooldownMs ?? PROMPT_TOOL_CONGESTION_COOLDOWN_MS;
+
+    const attempts: PromptToolAttemptRecord[] = [];
+    const currentTime = now();
+
+    const isTargetCooledDown = (target: PromptToolAttemptTarget): boolean => {
+        const expiresAt = congestionCooldownMap.get(`${target.tier}:${target.model}`);
+        return typeof expiresAt === 'number' && expiresAt > currentTime;
+    };
+
+    const allCooledDown = chain.every(isTargetCooledDown);
+
+    let lastError: unknown = null;
+    const triedClientKeys = new Set<string>();
+    const triedClientObjects = new Map<GoogleGenAI, Set<PromptToolModel>>();
+
+    const hasTriedClientForModel = (client: GoogleGenAI, model: PromptToolModel): boolean => {
+        const explicitApiKey = (client as { apiKey?: unknown })?.apiKey;
+        if (typeof explicitApiKey === 'string' && explicitApiKey.length > 0) {
+            return triedClientKeys.has(`${explicitApiKey}:${model}`);
+        }
+        return triedClientObjects.get(client)?.has(model) ?? false;
+    };
+
+    const markClientTriedForModel = (client: GoogleGenAI, model: PromptToolModel): void => {
+        const explicitApiKey = (client as { apiKey?: unknown })?.apiKey;
+        if (typeof explicitApiKey === 'string' && explicitApiKey.length > 0) {
+            triedClientKeys.add(`${explicitApiKey}:${model}`);
+            return;
+        }
+        let models = triedClientObjects.get(client);
+        if (!models) {
+            models = new Set<PromptToolModel>();
+            triedClientObjects.set(client, models);
+        }
+        models.add(model);
+    };
+
+    for (let i = 0; i < chain.length; i++) {
+        const target = chain[i];
+        const key = `${target.tier}:${target.model}`;
+
+        if (!allCooledDown && isTargetCooledDown(target)) {
+            attempts.push({
+                model: target.model,
+                tier: target.tier,
+                skippedDueToCooldown: true,
+            });
+            continue;
+        }
+
+        let client: GoogleGenAI;
+        try {
+            client = getAIClient({ model: target.model, tier: target.tier });
+        } catch (clientErr) {
+            attempts.push({
+                model: target.model,
+                tier: target.tier,
+                errorMessage: clientErr instanceof Error ? clientErr.message : String(clientErr),
+            });
+            lastError = clientErr;
+            continue;
+        }
+
+        if (hasTriedClientForModel(client, target.model)) {
+            continue;
+        }
+
+        try {
+            const value = await operation(client, target);
+            congestionCooldownMap.delete(key);
+
+            const isModelDowngrade = target.model !== PROMPT_TOOL_PRIMARY_MODEL;
+            const isTierSwitch = target.tier !== requestedTier;
+            const usedFallback = isModelDowngrade || isTierSwitch;
+
+            let fallbackReason: PromptToolFallbackReason = 'none';
+            if (isModelDowngrade && isTierSwitch) {
+                fallbackReason = 'model-and-tier-fallback';
+            } else if (isTierSwitch) {
+                fallbackReason = 'tier-fallback';
+            } else if (isModelDowngrade) {
+                fallbackReason = 'model-fallback';
+            }
+
+            const executionMeta: PromptToolExecutionMeta = {
+                optimizationMode: mode,
+                model: target.model,
+                effectiveTier: target.tier,
+                requestedTier,
+                isFallback: usedFallback,
+                fallbackReason,
+            };
+
+            return {
+                value,
+                model: target.model,
+                tier: target.tier,
+                usedFallback,
+                executionMeta,
+                attempts,
+            };
+        } catch (error: any) {
+            lastError = error;
+            markClientTriedForModel(client, target.model);
+
+            const isTransient = isTransientPromptToolAvailabilityError(error);
+            attempts.push({
+                model: target.model,
+                tier: target.tier,
+                status: error?.status ?? error?.statusCode ?? error?.code,
+                errorMessage: error?.message || String(error),
+            });
+
+            if (isTransient) {
+                congestionCooldownMap.set(key, currentTime + cooldownMs);
+                continue;
+            }
+
+            throw error;
+        }
+    }
+
+    if (lastError) {
+        throw lastError;
+    }
+
+    throw new Error('All prompt tool attempts failed without a specific error.');
+}
 
 const LANGUAGE_INSTRUCTION_NAMES: Record<string, string> = {
     en: 'English',
@@ -137,26 +378,33 @@ export async function identifyBlockKeywords(
     category: string,
     thinkingLevel: string = 'low',
 ): Promise<string> {
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-3.8-flash',
-            config: {
-                systemInstruction: `You are a content safety analyzer.
+    const models = [PROMPT_TOOL_PRIMARY_MODEL, PROMPT_TOOL_FALLBACK_MODEL];
+    for (const model of models) {
+        try {
+            const response = await ai.models.generateContent({
+                model,
+                config: {
+                    systemInstruction: `You are a content safety analyzer.
 Task: Analyze the input text which triggered a "${category}" safety filter.
 Output: Extract specific words, phrases, or visual descriptions that likely caused this policy violation.
 Constraints:
 1. Return ONLY a comma-separated list (e.g. "blood, gore, weapon").
 2. Do NOT output conversational text, definitions, or markdown.
 3. If specific words are not found, output the concept (e.g. "explicit violence").`,
-                thinkingConfig: {
-                    thinkingLevel: toPromptGeminiThinkingLevel(thinkingLevel),
+                    thinkingConfig: {
+                        thinkingLevel: toPromptGeminiThinkingLevel(thinkingLevel),
+                    },
                 },
-            },
-            contents: `Text: "${prompt}"`,
-        });
-        const keywords = cleanResponseText(response.text, '');
-        return keywords ? `[${keywords}]` : '';
-    } catch {
-        return '';
+                contents: `Text: "${prompt}"`,
+            });
+            const keywords = cleanResponseText(response.text, '');
+            if (keywords) {
+                return `[${keywords}]`;
+            }
+            return '';
+        } catch {
+            continue;
+        }
     }
+    return '';
 }

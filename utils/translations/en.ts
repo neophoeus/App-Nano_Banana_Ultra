@@ -1105,13 +1105,17 @@ export const en = {
     optimizationModeUseCasesLabel: 'Best for:',
     optimizationModeQualityTitle: 'Quality Mode (Default)',
     optimizationModeQualityDesc:
-        'Preserves top-tier MediaResolution (ULTRA_HIGH for character & 4K references), complete multi-turn conversation history, and full reasoning thinking for lifelike likeness, rich textures, and seamless coherence.',
+        'Exclusively uses Paid API (dedicated compute pool with zero queue latency), preserves top-tier MediaResolution (ULTRA_HIGH for character & 4K references), complete multi-turn conversation history, and full reasoning thinking for lifelike likeness, rich textures, and seamless coherence.',
     optimizationModeQualityUseCases:
         'Best for final production, portrait synthesis, multi-turn consistency, and 4K mastering.',
     optimizationModeEcoTitle: 'Eco Mode (Token Saver)',
     optimizationModeEcoDesc:
-        'Maximizes token efficiency by compressing reference media resolutions, truncating conversation history to the latest 2 turns, and converging thinking depth to minimal / disabled.',
+        'Free API first with smart fallback and anti-congestion rescue: maximizes token efficiency by compressing reference media resolutions, truncating conversation history to the latest 2 turns, and converging thinking depth to minimal / disabled.',
     optimizationModeEcoOutputSizeNotice:
         'Does not alter your chosen output resolution (1K/2K/4K); switch manually to 1K for maximum token savings.',
     optimizationModeEcoUseCases: 'Ideal for early brainstorming, rapid concept exploration, and low-cost batch runs.',
+    promptToolFallbackModelNotice:
+        'Primary model is experiencing high demand. Automatically switched to high-throughput gemini-3.5-flash-lite.',
+    promptToolFallbackPaidTierNotice: 'Free API tier is congested or exhausted. Automatically rescued via Paid API.',
+    promptToolFallbackPaidLiteNotice: 'Free API tier congested. Rescued via Paid API with gemini-3.5-flash-lite.',
 } as const;

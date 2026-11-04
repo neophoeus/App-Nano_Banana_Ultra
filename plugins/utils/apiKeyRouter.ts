@@ -51,7 +51,11 @@ export interface ResolvedApiKeySelection {
 
 export type GetAIClient = (options?: ApiClientLookupOptions | string) => GoogleGenAI;
 
-export const DEFAULT_FREE_TIER_MODELS: readonly string[] = ['gemini-3.8-flash'];
+export const DEFAULT_FREE_TIER_MODELS: readonly string[] = [
+    'gemini-3.8-flash',
+    'gemini-3.5-flash-lite',
+    'gemini-3.1-flash-lite',
+];
 
 export const MISSING_API_KEY_ERROR_MESSAGE =
     'Missing GEMINI_API_KEY. Add GEMINI_PAID_API_KEY / GEMINI_FREE_API_KEY (or GEMINI_API_KEY) to .env.local and restart the dev server.';

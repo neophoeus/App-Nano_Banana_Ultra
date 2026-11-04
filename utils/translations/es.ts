@@ -76,7 +76,8 @@ export const es = {
     videoRefLiteAdvisory:
         'Nano Banana 2 Lite admite referencias de vídeo de forma nativa, pero tiene un límite de entrada menor (65K tokens) y menor adherencia multirreferencia. Ideal para borradores de clips cortos (con modo Eco); use Nano Banana 2 o 2.1 para vídeos más largos o mayor fidelidad.',
     videoRefLiteChipBadge: 'Soporte Lite (clips cortos / 65K)',
-    workspaceConstraintClearVideo: 'Las referencias de vídeo no son compatibles con el modelo seleccionado y se han eliminado.',
+    workspaceConstraintClearVideo:
+        'Las referencias de vídeo no son compatibles con el modelo seleccionado y se han eliminado.',
     unsupportedModel: 'No compatible con este modelo',
     modelSelect: 'Modelo',
     modelGeminiNanoBanana21: 'Nano Banana 2.1 (gemini-nano-banana-2.1)',
@@ -1135,12 +1136,18 @@ export const es = {
     optimizationModeUseCasesLabel: 'Casos de uso:',
     optimizationModeQualityTitle: 'Modo Calidad (Predeterminado)',
     optimizationModeQualityDesc:
-        'Mantiene MediaResolution de alto nivel (ULTRA_HIGH para personajes y 4K), historial completo de conversación y razonamiento profundo para máxima fidelidad y texturas detalladas.',
+        'Usa exclusivamente la API de pago (grupo de computo dedicado sin latencia de cola), mantiene MediaResolution de alto nivel (ULTRA_HIGH para personajes y 4K), historial completo de conversación y razonamiento profundo para máxima fidelidad y texturas detalladas.',
     optimizationModeQualityUseCases: 'Ideal para producción final, retratos fotorrealistas y edición continua.',
     optimizationModeEcoTitle: 'Modo Ahorro (Eco)',
     optimizationModeEcoDesc:
-        'Maximiza el ahorro de tokens: comprime la resolución de imágenes de referencia, trunca el historial a los últimos 2 turnos y converge el pensamiento a minimal / disabled.',
+        'Prioridad de API gratuita con degradacion inteligente y rescate anti-congestion: maximiza el ahorro de tokens, comprime la resolución de referencias, trunca el historial a 2 turnos y converge el pensamiento a minimal / disabled.',
     optimizationModeEcoOutputSizeNotice:
         'No modifica la resolución de salida elegida (1K/2K/4K); cambie manualmente a 1K para un ahorro extremo.',
     optimizationModeEcoUseCases: 'Ideal para lluvia de ideas, exploración rápida de conceptos y lotes económicos.',
+    promptToolFallbackModelNotice:
+        'El modelo principal experimenta alta demanda. Se cambio automaticamente al modelo de alto rendimiento gemini-3.5-flash-lite.',
+    promptToolFallbackPaidTierNotice:
+        'El nivel de API gratuito esta congestionado. Se rescato automaticamente mediante la API de pago.',
+    promptToolFallbackPaidLiteNotice:
+        'Nivel gratuito congestionado. Rescatado mediante API de pago con gemini-3.5-flash-lite.',
 } as const;

@@ -59,7 +59,8 @@ export const ru = {
     videoRefUploadHint: 'Перетащите видео-референс сюда или нажмите для выбора',
     videoRefUploadSubHint: 'MP4, MOV, WebM, AVI до 200 МБ',
     videoRefUploading: 'Загрузка и обработка видео...',
-    videoRefYoutubePlaceholder: 'Вставьте ссылку на публичное видео YouTube (напр. https://www.youtube.com/watch?v=...)',
+    videoRefYoutubePlaceholder:
+        'Вставьте ссылку на публичное видео YouTube (напр. https://www.youtube.com/watch?v=...)',
     videoRefYoutubeApply: 'Применить',
     videoRefYoutubeHint: 'Поддерживаются публичные ссылки YouTube watch, shorts и youtu.be',
     videoRefSourceFilesApi: 'Files API',
@@ -1127,12 +1128,17 @@ export const ru = {
     optimizationModeUseCasesLabel: 'Сценарии:',
     optimizationModeQualityTitle: 'Режим качества (По умолчанию)',
     optimizationModeQualityDesc:
-        'Сохраняет наивысшее разрешение MediaResolution (ULTRA_HIGH для персонажей и 4K), полную историю диалога и детальное мышление для максимальной точности и реализма.',
+        'Исключительно платный API (выделенный пул без задержек в очереди), наивысшее разрешение MediaResolution (ULTRA_HIGH для персонажей и 4K), полная история диалога и детальное мышление.',
     optimizationModeQualityUseCases: 'Подходит для финальной генерации, портретов и связного редактирования.',
     optimizationModeEcoTitle: 'Эко-режим (Экономия токенов)',
     optimizationModeEcoDesc:
-        'Максимальная экономия токенов: сжатие разрешения референсов, усечение истории диалога до 2 последних реплик и сведение мышления к minimal / disabled.',
+        'Бесплатный API в приоритете с умным переключением и спасением от перегрузки: максимальная экономия токенов, сжатие референсов, усечение истории до 2 реплик и мышление minimal / disabled.',
     optimizationModeEcoOutputSizeNotice:
         'Не изменяет выбранное вами разрешение вывода (1K/2K/4K); переключитесь на 1K вручную для максимальной экономии.',
     optimizationModeEcoUseCases: 'Идеально для мозгового штурма, быстрой проверки идей и недорогих пакетов.',
+    promptToolFallbackModelNotice:
+        'Основная модель перегружена. Выполнен автоматический переход на высокопроизводительную модель gemini-3.5-flash-lite.',
+    promptToolFallbackPaidTierNotice: 'Бесплатный уровень API перегружен. Запрос успешно выполнен через платный API.',
+    promptToolFallbackPaidLiteNotice:
+        'Бесплатный API перегружен. Запрос выполнен через платный API с gemini-3.5-flash-lite.',
 } as const;

@@ -1,11 +1,38 @@
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
-import { enhancePromptWithGemini, generatePromptFromImage, generateRandomPrompt } from '../services/geminiService';
+import {
+    consumeLastPromptToolExecutionMeta,
+    enhancePromptWithGemini,
+    generatePromptFromImage,
+    generateRandomPrompt,
+} from '../services/geminiService';
 import type { OptimizationMode, PromptThinkingLevel } from '../types';
 import { prepareImageAssetFromFile } from '../utils/imageSaveUtils';
 import { resolveEffectivePromptThinkingLevel, resolveImageToPromptMaxDimension } from '../utils/optimizationMode';
 import { Language } from '../utils/translations';
 
 type PromptToolId = 'image-to-prompt' | 'inspiration' | 'rewrite';
+
+function notifyPromptToolFallback(
+    showNotification: (msg: string, type: 'info' | 'error') => void,
+    addLog: (msg: string) => void,
+    t: (key: string) => string,
+): void {
+    const meta = consumeLastPromptToolExecutionMeta();
+    if (!meta?.isFallback) {
+        return;
+    }
+
+    let messageKey = 'promptToolFallbackModelNotice';
+    if (meta.fallbackReason === 'tier-fallback') {
+        messageKey = 'promptToolFallbackPaidTierNotice';
+    } else if (meta.fallbackReason === 'model-and-tier-fallback') {
+        messageKey = 'promptToolFallbackPaidLiteNotice';
+    }
+
+    const message = t(messageKey);
+    showNotification(message, 'info');
+    addLog(message);
+}
 
 interface UsePromptToolsOptions {
     currentLanguage: Language;
@@ -69,6 +96,7 @@ export function usePromptTools({
                     : await enhancePromptWithGemini(prompt, currentLanguage, effectiveThinkingLevel);
             setPrompt(enhanced);
             addLog(t('logRewriteOk'));
+            notifyPromptToolFallback(showNotification, addLog, t);
         } catch (e) {
             console.error(e);
             showNotification(t('logRewriteFailed'), 'error');
@@ -107,6 +135,7 @@ export function usePromptTools({
                     : await generateRandomPrompt(currentLanguage, effectiveThinkingLevel);
             setPrompt(randomPrompt);
             addLog(t('logRandomOk'));
+            notifyPromptToolFallback(showNotification, addLog, t);
         } catch (e) {
             console.error(e);
             showNotification(t('logRandomFailed'), 'error');
@@ -123,6 +152,7 @@ export function usePromptTools({
         optimizationMode,
         promptThinkingLevel,
         setPrompt,
+        showNotification,
         t,
     ]);
 
@@ -160,6 +190,7 @@ export function usePromptTools({
                         : await generatePromptFromImage(preparedImage.dataUrl, currentLanguage, effectiveThinkingLevel);
                 setPrompt(generatedPrompt);
                 addLog(t('logImageToPromptOk'));
+                notifyPromptToolFallback(showNotification, addLog, t);
             } catch (error) {
                 console.error(error);
                 if (error instanceof Error && /invalid image|failed to read|failed to load/i.test(error.message)) {

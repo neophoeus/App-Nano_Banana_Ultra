@@ -121,8 +121,12 @@ function buildGenerationClientOptions(
 function resolveSafetyAnalyzerClient(
     getAIClient: RegisterGenerateRoutesArgs['getAIClient'],
     fallbackClient: GoogleGenAI,
+    optimizationMode?: string,
 ): GoogleGenAI {
     try {
+        if (optimizationMode === 'quality') {
+            return getAIClient({ model: 'gemini-3.8-flash', tier: 'paid' });
+        }
         return getAIClient(SAFETY_ANALYZER_CLIENT_OPTIONS);
     } catch {
         // Never let the auxiliary analyzer lookup break failure reporting; reuse the generation client.
@@ -1364,7 +1368,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
             }
 
             const failureResponse = await buildFailureResponse(
-                resolveSafetyAnalyzerClient(getAIClient, ai),
+                resolveSafetyAnalyzerClient(getAIClient, ai, body.optimizationMode),
                 '/api/images/generate',
                 String(body.prompt || ''),
                 validated.model,
@@ -1596,7 +1600,7 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
             }
 
             const failureResponse = await buildFailureResponse(
-                resolveSafetyAnalyzerClient(getAIClient, ai),
+                resolveSafetyAnalyzerClient(getAIClient, ai, body.optimizationMode),
                 '/api/images/generate-stream',
                 String(body.prompt || ''),
                 validated.model,

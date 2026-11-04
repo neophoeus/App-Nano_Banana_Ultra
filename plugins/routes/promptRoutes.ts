@@ -15,6 +15,7 @@ import {
     buildPromptEnhancerInstruction,
     buildRandomPromptInstruction,
     buildRandomPromptRequest,
+    executePromptToolWithFallback,
     normalizePromptToolLanguage,
 } from '../utils/promptHelpers';
 import { extractUsageMetadata, resolveRoleMediaResolution } from '../utils/mediaResolution';
@@ -45,10 +46,6 @@ type RegisterPromptRoutesArgs = {
     getAIClient: (options?: ApiClientLookupOptions | string) => GoogleGenAI;
 };
 
-// Prompt tools run on gemini-3.8-flash, which is free of charge on the Free Tier, so they prefer the free key.
-const PROMPT_TOOL_MODEL = 'gemini-3.8-flash';
-const PROMPT_TOOL_CLIENT_OPTIONS: ApiClientLookupOptions = { model: PROMPT_TOOL_MODEL, tier: 'free' };
-
 export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromptRoutesArgs): void {
     server.use('/api/prompt/enhance', async (req: any, res: any) => {
         const requestContext = createApiRequestContext(req, '/api/prompt/enhance');
@@ -59,7 +56,6 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
         }
 
         try {
-            const ai = getAIClient(PROMPT_TOOL_CLIENT_OPTIONS);
             const {
                 currentPrompt = '',
                 lang: requestedLang,
@@ -75,28 +71,40 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 optimizationMode,
                 promptLength: currentPrompt.trim().length,
             });
-            const response = await ai.models.generateContent({
-                model: 'gemini-3.8-flash',
-                config: {
-                    systemInstruction: buildPromptEnhancerInstruction(lang),
-                    thinkingConfig: {
-                        thinkingLevel: toPromptGeminiThinkingLevel(effectiveThinkingLevel),
-                    },
-                },
-                contents: `Original prompt to rewrite: "${currentPrompt || 'A creative image'}"`,
-            });
 
-            const text = cleanResponseText(response.text, '');
+            const result = await executePromptToolWithFallback(
+                getAIClient,
+                async (ai, target) => {
+                    const response = await ai.models.generateContent({
+                        model: target.model,
+                        config: {
+                            systemInstruction: buildPromptEnhancerInstruction(lang),
+                            thinkingConfig: {
+                                thinkingLevel: toPromptGeminiThinkingLevel(effectiveThinkingLevel),
+                            },
+                        },
+                        contents: `Original prompt to rewrite: "${currentPrompt || 'A creative image'}"`,
+                    });
+                    const text = cleanResponseText(response.text, '');
+                    return { text };
+                },
+                { optimizationMode },
+            );
+
             sendJson(
                 res,
                 200,
-                { text },
+                { text: result.value.text, executionMeta: result.executionMeta },
                 {
                     requestContext,
-                    summary: `${lang} prompt enhancement`,
+                    summary: `${lang} prompt enhancement (${result.model}, ${result.tier})`,
                     details: {
                         source: 'prompt-tools',
-                        textLength: text.length,
+                        textLength: result.value.text.length,
+                        model: result.model,
+                        tier: result.tier,
+                        isFallback: result.usedFallback,
+                        fallbackReason: result.executionMeta.fallbackReason,
                     },
                 },
             );
@@ -120,7 +128,6 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
         }
 
         try {
-            const ai = getAIClient(PROMPT_TOOL_CLIENT_OPTIONS);
             const { lang: requestedLang, thinkingLevel, optimizationMode } = await readJsonBody<PromptRequestBody>(req);
             const lang = normalizePromptToolLanguage(requestedLang);
             const effectiveThinkingLevel = resolveEffectivePromptThinkingLevel(thinkingLevel, optimizationMode);
@@ -130,28 +137,40 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 thinkingLevel: effectiveThinkingLevel,
                 optimizationMode,
             });
-            const response = await ai.models.generateContent({
-                model: 'gemini-3.8-flash',
-                config: {
-                    systemInstruction: buildRandomPromptInstruction(lang),
-                    thinkingConfig: {
-                        thinkingLevel: toPromptGeminiThinkingLevel(effectiveThinkingLevel),
-                    },
-                },
-                contents: buildRandomPromptRequest(),
-            });
 
-            const text = cleanResponseText(response.text, '');
+            const result = await executePromptToolWithFallback(
+                getAIClient,
+                async (ai, target) => {
+                    const response = await ai.models.generateContent({
+                        model: target.model,
+                        config: {
+                            systemInstruction: buildRandomPromptInstruction(lang),
+                            thinkingConfig: {
+                                thinkingLevel: toPromptGeminiThinkingLevel(effectiveThinkingLevel),
+                            },
+                        },
+                        contents: buildRandomPromptRequest(),
+                    });
+                    const text = cleanResponseText(response.text, '');
+                    return { text };
+                },
+                { optimizationMode },
+            );
+
             sendJson(
                 res,
                 200,
-                { text },
+                { text: result.value.text, executionMeta: result.executionMeta },
                 {
                     requestContext,
-                    summary: `${lang} random prompt`,
+                    summary: `${lang} random prompt (${result.model}, ${result.tier})`,
                     details: {
                         source: 'prompt-tools',
-                        textLength: text.length,
+                        textLength: result.value.text.length,
+                        model: result.model,
+                        tier: result.tier,
+                        isFallback: result.usedFallback,
+                        fallbackReason: result.executionMeta.fallbackReason,
                     },
                 },
             );
@@ -175,7 +194,6 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
         }
 
         try {
-            const ai = getAIClient(PROMPT_TOOL_CLIENT_OPTIONS);
             const {
                 imageDataUrl = '',
                 lang: requestedLang,
@@ -210,47 +228,63 @@ export function registerPromptRoutes(server: any, { getAIClient }: RegisterPromp
                 return;
             }
 
-            const mediaResolution = resolveRoleMediaResolution({
-                model: 'gemini-3.8-flash',
-                role: 'forensic-prompt',
-                optimizationMode,
-            });
+            const result = await executePromptToolWithFallback(
+                getAIClient,
+                async (ai, target) => {
+                    const mediaResolution = resolveRoleMediaResolution({
+                        model: target.model,
+                        role: 'forensic-prompt',
+                        optimizationMode,
+                    });
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-3.8-flash',
-                config: {
-                    systemInstruction: buildImageToPromptInstruction(lang),
-                    thinkingConfig: {
-                        thinkingLevel: toPromptGeminiThinkingLevel(effectiveThinkingLevel),
-                    },
+                    const response = await ai.models.generateContent({
+                        model: target.model,
+                        config: {
+                            systemInstruction: buildImageToPromptInstruction(lang),
+                            thinkingConfig: {
+                                thinkingLevel: toPromptGeminiThinkingLevel(effectiveThinkingLevel),
+                            },
+                        },
+                        contents: [
+                            {
+                                inlineData: inlineImage,
+                                ...(mediaResolution
+                                    ? { mediaResolution: { level: mediaResolution.level as PartMediaResolutionLevel } }
+                                    : {}),
+                            },
+                            {
+                                text: 'Analyze this image carefully and generate a highly detailed, extremely accurate image prompt in the requested language describing it. Focus on absolute forensic precision, documenting every single detail, object, texture, color shade, camera setting, and art medium characteristic without summarization. Output only the prompt itself without any headings, labels, sections, or commentary.',
+                            },
+                        ],
+                    });
+
+                    const text = cleanResponseText(response.text, '');
+                    const tokenUsage = extractUsageMetadata(response);
+                    return { text, tokenUsage: tokenUsage || undefined };
                 },
-                contents: [
-                    {
-                        inlineData: inlineImage,
-                        ...(mediaResolution
-                            ? { mediaResolution: { level: mediaResolution.level as PartMediaResolutionLevel } }
-                            : {}),
-                    },
-                    {
-                        text: 'Analyze this image carefully and generate a highly detailed, extremely accurate image prompt in the requested language describing it. Focus on absolute forensic precision, documenting every single detail, object, texture, color shade, camera setting, and art medium characteristic without summarization. Output only the prompt itself without any headings, labels, sections, or commentary.',
-                    },
-                ],
-            });
+                { optimizationMode },
+            );
 
-            const text = cleanResponseText(response.text, '');
-            const tokenUsage = extractUsageMetadata(response);
             sendJson(
                 res,
                 200,
-                { text, tokenUsage: tokenUsage || undefined },
+                {
+                    text: result.value.text,
+                    tokenUsage: result.value.tokenUsage,
+                    executionMeta: result.executionMeta,
+                },
                 {
                     requestContext,
-                    summary: `${lang} image-to-prompt`,
+                    summary: `${lang} image-to-prompt (${result.model}, ${result.tier})`,
                     details: {
                         source: 'prompt-tools',
-                        textLength: text.length,
+                        textLength: result.value.text.length,
                         mimeType: inlineImage.mimeType,
-                        tokenUsage,
+                        tokenUsage: result.value.tokenUsage,
+                        model: result.model,
+                        tier: result.tier,
+                        isFallback: result.usedFallback,
+                        fallbackReason: result.executionMeta.fallbackReason,
                     },
                 },
             );

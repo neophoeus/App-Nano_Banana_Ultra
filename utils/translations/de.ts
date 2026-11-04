@@ -75,7 +75,8 @@ export const de = {
     videoRefLiteAdvisory:
         'Nano Banana 2 Lite unterstützt native Videoreferenzen, hat jedoch ein kleineres Token-Limit (65K) und begrenzte Multi-Referenz-Bindung. Ideal für kurze Entwürfe (mit Eco-Modus); für längere Videos oder höhere Wiedergabetreue Nano Banana 2 oder 2.1 verwenden.',
     videoRefLiteChipBadge: 'Lite-Unterstützung (Kurzclips / 65K)',
-    workspaceConstraintClearVideo: 'Videoreferenzen werden vom ausgewählten Modell nicht unterstützt und wurden entfernt.',
+    workspaceConstraintClearVideo:
+        'Videoreferenzen werden vom ausgewählten Modell nicht unterstützt und wurden entfernt.',
     unsupportedModel: 'Wird von diesem Modell nicht unterstützt',
     modelSelect: 'Modell',
     modelGeminiNanoBanana21: 'Nano Banana 2.1 (gemini-nano-banana-2.1)',
@@ -1138,12 +1139,18 @@ export const de = {
     optimizationModeUseCasesLabel: 'Einsatzbereich:',
     optimizationModeQualityTitle: 'Qualitätsmodus (Standard)',
     optimizationModeQualityDesc:
-        'Behält maximale MediaResolution (ULTRA_HIGH für Charaktere & 4K), vollständigen Gesprächsverlauf und tiefes Reasoning für maximale Detailtreue und nahtlose Konsistenz bei.',
+        'Verwendet ausschliesslich die kostenpflichtige API (dedizierter Pool ohne Warteschlangen-Latenz), behaelt maximale MediaResolution (ULTRA_HIGH für Charaktere & 4K), vollstaendigen Gespraechsverlauf und tiefes Reasoning bei.',
     optimizationModeQualityUseCases: 'Optimal für finale Renderings, Porträtsynthese und mehrstufige Bearbeitung.',
     optimizationModeEcoTitle: 'Sparmodus (Token-Sparer)',
     optimizationModeEcoDesc:
-        'Minimiert Token-Verbrauch: Komprimiert Referenzbilder, kürzt den Gesprächsverlauf auf die letzten 2 Runden und begrenzt die Denktiefe auf minimal / disabled.',
+        'Kostenlose API bevorzugt mit intelligentem Fallback und Ueberlastungsschutz: minimiert Token-Verbrauch, komprimiert Referenzbilder, kuerzt Verlauf auf 2 Runden und begrenzt Denktiefe auf minimal / disabled.',
     optimizationModeEcoOutputSizeNotice:
         'Behält Ihre gewählte Ausgabeauflösung (1K/2K/4K) bei; stellen Sie manuell auf 1K für maximale Einsparung.',
     optimizationModeEcoUseCases: 'Perfekt für Brainstorming, schnelle Konzeptentwürfe und kostengünstige Batches.',
+    promptToolFallbackModelNotice:
+        'Das Primaermodell ist derzeit stark ausgelastet. Automatisch auf das Modell gemini-3.5-flash-lite umgeschaltet.',
+    promptToolFallbackPaidTierNotice:
+        'Das kostenlose API-Kontingent ist ausgelastet. Automatisch ueber die kostenpflichtige API ausgefuehrt.',
+    promptToolFallbackPaidLiteNotice:
+        'Kostenloses Kontingent ausgelastet. Ueber kostenpflichtige API mit gemini-3.5-flash-lite gerettet.',
 } as const;

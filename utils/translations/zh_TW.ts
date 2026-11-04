@@ -1063,12 +1063,15 @@ export const zh_TW = {
     optimizationModeUseCasesLabel: '使用情境：',
     optimizationModeQualityTitle: '品質模式（預設）',
     optimizationModeQualityDesc:
-        '全面保留高規格 MediaResolution（角色與4K圖採 ULTRA_HIGH 規格）、保留完整多輪對話歷史上下文與完整思考推理，提供最細膩的人物特徵重現、逼真紋理與連貫編修。',
+        '全面使用付費 API（專用算力池，零排隊延遲）、保留高規格 MediaResolution（角色與4K圖採 ULTRA_HIGH 規格）、保留完整多輪對話歷史上下文與完整思考推理，提供最細膩的人物特徵重現、逼真紋理與連貫編修。',
     optimizationModeQualityUseCases: '適合正式創作、高擬真人物合成、多輪連貫編修與高解析度精修。',
     optimizationModeEcoTitle: '節流模式',
     optimizationModeEcoDesc:
-        '全方位壓縮 Token 消耗：多模態參考圖降階處理、舊對話自動截斷保留最新 2 輪核心輪次，並收斂思考深度為 minimal / disabled。',
+        '免費 API 優先（具備智慧降級與防擁塞救援機制）：全方位壓縮 Token 消耗、多模態參考圖降階處理、舊對話自動截斷保留最新 2 輪核心輪次，並收斂思考深度為 minimal / disabled。',
     optimizationModeEcoOutputSizeNotice:
         '不會強制更動您自選的輸出解析度（1K／2K／4K）；若追求極致省流，建議手動將輸出尺寸改為 1K。',
     optimizationModeEcoUseCases: '適合前期發想、大量快速概念探索、靈感打樣與低成本批次實驗。',
+    promptToolFallbackModelNotice: '因目前模型擁塞，系統已自動降級至高吞吐量的 gemini-3.5-flash-lite 完成生成。',
+    promptToolFallbackPaidTierNotice: '免費 API 配額擁塞或暫時耗盡，系統已自動切換至付費 API 救援完成。',
+    promptToolFallbackPaidLiteNotice: '免費 API 擁塞，系統已自動切換至付費 API 並以 gemini-3.5-flash-lite 完成救援。',
 } as const;

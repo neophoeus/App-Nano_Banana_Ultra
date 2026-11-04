@@ -1,5 +1,22 @@
 # Changelog
 
+## v5.7.0 - 2026-11-04
+
+- Release title: Nano Banana Ultra 5.7.0 - Quality/Eco Prompt Tools API Routing, Smart 4-Stage Cascading Fallback & Congestion Cooldown, and Live Toast Notification System
+- Release summary:
+    - **Prompt Tools API Routing & Smart 4-Stage Cascading Fallback Engine (`plugins/utils/promptHelpers.ts`, `plugins/utils/apiKeyRouter.ts`, `plugins/routes/promptRoutes.ts`, `plugins/routes/generateRoutes.ts`, `plugins/utils/mediaResolution.ts`, `.env.example`, `tests/promptHelpers.test.ts`, `tests/apiKeyRouter.test.ts`)**:
+        - Optimization Mode-Driven Routing:
+            - Quality Mode (`optimizationMode === 'quality'`): Exclusively routes prompt tools (Smart Rewrite, Surprise Me, Image-to-Prompt) and safety analyzers to `GEMINI_PAID_API_KEY` (`gemini-3.8-flash`), with automatic in-tier model fallback to `gemini-3.5-flash-lite` on transient 503/429 spikes.
+            - Eco / Throttling Mode (`optimizationMode === 'eco'`): Optimizes cost by routing to `GEMINI_FREE_API_KEY` first via an intelligent 4-stage cascading chain: `free:gemini-3.8-flash` -> `free:gemini-3.5-flash-lite` -> `paid:gemini-3.8-flash` -> `paid:gemini-3.5-flash-lite`.
+        - 60-Second Anti-Congestion Cooldown: Automatically marks failing models/tiers as congested (`503 UNAVAILABLE`, `429 RESOURCE_EXHAUSTED`, high-demand spikes) for 60 seconds, skipping congested nodes on subsequent calls within the cooldown window to eliminate repeated 1.5s/3s latency delays.
+        - Robust Client Identity Deduplication: Dual-tier deduplication by API key and object reference identity (`Map<GoogleGenAI, Set<PromptToolModel>>`) guaranteeing correct instance handling in both dual-key and single-key deployment environments.
+        - Safety Analyzer Client Alignment: Updated `resolveSafetyAnalyzerClient` in `plugins/routes/generateRoutes.ts` to respect explicit `optimizationMode`, selecting Paid Key in Quality Mode and Free Key with fallback in Eco Mode.
+        - Model Tier Whitelist Expansion: Expanded `DEFAULT_FREE_TIER_MODELS` in `apiKeyRouter.ts` to include `gemini-3.8-flash` and `gemini-3.5-flash-lite`.
+    - **Live Downgrade & Tier-Switch Toast Notification System (`services/geminiService.ts`, `hooks/usePromptTools.ts`, `utils/translations/*`, `tests/usePromptTools.test.tsx`)**:
+        - User-Facing Notification & Diagnostic Logs: Triggers non-intrusive Toast notifications (`showNotification(msg, 'info')`) and diagnostic workspace logs (`addLog(msg)`) whenever an automatic model downgrade or tier rescue switch occurs.
+        - 9-Language Localization: Added `promptToolFallbackModelNotice`, `promptToolFallbackPaidTierNotice`, and `promptToolFallbackPaidLiteNotice` across English, Traditional Chinese (`zh_TW`), Simplified Chinese (`zh_CN`), Japanese, Korean, Spanish, French, German, and Russian, while refining descriptions for `optimizationModeQualityDesc` and `optimizationModeEcoDesc`.
+        - Execution Metadata Propagation: Returns `executionMeta` (`optimizationMode`, `model`, `effectiveTier`, `requestedTier`, `isFallback`, `fallbackReason`) from backend prompt endpoints, consumed by `geminiService.ts` and surfaced via `notifyPromptToolFallback`.
+
 ## v5.6.0 - 2026-11-02
 
 - Release title: Nano Banana Ultra 5.6.0 - Dual Free/Paid API Key Smart Routing Architecture, Batch History Commit Race Guard, and Workspace Restore Outpaint Boundary Hardening

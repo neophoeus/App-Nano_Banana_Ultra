@@ -119,7 +119,7 @@ const EMPTY_ENV: Record<string, string | undefined> = {};
 
 describe('apiKeyRouter', () => {
     describe('parseFreeTierModels', () => {
-        it('defaults to gemini-3.8-flash when nothing is configured', () => {
+        it('defaults to free-tier models (gemini-3.8-flash, gemini-3.5-flash-lite, gemini-3.1-flash-lite) when nothing is configured', () => {
             expect([...parseFreeTierModels()]).toEqual([...DEFAULT_FREE_TIER_MODELS]);
             expect([...parseFreeTierModels('  , ,')]).toEqual([...DEFAULT_FREE_TIER_MODELS]);
             expect([...parseFreeTierModels([])]).toEqual([...DEFAULT_FREE_TIER_MODELS]);
@@ -200,6 +200,8 @@ describe('apiKeyRouter', () => {
         it('routes free-tier models to free and everything else to paid', () => {
             expect(resolveTargetApiKeyTier({ model: 'gemini-3.8-flash' })).toBe('free');
             expect(resolveTargetApiKeyTier('gemini-3.8-flash')).toBe('free');
+            expect(resolveTargetApiKeyTier({ model: 'gemini-3.5-flash-lite' })).toBe('free');
+            expect(resolveTargetApiKeyTier({ model: 'gemini-3.1-flash-lite' })).toBe('free');
             expect(resolveTargetApiKeyTier({ model: 'gemini-nano-banana-2.1' })).toBe('paid');
             expect(resolveTargetApiKeyTier({ model: 'gemini-3-pro-image' })).toBe('paid');
             expect(resolveTargetApiKeyTier()).toBe('paid');
@@ -347,13 +349,14 @@ describe('dual API key routing through backend routes', () => {
         vi.unstubAllEnvs();
     });
 
-    it('sends prompt tools with the free key and image generation with the paid key', async () => {
+    it('sends prompt tools with the free key in eco mode and image generation with the paid key', async () => {
         generateContentImpl.mockResolvedValueOnce({ text: 'An enhanced prompt' }).mockResolvedValueOnce(IMAGE_RESPONSE);
         const handlers = await configurePluginHandlers({ geminiPaidApiKey: 'paid-key', geminiFreeApiKey: 'free-key' });
 
         const enhanceResponse = await invokeRoute(handlers.get('/api/prompt/enhance')!, {
             currentPrompt: 'a cat',
             lang: 'en',
+            optimizationMode: 'eco',
         });
         const generateResponse = await invokeRoute(handlers.get('/api/images/generate')!, {
             prompt: 'a cat',
@@ -369,6 +372,20 @@ describe('dual API key routing through backend routes', () => {
             { apiKey: 'free-key', model: 'gemini-3.8-flash' },
             { apiKey: 'paid-key', model: 'gemini-nano-banana-2.1' },
         ]);
+    });
+
+    it('sends prompt tools with the paid key in quality mode', async () => {
+        generateContentImpl.mockResolvedValueOnce({ text: 'An enhanced prompt in quality mode' });
+        const handlers = await configurePluginHandlers({ geminiPaidApiKey: 'paid-key', geminiFreeApiKey: 'free-key' });
+
+        const enhanceResponse = await invokeRoute(handlers.get('/api/prompt/enhance')!, {
+            currentPrompt: 'a cat',
+            lang: 'en',
+            optimizationMode: 'quality',
+        });
+
+        expect(enhanceResponse.status).toBe(200);
+        expect(generateContentCalls).toEqual([{ apiKey: 'paid-key', model: 'gemini-3.8-flash' }]);
     });
 
     it('routes a custom free-tier image model to the free key unless grounding is enabled', async () => {

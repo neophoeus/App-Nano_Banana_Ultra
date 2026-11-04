@@ -1387,6 +1387,29 @@ export const promptForApiKey = async (): Promise<void> => {
 
 // --- Text Utilities (Prompt Engineering) ---
 
+export type PromptToolFallbackReason = 'none' | 'model-fallback' | 'tier-fallback' | 'model-and-tier-fallback';
+
+export type PromptToolExecutionMeta = {
+    optimizationMode: OptimizationMode;
+    model: string;
+    effectiveTier: 'free' | 'paid';
+    requestedTier: 'free' | 'paid';
+    isFallback: boolean;
+    fallbackReason: PromptToolFallbackReason;
+};
+
+let lastPromptToolExecutionMeta: PromptToolExecutionMeta | null = null;
+
+export const setLastPromptToolExecutionMeta = (meta: PromptToolExecutionMeta | null): void => {
+    lastPromptToolExecutionMeta = meta;
+};
+
+export const consumeLastPromptToolExecutionMeta = (): PromptToolExecutionMeta | null => {
+    const meta = lastPromptToolExecutionMeta;
+    lastPromptToolExecutionMeta = null;
+    return meta;
+};
+
 export const enhancePromptWithGemini = async (
     currentPrompt: string,
     lang: Language,
@@ -1407,7 +1430,7 @@ export const enhancePromptWithGemini = async (
     };
     const response = await retryOperation(
         () =>
-            fetchJson<{ text: string }>(
+            fetchJson<{ text: string; executionMeta?: PromptToolExecutionMeta }>(
                 '/api/prompt/enhance',
                 {
                     method: 'POST',
@@ -1424,8 +1447,12 @@ export const enhancePromptWithGemini = async (
                     requestSummary: `Prompt enhancer (${lang})`,
                     requestPayload,
                     responseLabel: 'Prompt enhancer response',
-                    responseSummary: (result: { text: string }) => buildTextResponseSummary(result.text),
-                    responsePayload: (result: { text: string }) => ({ text: result.text }),
+                    responseSummary: (result: { text: string; executionMeta?: PromptToolExecutionMeta }) =>
+                        buildTextResponseSummary(result.text),
+                    responsePayload: (result: { text: string; executionMeta?: PromptToolExecutionMeta }) => ({
+                        text: result.text,
+                        executionMeta: result.executionMeta,
+                    }),
                     errorLabel: 'Prompt enhancer failed',
                 },
             ),
@@ -1440,6 +1467,28 @@ export const enhancePromptWithGemini = async (
             operation: 'Prompt enhancer',
         },
     );
+
+    if (response.executionMeta) {
+        setLastPromptToolExecutionMeta(response.executionMeta);
+        if (response.executionMeta.isFallback) {
+            emitServiceDebugEvent({
+                kind: 'log',
+                label: `Prompt enhancer fallback (${response.executionMeta.fallbackReason})`,
+                context: {
+                    source: 'prompt-tools',
+                    operation: 'Prompt enhancer',
+                    route: '/api/prompt/enhance',
+                    method: 'POST',
+                    phase: 'runtime',
+                    correlationId,
+                },
+                summary: `Switched to ${response.executionMeta.model} (${response.executionMeta.effectiveTier}) due to ${response.executionMeta.fallbackReason}`,
+                payload: { executionMeta: response.executionMeta },
+            });
+        }
+    } else {
+        setLastPromptToolExecutionMeta(null);
+    }
 
     const promptText = response.text?.trim();
     if (!promptText) {
@@ -1481,7 +1530,7 @@ export const generateRandomPrompt = async (
     };
     const response = await retryOperation(
         () =>
-            fetchJson<{ text: string }>(
+            fetchJson<{ text: string; executionMeta?: PromptToolExecutionMeta }>(
                 '/api/prompt/random',
                 {
                     method: 'POST',
@@ -1498,8 +1547,12 @@ export const generateRandomPrompt = async (
                     requestSummary: `Random prompt (${lang})`,
                     requestPayload,
                     responseLabel: 'Random prompt response',
-                    responseSummary: (result: { text: string }) => buildTextResponseSummary(result.text),
-                    responsePayload: (result: { text: string }) => ({ text: result.text }),
+                    responseSummary: (result: { text: string; executionMeta?: PromptToolExecutionMeta }) =>
+                        buildTextResponseSummary(result.text),
+                    responsePayload: (result: { text: string; executionMeta?: PromptToolExecutionMeta }) => ({
+                        text: result.text,
+                        executionMeta: result.executionMeta,
+                    }),
                     errorLabel: 'Random prompt failed',
                 },
             ),
@@ -1514,6 +1567,28 @@ export const generateRandomPrompt = async (
             operation: 'Random prompt',
         },
     );
+
+    if (response.executionMeta) {
+        setLastPromptToolExecutionMeta(response.executionMeta);
+        if (response.executionMeta.isFallback) {
+            emitServiceDebugEvent({
+                kind: 'log',
+                label: `Random prompt fallback (${response.executionMeta.fallbackReason})`,
+                context: {
+                    source: 'prompt-tools',
+                    operation: 'Random prompt',
+                    route: '/api/prompt/random',
+                    method: 'POST',
+                    phase: 'runtime',
+                    correlationId,
+                },
+                summary: `Switched to ${response.executionMeta.model} (${response.executionMeta.effectiveTier}) due to ${response.executionMeta.fallbackReason}`,
+                payload: { executionMeta: response.executionMeta },
+            });
+        }
+    } else {
+        setLastPromptToolExecutionMeta(null);
+    }
 
     const promptText = response.text?.trim();
     if (!promptText) {
@@ -1557,7 +1632,7 @@ export const generatePromptFromImage = async (
     };
     const response = await retryOperation(
         () =>
-            fetchJson<{ text: string }>(
+            fetchJson<{ text: string; executionMeta?: PromptToolExecutionMeta }>(
                 '/api/prompt/image-to-prompt',
                 {
                     method: 'POST',
@@ -1574,8 +1649,12 @@ export const generatePromptFromImage = async (
                     requestSummary: `Image-to-prompt (${lang})`,
                     requestPayload,
                     responseLabel: 'Image-to-prompt response',
-                    responseSummary: (result: { text: string }) => buildTextResponseSummary(result.text),
-                    responsePayload: (result: { text: string }) => ({ text: result.text }),
+                    responseSummary: (result: { text: string; executionMeta?: PromptToolExecutionMeta }) =>
+                        buildTextResponseSummary(result.text),
+                    responsePayload: (result: { text: string; executionMeta?: PromptToolExecutionMeta }) => ({
+                        text: result.text,
+                        executionMeta: result.executionMeta,
+                    }),
                     errorLabel: 'Image-to-prompt failed',
                 },
             ),
@@ -1590,6 +1669,28 @@ export const generatePromptFromImage = async (
             operation: 'Image to prompt',
         },
     );
+
+    if (response.executionMeta) {
+        setLastPromptToolExecutionMeta(response.executionMeta);
+        if (response.executionMeta.isFallback) {
+            emitServiceDebugEvent({
+                kind: 'log',
+                label: `Image-to-prompt fallback (${response.executionMeta.fallbackReason})`,
+                context: {
+                    source: 'prompt-tools',
+                    operation: 'Image to prompt',
+                    route: '/api/prompt/image-to-prompt',
+                    method: 'POST',
+                    phase: 'runtime',
+                    correlationId,
+                },
+                summary: `Switched to ${response.executionMeta.model} (${response.executionMeta.effectiveTier}) due to ${response.executionMeta.fallbackReason}`,
+                payload: { executionMeta: response.executionMeta },
+            });
+        }
+    } else {
+        setLastPromptToolExecutionMeta(null);
+    }
 
     const promptText = response.text?.trim();
     if (!promptText) {

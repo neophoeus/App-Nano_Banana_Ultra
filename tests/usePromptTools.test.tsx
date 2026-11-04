@@ -5,10 +5,16 @@ import { createRoot, Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePromptTools } from '../hooks/usePromptTools';
 
-const { enhancePromptWithGeminiMock, generatePromptFromImageMock, generateRandomPromptMock } = vi.hoisted(() => ({
+const {
+    enhancePromptWithGeminiMock,
+    generatePromptFromImageMock,
+    generateRandomPromptMock,
+    consumeLastPromptToolExecutionMetaMock,
+} = vi.hoisted(() => ({
     enhancePromptWithGeminiMock: vi.fn(),
     generatePromptFromImageMock: vi.fn(),
     generateRandomPromptMock: vi.fn(),
+    consumeLastPromptToolExecutionMetaMock: vi.fn().mockReturnValue(null),
 }));
 
 const { prepareImageAssetFromFileMock } = vi.hoisted(() => ({
@@ -19,6 +25,7 @@ vi.mock('../services/geminiService', () => ({
     enhancePromptWithGemini: enhancePromptWithGeminiMock,
     generatePromptFromImage: generatePromptFromImageMock,
     generateRandomPrompt: generateRandomPromptMock,
+    consumeLastPromptToolExecutionMeta: consumeLastPromptToolExecutionMetaMock,
 }));
 
 vi.mock('../utils/imageSaveUtils', () => ({
@@ -59,6 +66,9 @@ describe('usePromptTools', () => {
                         logImageToPromptFailed: 'Image prompt failed.',
                         logRandomOk: 'Random ok.',
                         logRandomFailed: 'Random failed.',
+                        promptToolFallbackModelNotice: 'Fallback to lite model notice',
+                        promptToolFallbackPaidTierNotice: 'Fallback to paid tier notice',
+                        promptToolFallbackPaidLiteNotice: 'Fallback to paid lite notice',
                     };
                     return translations[key] || key;
                 },
@@ -86,6 +96,8 @@ describe('usePromptTools', () => {
         generatePromptFromImageMock.mockReset();
         generateRandomPromptMock.mockReset();
         prepareImageAssetFromFileMock.mockReset();
+        consumeLastPromptToolExecutionMetaMock.mockReset();
+        consumeLastPromptToolExecutionMetaMock.mockReturnValue(null);
     });
 
     afterEach(() => {
@@ -245,5 +257,101 @@ describe('usePromptTools', () => {
         expect(notifications).toEqual([{ message: 'Invalid image.', type: 'error' }]);
         expect(logs).toEqual(['Image prompt failed.']);
         expect(generatePromptFromImageMock).not.toHaveBeenCalled();
+    });
+
+    it('triggers info toast and log when smart rewrite encounters an automatic model downgrade', async () => {
+        prompt = 'test idea';
+        enhancePromptWithGeminiMock.mockResolvedValue('enhanced test idea');
+        consumeLastPromptToolExecutionMetaMock.mockReturnValue({
+            optimizationMode: 'quality',
+            model: 'gemini-3.5-flash-lite',
+            effectiveTier: 'paid',
+            requestedTier: 'paid',
+            isFallback: true,
+            fallbackReason: 'model-fallback',
+        });
+        renderHook();
+
+        await act(async () => {
+            await latestHook?.handleSmartRewrite();
+        });
+
+        expect(prompt).toBe('enhanced test idea');
+        expect(notifications).toEqual([{ message: 'Fallback to lite model notice', type: 'info' }]);
+        expect(logs).toContain('Rewrite ok.');
+        expect(logs).toContain('Fallback to lite model notice');
+    });
+
+    it('triggers info toast and log when surprise me is rescued via paid API tier', async () => {
+        generateRandomPromptMock.mockResolvedValue('random prompt idea');
+        consumeLastPromptToolExecutionMetaMock.mockReturnValue({
+            optimizationMode: 'eco',
+            model: 'gemini-3.8-flash',
+            effectiveTier: 'paid',
+            requestedTier: 'free',
+            isFallback: true,
+            fallbackReason: 'tier-fallback',
+        });
+        renderHook();
+
+        await act(async () => {
+            await latestHook?.handleSurpriseMe();
+        });
+
+        expect(prompt).toBe('random prompt idea');
+        expect(notifications).toEqual([{ message: 'Fallback to paid tier notice', type: 'info' }]);
+        expect(logs).toContain('Random ok.');
+        expect(logs).toContain('Fallback to paid tier notice');
+    });
+
+    it('triggers info toast and log when image-to-prompt is rescued via paid lite', async () => {
+        const imageFile = new File(['img'], 'reference.png', { type: 'image/png' });
+        prepareImageAssetFromFileMock.mockResolvedValue({
+            dataUrl: 'data:image/png;base64,AAA',
+            wasResized: false,
+            width: 1,
+            height: 1,
+            mimeType: 'image/png',
+        });
+        generatePromptFromImageMock.mockResolvedValue('image prompt from lite rescue');
+        consumeLastPromptToolExecutionMetaMock.mockReturnValue({
+            optimizationMode: 'eco',
+            model: 'gemini-3.5-flash-lite',
+            effectiveTier: 'paid',
+            requestedTier: 'free',
+            isFallback: true,
+            fallbackReason: 'model-and-tier-fallback',
+        });
+        renderHook();
+
+        await act(async () => {
+            await latestHook?.handleImageToPrompt(imageFile);
+        });
+
+        expect(prompt).toBe('image prompt from lite rescue');
+        expect(notifications).toEqual([{ message: 'Fallback to paid lite notice', type: 'info' }]);
+        expect(logs).toContain('Image prompt ok.');
+        expect(logs).toContain('Fallback to paid lite notice');
+    });
+
+    it('does not trigger fallback toast when prompt tools succeed without fallback', async () => {
+        prompt = 'clean idea';
+        enhancePromptWithGeminiMock.mockResolvedValue('enhanced clean idea');
+        consumeLastPromptToolExecutionMetaMock.mockReturnValue({
+            optimizationMode: 'quality',
+            model: 'gemini-3.8-flash',
+            effectiveTier: 'paid',
+            requestedTier: 'paid',
+            isFallback: false,
+            fallbackReason: 'none',
+        });
+        renderHook();
+
+        await act(async () => {
+            await latestHook?.handleSmartRewrite();
+        });
+
+        expect(notifications).toEqual([]);
+        expect(logs).toEqual(['Rewrite ok.']);
     });
 });

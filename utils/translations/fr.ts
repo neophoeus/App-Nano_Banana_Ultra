@@ -74,9 +74,10 @@ export const fr = {
     videoRefErrorUploadFailed: 'Échec du téléversement et du traitement de la vidéo avec Gemini Files API.',
     videoRefAttachedNotice: 'Vidéo de référence attachée.',
     videoRefLiteAdvisory:
-        'Nano Banana 2 Lite prend en charge les références vidéo natives, mais dispose d\'une limite d\'entrée réduite (65K tokens) et d\'une adhérence multiréférence plus légère. Idéal pour de courts brouillons (avec mode Éco) ; utilisez Nano Banana 2 ou 2.1 pour des vidéos plus longues ou une fidélité accrue.',
+        "Nano Banana 2 Lite prend en charge les références vidéo natives, mais dispose d'une limite d'entrée réduite (65K tokens) et d'une adhérence multiréférence plus légère. Idéal pour de courts brouillons (avec mode Éco) ; utilisez Nano Banana 2 ou 2.1 pour des vidéos plus longues ou une fidélité accrue.",
     videoRefLiteChipBadge: 'Support Lite (clips courts / 65K)',
-    workspaceConstraintClearVideo: 'Les références vidéo ne sont pas prises en charge par le modèle sélectionné et ont été supprimées.',
+    workspaceConstraintClearVideo:
+        'Les références vidéo ne sont pas prises en charge par le modèle sélectionné et ont été supprimées.',
     unsupportedModel: 'Non pris en charge par ce modèle',
     modelSelect: 'Modèle',
     modelGeminiNanoBanana21: 'Nano Banana 2.1 (gemini-nano-banana-2.1)',
@@ -1134,13 +1135,18 @@ export const fr = {
     optimizationModeUseCasesLabel: 'Cas d’usage :',
     optimizationModeQualityTitle: 'Mode Qualité (Par défaut)',
     optimizationModeQualityDesc:
-        'Conserve la MediaResolution maximale (ULTRA_HIGH pour les personnages et le 4K), l’historique complet de la conversation et le raisonnement approfondi pour une fidélité optimale.',
+        'Utilise exclusivement l’API payante (pool dédié sans file d’attente), conserve la MediaResolution maximale (ULTRA_HIGH pour les personnages et le 4K), l’historique complet et le raisonnement approfondi pour une fidélité optimale.',
     optimizationModeQualityUseCases: 'Idéal pour les rendus finaux, les portraits réalistes et l’édition cohérente.',
     optimizationModeEcoTitle: 'Mode Éco (Économie de tokens)',
     optimizationModeEcoDesc:
-        'Compresse les tokens au maximum : abaissement de la résolution des références, troncature de l’historique aux 2 derniers tours et convergence de la réflexion vers minimal / disabled.',
+        'Priorité à l’API gratuite avec repli intelligent et secours anti-congestion : compresse les tokens au maximum, abaissement de la résolution des références, troncature de l’historique aux 2 derniers tours et convergence vers minimal / disabled.',
     optimizationModeEcoOutputSizeNotice:
         'Ne modifie pas votre résolution de sortie (1K/2K/4K) ; passez manuellement en 1K pour une économie maximale.',
     optimizationModeEcoUseCases:
         'Idéal pour le remue-méninges, l’exploration rapide de concepts et les séries à faible coût.',
+    promptToolFallbackModelNotice:
+        'Le modele principal est tres sollicite. Basculement automatique vers le modele a haut debit gemini-3.5-flash-lite.',
+    promptToolFallbackPaidTierNotice:
+        'Le niveau d’API gratuit est sature. Sauvegarde automatique effectuee via l’API payante.',
+    promptToolFallbackPaidLiteNotice: 'Niveau gratuit sature. Sauvegarde via l’API payante avec gemini-3.5-flash-lite.',
 } as const;

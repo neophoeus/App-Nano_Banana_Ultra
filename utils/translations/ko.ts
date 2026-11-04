@@ -1099,12 +1099,16 @@ export const ko = {
     optimizationModeUseCasesLabel: '활용 상황:',
     optimizationModeQualityTitle: '품질 모드 (기본값)',
     optimizationModeQualityDesc:
-        '최고 수준 MediaResolution(캐릭터 및 4K 이미지는 ULTRA_HIGH), 전체 대화 기록 컨텍스트, 심층 사고 추론을 유지하여 섬세한 인물 묘사와 일관성을 제공합니다.',
+        '유료 API 전용 사용(대기 지연 없는 전용 풀), 최고 수준 MediaResolution(캐릭터 및 4K 이미지는 ULTRA_HIGH), 전체 대화 기록 컨텍스트, 심층 사고 추론을 유지하여 섬세한 인물 묘사와 일관성을 제공합니다.',
     optimizationModeQualityUseCases: '최종 제작, 고정밀 인물 합성, 일관된 멀티턴 편집에 적합합니다.',
     optimizationModeEcoTitle: '절약 모드',
     optimizationModeEcoDesc:
-        '토큰 소모를 대폭 절감: 참조 이미지 해상도 압축, 대화 기록을 최신 2회로 자동 단축, 사고 깊이를 minimal / disabled로 수렴합니다.',
+        '무료 API 우선(스마트 폴백 및 혼잡 자동 구제 지원): 토큰 소모를 대폭 절감, 참조 이미지 해상도 압축, 대화 기록을 최신 2회로 자동 단축, 사고 깊이를 minimal / disabled로 수렴합니다.',
     optimizationModeEcoOutputSizeNotice:
         '선택하신 출력 해상도(1K/2K/4K)는 변경되지 않습니다. 극대화된 절약을 원하시면 수동으로 1K로 설정하세요.',
     optimizationModeEcoUseCases: '초기 브레인스토밍, 빠른 컨셉 탐색, 저비용 배치 작업에 적합합니다.',
+    promptToolFallbackModelNotice:
+        '기본 모델의 트래픽이 많아 고처리량 모델인 gemini-3.5-flash-lite로 자동 전환되었습니다.',
+    promptToolFallbackPaidTierNotice: '무료 API 대역폭이 혼잡하거나 소진되어 유료 API로 자동 전환되어 완료되었습니다.',
+    promptToolFallbackPaidLiteNotice: '무료 API 혼잡으로 유료 API(gemini-3.5-flash-lite)로 전환되어 완료되었습니다.',
 } as const;
