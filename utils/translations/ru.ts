@@ -1139,6 +1139,4 @@ export const ru = {
     promptToolFallbackModelNotice:
         'Основная модель перегружена. Выполнен автоматический переход на высокопроизводительную модель gemini-3.5-flash-lite.',
     promptToolFallbackPaidTierNotice: 'Бесплатный уровень API перегружен. Запрос успешно выполнен через платный API.',
-    promptToolFallbackPaidLiteNotice:
-        'Бесплатный API перегружен. Запрос выполнен через платный API с gemini-3.5-flash-lite.',
 } as const;

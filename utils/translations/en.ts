@@ -1117,5 +1117,4 @@ export const en = {
     promptToolFallbackModelNotice:
         'Primary model is experiencing high demand. Automatically switched to high-throughput gemini-3.5-flash-lite.',
     promptToolFallbackPaidTierNotice: 'Free API tier is congested or exhausted. Automatically rescued via Paid API.',
-    promptToolFallbackPaidLiteNotice: 'Free API tier congested. Rescued via Paid API with gemini-3.5-flash-lite.',
 } as const;

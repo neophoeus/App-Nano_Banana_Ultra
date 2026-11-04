@@ -610,10 +610,7 @@ type StreamRouteFailureEvent = {
 };
 
 type StreamRouteEvent =
-    | StreamRouteStartEvent
-    | StreamRouteResultPartEvent
-    | StreamRouteCompleteEvent
-    | StreamRouteFailureEvent;
+    StreamRouteStartEvent | StreamRouteResultPartEvent | StreamRouteCompleteEvent | StreamRouteFailureEvent;
 
 export type GenerationLiveProgressEvent =
     | {
@@ -1387,7 +1384,7 @@ export const promptForApiKey = async (): Promise<void> => {
 
 // --- Text Utilities (Prompt Engineering) ---
 
-export type PromptToolFallbackReason = 'none' | 'model-fallback' | 'tier-fallback' | 'model-and-tier-fallback';
+export type PromptToolFallbackReason = 'none' | 'model-fallback' | 'tier-fallback';
 
 export type PromptToolExecutionMeta = {
     optimizationMode: OptimizationMode;

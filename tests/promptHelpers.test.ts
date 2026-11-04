@@ -157,24 +157,20 @@ describe('isTransientPromptToolAvailabilityError', () => {
 });
 
 describe('resolvePromptToolAttemptChain', () => {
-    it('returns paid primary and fallback for quality mode', () => {
+    it('returns paid primary exclusively for quality mode', () => {
         const qualityChain = resolvePromptToolAttemptChain('quality');
-        expect(qualityChain).toEqual([
-            { tier: 'paid', model: PROMPT_TOOL_PRIMARY_MODEL },
-            { tier: 'paid', model: PROMPT_TOOL_FALLBACK_MODEL },
-        ]);
+        expect(qualityChain).toEqual([{ tier: 'paid', model: PROMPT_TOOL_PRIMARY_MODEL }]);
 
         // Default when undefined is quality
         expect(resolvePromptToolAttemptChain(undefined)).toEqual(qualityChain);
     });
 
-    it('returns 4-stage cascading chain for eco mode', () => {
+    it('returns 3-stage cascading chain for eco mode', () => {
         const ecoChain = resolvePromptToolAttemptChain('eco');
         expect(ecoChain).toEqual([
             { tier: 'free', model: PROMPT_TOOL_PRIMARY_MODEL },
             { tier: 'free', model: PROMPT_TOOL_FALLBACK_MODEL },
             { tier: 'paid', model: PROMPT_TOOL_PRIMARY_MODEL },
-            { tier: 'paid', model: PROMPT_TOOL_FALLBACK_MODEL },
         ]);
     });
 });
@@ -206,30 +202,19 @@ describe('executePromptToolWithFallback', () => {
         expect(operation).toHaveBeenCalledWith(mockClient, { tier: 'paid', model: PROMPT_TOOL_PRIMARY_MODEL });
     });
 
-    it('in quality mode: falls back to gemini-3.5-flash-lite on paid tier when 3.8-flash hits 503', async () => {
+    it('in quality mode: does not downgrade model and rejects immediately on error', async () => {
         const mockClient = { name: 'paid-client' } as any;
         const getAIClient = vi.fn().mockReturnValue(mockClient);
         const error503 = { status: 503, message: 'This model is currently experiencing high demand.' };
 
-        const operation = vi
-            .fn()
-            .mockRejectedValueOnce(error503)
-            .mockResolvedValueOnce({ text: 'fallback rewritten prompt' });
+        const operation = vi.fn().mockRejectedValueOnce(error503);
 
-        const result = await executePromptToolWithFallback(getAIClient, operation, { optimizationMode: 'quality' });
+        await expect(
+            executePromptToolWithFallback(getAIClient, operation, { optimizationMode: 'quality' }),
+        ).rejects.toEqual(error503);
 
-        expect(result.usedFallback).toBe(true);
-        expect(result.model).toBe(PROMPT_TOOL_FALLBACK_MODEL);
-        expect(result.tier).toBe('paid');
-        expect(result.executionMeta).toEqual({
-            optimizationMode: 'quality',
-            model: PROMPT_TOOL_FALLBACK_MODEL,
-            effectiveTier: 'paid',
-            requestedTier: 'paid',
-            isFallback: true,
-            fallbackReason: 'model-fallback',
-        });
-        expect(operation).toHaveBeenCalledTimes(2);
+        expect(operation).toHaveBeenCalledTimes(1);
+        expect(operation).toHaveBeenCalledWith(mockClient, { tier: 'paid', model: PROMPT_TOOL_PRIMARY_MODEL });
     });
 
     it('in eco mode: runs free primary model when healthy', async () => {
@@ -245,7 +230,7 @@ describe('executePromptToolWithFallback', () => {
         expect(result.executionMeta.fallbackReason).toBe('none');
     });
 
-    it('in eco mode: falls back to free lite, then paid primary rescue, then paid lite', async () => {
+    it('in eco mode: falls back to free lite, then paid primary rescue', async () => {
         const freeClient = { apiKey: 'free-key', name: 'free-client' } as any;
         const paidClient = { apiKey: 'paid-key', name: 'paid-client' } as any;
         const getAIClient = vi.fn().mockImplementation((opt) => (opt?.tier === 'paid' ? paidClient : freeClient));
@@ -273,56 +258,43 @@ describe('executePromptToolWithFallback', () => {
         expect(res2.executionMeta.effectiveTier).toBe('paid');
         expect(res2.executionMeta.model).toBe(PROMPT_TOOL_PRIMARY_MODEL);
         expect(res2.executionMeta.fallbackReason).toBe('tier-fallback');
-
-        clearPromptToolCongestionCooldowns();
-
-        // Test stage 4: free:3.8 fails -> free:3.5 fails -> paid:3.8 fails -> paid:3.5 rescue succeeds (model-and-tier-fallback)
-        const op3 = vi
-            .fn()
-            .mockRejectedValueOnce(error503)
-            .mockRejectedValueOnce(error503)
-            .mockRejectedValueOnce(error503)
-            .mockResolvedValueOnce({ text: 'paid lite rescued prompt' });
-        const res3 = await executePromptToolWithFallback(getAIClient, op3, { optimizationMode: 'eco' });
-        expect(res3.executionMeta.isFallback).toBe(true);
-        expect(res3.executionMeta.effectiveTier).toBe('paid');
-        expect(res3.executionMeta.model).toBe(PROMPT_TOOL_FALLBACK_MODEL);
-        expect(res3.executionMeta.fallbackReason).toBe('model-and-tier-fallback');
     });
 
-    it('skips cooled-down nodes on subsequent calls within 60s cooldown window', async () => {
+    it('skips cooled-down nodes on subsequent calls within 60s cooldown window in eco mode', async () => {
         let currentTime = 1000;
         const now = () => currentTime;
         const mockClient = { name: 'mock-client' } as any;
         const getAIClient = vi.fn().mockReturnValue(mockClient);
         const error503 = { status: 503, message: 'high demand' };
 
-        // First call: primary fails with 503, fallback succeeds
+        // First call: free:primary fails with 503, free:fallback succeeds
         const op1 = vi.fn().mockRejectedValueOnce(error503).mockResolvedValueOnce({ text: 'res1' });
         const res1 = await executePromptToolWithFallback(getAIClient, op1, {
-            optimizationMode: 'quality',
+            optimizationMode: 'eco',
             now,
             cooldownMs: 60_000,
         });
         expect(res1.model).toBe(PROMPT_TOOL_FALLBACK_MODEL);
+        expect(res1.tier).toBe('free');
         expect(op1).toHaveBeenCalledTimes(2);
 
         // Advance time by 30 seconds (still within 60s cooldown)
         currentTime += 30_000;
 
-        // Second call: primary should be skipped due to cooldown, directly hitting fallback
+        // Second call: free:primary should be skipped due to cooldown, directly hitting free:fallback
         const op2 = vi.fn().mockResolvedValueOnce({ text: 'res2' });
         const res2 = await executePromptToolWithFallback(getAIClient, op2, {
-            optimizationMode: 'quality',
+            optimizationMode: 'eco',
             now,
             cooldownMs: 60_000,
         });
         expect(res2.model).toBe(PROMPT_TOOL_FALLBACK_MODEL);
+        expect(res2.tier).toBe('free');
         expect(op2).toHaveBeenCalledTimes(1);
         expect(res2.attempts).toContainEqual(
             expect.objectContaining({
                 model: PROMPT_TOOL_PRIMARY_MODEL,
-                tier: 'paid',
+                tier: 'free',
                 skippedDueToCooldown: true,
             }),
         );

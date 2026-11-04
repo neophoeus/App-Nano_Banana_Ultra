@@ -1148,5 +1148,4 @@ export const fr = {
         'Le modele principal est tres sollicite. Basculement automatique vers le modele a haut debit gemini-3.5-flash-lite.',
     promptToolFallbackPaidTierNotice:
         'Le niveau d’API gratuit est sature. Sauvegarde automatique effectuee via l’API payante.',
-    promptToolFallbackPaidLiteNotice: 'Niveau gratuit sature. Sauvegarde via l’API payante avec gemini-3.5-flash-lite.',
 } as const;

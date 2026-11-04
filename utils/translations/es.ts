@@ -1148,6 +1148,4 @@ export const es = {
         'El modelo principal experimenta alta demanda. Se cambio automaticamente al modelo de alto rendimiento gemini-3.5-flash-lite.',
     promptToolFallbackPaidTierNotice:
         'El nivel de API gratuito esta congestionado. Se rescato automaticamente mediante la API de pago.',
-    promptToolFallbackPaidLiteNotice:
-        'Nivel gratuito congestionado. Rescatado mediante API de pago con gemini-3.5-flash-lite.',
 } as const;

@@ -1151,6 +1151,4 @@ export const de = {
         'Das Primaermodell ist derzeit stark ausgelastet. Automatisch auf das Modell gemini-3.5-flash-lite umgeschaltet.',
     promptToolFallbackPaidTierNotice:
         'Das kostenlose API-Kontingent ist ausgelastet. Automatisch ueber die kostenpflichtige API ausgefuehrt.',
-    promptToolFallbackPaidLiteNotice:
-        'Kostenloses Kontingent ausgelastet. Ueber kostenpflichtige API mit gemini-3.5-flash-lite gerettet.',
 } as const;

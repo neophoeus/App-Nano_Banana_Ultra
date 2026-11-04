@@ -1121,5 +1121,4 @@ export const ja = {
     promptToolFallbackModelNotice:
         'プライマリモデルが混雑しているため、高スループットな gemini-3.5-flash-lite に自動切り替えしました。',
     promptToolFallbackPaidTierNotice: '無料 API が混雑または一時的に枯渇したため、有料 API で自動救済しました。',
-    promptToolFallbackPaidLiteNotice: '無料 API が混雑したため、有料 API（gemini-3.5-flash-lite）で自動救済しました。',
 } as const;

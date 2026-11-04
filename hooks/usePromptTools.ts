@@ -25,8 +25,6 @@ function notifyPromptToolFallback(
     let messageKey = 'promptToolFallbackModelNotice';
     if (meta.fallbackReason === 'tier-fallback') {
         messageKey = 'promptToolFallbackPaidTierNotice';
-    } else if (meta.fallbackReason === 'model-and-tier-fallback') {
-        messageKey = 'promptToolFallbackPaidLiteNotice';
     }
 
     const message = t(messageKey);

@@ -68,7 +68,6 @@ describe('usePromptTools', () => {
                         logRandomFailed: 'Random failed.',
                         promptToolFallbackModelNotice: 'Fallback to lite model notice',
                         promptToolFallbackPaidTierNotice: 'Fallback to paid tier notice',
-                        promptToolFallbackPaidLiteNotice: 'Fallback to paid lite notice',
                     };
                     return translations[key] || key;
                 },
@@ -302,36 +301,6 @@ describe('usePromptTools', () => {
         expect(notifications).toEqual([{ message: 'Fallback to paid tier notice', type: 'info' }]);
         expect(logs).toContain('Random ok.');
         expect(logs).toContain('Fallback to paid tier notice');
-    });
-
-    it('triggers info toast and log when image-to-prompt is rescued via paid lite', async () => {
-        const imageFile = new File(['img'], 'reference.png', { type: 'image/png' });
-        prepareImageAssetFromFileMock.mockResolvedValue({
-            dataUrl: 'data:image/png;base64,AAA',
-            wasResized: false,
-            width: 1,
-            height: 1,
-            mimeType: 'image/png',
-        });
-        generatePromptFromImageMock.mockResolvedValue('image prompt from lite rescue');
-        consumeLastPromptToolExecutionMetaMock.mockReturnValue({
-            optimizationMode: 'eco',
-            model: 'gemini-3.5-flash-lite',
-            effectiveTier: 'paid',
-            requestedTier: 'free',
-            isFallback: true,
-            fallbackReason: 'model-and-tier-fallback',
-        });
-        renderHook();
-
-        await act(async () => {
-            await latestHook?.handleImageToPrompt(imageFile);
-        });
-
-        expect(prompt).toBe('image prompt from lite rescue');
-        expect(notifications).toEqual([{ message: 'Fallback to paid lite notice', type: 'info' }]);
-        expect(logs).toContain('Image prompt ok.');
-        expect(logs).toContain('Fallback to paid lite notice');
     });
 
     it('does not trigger fallback toast when prompt tools succeed without fallback', async () => {

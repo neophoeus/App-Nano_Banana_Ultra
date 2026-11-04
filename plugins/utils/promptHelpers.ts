@@ -11,7 +11,7 @@ export const PROMPT_TOOL_CONGESTION_COOLDOWN_MS = 60_000;
 
 export type PromptToolModel = typeof PROMPT_TOOL_PRIMARY_MODEL | typeof PROMPT_TOOL_FALLBACK_MODEL;
 
-export type PromptToolFallbackReason = 'none' | 'model-fallback' | 'tier-fallback' | 'model-and-tier-fallback';
+export type PromptToolFallbackReason = 'none' | 'model-fallback' | 'tier-fallback';
 
 export interface PromptToolAttemptTarget {
     model: PromptToolModel;
@@ -86,17 +86,13 @@ export function resolvePromptToolAttemptChain(optimizationMode?: OptimizationMod
     const mode = normalizeOptimizationMode(optimizationMode);
 
     if (mode === 'quality') {
-        return [
-            { tier: 'paid', model: PROMPT_TOOL_PRIMARY_MODEL },
-            { tier: 'paid', model: PROMPT_TOOL_FALLBACK_MODEL },
-        ];
+        return [{ tier: 'paid', model: PROMPT_TOOL_PRIMARY_MODEL }];
     }
 
     return [
         { tier: 'free', model: PROMPT_TOOL_PRIMARY_MODEL },
         { tier: 'free', model: PROMPT_TOOL_FALLBACK_MODEL },
         { tier: 'paid', model: PROMPT_TOOL_PRIMARY_MODEL },
-        { tier: 'paid', model: PROMPT_TOOL_FALLBACK_MODEL },
     ];
 }
 
@@ -190,9 +186,7 @@ export async function executePromptToolWithFallback<T>(
             const usedFallback = isModelDowngrade || isTierSwitch;
 
             let fallbackReason: PromptToolFallbackReason = 'none';
-            if (isModelDowngrade && isTierSwitch) {
-                fallbackReason = 'model-and-tier-fallback';
-            } else if (isTierSwitch) {
+            if (isTierSwitch) {
                 fallbackReason = 'tier-fallback';
             } else if (isModelDowngrade) {
                 fallbackReason = 'model-fallback';
@@ -228,7 +222,9 @@ export async function executePromptToolWithFallback<T>(
             });
 
             if (isTransient) {
-                congestionCooldownMap.set(key, currentTime + cooldownMs);
+                if (chain.length > 1) {
+                    congestionCooldownMap.set(key, currentTime + cooldownMs);
+                }
                 continue;
             }
 

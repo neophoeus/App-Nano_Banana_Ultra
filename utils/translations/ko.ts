@@ -1110,5 +1110,4 @@ export const ko = {
     promptToolFallbackModelNotice:
         '기본 모델의 트래픽이 많아 고처리량 모델인 gemini-3.5-flash-lite로 자동 전환되었습니다.',
     promptToolFallbackPaidTierNotice: '무료 API 대역폭이 혼잡하거나 소진되어 유료 API로 자동 전환되어 완료되었습니다.',
-    promptToolFallbackPaidLiteNotice: '무료 API 혼잡으로 유료 API(gemini-3.5-flash-lite)로 전환되어 완료되었습니다.',
 } as const;
