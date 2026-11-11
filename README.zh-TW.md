@@ -141,13 +141,13 @@ Nano Banana Ultra 提供兩種靈活互補的成果匯出與歸檔管道：
 
 ## 版本總覽
 
-### 最新版本：5.8.0
+### 最新版本：5.9.0
 
 完整歷史版本紀錄與更新細節請見 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 5.x 系列
 
-5.x 系列的核心在於**配合 Google AI Studio 官方政策調整進行架構純化與健全化**。全面回歸單一、純淨且高效的本機 Node.js 後端架構，徹底廢除已無執行期引用的舊版遺留元件、AI Studio 直連分支、算力池監控與歷史備份殘留；並全面導入零外部依賴的「成品匯出」（100% 相容 Workspace Extractor、A1111 與 ComfyUI，無損內嵌 PNG iTXt 與 JPEG COM 參數）、全新整合的「雙模中繼資料檢視器」、角色感知每圖元解析度（`MediaResolution`）無損 Token 最佳化、Nano Banana 2.1 / 2 / 2 Lite 多模態視訊參考（Gemini Files API 與 YouTube）、**品質／節流最佳化模式（Quality/Eco Modes）**、**雙金鑰智慧分流與串聯降級引擎**（含即時 Toast 通知），以及全方位的本機網路安全綁定、CSRF 來源驗證中介層、世代計數並發競態防禦與 UI 生命週期無障礙健全化，帶來極致流暢純淨的端到端創作體驗。
+5.x 系列的核心在於**配合 Google AI Studio 官方政策調整進行架構純化與健全化**。全面回歸單一、純淨且高效的本機 Node.js 後端架構，徹底廢除已無執行期引用的舊版遺留元件、AI Studio 直連分支、算力池監控與歷史備份殘留；並全面導入原生 **IndexedDB 二進位資產卸載引擎**（徹底根除 `localStorage` 配額超限風險並維持 100% 自包含 JSON 匯出相容）、零依賴 **React 19 外部領域狀態庫（`useSyncExternalStore`）** 與重渲染隔離架構、零外部依賴的「成品匯出」（100% 相容 Workspace Extractor、A1111 與 ComfyUI，無損內嵌 PNG iTXt 與 JPEG COM 參數）、全新整合的「雙模中繼資料檢視器」、角色感知每圖元解析度（`MediaResolution`）無損 Token 最佳化、Nano Banana 2.1 / 2 / 2 Lite 多模態視訊參考（Gemini Files API 與 YouTube）、**品質／節流最佳化模式（Quality/Eco Modes）**、**雙金鑰智慧分流與串聯降級引擎**（含即時 Toast 通知），以及全方位的本機網路安全綁定、CSRF 來源驗證中介層、世代計數並發競態防禦與 UI 生命週期無障礙健全化，帶來極致流暢純淨的端到端創作體驗。
 
 ### 4.x 系列
 

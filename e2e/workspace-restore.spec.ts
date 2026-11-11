@@ -2984,6 +2984,14 @@ test.describe('workspace restore flows', () => {
 
     test('editor shared controls can open advanced settings as the dedicated modal', async ({ page }) => {
         await openFreshWorkspace(page);
+        await page.getByTestId('composer-settings-button').click();
+        await expect(page.getByTestId('workspace-picker-sheet')).toBeVisible();
+        await page
+            .getByTestId('workspace-generation-settings-model-pane')
+            .getByText('gemini-3.1-flash-image', { exact: true })
+            .click();
+        await page.getByTestId('generation-settings-apply').click();
+        await expect(page.getByTestId('workspace-picker-sheet')).toHaveCount(0);
         await openEditorFromUpload(page, 'Editor advanced settings prompt');
         await closeSharedPromptSheet(page);
 
@@ -3019,6 +3027,14 @@ test.describe('workspace restore flows', () => {
         page,
     }) => {
         await openFreshWorkspace(page);
+        await page.getByTestId('composer-settings-button').click();
+        await expect(page.getByTestId('workspace-picker-sheet')).toBeVisible();
+        await page
+            .getByTestId('workspace-generation-settings-model-pane')
+            .getByText('gemini-3.1-flash-image', { exact: true })
+            .click();
+        await page.getByTestId('generation-settings-apply').click();
+        await expect(page.getByTestId('workspace-picker-sheet')).toHaveCount(0);
         await openEditorFromUpload(page, 'Editor advanced settings persistence prompt');
         await closeSharedPromptSheet(page);
 
@@ -4478,7 +4494,7 @@ test.describe('workspace restore flows', () => {
             name: 'batches/editor-queued-job',
             displayName: 'Editor queue job',
             state: 'JOB_STATE_PENDING',
-            model: 'gemini-3.1-flash-image',
+            model: 'gemini-nano-banana-2.1',
             createTime: '2025-04-02T09:20:00.000Z',
             updateTime: '2025-04-02T09:20:00.000Z',
         };
@@ -4524,7 +4540,7 @@ test.describe('workspace restore flows', () => {
 
         await expect.poll(() => queuedBatchRequestBody).not.toBeNull();
         expect(queuedBatchRequestBody).toMatchObject({
-            model: 'gemini-3.1-flash-image',
+            model: 'gemini-nano-banana-2.1',
             executionMode: 'queued-batch-job',
             requestCount: 1,
         });

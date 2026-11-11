@@ -1,1144 +1,205 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense, lazy } from 'react';
-import {
-    BatchPreviewSession,
-    BranchNameOverrides,
-    GeneratedImage as GeneratedImageType,
-    ImageModel,
-    OptimizationMode,
-    PromptThinkingLevel,
-    ResultPart,
-    VideoReferenceItem,
-    ViewerComposerSettingsSnapshot,
-} from './types';
-import ComposerAdvancedSettingsDialog from './components/ComposerAdvancedSettingsDialog';
+import React, { lazy, Suspense, useMemo } from 'react';
 import ComposerSettingsPanel from './components/ComposerSettingsPanel';
-import DebugTerminalPanel, { DebugTerminalToggleIcon } from './components/DebugTerminalPanel';
+import { DebugTerminalToggleIcon } from './components/DebugTerminalPanel';
 import PanelLoadingFallback from './components/PanelLoadingFallback';
 import SurfaceLoadingFallback from './components/SurfaceLoadingFallback';
+import WorkspaceBottomFooter from './components/WorkspaceBottomFooter';
+import WorkspaceDebugTerminalHost from './components/WorkspaceDebugTerminalHost';
+import WorkspaceDetailOverlays from './components/WorkspaceDetailOverlays';
+import { WorkspaceFloatingLayerContext } from './components/WorkspaceFloatingLayerContext';
 import WorkspaceOverlayStack from './components/WorkspaceOverlayStack';
 import WorkspaceSideToolPanel from './components/WorkspaceSideToolPanel';
-import WorkspaceBottomFooter from './components/WorkspaceBottomFooter';
+import { renderWorkspaceSupportRail } from './components/WorkspaceSupportRail';
 import WorkspaceTopHeader from './components/WorkspaceTopHeader';
 import WorkspaceUnifiedHistoryPanel from './components/WorkspaceUnifiedHistoryPanel';
-import WorkspaceDetailOverlays from './components/WorkspaceDetailOverlays';
-import WorkspaceSupportRail, { renderWorkspaceSupportRail } from './components/WorkspaceSupportRail';
-import type { WorkspaceProgressThoughtImageDownloadRequest } from './components/WorkspaceProgressDetailPanel';
-import { WorkspaceFloatingLayerContext } from './components/WorkspaceFloatingLayerContext';
-import { resolveStyleLabel } from './utils/styleRegistry';
 import {
-    Language,
-    ensureLanguageLoaded,
-    getTranslation,
-    isLanguageLoaded,
-    persistLanguagePreference,
-    resolvePreferredLanguage,
-} from './utils/translations';
-import { IMAGE_MODELS, MODEL_CAPABILITIES } from './constants';
-import { buildStageErrorState } from './utils/generationFailure';
-import {
-    clearSharedWorkspaceSnapshot,
-    clearStoredWorkspaceSnapshot,
-    EMPTY_WORKSPACE_COMPOSER_STATE,
-    EMPTY_WORKSPACE_SNAPSHOT,
-    loadWorkspaceSnapshot,
-    saveWorkspaceSnapshot,
-} from './utils/workspacePersistence';
-import { loadQueuedBatchSpaceSnapshot } from './utils/queuedBatchSpacePersistence';
-import { hasRestorableWorkspaceContent } from './utils/workspaceSnapshotState';
-import { deriveGroundingMode, getAvailableGroundingModes } from './utils/groundingMode';
-import { EMPTY_WORKSPACE_CONVERSATION_STATE } from './utils/conversationState';
-import {
-    DEFAULT_OPTIMIZATION_MODE,
-    normalizeOptimizationMode,
-    OPTIMIZATION_MODE_STORAGE_KEY,
-} from './utils/optimizationMode';
-import { useImageGeneration } from './hooks/useImageGeneration';
-import { usePerformGeneration } from './hooks/usePerformGeneration';
-import { checkApiKey, GenerationLiveProgressEvent, uploadReferenceVideo } from './services/geminiService';
-import { usePromptTools } from './hooks/usePromptTools';
-import { useComposerState } from './hooks/useComposerState';
-import { useHistoryPresentationHelpers } from './hooks/useHistoryPresentationHelpers';
-import { useHistorySourceOrchestration } from './hooks/useHistorySourceOrchestration';
-import { useImportedWorkspaceReview } from './hooks/useImportedWorkspaceReview';
-import { useDocumentThemeMode } from './hooks/useDocumentThemeMode';
-import { useComposerSettingsPanelProps } from './hooks/useComposerSettingsPanelProps';
-import { useWorkspaceBranchRenameDialogProps } from './hooks/useWorkspaceBranchRenameDialogProps';
-import { useWorkspaceImportReviewProps } from './hooks/useWorkspaceImportReviewProps';
-import { useWorkspaceSurfaceSharedControlsProps } from './hooks/useWorkspaceSurfaceSharedControlsProps';
-import { useWorkspacePickerSheetProps } from './hooks/useWorkspacePickerSheetProps';
-import { useWorkspaceStageViewer } from './hooks/useWorkspaceStageViewer';
-import { useWorkspaceTopHeaderProps } from './hooks/useWorkspaceTopHeaderProps';
-import { useWorkspaceBranchPresentation } from './hooks/useWorkspaceBranchPresentation';
-import { useProvenanceContinuation } from './hooks/useProvenanceContinuation';
-import { useSelectedResultState } from './hooks/useSelectedResultState';
-import { useWorkspaceAssets } from './hooks/useWorkspaceAssets';
-import { useWorkspaceLineageSelectors } from './hooks/useWorkspaceLineageSelectors';
-import { useWorkspaceShellViewModel } from './hooks/useWorkspaceShellViewModel';
-import { useWorkspaceProgressThoughts } from './hooks/useWorkspaceProgressThoughts';
-import { useWorkspaceViewerProvenanceState } from './hooks/useWorkspaceViewerProvenanceState';
-import { useWorkspaceCapabilityConstraints } from './hooks/useWorkspaceCapabilityConstraints';
-import { useWorkspaceGenerationActions } from './hooks/useWorkspaceGenerationActions';
-import { useWorkspaceAppLifecycle } from './hooks/useWorkspaceAppLifecycle';
-import { useWorkspaceSessionState } from './hooks/useWorkspaceSessionState';
-import { useWorkspaceEditorActions } from './hooks/useWorkspaceEditorActions';
-import { useWorkspaceResetActions } from './hooks/useWorkspaceResetActions';
-import { useQueuedBatchSpacePersistence } from './hooks/useQueuedBatchSpacePersistence';
-import { useWorkspaceSnapshotPersistence } from './hooks/useWorkspaceSnapshotPersistence';
-import { useWorkspaceSnapshotActions } from './hooks/useWorkspaceSnapshotActions';
-import { useWorkspaceSurfaceState } from './hooks/useWorkspaceSurfaceState';
-import { useQueuedBatchWorkflow } from './hooks/useQueuedBatchWorkflow';
-import { useQueuedBatchPresentation } from './hooks/useQueuedBatchPresentation';
-import { useWorkspaceGenerationContext } from './hooks/useWorkspaceGenerationContext';
-import { useWorkspaceShellUtilities } from './hooks/useWorkspaceShellUtilities';
-import { useWorkspaceShellOwnerState } from './hooks/useWorkspaceShellOwnerState';
-import { useWorkspaceSettingsSession } from './hooks/useWorkspaceSettingsSession';
-import { useWorkspaceTransientUiState } from './hooks/useWorkspaceTransientUiState';
-import { useDebugTerminal } from './hooks/useDebugTerminal';
-import { useLegacyWorkspaceSnapshotMigration } from './hooks/useLegacyWorkspaceSnapshotMigration';
-import { resolveCurrentStageSelectionFirstSourceOverride } from './utils/generationSourceOverride';
-import { buildSavedImageLoadUrl, loadImageMetadata } from './utils/imageSaveUtils';
-import { createImageSidecarMetadataState, normalizeImageSidecarMetadata } from './utils/imageSidecarMetadata';
-import { useStageImageDownloadActions } from './hooks/useStageImageDownloadActions';
-import { useBatchPreviewSession } from './hooks/useBatchPreviewSession';
+    useWorkspaceOrchestrator,
+    useWorkspaceStageViewer,
+    useWorkspaceTopHeaderProps,
+} from './hooks/useWorkspaceOrchestrator';
+import { WorkspaceDomainStoreContext } from './state/workspaceDomainStore';
 
 const ImageEditor = lazy(() => import('./components/ImageEditor'));
 const GeneratedImage = lazy(() => import('./components/GeneratedImage'));
 const WorkspaceHealthPanel = lazy(() => import('./components/WorkspaceHealthPanel'));
 const GroundingProvenancePanel = lazy(() => import('./components/GroundingProvenancePanel'));
 const SketchPad = lazy(() => import('./components/SketchPad'));
-const getShortTurnId = (historyId?: string | null) => (historyId ? historyId.slice(0, 8) : '--------');
+
+const stagePanelClassName =
+    'min-w-0 nbu-shell-panel nbu-shell-surface-stage-hero min-h-[400px] overflow-hidden p-3 lg:min-h-0 xl:flex-1';
 
 const App: React.FC = () => {
-    const [initialWorkspaceSnapshot] = useState(() => loadWorkspaceSnapshot());
-    const [initialQueuedBatchSpaceSnapshot] = useState(() => loadQueuedBatchSpaceSnapshot());
-    const initialActiveResult = initialWorkspaceSnapshot.workspaceSession.activeResult;
-    const initialComposerState = initialWorkspaceSnapshot.composerState || EMPTY_WORKSPACE_COMPOSER_STATE;
-    const [apiKeyReady, setApiKeyReady] = useState(false);
-    const [isCancelFinalizing, setIsCancelFinalizing] = useState(false);
-    const [isDebugTerminalOpen, setIsDebugTerminalOpen] = useState(false);
-    const [showExportResultsModal, setShowExportResultsModal] = useState(false);
-    const [showMetadataViewerDrawer, setShowMetadataViewerDrawer] = useState(false);
-    const isDarkTheme = useDocumentThemeMode();
-    const [currentLang, setCurrentLang] = useState<Language>(() => {
-        const preferredLanguage = resolvePreferredLanguage();
-        return isLanguageLoaded(preferredLanguage) ? preferredLanguage : 'en';
-    });
     const {
-        areInitialPreferencesReady,
-        setAreInitialPreferencesReady,
-        isEditing,
-        setIsEditing,
-        editingImageSource,
-        setEditingImageSource,
-        editorMode,
-        setEditorMode,
-        editorRetouchLockedRatio,
-        setEditorRetouchLockedRatio,
-        activeBatchPreviewSession,
-        setActiveBatchPreviewSession,
-        activeLiveProgressSession,
-        setActiveLiveProgressSession,
-        batchProgress,
-        setBatchProgress,
-        activeWorkspaceDetailModal,
-        setActiveWorkspaceDetailModal,
-        isQueuedBatchSpaceOpen,
-        setIsQueuedBatchSpaceOpen,
-        surfaceSharedControlsBottom,
-        setSurfaceSharedControlsBottom,
-        workspaceFloatingHostElement,
-        setWorkspaceFloatingHostElement,
-    } = useWorkspaceShellOwnerState();
-    const [branchNameOverrides, setBranchNameOverrides] = useState<BranchNameOverrides>(
-        () => initialWorkspaceSnapshot.branchState.nameOverrides,
-    );
-    const [branchContinuationSourceByBranchOriginId, setBranchContinuationSourceByBranchOriginId] = useState<
-        Record<string, string>
-    >(() => initialWorkspaceSnapshot.branchState.continuationSourceByBranchOriginId);
-    const [conversationState, setConversationState] = useState(
-        () => initialWorkspaceSnapshot.conversationState || EMPTY_WORKSPACE_CONVERSATION_STATE,
-    );
-    const debugTerminal = useDebugTerminal();
-    const {
-        isSketchPadOpen,
-        setIsSketchPadOpen,
-        showSketchReplaceConfirm,
-        setShowSketchReplaceConfirm,
-        showClearWorkspaceConfirm,
-        setShowClearWorkspaceConfirm,
-        activePickerSheet,
-        setActivePickerSheet,
-        closePickerSheet,
-        isAdvancedSettingsOpen,
-        setIsAdvancedSettingsOpen,
-        isViewerOpen,
-        setIsViewerOpen,
-        branchRenameDialog,
-        setBranchRenameDialog,
-        branchRenameDraft,
-        setBranchRenameDraft,
-        openBranchRenameDialog,
-        closeBranchRenameDialog,
-        openSurfacePickerSheet,
-    } = useWorkspaceSurfaceState();
-
-    const uploadInputRef = useRef<HTMLInputElement>(null);
-    const workspaceImportInputRef = useRef<HTMLInputElement>(null);
-    const composerPromptTextareaRef = useRef<HTMLTextAreaElement>(null);
-    const abortControllerRef = useRef<AbortController | null>(null);
-    const languageChangeRequestRef = useRef(0);
-    const lastPromotedHistoryIdRef = useRef<string | null>(
-        initialWorkspaceSnapshot.history.find((item) => item.status === 'success')?.id ?? null,
-    );
-    const queuedBatchHistorySelectRef = useRef<((item: import('./types').GeneratedImage) => void) | null>(null);
-    const cancelPendingHistoryLoadsRef = useRef<(() => void) | null>(null);
-
-    const {
-        generatedImageUrls,
-        setGeneratedImageUrls,
-        selectedImageIndex,
-        setSelectedImageIndex,
-        isGenerating,
-        setIsGenerating,
-        generationMode,
-        setGenerationMode,
-        executionMode,
-        setExecutionMode,
-        error,
-        setError,
-        logs,
-        setLogs,
-        history,
-        setHistory,
-        displaySettings,
-        setDisplaySettings,
-        addLog,
-        getActiveImageUrl,
-        handleClearResults,
-    } = useImageGeneration(initialWorkspaceSnapshot);
-    const [isUploadingVideo, setIsUploadingVideo] = useState(false);
-    const isForegroundGenerationLocked = isGenerating && !isCancelFinalizing;
-
-    const {
-        prompt,
-        setPrompt,
-        aspectRatio,
-        setAspectRatio,
-        imageSize,
-        setImageSize,
-        imageStyle,
-        setImageStyle,
-        imageModel,
-        setImageModel,
-        batchSize,
-        setBatchSize,
-        outputFormat,
-        setOutputFormat,
-        temperature,
-        setTemperature,
-        thinkingLevel,
-        setThinkingLevel,
-        includeThoughts,
-        setIncludeThoughts,
-        googleSearch,
-        setGoogleSearch,
-        imageSearch,
-        setImageSearch,
-        stickySendIntent,
-        setStickySendIntent,
-        roundCount,
-        setRoundCount,
-        composerState,
-        applyComposerState,
-        applyViewerComposerSettingsSnapshot,
-        setGroundingMode,
-        restoreEditorComposerState,
-        settingsLocked,
-        setSettingsLocked,
-    } = useComposerState({
-        initialComposerState,
-        generationMode,
-        executionMode,
-        setGenerationMode,
-        setExecutionMode,
-        setDisplaySettings,
-    });
-    const {
-        stagedAssets,
-        setStagedAssets,
-        objectImages,
-        characterImages,
-        styleImages,
-        orderedReferenceAssets,
-        currentStageAsset,
-        hasSketch,
-        setObjectImages,
-        setCharacterImages,
-        setStyleImages,
-        addWorkspaceAsset,
-        clearAssetRoles,
-        removeAssetAtRoleIndex,
-        upsertViewerStageSource,
-    } = useWorkspaceAssets({
-        initialStagedAssets: initialWorkspaceSnapshot.stagedAssets,
-    });
-    const {
-        selectedResultText,
-        selectedThoughts,
-        selectedResultParts,
-        selectedGrounding,
-        selectedMetadata,
-        setSelectedMetadata,
-        selectedSessionHints,
-        selectedHistoryId,
-        setSelectedHistoryId,
-        activeGroundingSelection,
-        setActiveGroundingSelection,
-        focusLinkedGroundingItems,
-        setFocusLinkedGroundingItems,
-        buildResultArtifacts,
-        applySelectedResultArtifacts,
-        resetSelectedOutputState,
-    } = useSelectedResultState({
-        initialActiveResult,
-        initialSelectedHistoryId: initialWorkspaceSnapshot.viewState.selectedHistoryId || null,
-    });
-    const {
-        workspaceSession,
-        setWorkspaceSession,
-        pendingProvenanceContext,
-        setPendingProvenanceContext,
-        promoteResultArtifactsToSession,
-        resetWorkspaceSession,
-    } = useWorkspaceSessionState({
-        initialWorkspaceSession: initialWorkspaceSnapshot.workspaceSession,
-    });
-    const {
-        notification,
-        showNotification,
+        store,
+        isDarkTheme,
+        currentLang,
+        t,
         systemStatusRefreshToken,
-        enterToSubmit,
-        toggleEnterToSubmit,
-        handleApiKeyConnect,
-    } = useWorkspaceShellUtilities({
-        setApiKeyReady,
-    });
-    const {
+        optimizationMode,
+        handleLanguageChange,
+        handleOptimizationModeChange,
+        handleOpenDebugTerminal,
+        uploadInputRef,
+        workspaceImportInputRef,
+        handleUploadForEdit,
+        handleImportWorkspaceSnapshot,
+        notification,
+        surfaceSharedControlsProps,
+        importReviewProps,
+        advancedSettingsDialogProps,
+        branchRenameDialogProps,
+        workspacePickerSheetProps,
+        composerSettingsPanelProps,
+        workspaceFloatingLayerValue,
+        floatingControlsZIndex,
+        setWorkspaceFloatingHostElement,
+        isSketchPadOpen,
+        handleSketchPadSave,
+        handleCloseSketchPad,
+        showSketchReplaceConfirm,
+        handleSketchReplaceCancel,
+        handleSketchReplaceConfirm,
+        isEditing,
+        editingImageSource,
         editorContextSnapshot,
-        setEditorContextSnapshot,
+        editorInitialState,
         editorPrompt,
         setEditorPrompt,
         editorObjectImages,
         setEditorObjectImages,
         editorCharacterImages,
         setEditorCharacterImages,
-        editorInitialState,
-    } = useWorkspaceTransientUiState({
-        selectedGrounding,
-        activeResultGrounding: workspaceSession.activeResult?.grounding || null,
-        activeGroundingSelection,
-        setActiveGroundingSelection,
-        setFocusLinkedGroundingItems,
-        isEditing,
-        objectImages,
-        characterImages,
+        editorMode,
+        setEditorMode,
         aspectRatio,
-        imageSize,
-        batchSize,
-    });
-    const surfaceObjectImages = isEditing ? editorObjectImages : objectImages;
-    const surfaceCharacterImages = isEditing ? editorCharacterImages : characterImages;
-    const setSurfaceObjectImages = isEditing ? setEditorObjectImages : setObjectImages;
-    const setSurfaceCharacterImages = isEditing ? setEditorCharacterImages : setCharacterImages;
-    const isSharedControlsSurfaceOpen = isEditing || isSketchPadOpen;
-
-    const handleLanguageChange = useCallback(
-        (nextLanguage: Language) => {
-            if (nextLanguage === currentLang) {
-                return;
-            }
-
-            persistLanguagePreference(nextLanguage);
-            const requestId = languageChangeRequestRef.current + 1;
-            languageChangeRequestRef.current = requestId;
-
-            // 立即同步更新語言狀態，確保重寫與圖轉提示詞工具能立即以最新語言發送 API 請求
-            setCurrentLang(nextLanguage);
-
-            if (isLanguageLoaded(nextLanguage)) {
-                return;
-            }
-
-            void ensureLanguageLoaded(nextLanguage).catch((error) => {
-                if (languageChangeRequestRef.current === requestId) {
-                    // 若加載翻譯失敗，回滾到原本的語言狀態
-                    setCurrentLang(currentLang);
-                    persistLanguagePreference(currentLang);
-                }
-
-                console.error(`Failed to load translations for ${nextLanguage}.`, error);
-            });
-        },
-        [currentLang],
-    );
-    const t = useCallback((key: string) => getTranslation(currentLang, key), [currentLang]);
-    const capability = MODEL_CAPABILITIES[imageModel];
-    const groundingMode = deriveGroundingMode(googleSearch, imageSearch);
-    const availableGroundingModes = useMemo(() => getAvailableGroundingModes(capability), [capability]);
-    const historyById = useMemo(() => new Map(history.map((item) => [item.id, item])), [history]);
-    const getHistoryTurnById = useCallback(
-        (historyId?: string | null) => {
-            if (!historyId) {
-                return null;
-            }
-
-            return historyById.get(historyId) || null;
-        },
-        [historyById],
-    );
-    const getStyleLabel = useCallback(
-        (style: string) => {
-            return resolveStyleLabel(style, t);
-        },
-        [t],
-    );
-
-    const [videoReference, setVideoReference] = useState<VideoReferenceItem | null>(null);
-    const videoUploadAbortRef = useRef<AbortController | null>(null);
-    const videoUploadRequestIdRef = useRef(0);
-    const imageModelRef = useRef(imageModel);
-    imageModelRef.current = imageModel;
-
-    const cancelActiveVideoUpload = useCallback(() => {
-        videoUploadRequestIdRef.current += 1;
-        videoUploadAbortRef.current?.abort();
-        videoUploadAbortRef.current = null;
-        setIsUploadingVideo(false);
-    }, []);
-
-    const handleVideoReferenceChange = useCallback(
-        (next: VideoReferenceItem | null) => {
-            cancelActiveVideoUpload();
-            setVideoReference(next);
-        },
-        [cancelActiveVideoUpload],
-    );
-
-    useEffect(() => {
-        return () => {
-            videoUploadAbortRef.current?.abort();
-        };
-    }, []);
-
-    const handleUploadVideoFile = useCallback(
-        async (file: File, signal?: AbortSignal): Promise<VideoReferenceItem> => {
-            if (!apiKeyReady) {
-                const connected = await handleApiKeyConnect();
-                if (!connected) {
-                    throw new Error(t('apiKeyRequired'));
-                }
-                const ready = await checkApiKey();
-                if (!ready) {
-                    throw new Error(t('apiKeyRequired'));
-                }
-                setApiKeyReady(true);
-            }
-
-            cancelActiveVideoUpload();
-            const requestId = videoUploadRequestIdRef.current;
-            const controller = new AbortController();
-            videoUploadAbortRef.current = controller;
-
-            const handleAbort = () => {
-                controller.abort();
-            };
-            if (signal) {
-                if (signal.aborted) {
-                    controller.abort();
-                } else {
-                    signal.addEventListener('abort', handleAbort, { once: true });
-                }
-            }
-
-            setIsUploadingVideo(true);
-            try {
-                const uploaded = await uploadReferenceVideo(file, { signal: controller.signal });
-                if (
-                    requestId !== videoUploadRequestIdRef.current ||
-                    controller.signal.aborted ||
-                    !MODEL_CAPABILITIES[imageModelRef.current]?.supportsVideo
-                ) {
-                    throw new Error('ABORTED');
-                }
-
-                const nextVideoReference: VideoReferenceItem = {
-                    sourceType: 'upload',
-                    uri: uploaded.fileUri,
-                    mimeType: uploaded.mimeType,
-                    displayName: uploaded.displayName,
-                    fileSizeBytes: uploaded.sizeBytes ?? file.size,
-                    geminiFileName: uploaded.name,
-                    expiresAt: uploaded.expiresAt,
-                    createdAt: Date.now(),
-                };
-                setVideoReference(nextVideoReference);
-                return nextVideoReference;
-            } finally {
-                if (signal) {
-                    signal.removeEventListener('abort', handleAbort);
-                }
-                if (videoUploadRequestIdRef.current === requestId) {
-                    setIsUploadingVideo(false);
-                    videoUploadAbortRef.current = null;
-                }
-            }
-        },
-        [apiKeyReady, cancelActiveVideoUpload, handleApiKeyConnect, setApiKeyReady, t],
-    );
-
-    const markHistoryItemOpened = useCallback(
-        (historyId: string) => {
-            setHistory((previousHistory) =>
-                previousHistory.map((historyItem) =>
-                    historyItem.id === historyId && historyItem.status === 'success' && historyItem.openedAt == null
-                        ? {
-                              ...historyItem,
-                              openedAt: Date.now(),
-                          }
-                        : historyItem,
-                ),
-            );
-        },
-        [setHistory],
-    );
-
-    const getBatchVisualSlotIndex = useCallback((item: GeneratedImageType) => {
-        const candidateSlotIndex = item.metadata?.batchResultIndex;
-        return typeof candidateSlotIndex === 'number' && Number.isFinite(candidateSlotIndex) ? candidateSlotIndex : -1;
-    }, []);
-
-    const silentlyShowHistoryItemOnStage = useCallback(
-        (item: GeneratedImageType) => {
-            const stageUrl = item.savedFilename ? buildSavedImageLoadUrl(item.savedFilename) : item.url;
-            if (!stageUrl) {
-                return;
-            }
-
-            setGeneratedImageUrls([stageUrl]);
-            setSelectedImageIndex(0);
-            setSelectedHistoryId(item.id);
-            applySelectedResultArtifacts(buildResultArtifacts(item));
-            setError(null);
-            upsertViewerStageSource({
-                origin: 'history',
-                url: stageUrl,
-                savedFilename: item.savedFilename,
-                sourceHistoryId: item.id,
-                lineageAction: item.lineageAction,
-            });
-        },
-        [
-            applySelectedResultArtifacts,
-            buildResultArtifacts,
-            setError,
-            setGeneratedImageUrls,
-            setSelectedHistoryId,
-            setSelectedImageIndex,
-            upsertViewerStageSource,
-        ],
-    );
-
-    const silentlyShowFailedHistoryItemOnStage = useCallback(
-        (item: GeneratedImageType) => {
-            setGeneratedImageUrls([]);
-            setSelectedImageIndex(0);
-            setSelectedHistoryId(item.id);
-            applySelectedResultArtifacts(buildResultArtifacts(item));
-            setError(buildStageErrorState(t, item.failure, item.error || t('statusFailed'), item.failureContext));
-            clearAssetRoles(['stage-source']);
-        },
-        [
-            applySelectedResultArtifacts,
-            buildResultArtifacts,
-            clearAssetRoles,
-            setError,
-            setGeneratedImageUrls,
-            setSelectedHistoryId,
-            setSelectedImageIndex,
-            t,
-        ],
-    );
-
-    useEffect(() => {
-        setError((currentError) => {
-            if (!currentError) {
-                return currentError;
-            }
-
-            const candidateHistoryId = currentStageAsset?.sourceHistoryId || selectedHistoryId;
-            const candidateHistoryItem = candidateHistoryId ? getHistoryTurnById(candidateHistoryId) : null;
-            if (candidateHistoryItem?.status === 'failed') {
-                return buildStageErrorState(
-                    t,
-                    candidateHistoryItem.failure,
-                    candidateHistoryItem.error || t('statusFailed'),
-                    candidateHistoryItem.failureContext,
-                );
-            }
-
-            return buildStageErrorState(t, currentError.failure, currentError.rawError, currentError.displayContext);
-        });
-    }, [currentStageAsset?.sourceHistoryId, getHistoryTurnById, selectedHistoryId, setError, t]);
-
-    const currentViewedCompletedHistoryId = useMemo(() => {
-        const candidateHistoryId = currentStageAsset?.sourceHistoryId || selectedHistoryId;
-        const candidateHistoryItem = getHistoryTurnById(candidateHistoryId);
-
-        return candidateHistoryItem?.status === 'success' ? candidateHistoryItem.id : null;
-    }, [currentStageAsset?.sourceHistoryId, getHistoryTurnById, selectedHistoryId]);
-    const currentViewedCompletedHistoryItem = useMemo(
-        () => (currentViewedCompletedHistoryId ? getHistoryTurnById(currentViewedCompletedHistoryId) : null),
-        [currentViewedCompletedHistoryId, getHistoryTurnById],
-    );
-    const currentViewedCompletedHistoryMetadata = useMemo(() => {
-        const metadata = currentViewedCompletedHistoryItem?.metadata;
-        return metadata && typeof metadata === 'object' && !Array.isArray(metadata)
-            ? normalizeImageSidecarMetadata(metadata)
-            : null;
-    }, [currentViewedCompletedHistoryItem]);
-
-    const previousViewedCompletedHistoryIdRef = useRef<string | null>(currentViewedCompletedHistoryId);
-    const hydratedSidecarHistoryIdRef = useRef<string | null>(null);
-
-    useEffect(() => {
-        const previousViewedCompletedHistoryId = previousViewedCompletedHistoryIdRef.current;
-
-        if (previousViewedCompletedHistoryId && previousViewedCompletedHistoryId !== currentViewedCompletedHistoryId) {
-            const previousHistoryItem = getHistoryTurnById(previousViewedCompletedHistoryId);
-            if (previousHistoryItem?.status === 'success' && previousHistoryItem.openedAt == null) {
-                markHistoryItemOpened(previousViewedCompletedHistoryId);
-            }
-        }
-
-        previousViewedCompletedHistoryIdRef.current = currentViewedCompletedHistoryId;
-    }, [currentViewedCompletedHistoryId, getHistoryTurnById, markHistoryItemOpened]);
-
-    useEffect(() => {
-        let isDisposed = false;
-
-        if (!currentViewedCompletedHistoryItem) {
-            if (hydratedSidecarHistoryIdRef.current) {
-                hydratedSidecarHistoryIdRef.current = null;
-                setSelectedMetadata(null);
-            }
-            return;
-        }
-
-        hydratedSidecarHistoryIdRef.current = currentViewedCompletedHistoryItem.id;
-
-        if (!currentViewedCompletedHistoryItem.savedFilename) {
-            setSelectedMetadata(currentViewedCompletedHistoryMetadata || createImageSidecarMetadataState('missing'));
-            return;
-        }
-
-        if (currentViewedCompletedHistoryMetadata) {
-            setSelectedMetadata(currentViewedCompletedHistoryMetadata);
-        } else {
-            setSelectedMetadata(createImageSidecarMetadataState('loading'));
-        }
-
-        void loadImageMetadata(currentViewedCompletedHistoryItem.savedFilename).then((metadata) => {
-            if (isDisposed || hydratedSidecarHistoryIdRef.current !== currentViewedCompletedHistoryItem.id) {
-                return;
-            }
-
-            const mergedMetadata = normalizeImageSidecarMetadata(
-                currentViewedCompletedHistoryMetadata || metadata
-                    ? {
-                          ...(currentViewedCompletedHistoryMetadata || {}),
-                          ...(metadata || {}),
-                      }
-                    : null,
-            );
-
-            setSelectedMetadata(mergedMetadata || createImageSidecarMetadataState('missing'));
-        });
-
-        return () => {
-            isDisposed = true;
-        };
-    }, [currentViewedCompletedHistoryItem, currentViewedCompletedHistoryMetadata, setSelectedMetadata]);
-
-    const {
-        handleBatchPreviewStart,
-        handleBatchPreviewTileUpdate,
-        handleBatchPreviewComplete,
-        handleBatchPreviewClear,
-        handleBatchPreviewTileSelect,
-        handleLiveProgressReset,
-        handleLiveProgressEvent,
-        handleHistorySelectionDuringGeneration,
-    } = useBatchPreviewSession({
-        activeBatchPreviewSession,
-        setActiveBatchPreviewSession,
-        activeLiveProgressSession,
-        setActiveLiveProgressSession,
-        setGeneratedImageUrls,
-        setSelectedImageIndex,
-        clearAssetRoles,
-        resetSelectedOutputState,
-        setError,
-        getBatchVisualSlotIndex,
-        silentlyShowHistoryItemOnStage,
-        silentlyShowFailedHistoryItemOnStage,
-    });
-
-    const getModelLabel = useCallback(
-        (model: ImageModel) => {
-            if (model === 'gemini-nano-banana-2.1') {
-                return t('modelGeminiNanoBanana21');
-            }
-            if (model === 'gemini-3.1-flash-image') {
-                return t('modelGemini31Flash');
-            }
-            if (model === 'gemini-3.1-flash-lite-image') {
-                return t('modelGemini31FlashLite');
-            }
-            if (model === 'gemini-3-pro-image') {
-                return t('modelGemini3Pro');
-            }
-            return t('modelGemini25Flash');
-        },
-        [t],
-    );
-    const activeEditorLockedAspectRatio = isEditing && editorMode === 'inpaint' ? editorRetouchLockedRatio : null;
-    const compatibleEditorLockedModels = useMemo(
-        () =>
-            activeEditorLockedAspectRatio
-                ? IMAGE_MODELS.filter((model) =>
-                      MODEL_CAPABILITIES[model].supportedRatios.includes(activeEditorLockedAspectRatio),
-                  )
-                : IMAGE_MODELS,
-        [activeEditorLockedAspectRatio],
-    );
-    const {
-        clearSettingsSession,
-        generationSettingsDraft,
-        handleApplySettingsSessionDraft,
-        handleCloseAdvancedSettingsSession,
-        handleCloseSettingsSheetSession,
-        handleSettingsSessionGroundingModeChange,
-        handleUpdateGenerationSettingsDraft,
-        openAdvancedSettingsFromGeneration,
-        openAdvancedSettingsSession,
-        openGenerationSettingsSession,
-        settingsSessionAvailableGroundingModes,
-        settingsSessionCapability,
-        settingsSessionView,
-        updateSettingsSessionDraft,
-    } = useWorkspaceSettingsSession({
-        activeEditorLockedAspectRatio,
-        imageModel,
-        aspectRatio,
-        imageSize,
-        batchSize,
-        outputFormat,
-        temperature,
-        thinkingLevel,
-        groundingMode,
-        closePickerSheet,
-        setActivePickerSheet,
-        setIsAdvancedSettingsOpen,
-        setImageModel,
         setAspectRatio,
+        activeEditorLockedAspectRatio,
+        imageSize,
         setImageSize,
+        batchSize,
         setBatchSize,
-        setOutputFormat,
-        setTemperature,
-        setThinkingLevel,
-        setGroundingMode,
-        showNotification,
-        t,
-        settingsLocked,
-    });
-
-    useEffect(() => {
-        if (isEditing) {
-            return;
-        }
-
-        setEditorMode('inpaint');
-        setEditorRetouchLockedRatio(null);
-    }, [isEditing]);
-
-    useEffect(() => {
-        if (!activeEditorLockedAspectRatio) {
-            return;
-        }
-
-        if (aspectRatio !== activeEditorLockedAspectRatio) {
-            setAspectRatio(activeEditorLockedAspectRatio, { bypassLock: true });
-            return;
-        }
-
-        if (compatibleEditorLockedModels.length === 0 || compatibleEditorLockedModels.includes(imageModel)) {
-            return;
-        }
-
-        const nextModel = compatibleEditorLockedModels[0];
-        setImageModel(nextModel);
-        showNotification(
-            t('editorRetouchModelAutoSwitch')
-                .replace('{0}', getModelLabel(nextModel))
-                .replace('{1}', activeEditorLockedAspectRatio),
-            'info',
-        );
-    }, [
-        activeEditorLockedAspectRatio,
-        aspectRatio,
-        compatibleEditorLockedModels,
-        getModelLabel,
-        imageModel,
-        setAspectRatio,
-        setImageModel,
-        t,
-    ]);
-    const lineageBranchLabelConfig = useMemo(
-        () => ({
-            main: t('historyBranchMain'),
-            branchNumber: t('historyBranchNumber'),
-        }),
-        [t],
-    );
-    const lineageContinueActionLabels = useMemo(
-        () => ({
-            continue: t('lineageActionContinue'),
-            promoteVariant: t('historyContinuePromoteVariant'),
-            sourceActive: t('historyContinueSourceActive'),
-        }),
-        [t],
-    );
-    const {
-        successfulHistory,
-        branchLabelByTurnId,
-        branchLabelByOriginId,
-        branchOriginIdByTurnId,
-        autoBranchLabelByOriginId,
-        effectiveBranchContinuationSourceByBranchOriginId,
-        branchSummaries,
-        lineageRootGroups,
-        activeBranchSummary,
-        currentStageSourceHistoryId,
-        currentStageSourceTurn,
-        currentStageBranchSummary,
-        recentBranchSummaries,
-        isPromotedContinuationSource,
-        getContinueActionLabel,
-    } = useWorkspaceLineageSelectors({
-        history,
-        branchNameOverrides,
-        branchContinuationSourceByBranchOriginId,
-        workspaceSessionSourceHistoryId: workspaceSession.sourceHistoryId,
-        workspaceSessionSourceLineageAction: workspaceSession.sourceLineageAction || null,
-        branchLabelConfig: lineageBranchLabelConfig,
-        continueActionLabels: lineageContinueActionLabels,
-        selectedHistoryId,
-        currentStageAssetSourceHistoryId: currentStageAsset?.sourceHistoryId || null,
-        conversationId: workspaceSession.conversationId,
-        conversationBranchOriginId: workspaceSession.conversationBranchOriginId,
-        conversationActiveSourceHistoryId: workspaceSession.conversationActiveSourceHistoryId,
-        conversationTurnIds: workspaceSession.conversationTurnIds,
-        getHistoryTurnById,
-        getShortTurnId,
-    });
-
-    const { getGenerationLineageContext, getConversationRequestContext } = useWorkspaceGenerationContext({
-        currentStageAsset,
-        workspaceSession,
-        history,
-        conversationState,
-        stickySendIntent,
-        branchOriginIdByTurnId,
-        getHistoryTurnById,
-    });
-
-    const viewerHistoryItems = useMemo(
-        () =>
-            successfulHistory
-                .map((historyItem) => ({
-                    id: historyItem.id,
-                    url: historyItem.savedFilename
-                        ? buildSavedImageLoadUrl(historyItem.savedFilename)
-                        : historyItem.url,
-                    isFresh: historyItem.openedAt == null,
-                }))
-                .filter((historyItem) => Boolean(historyItem.url)),
-        [successfulHistory],
-    );
-    const currentSourceHistoryId = useMemo(
-        () =>
-            resolveCurrentStageSelectionFirstSourceOverride({
-                sourceHistoryId: currentStageAsset?.sourceHistoryId || null,
-                currentStageLineageAction: currentStageAsset?.lineageAction || null,
-                history,
-                branchOriginIdByTurnId,
-                workspaceSessionSourceHistoryId: workspaceSession.sourceHistoryId,
-                workspaceSessionSourceLineageAction: workspaceSession.sourceLineageAction || null,
-            }).sourceHistoryId,
-        [
-            branchOriginIdByTurnId,
-            currentStageAsset?.lineageAction,
-            currentStageAsset?.sourceHistoryId,
-            history,
-            workspaceSession.sourceHistoryId,
-            workspaceSession.sourceLineageAction,
-        ],
-    );
-
-    const [optimizationMode, setOptimizationMode] = useState<OptimizationMode>(() => {
-        try {
-            const saved = localStorage.getItem(OPTIMIZATION_MODE_STORAGE_KEY);
-            if (saved) {
-                return normalizeOptimizationMode(saved);
-            }
-        } catch {
-            // Ignore localStorage errors
-        }
-        return DEFAULT_OPTIMIZATION_MODE;
-    });
-
-    const handleOptimizationModeChange = useCallback((mode: OptimizationMode) => {
-        const normalized = normalizeOptimizationMode(mode);
-        setOptimizationMode(normalized);
-        try {
-            localStorage.setItem(OPTIMIZATION_MODE_STORAGE_KEY, normalized);
-        } catch {
-            // Ignore localStorage errors
-        }
-    }, []);
-
-    const { performGeneration } = usePerformGeneration({
-        t,
-        apiKeyReady,
-        setApiKeyReady,
-        handleApiKeyConnect,
-        setIsGenerating,
-        setIsCancelFinalizing,
+        handleEditorGenerate,
+        showEditorQueueBatch,
+        handleEditorQueueBatch,
+        editorQueueDisabledReason,
+        closeEditor,
+        isGenerating,
+        isForegroundGenerationLocked,
+        error,
         setError,
-        setGeneratedImageUrls,
-        setSelectedImageIndex,
-        setLogs,
-        addLog,
-        abortControllerRef,
+        imageModel,
+        surfaceSharedControlsBottom,
+        groundingProvenancePanelProps,
+        generatedImageUrls,
+        selectedImageIndex,
+        isViewerOpen,
+        setIsViewerOpen,
+        viewerHistoryItems,
+        currentViewedCompletedHistoryId,
+        handleViewerSelectHistoryItem,
+        viewerPromptValue,
+        groundingResolutionStatusSummary,
+        groundingResolutionStatusTone,
+        stageViewerSettings,
+        generationMode,
+        executionMode,
+        stableHandleGenerate,
+        stableHandleOpenEditor,
+        stableHandleClearCurrentStage,
+        stableHandleDownloadStageImage,
+        stableHandleAddToObjectReference,
+        capability,
+        stableHandleAddToCharacterReference,
+        logs,
+        currentStageLinkedBranchSummary,
+        currentStageHasLinkedHistoryTurn,
+        currentStageIsCurrentSource,
+        viewerMetadataItems,
+        viewerMetadataStateMessage,
+        effectiveThoughts,
+        thoughtStateMessage,
+        sessionHintEntries,
+        formatSessionHintKey,
+        formatSessionHintValue,
+        handleApplyPromptFromViewer,
+        viewerSettingsSnapshot,
+        handleApplySettingsFromViewer,
+        commitPendingViewerSelection,
+        history,
+        activeBatchPreviewSession,
+        handleBatchPreviewTileSelect,
+        selectedHistoryId,
+        currentSourceHistoryId,
+        activeBranchSummary,
+        branchSummariesCount,
+        handleHistorySelect,
+        getBranchAccentClassName,
+        handleOpenVersionsDetails,
+        handleOpenWorkspaceImportPicker,
+        handleExportWorkspaceSnapshot,
+        handleOpenExportResultsModal,
+        handleCloseExportResultsModal,
+        handleOpenClearWorkspaceConfirm,
+        handleCloseClearWorkspaceConfirm,
+        handleConfirmClearWorkspace,
+        progressThoughtsSummaryText,
+        hasProgressActivity,
+        hasSourceTrailInfo,
+        hasQueuedBatchActivity,
+        handleOpenProgressDetails,
+        handleOpenSourcesDetails,
+        handleOpenQueuedBatchJobs,
+        canRepaintCurrentImage,
+        handleOpenSketchPad,
+        handleOpenEditor,
+        handleOpenUploadToRepaint,
         objectImages,
         characterImages,
         styleImages,
-        videoInput: videoReference?.uri,
-        videoMimeType: videoReference?.mimeType,
-        batchSize,
-        aspectRatio,
-        outputFormat,
-        temperature,
-        thinkingLevel,
-        includeThoughts,
-        googleSearch,
-        imageSearch,
-        setBatchProgress,
-        setGenerationMode,
-        setExecutionMode,
-        setDisplaySettings,
-        showNotification,
-        setHistory,
-        setIsEditing,
-        setEditingImageSource,
-        getGenerationLineageContext,
-        getConversationRequestContext,
-        onBatchPreviewStart: handleBatchPreviewStart,
-        onBatchPreviewTileUpdate: handleBatchPreviewTileUpdate,
-        onBatchPreviewComplete: handleBatchPreviewComplete,
-        onBatchPreviewClear: handleBatchPreviewClear,
-        onLiveProgressEvent: handleLiveProgressEvent,
-        onLiveProgressReset: handleLiveProgressReset,
-        roundCount,
-        optimizationMode,
-    });
-
-    const [promptThinkingLevel, setPromptThinkingLevel] = useState<PromptThinkingLevel>(() => {
-        try {
-            const saved = localStorage.getItem('nb_prompt_thinking_level');
-            if (saved === 'low' || saved === 'medium' || saved === 'high') {
-                return saved;
-            }
-        } catch {
-            // Ignore localStorage errors
-        }
-        return 'low';
-    });
-
-    const handlePromptThinkingLevelChange = useCallback((level: PromptThinkingLevel) => {
-        setPromptThinkingLevel(level);
-        try {
-            localStorage.setItem('nb_prompt_thinking_level', level);
-        } catch {
-            // Ignore localStorage errors
-        }
-    }, []);
-
-    const {
-        isEnhancingPrompt: isEnhancingComposerPrompt,
-        activePromptTool: activeComposerPromptTool,
-        handleSmartRewrite: handleComposerSmartRewrite,
-        handleSurpriseMe: handleComposerSurpriseMe,
-        handleImageToPrompt: handleComposerImageToPrompt,
-        cancelPromptTools: cancelComposerPromptTools,
-    } = usePromptTools({
-        currentLanguage: currentLang,
-        prompt,
-        promptThinkingLevel,
-        optimizationMode,
-        setPrompt,
-        addLog,
-        showNotification,
-        t,
-        apiKeyReady,
-        handleApiKeyConnect,
-    });
-
-    const handleAbortWorkspaceOperations = useCallback(() => {
-        abortControllerRef.current?.abort('workspace-reset');
-        abortControllerRef.current = null;
-        setIsCancelFinalizing(false);
-        cancelActiveVideoUpload();
-        setVideoReference(null);
-        cancelComposerPromptTools();
-        cancelPendingHistoryLoadsRef.current?.();
-    }, [cancelActiveVideoUpload, cancelComposerPromptTools]);
-
-    useWorkspaceAppLifecycle({
-        historyCount: history.length,
-        generatedImageCount: generatedImageUrls.length,
-        orderedReferenceAssets,
-        hasDraftPrompt: prompt.trim().length > 0,
-        aspectRatio,
-        setApiKeyReady,
-        setCurrentLang,
-        setInitialPreferencesReady: setAreInitialPreferencesReady,
-        setAspectRatio,
-        addLog,
-        showNotification,
-        t,
-        settingsLocked,
-    });
-
-    useWorkspaceCapabilityConstraints({
-        capability,
-        imageSize,
-        aspectRatio,
-        lockedAspectRatio: activeEditorLockedAspectRatio,
-        outputFormat,
-        thinkingLevel,
-        includeThoughts,
-        googleSearch,
-        imageSearch,
-        setImageSize,
-        setAspectRatio,
-        setOutputFormat,
-        setThinkingLevel,
-        setIncludeThoughts,
-        setGoogleSearch,
-        setImageSearch,
         setObjectImages,
         setCharacterImages,
         setStyleImages,
-        setVideoReference,
-        onClearVideoUpload: cancelActiveVideoUpload,
         showNotification,
-        t,
-    });
-
-    const { clearPendingProvenanceContext, primePendingProvenanceContinuation } = useProvenanceContinuation({
-        selectedGrounding,
-        selectedSessionHints,
-        workspaceSession,
-        currentStageAssetSourceHistoryId: currentStageAsset?.sourceHistoryId || null,
-        pendingProvenanceContext,
-        setPendingProvenanceContext,
-        history,
-        generatedImageCount: generatedImageUrls.length,
-        isGenerating,
-        lastPromotedHistoryIdRef,
-        buildResultArtifacts,
-        conversationState,
-        setConversationState,
-        promoteResultArtifactsToSession,
-        applySelectedResultArtifacts,
-        selectedHistoryId,
-        addLog,
-        t,
-    });
-    const handlePrepareGenerate = useCallback(() => {
-        clearAssetRoles(['stage-source']);
-    }, [clearAssetRoles]);
-
-    const { handleGenerate, handleFollowUpGenerate, handleCancelGeneration } = useWorkspaceGenerationActions({
-        abortControllerRef,
-        setIsCancelFinalizing,
-        isSurfaceWorkspaceOpen: isSharedControlsSurfaceOpen,
-        prompt,
-        aspectRatio,
-        imageSize,
-        imageStyle,
-        imageModel,
-        history,
-        branchOriginIdByTurnId,
-        workspaceSessionSourceHistoryId: workspaceSession.sourceHistoryId,
-        workspaceSessionSourceLineageAction: workspaceSession.sourceLineageAction,
-        objectImages,
-        characterImages,
-        currentStageAsset,
-        clearPendingProvenanceContext,
-        primePendingProvenanceContinuation,
-        resetSelectedOutputState,
-        performGeneration,
-        onPrepareGenerate: handlePrepareGenerate,
-        addLog,
-        showNotification,
-        t,
-    });
-    const {
-        canQueueComposerBatch,
-        showEditorQueueBatch,
-        isQueueBatchDisabled,
-        queueBatchDisabledReason,
-        editorQueueDisabledReason,
-        queueBatchModeSummary,
-        queueBatchGenerateModeSummary,
-        queueBatchConversationNotice,
-        getImportedQueuedHistoryItems,
-        getImportedQueuedResultCount,
-    } = useQueuedBatchPresentation({
-        currentStageAsset,
-        objectImageCount: objectImages.length,
-        characterImageCount: characterImages.length,
-        styleImageCount: styleImages.length,
-        hasVideoInput: Boolean(videoReference),
-        stickySendIntent,
-        workspaceSession,
-        conversationState,
-        history,
-        t,
-    });
-    const {
+        handleRemoveObjectReference,
+        handleRemoveCharacterReference,
+        handleRemoveStyleReference,
+        handleClearAllReferences,
+        videoReference,
+        handleVideoReferenceChange,
+        handleUploadVideoFile,
+        isUploadingVideo,
+        cancelActiveVideoUpload,
+        activeWorkspaceDetailModal,
+        isQueuedBatchSpaceOpen,
+        showClearWorkspaceConfirm,
+        showExportResultsModal,
+        showMetadataViewerDrawer,
+        handleCloseMetadataViewer,
+        handleApplyBothFromMetadataViewer,
+        settingsLocked,
+        handleCloseWorkspaceDetailModal,
+        progressThoughtEntries,
+        handleDownloadThoughtImage,
+        latestWorkflowEntry,
+        batchProgress,
         queuedJobs,
-        setQueuedJobs,
-        handleQueueBatchJob,
-        handleQueueBatchFollowUpJob,
-        handleQueueBatchJobFromEditor,
-        handlePollQueuedJob,
+        getImportedQueuedResultCount,
+        provenanceSummaryRows,
+        provenanceContinuityMessage,
+        groundingStateMessage,
+        groundingSupportMessage,
+        selectedSourcesCount,
+        selectedSupportBundlesCount,
+        versionsDetailPanelProps,
+        queueBatchConversationNotice,
+        getLineageActionLabel,
+        getImportedQueuedHistoryItems,
+        currentStageSourceHistoryId,
+        handleImportAllQueuedJobs,
         handlePollAllQueuedJobs,
+        handlePollQueuedJob,
         handleCancelQueuedJob,
         handleImportQueuedJob,
-        handleImportAllQueuedJobs,
         handleOpenImportedQueuedJob,
         handleOpenLatestImportedQueuedJob,
         handleOpenImportedQueuedHistoryItem,
@@ -1146,655 +207,9 @@ const App: React.FC = () => {
         handleClearImportedQueuedJobs,
         handleRemoveQueuedJob,
         handleRecoverRecentQueuedJobs,
-    } = useQueuedBatchWorkflow({
-        initialQueuedJobs: initialQueuedBatchSpaceSnapshot.queuedJobs,
-        history,
-        apiKeyReady,
-        setApiKeyReady,
-        handleApiKeyConnect,
-        prompt,
-        imageStyle,
-        imageModel,
-        batchSize,
-        aspectRatio,
-        imageSize,
-        outputFormat,
-        temperature,
-        thinkingLevel,
-        includeThoughts,
-        googleSearch,
-        imageSearch,
-        currentStageAsset,
-        branchOriginIdByTurnId,
-        workspaceSessionSourceHistoryId: workspaceSession.sourceHistoryId,
-        workspaceSessionSourceLineageAction: workspaceSession.sourceLineageAction,
-        objectImages,
-        characterImages,
-        styleImages,
-        videoInput: videoReference?.uri,
-        videoMimeType: videoReference?.mimeType,
-        getModelLabel,
-        getGenerationLineageContext,
-        addLog,
-        showNotification,
-        setHistory,
-        historySelectRef: queuedBatchHistorySelectRef,
-        canQueueComposerBatch,
-        queueBatchDisabledReason,
-        canQueueEditorBatch: showEditorQueueBatch,
-        editorQueueDisabledReason,
-        t,
-        optimizationMode,
-    });
-    useQueuedBatchSpacePersistence({ queuedJobs, setQueuedJobs });
+        handleClearStyle,
+    } = useWorkspaceOrchestrator();
 
-    const { composeCurrentWorkspaceSnapshot } = useWorkspaceSnapshotPersistence({
-        history,
-        stagedAssets,
-        workflowLogs: logs,
-        workspaceSession,
-        branchNameOverrides,
-        branchContinuationSourceByBranchOriginId,
-        generatedImageUrls,
-        selectedImageIndex,
-        selectedHistoryId,
-        composerState,
-        conversationState,
-    });
-
-    const {
-        workspaceImportReview,
-        applyWorkspaceSnapshot,
-        handleCloseWorkspaceImportReview,
-        handleApplyImportedWorkspaceSnapshot: rawHandleApplyImportedWorkspaceSnapshot,
-        handleMergeImportedWorkspaceSnapshot,
-        handleExportWorkspaceSnapshot,
-        handleImportWorkspaceSnapshot,
-    } = useWorkspaceSnapshotActions({
-        currentLanguage: currentLang,
-        initialShouldAnnounceRestoreToast: hasRestorableWorkspaceContent(initialWorkspaceSnapshot),
-        isInitialRestoreAnnouncementReady: areInitialPreferencesReady,
-        workspaceImportInputRef,
-        lastPromotedHistoryIdRef,
-        composeCurrentWorkspaceSnapshot,
-        showNotification,
-        addLog,
-        setHistory,
-        setStagedAssets,
-        setWorkspaceSession,
-        setBranchNameOverrides,
-        setBranchContinuationSourceByBranchOriginId,
-        setConversationState,
-        setGeneratedImageUrls,
-        setSelectedImageIndex,
-        applySelectedResultArtifacts,
-        setSelectedHistoryId,
-        applyComposerState,
-        setBatchProgress,
-        setPendingProvenanceContext,
-        setIsGenerating,
-        setError,
-        setLogs,
-        setIsEditing,
-        setEditingImageSource,
-        setIsViewerOpen,
-        setActivePickerSheet,
-        setBranchRenameDialog,
-        setBranchRenameDraft,
-        onAbortWorkspaceOperations: handleAbortWorkspaceOperations,
-    });
-    const handleApplyImportedWorkspaceSnapshot = useCallback(
-        (...args: Parameters<typeof rawHandleApplyImportedWorkspaceSnapshot>) => {
-            handleAbortWorkspaceOperations();
-            return rawHandleApplyImportedWorkspaceSnapshot(...args);
-        },
-        [handleAbortWorkspaceOperations, rawHandleApplyImportedWorkspaceSnapshot],
-    );
-    const applyEmptyWorkspaceSnapshot = useCallback(() => {
-        handleAbortWorkspaceOperations();
-        clearStoredWorkspaceSnapshot();
-        saveWorkspaceSnapshot(EMPTY_WORKSPACE_SNAPSHOT);
-        applyWorkspaceSnapshot(EMPTY_WORKSPACE_SNAPSHOT);
-    }, [applyWorkspaceSnapshot, handleAbortWorkspaceOperations]);
-
-    useLegacyWorkspaceSnapshotMigration({
-        composeCurrentWorkspaceSnapshot,
-        applyWorkspaceSnapshot,
-        addLog,
-    });
-
-    const handleOpenWorkspaceImportPicker = useCallback(() => {
-        workspaceImportInputRef.current?.click();
-    }, []);
-
-    const {
-        closeEditor,
-        handleAddToCharacterReference,
-        handleAddToObjectReference,
-        handleOpenSketchPad,
-        handleSketchPadSave,
-        handleRemoveObjectReference,
-        handleRemoveCharacterReference,
-        handleUploadForEdit,
-        handleOpenEditor,
-        handleEditorGenerate,
-        handleEditorQueueBatch,
-        handleSketchReplaceCancel,
-        handleSketchReplaceConfirm,
-        handleCloseSketchPad,
-    } = useWorkspaceEditorActions({
-        history,
-        branchOriginIdByTurnId,
-        workspaceSessionSourceHistoryId: workspaceSession.sourceHistoryId,
-        workspaceSessionSourceLineageAction: workspaceSession.sourceLineageAction,
-        objectImages,
-        characterImages,
-        aspectRatio,
-        imageSize,
-        batchSize,
-        imageModel,
-        imageStyle,
-        outputFormat,
-        temperature,
-        thinkingLevel,
-        includeThoughts,
-        googleSearch,
-        imageSearch,
-        capability,
-        currentStageAsset,
-        editorContextSnapshot,
-        hasSketch,
-        uploadInputRef,
-        setObjectImages,
-        setCharacterImages,
-        setIsEditing,
-        setEditingImageSource,
-        setEditorContextSnapshot,
-        setEditorPrompt,
-        setAspectRatio,
-        setImageSize,
-        setActivePickerSheet,
-        setError,
-        setIsSketchPadOpen,
-        setShowSketchReplaceConfirm,
-        setEditorMode,
-        setEditorRetouchLockedRatio,
-        restoreEditorComposerState,
-        getActiveImageUrl,
-        addWorkspaceAsset,
-        removeAssetAtRoleIndex,
-        showNotification,
-        addLog,
-        t,
-        primePendingProvenanceContinuation,
-        performGeneration,
-        queueBatchJobFromEditor: handleQueueBatchJobFromEditor,
-    });
-    const handleOpenUploadToRepaint = useCallback(() => {
-        uploadInputRef.current?.click();
-    }, []);
-    const handleSurfaceRemoveObjectReference = useCallback(
-        (indexToRemove: number) => {
-            if (isEditing) {
-                setEditorObjectImages((previous) => previous.filter((_, index) => index !== indexToRemove));
-                return;
-            }
-
-            handleRemoveObjectReference(indexToRemove);
-        },
-        [handleRemoveObjectReference, isEditing, setEditorObjectImages],
-    );
-    const handleSurfaceRemoveCharacterReference = useCallback(
-        (indexToRemove: number) => {
-            if (isEditing) {
-                setEditorCharacterImages((previous) => previous.filter((_, index) => index !== indexToRemove));
-                return;
-            }
-
-            handleRemoveCharacterReference(indexToRemove);
-        },
-        [handleRemoveCharacterReference, isEditing, setEditorCharacterImages],
-    );
-    const handleRemoveStyleReference = useCallback(
-        (indexToRemove: number) => {
-            removeAssetAtRoleIndex('style', indexToRemove);
-        },
-        [removeAssetAtRoleIndex],
-    );
-    const handleClearAllReferences = useCallback(() => {
-        clearAssetRoles(['object', 'character', 'style']);
-        cancelActiveVideoUpload();
-        setVideoReference(null);
-    }, [cancelActiveVideoUpload, clearAssetRoles]);
-
-    const { handleClearCurrentStage, handleClearGalleryHistory } = useWorkspaceResetActions({
-        lastPromotedHistoryIdRef,
-        handleClearResults,
-        clearAssetRoles,
-        applyEmptyWorkspaceSnapshot,
-        clearSharedWorkspaceSnapshot,
-        setActiveWorkspaceDetailModal,
-        setIsAdvancedSettingsOpen,
-        setIsSketchPadOpen,
-        setShowSketchReplaceConfirm,
-        clearSettingsSession,
-        setSurfaceSharedControlsBottom,
-        onAbortWorkspaceOperations: handleAbortWorkspaceOperations,
-    });
-
-    const {
-        handleStartNewConversation,
-        handleHistorySelect,
-        handleContinueFromHistoryTurn,
-        handleBranchFromHistoryTurn,
-        handleImportReviewDirectAction,
-        commitPendingViewerSelection,
-        cancelPendingHistoryLoads,
-    } = useHistorySourceOrchestration({
-        history,
-        generatedImageUrls,
-        selectedImageIndex,
-        selectedHistoryId,
-        isGenerating,
-        currentStageSourceHistoryId: currentStageAsset?.sourceHistoryId || null,
-        currentStageLineageAction: currentStageAsset?.lineageAction,
-        workspaceSession,
-        conversationState,
-        branchOriginIdByTurnId,
-        handleApplyImportedWorkspaceSnapshot,
-        getHistoryTurnById,
-        handleClearResults,
-        resetSelectedOutputState,
-        resetWorkspaceSession,
-        clearAssetRoles,
-        buildResultArtifacts,
-        applySelectedResultArtifacts,
-        promoteResultArtifactsToSession,
-        setPendingProvenanceContext,
-        setStickySendIntent,
-        setConversationState,
-        setBranchContinuationSourceByBranchOriginId,
-        setHistory,
-        setEditingImageSource,
-        setGeneratedImageUrls,
-        setSelectedImageIndex,
-        setSelectedHistoryId,
-        setError,
-        setLogs,
-        upsertViewerStageSource,
-        addLog,
-        showNotification,
-        t,
-        clearActivePickerSheet: closePickerSheet,
-        onHistorySelectWhileGenerating: handleHistorySelectionDuringGeneration,
-    });
-    queuedBatchHistorySelectRef.current = handleHistorySelect;
-    cancelPendingHistoryLoadsRef.current = cancelPendingHistoryLoads;
-    const {
-        importedBranchSummaries,
-        importedLatestTurn,
-        importedLatestSuccessfulTurn,
-        isImportedPromotedContinuationSource,
-        getImportedContinueActionLabel,
-        importReviewBranchActions,
-    } = useImportedWorkspaceReview({
-        workspaceImportReview,
-        handleImportReviewDirectAction,
-        continueActionLabels: {
-            continue: t('lineageActionContinue'),
-            promoteVariant: t('historyContinuePromoteVariant'),
-            sourceActive: t('historyContinueSourceActive'),
-        },
-    });
-    const {
-        getLineageActionLabel,
-        getStageOriginLabel,
-        handleRenameBranch,
-        handleSubmitBranchRename,
-        getBranchAccentClassName,
-    } = useWorkspaceBranchPresentation({
-        autoBranchLabelByOriginId,
-        branchLabelByOriginId,
-        branchLabelByTurnId,
-        branchOriginIdByTurnId,
-        branchRenameDialog,
-        branchRenameDraft,
-        openBranchRenameDialog,
-        closeBranchRenameDialog,
-        setBranchNameOverrides,
-        showNotification,
-        addLog,
-        getShortTurnId,
-        t,
-    });
-    const {
-        renderHistoryTurnSnapshotContent,
-        renderHistoryTurnActionRow,
-        renderHistoryTurnBadges,
-        renderActiveBranchSummaryContent,
-    } = useHistoryPresentationHelpers({
-        history,
-        effectiveBranchContinuationSourceByBranchOriginId,
-        getBranchAccentClassName,
-        getContinueActionLabel,
-        getLineageActionLabel,
-        getShortTurnId,
-        handleBranchFromHistoryTurn,
-        handleContinueFromHistoryTurn,
-        handleHistorySelect,
-        handleRenameBranch,
-        isPromotedContinuationSource,
-        t,
-    });
-
-    const {
-        viewSettings,
-        latestWorkflowEntry,
-        activeSheetTitle,
-        isSurfaceWorkspaceOpen,
-        floatingControlsZIndex,
-        pickerSheetZIndex,
-        totalReferenceCount,
-    } = useWorkspaceShellViewModel({
-        generatedImageCount: generatedImageUrls.length,
-        isGenerating,
-        displaySettings,
-        prompt,
-        surfacePrompt: isEditing ? editorPrompt : prompt,
-        aspectRatio,
-        imageSize,
-        imageStyle,
-        imageModel,
-        batchSize,
-        outputFormat,
-        temperature,
-        thinkingLevel,
-        includeThoughts,
-        googleSearch,
-        imageSearch,
-        logs,
-        currentStageSourceHistoryId,
-        getShortTurnId,
-        activePickerSheet,
-        isEditing,
-        isSketchPadOpen,
-        objectImageCount: surfaceObjectImages.length,
-        characterImageCount: surfaceCharacterImages.length,
-        styleImageCount: isEditing ? 0 : styleImages.length,
-        hasVideoInput: !isEditing && Boolean(videoReference),
-        t,
-    });
-    const viewerPromptValue = useMemo(() => {
-        const historyPrompt = currentViewedCompletedHistoryItem?.prompt?.trim();
-        if (historyPrompt) {
-            return historyPrompt;
-        }
-
-        const metadataPrompt = typeof selectedMetadata?.prompt === 'string' ? selectedMetadata.prompt.trim() : '';
-        if (metadataPrompt) {
-            return metadataPrompt;
-        }
-
-        return viewSettings.prompt;
-    }, [currentViewedCompletedHistoryItem?.prompt, selectedMetadata, viewSettings.prompt]);
-
-    useEffect(() => {
-        if (!isSurfaceWorkspaceOpen) {
-            setSurfaceSharedControlsBottom(null);
-            return;
-        }
-
-        if (activePickerSheet === 'styles') {
-            setActivePickerSheet(null);
-        }
-    }, [activePickerSheet, isSurfaceWorkspaceOpen, setActivePickerSheet]);
-
-    const {
-        effectiveThoughts,
-        effectiveResultParts,
-        effectiveSessionHints,
-        groundingResolutionStatusSummary,
-        groundingResolutionStatusTone,
-        sessionUpdatedLabel,
-        selectedSources,
-        selectedSupportBundles,
-        groundingQueries,
-        searchEntryPointRenderedContent,
-        sessionHintEntries,
-        formatSessionHintKey,
-        formatSessionHintValue,
-        thoughtStateMessage,
-        groundingStateMessage,
-        groundingSupportMessage,
-        provenanceContinuityMessage,
-        provenanceSummaryRows,
-        groundingProvenancePanelProps,
-        viewerMetadataItems,
-        viewerMetadataStateMessage,
-        viewerSettingsSnapshot,
-    } = useWorkspaceViewerProvenanceState({
-        selectedResultText,
-        selectedThoughts,
-        selectedResultParts,
-        selectedGrounding,
-        selectedMetadata,
-        selectedSessionHints,
-        workspaceSession,
-        viewSettings,
-        activeGroundingSelection,
-        focusLinkedGroundingItems,
-        getHistoryTurnById,
-        getShortTurnId,
-        currentStageSourceHistoryId,
-        setPrompt,
-        showNotification,
-        addLog,
-        t,
-        currentLanguage: currentLang,
-        renderHistoryTurnActionRow,
-        setActiveGroundingSelection,
-        setFocusLinkedGroundingItems,
-        currentViewedCompletedHistoryItem,
-        currentViewedCompletedHistoryMetadata,
-        getStyleLabel,
-        getModelLabel,
-    });
-    const handleOpenSurfacePickerSheet = useCallback(
-        (sheet: Parameters<typeof openSurfacePickerSheet>[0]) => {
-            if (sheet === 'styles') {
-                return;
-            }
-
-            if (sheet === 'settings') {
-                openGenerationSettingsSession();
-                return;
-            }
-
-            openSurfacePickerSheet(sheet);
-        },
-        [openGenerationSettingsSession, openSurfacePickerSheet],
-    );
-    const surfaceSharedControlsProps = useWorkspaceSurfaceSharedControlsProps({
-        isSurfaceWorkspaceOpen,
-        isAdvancedSettingsOpen,
-        activePickerSheet,
-        settingsVariant: isSketchPadOpen ? 'sketch' : 'full',
-        totalReferenceCount,
-        hasSurfacePrompt: Boolean((isEditing ? editorPrompt : prompt).trim()),
-        imageModel,
-        capability,
-        availableGroundingModes,
-        aspectRatio,
-        imageSize,
-        batchSize,
-        outputFormat,
-        temperature,
-        thinkingLevel,
-        groundingMode,
-        objectImageCount: surfaceObjectImages.length,
-        characterImageCount: surfaceCharacterImages.length,
-        floatingControlsZIndex,
-        onSurfaceSharedControlsBottomChange: setSurfaceSharedControlsBottom,
-        currentLanguage: currentLang,
-        openSurfacePickerSheet: handleOpenSurfacePickerSheet,
-        openAdvancedSettings: openAdvancedSettingsSession,
-        getModelLabel,
-    });
-    const importReviewProps = useWorkspaceImportReviewProps({
-        currentLanguage: currentLang,
-        workspaceImportReview,
-        importedBranchSummaries,
-        importedLatestTurn,
-        importedLatestSuccessfulTurn,
-        isImportedPromotedContinuationSource,
-        getImportedContinueActionLabel,
-        handleCloseWorkspaceImportReview,
-        handleMergeImportedWorkspaceSnapshot,
-        handleApplyImportedWorkspaceSnapshot,
-        importReviewBranchActions,
-    });
-    const branchRenameDialogProps = useWorkspaceBranchRenameDialogProps({
-        currentLanguage: currentLang,
-        branchRenameDialog,
-        getShortTurnId,
-        branchRenameDraft,
-        setBranchRenameDraft,
-        closeBranchRenameDialog,
-        handleSubmitBranchRename,
-    });
-    const handleCloseWorkspaceDetailModal = useCallback(() => {
-        setActiveWorkspaceDetailModal(null);
-        setIsQueuedBatchSpaceOpen(false);
-    }, []);
-    const handleOpenProgressDetails = useCallback(() => {
-        setIsQueuedBatchSpaceOpen(false);
-        setActiveWorkspaceDetailModal('progress');
-    }, []);
-    const workspaceFloatingLayerValue = useMemo(
-        () => ({
-            floatingZIndex: floatingControlsZIndex + 1,
-            hostElement: workspaceFloatingHostElement,
-        }),
-        [floatingControlsZIndex, workspaceFloatingHostElement],
-    );
-    const handleOpenSourcesDetails = useCallback(() => {
-        setIsQueuedBatchSpaceOpen(false);
-        setActiveWorkspaceDetailModal('sources');
-    }, []);
-    const handleOpenVersionsDetails = useCallback(() => {
-        setIsQueuedBatchSpaceOpen(false);
-        setActiveWorkspaceDetailModal('versions');
-    }, []);
-    const handleOpenQueuedBatchJobs = useCallback(() => {
-        setActiveWorkspaceDetailModal(null);
-        setIsQueuedBatchSpaceOpen(true);
-    }, []);
-    const handleClearStyle = useCallback(() => {
-        setImageStyle('None');
-    }, [setImageStyle]);
-    const handleToggleSettingsLock = useCallback(() => {
-        setSettingsLocked((prev) => !prev);
-    }, [setSettingsLocked]);
-    const composerSettingsPanelProps = useComposerSettingsPanelProps({
-        prompt,
-        placeholder: t('placeholder'),
-        enterToSubmit,
-        isGenerating: isForegroundGenerationLocked,
-        isActionLocked: isGenerating || isUploadingVideo,
-        isCancelFinalizing,
-        isEnhancingPrompt: isEnhancingComposerPrompt,
-        activePromptTool: activeComposerPromptTool,
-        currentLanguage: currentLang,
-        imageStyleLabel: getStyleLabel(imageStyle),
-        outputFormat,
-        thinkingLevel,
-        groundingMode,
-        stickySendIntent,
-        imageModel,
-        aspectRatio,
-        imageSize,
-        batchSize,
-        currentStageAsset,
-        capability,
-        availableGroundingModes,
-        temperature,
-        isAdvancedSettingsOpen,
-        generateLabel: t('generate'),
-        isQueueBatchDisabled,
-        queueBatchDisabledReason,
-        queueBatchModeSummary,
-        queueBatchGenerateModeSummary,
-        queueBatchConversationNotice,
-        promptTextareaRef: composerPromptTextareaRef,
-        setPrompt,
-        setBatchSize,
-        setStickySendIntent,
-        toggleEnterToSubmit,
-        handleGenerate,
-        handleQueueBatchJob,
-        handleQueueBatchFollowUpJob,
-        handleCancelGeneration,
-        handleStartNewConversation,
-        handleFollowUpGenerate,
-        handleSurpriseMe: handleComposerSurpriseMe,
-        handleSmartRewrite: handleComposerSmartRewrite,
-        handleImageToPrompt: handleComposerImageToPrompt,
-        openSettings: openGenerationSettingsSession,
-        openAdvancedSettings: openAdvancedSettingsSession,
-        setActivePickerSheet,
-        t,
-        getStageOriginLabel,
-        getLineageActionLabel,
-        roundCount,
-        setRoundCount,
-        batchProgress,
-        settingsLocked,
-        onToggleSettingsLock: handleToggleSettingsLock,
-        showNotification,
-        promptThinkingLevel,
-        onPromptThinkingLevelChange: handlePromptThinkingLevelChange,
-        objectImages: surfaceObjectImages,
-        characterImages: surfaceCharacterImages,
-        styleImages,
-        videoReference,
-        onClearVideoReference: () => {
-            cancelActiveVideoUpload();
-            setVideoReference(null);
-        },
-        openMetadataViewer: () => setShowMetadataViewerDrawer(true),
-    });
-    const advancedSettingsDialogProps: React.ComponentProps<typeof ComposerAdvancedSettingsDialog> | null =
-        isAdvancedSettingsOpen
-            ? {
-                  currentLanguage: currentLang,
-                  outputFormat: settingsSessionView.outputFormat,
-                  thinkingLevel: settingsSessionView.thinkingLevel,
-                  groundingMode: settingsSessionView.groundingMode,
-                  imageModel: settingsSessionView.imageModel,
-                  capability: settingsSessionCapability,
-                  availableGroundingModes: settingsSessionAvailableGroundingModes,
-                  temperature: settingsSessionView.temperature,
-                  onOutputFormatChange: (value) =>
-                      updateSettingsSessionDraft((previous) => ({
-                          ...previous,
-                          outputFormat: value,
-                      })),
-                  onTemperatureChange: (value) =>
-                      updateSettingsSessionDraft((previous) => ({
-                          ...previous,
-                          temperature: value,
-                      })),
-                  onThinkingLevelChange: (value) =>
-                      updateSettingsSessionDraft((previous) => ({
-                          ...previous,
-                          thinkingLevel: value,
-                      })),
-                  onGroundingModeChange: handleSettingsSessionGroundingModeChange,
-                  isOpen: true,
-                  onApply: handleApplySettingsSessionDraft,
-                  onClose: handleCloseAdvancedSettingsSession,
-              }
-            : null;
     const headerConsole = useMemo(
         () => (
             <div className="flex items-center gap-1.5 sm:gap-2">
@@ -1817,7 +232,7 @@ const App: React.FC = () => {
                 <button
                     type="button"
                     data-testid="debug-terminal-toggle"
-                    onClick={() => setIsDebugTerminalOpen(true)}
+                    onClick={handleOpenDebugTerminal}
                     className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200/80 bg-white/70 text-slate-500 transition-colors hover:border-cyan-300/80 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 dark:border-white/10 dark:bg-gray-800 dark:text-slate-300 dark:hover:border-cyan-400/50 dark:hover:bg-gray-700 dark:hover:text-cyan-300 sm:h-8 sm:w-8"
                     aria-label={t('debugTerminalOpen')}
                     title={t('debugTerminalOpen')}
@@ -1826,139 +241,9 @@ const App: React.FC = () => {
                 </button>
             </div>
         ),
-        [currentLang, systemStatusRefreshToken, t],
+        [currentLang, handleOpenDebugTerminal, systemStatusRefreshToken, t],
     );
-    const focusComposerPromptTextarea = useCallback(
-        ({ delayFrames = 1, ensureVisible = false }: { delayFrames?: number; ensureVisible?: boolean } = {}) => {
-            if (typeof window === 'undefined') {
-                return;
-            }
 
-            const normalizedDelayFrames = Math.max(1, delayFrames);
-            const focusTextarea = () => {
-                const textarea = composerPromptTextareaRef.current;
-                if (!textarea) {
-                    return;
-                }
-
-                if (ensureVisible) {
-                    try {
-                        textarea.scrollIntoView({ block: 'center', inline: 'nearest' });
-                    } catch {
-                        textarea.scrollIntoView();
-                    }
-                }
-
-                try {
-                    textarea.focus({ preventScroll: false });
-                } catch {
-                    textarea.focus();
-                }
-
-                const cursorIndex = textarea.value.length;
-                textarea.setSelectionRange(cursorIndex, cursorIndex);
-            };
-
-            const queueFocus = (remainingFrames: number) => {
-                window.requestAnimationFrame(() => {
-                    if (remainingFrames > 1) {
-                        queueFocus(remainingFrames - 1);
-                        return;
-                    }
-
-                    focusTextarea();
-                });
-            };
-
-            queueFocus(normalizedDelayFrames);
-        },
-        [],
-    );
-    const replaceComposerPromptText = useCallback(
-        (value: string, noticeKey: string, focusOptions?: { delayFrames?: number; ensureVisible?: boolean }) => {
-            const normalizedValue = value.trim();
-            if (!normalizedValue) {
-                return;
-            }
-
-            setPrompt(normalizedValue);
-            showNotification(t(noticeKey), 'info');
-            focusComposerPromptTextarea(focusOptions);
-        },
-        [focusComposerPromptTextarea, setPrompt, showNotification, t],
-    );
-    const handleApplyPromptFromViewer = useCallback(
-        (value: string) => {
-            replaceComposerPromptText(value, 'workspaceViewerPromptAppliedNotice', {
-                delayFrames: 2,
-                ensureVisible: true,
-            });
-        },
-        [replaceComposerPromptText],
-    );
-    const handleApplySettingsFromViewer = useCallback(
-        (snapshot: ViewerComposerSettingsSnapshot) => {
-            const applied = applyViewerComposerSettingsSnapshot(snapshot);
-            if (!applied) {
-                showNotification(t('settingsLockedNotice'), 'info');
-                return;
-            }
-            showNotification(t('workspaceViewerSettingsAppliedNotice'), 'info');
-            focusComposerPromptTextarea({
-                delayFrames: 2,
-                ensureVisible: true,
-            });
-        },
-        [applyViewerComposerSettingsSnapshot, focusComposerPromptTextarea, showNotification, t],
-    );
-    const handleApplyBothFromMetadataViewer = useCallback(
-        (promptText: string, snapshot: ViewerComposerSettingsSnapshot) => {
-            const applied = applyViewerComposerSettingsSnapshot(snapshot);
-            if (!applied) {
-                showNotification(t('settingsLockedNotice'), 'info');
-                handleApplyPromptFromViewer(promptText);
-                setShowMetadataViewerDrawer(false);
-                return;
-            }
-            setPrompt(promptText.trim());
-            focusComposerPromptTextarea({
-                delayFrames: 2,
-                ensureVisible: true,
-            });
-            showNotification(t('metadataViewerApplyBothSuccessNotice'), 'info');
-            setShowMetadataViewerDrawer(false);
-        },
-        [
-            applyViewerComposerSettingsSnapshot,
-            focusComposerPromptTextarea,
-            handleApplyPromptFromViewer,
-            setPrompt,
-            showNotification,
-            t,
-        ],
-    );
-    const stageViewerSettings = useMemo(
-        () => ({
-            aspectRatio: viewSettings.aspectRatio,
-            imageSize: viewSettings.size,
-            imageStyle: viewSettings.style,
-            model: viewSettings.model,
-            batchSize: viewSettings.batchSize,
-        }),
-        [viewSettings.aspectRatio, viewSettings.batchSize, viewSettings.model, viewSettings.size, viewSettings.style],
-    );
-    const currentStageLinkedHistoryId = currentStageAsset?.sourceHistoryId || null;
-    const currentStageHasLinkedHistoryTurn = Boolean(
-        currentStageLinkedHistoryId &&
-        currentStageSourceTurn &&
-        currentStageSourceTurn.id === currentStageLinkedHistoryId,
-    );
-    const currentStageLinkedBranchSummary = currentStageHasLinkedHistoryTurn ? currentStageBranchSummary : null;
-    const currentStageIsCurrentSource = Boolean(
-        generatedImageUrls.length > 0 &&
-        (!currentStageHasLinkedHistoryTurn ||
-            (currentStageSourceHistoryId && currentStageSourceHistoryId === currentSourceHistoryId)),
-    );
     const viewerProvenancePanel = useMemo(
         () => (
             <Suspense
@@ -1982,69 +267,6 @@ const App: React.FC = () => {
         ),
         [groundingProvenancePanelProps, isDarkTheme, t],
     );
-    const handleViewerSelectHistoryItem = useCallback(
-        (historyId: string) => {
-            const historyItem = getHistoryTurnById(historyId);
-            if (historyItem) {
-                handleHistorySelect(historyItem, { deferLineageCommit: true });
-            }
-        },
-        [getHistoryTurnById, handleHistorySelect],
-    );
-    const { handleDownloadStageImage, handleDownloadThoughtImage } = useStageImageDownloadActions({
-        history,
-        currentViewedCompletedHistoryItem,
-        selectedMetadata,
-        viewPrompt: viewSettings.prompt,
-        stageViewerSettings,
-        outputFormat,
-        temperature,
-        thinkingLevel,
-        includeThoughts,
-        googleSearch,
-        imageSearch,
-        generationMode,
-        executionMode,
-        selectedImageIndex,
-        getHistoryTurnById,
-        showNotification,
-        t,
-    });
-    const stableHandleGenerateRef = useRef(handleGenerate);
-    stableHandleGenerateRef.current = handleGenerate;
-    const stableHandleGenerate = useCallback(() => {
-        stableHandleGenerateRef.current();
-    }, []);
-
-    const stableHandleOpenEditorRef = useRef(handleOpenEditor);
-    stableHandleOpenEditorRef.current = handleOpenEditor;
-    const stableHandleOpenEditor = useCallback(() => {
-        stableHandleOpenEditorRef.current();
-    }, []);
-
-    const stableHandleClearCurrentStageRef = useRef(handleClearCurrentStage);
-    stableHandleClearCurrentStageRef.current = handleClearCurrentStage;
-    const stableHandleClearCurrentStage = useCallback(() => {
-        stableHandleClearCurrentStageRef.current();
-    }, []);
-
-    const stableHandleDownloadStageImageRef = useRef(handleDownloadStageImage);
-    stableHandleDownloadStageImageRef.current = handleDownloadStageImage;
-    const stableHandleDownloadStageImage = useCallback((imageUrl: string) => {
-        return stableHandleDownloadStageImageRef.current(imageUrl);
-    }, []);
-
-    const stableHandleAddToObjectReferenceRef = useRef(handleAddToObjectReference);
-    stableHandleAddToObjectReferenceRef.current = handleAddToObjectReference;
-    const stableHandleAddToObjectReference = useCallback(() => {
-        stableHandleAddToObjectReferenceRef.current();
-    }, []);
-
-    const stableHandleAddToCharacterReferenceRef = useRef(handleAddToCharacterReference);
-    stableHandleAddToCharacterReferenceRef.current = handleAddToCharacterReference;
-    const stableHandleAddToCharacterReference = useCallback(() => {
-        stableHandleAddToCharacterReferenceRef.current();
-    }, []);
 
     const { workspaceViewerOverlayProps, generatedImageStageProps } = useWorkspaceStageViewer({
         generatedImageUrls,
@@ -2087,72 +309,7 @@ const App: React.FC = () => {
         onApplySettings: handleApplySettingsFromViewer,
         onCloseViewer: commitPendingViewerSelection,
     });
-    const handleCloseWorkspacePickerSheet = useCallback(() => {
-        if (activePickerSheet === 'settings') {
-            handleCloseSettingsSheetSession();
-            return;
-        }
 
-        closePickerSheet();
-    }, [activePickerSheet, closePickerSheet, handleCloseSettingsSheetSession]);
-    const workspacePickerSheetProps = useWorkspacePickerSheetProps({
-        activePickerSheet,
-        activeSheetTitle,
-        pickerSheetZIndex,
-        prompt: isEditing ? editorPrompt : prompt,
-        setPrompt: isEditing ? setEditorPrompt : setPrompt,
-        isEnhancingPrompt: isEditing ? false : isEnhancingComposerPrompt,
-        closePickerSheet: handleCloseWorkspacePickerSheet,
-        openAdvancedSettings: openAdvancedSettingsFromGeneration,
-        currentLanguage: currentLang,
-        t,
-        imageStyle,
-        setImageStyle,
-        imageModel,
-        setImageModel,
-        capability,
-        aspectRatio,
-        setAspectRatio,
-        imageSize,
-        setImageSize,
-        lockedAspectRatio: activeEditorLockedAspectRatio,
-        settingsDraft: generationSettingsDraft,
-        onUpdateSettingsDraft: handleUpdateGenerationSettingsDraft,
-        onApplySettingsDraft: handleApplySettingsSessionDraft,
-        batchSize,
-        setBatchSize,
-        settingsVariant: isSketchPadOpen ? 'sketch' : 'full',
-        objectImages: surfaceObjectImages,
-        characterImages: surfaceCharacterImages,
-        styleImages,
-        setObjectImages: setSurfaceObjectImages,
-        isGenerating: isForegroundGenerationLocked,
-        showNotification,
-        handleRemoveObjectReference: handleSurfaceRemoveObjectReference,
-        setCharacterImages: setSurfaceCharacterImages,
-        handleRemoveCharacterReference: handleSurfaceRemoveCharacterReference,
-        setStyleImages,
-        handleRemoveStyleReference,
-        showStyleEntry: !isEditing,
-        videoReference,
-        onVideoReferenceChange: isEditing ? undefined : handleVideoReferenceChange,
-        onUploadVideoFile: isEditing ? undefined : handleUploadVideoFile,
-        isUploadingVideo: isEditing ? false : isUploadingVideo,
-        onCancelVideoUpload: isEditing ? undefined : cancelActiveVideoUpload,
-    });
-    const handleOpenClearWorkspaceConfirm = useCallback(() => {
-        setShowClearWorkspaceConfirm(true);
-    }, [setShowClearWorkspaceConfirm]);
-    const handleCloseClearWorkspaceConfirm = useCallback(() => {
-        setShowClearWorkspaceConfirm(false);
-    }, [setShowClearWorkspaceConfirm]);
-    const handleConfirmClearWorkspace = useCallback(
-        (clearOutput?: boolean) => {
-            setShowClearWorkspaceConfirm(false);
-            void handleClearGalleryHistory({ clearOutput });
-        },
-        [handleClearGalleryHistory, setShowClearWorkspaceConfirm],
-    );
     const historySurface = useMemo(
         () => (
             <WorkspaceUnifiedHistoryPanel
@@ -2164,61 +321,37 @@ const App: React.FC = () => {
                 selectedHistoryId={selectedHistoryId}
                 currentSourceHistoryId={currentSourceHistoryId}
                 activeBranchSummary={activeBranchSummary}
-                branchSummariesCount={branchSummaries.length}
+                branchSummariesCount={branchSummariesCount}
                 onSelect={handleHistorySelect}
                 getBranchAccentClassName={getBranchAccentClassName}
                 onOpenVersionsDetails={handleOpenVersionsDetails}
                 onImportWorkspace={handleOpenWorkspaceImportPicker}
                 onExportWorkspace={handleExportWorkspaceSnapshot}
-                onExportResults={() => setShowExportResultsModal(true)}
+                onExportResults={handleOpenExportResultsModal}
                 onClearWorkspace={handleOpenClearWorkspaceConfirm}
             />
         ),
         [
             activeBranchSummary,
+            activeBatchPreviewSession?.selectedPreviewSlotIndex,
             activeBatchPreviewSession?.tiles,
-            branchSummaries.length,
-            currentSourceHistoryId,
+            branchSummariesCount,
             currentLang,
+            currentSourceHistoryId,
             getBranchAccentClassName,
-            handleExportWorkspaceSnapshot,
-            handleOpenClearWorkspaceConfirm,
             handleBatchPreviewTileSelect,
+            handleExportWorkspaceSnapshot,
             handleHistorySelect,
+            handleOpenClearWorkspaceConfirm,
+            handleOpenExportResultsModal,
             handleOpenVersionsDetails,
             handleOpenWorkspaceImportPicker,
             history,
             selectedHistoryId,
+            t,
         ],
     );
-    const stagePanelClassName =
-        'min-w-0 nbu-shell-panel nbu-shell-surface-stage-hero min-h-[400px] overflow-hidden p-3 lg:min-h-0 xl:flex-1';
-    const hasQueuedBatchActivity = queuedJobs.length > 0;
-    const { progressThoughtEntries, progressThoughtsSummaryText, hasProgressActivity, hasSourceTrailInfo } =
-        useWorkspaceProgressThoughts({
-            selectedHistoryId,
-            getHistoryTurnById,
-            selectedResultParts,
-            selectedThoughts,
-            effectiveResultParts,
-            effectiveThoughts,
-            workspaceSession,
-            sessionUpdatedLabel,
-            isGenerating,
-            activeLiveProgressSession,
-            prompt,
-            history,
-            currentStageBranchSummary,
-            activeBranchSummary,
-            currentStageSourceTurn,
-            getShortTurnId,
-            groundingQueries,
-            selectedSourcesCount: selectedSources.length,
-            selectedSupportBundlesCount: selectedSupportBundles.length,
-            searchEntryPointRenderedContent: searchEntryPointRenderedContent ?? null,
-            effectiveSessionHints,
-            t,
-        });
+
     const supportRail = renderWorkspaceSupportRail({
         currentLanguage: currentLang,
         progressThoughtsSummaryText,
@@ -2230,6 +363,7 @@ const App: React.FC = () => {
         onOpenQueuedBatchJobs: handleOpenQueuedBatchJobs,
         t,
     });
+
     const workspaceTopHeaderProps = useWorkspaceTopHeaderProps({
         headerConsole,
         currentLanguage: currentLang,
@@ -2238,7 +372,7 @@ const App: React.FC = () => {
         optimizationMode,
         onOptimizationModeChange: handleOptimizationModeChange,
     });
-    const canRepaintCurrentImage = Boolean(getActiveImageUrl());
+
     const sideToolPanel = useMemo(
         () => (
             <WorkspaceSideToolPanel
@@ -2273,7 +407,6 @@ const App: React.FC = () => {
         ),
         [
             cancelActiveVideoUpload,
-            handleClearAllReferences,
             canRepaintCurrentImage,
             capability.maxCharacters,
             capability.maxObjects,
@@ -2281,7 +414,7 @@ const App: React.FC = () => {
             capability.supportsVideo,
             characterImages,
             currentLang,
-            imageModel,
+            handleClearAllReferences,
             handleOpenEditor,
             handleOpenSketchPad,
             handleOpenUploadToRepaint,
@@ -2290,6 +423,7 @@ const App: React.FC = () => {
             handleRemoveStyleReference,
             handleUploadVideoFile,
             handleVideoReferenceChange,
+            imageModel,
             isForegroundGenerationLocked,
             isUploadingVideo,
             objectImages,
@@ -2298,9 +432,11 @@ const App: React.FC = () => {
             setStyleImages,
             showNotification,
             styleImages,
+            t,
             videoReference,
         ],
     );
+
     const contextProvenanceDetailPanel = useMemo(
         () => (
             <Suspense
@@ -2316,58 +452,16 @@ const App: React.FC = () => {
         ),
         [groundingProvenancePanelProps, t],
     );
-    const versionsDetailPanelProps = useMemo(
-        () => ({
-            currentLanguage: currentLang,
-            activeBranchSummary,
-            recentBranchSummaries,
-            branchSummariesCount: branchSummaries.length,
-            sessionUpdatedLabel,
-            selectedHistoryId,
-            currentStageSourceHistoryId: currentStageAsset?.sourceHistoryId || workspaceSession.sourceHistoryId || null,
-            lineageRootGroups,
-            onExportWorkspace: handleExportWorkspaceSnapshot,
-            onImportWorkspace: handleOpenWorkspaceImportPicker,
-            onHistorySelect: handleHistorySelect,
-            onRenameBranch: handleRenameBranch,
-            getShortTurnId,
-            getBranchAccentClassName,
-            renderHistoryTurnSnapshotContent,
-            renderHistoryTurnBadges,
-            renderHistoryTurnActionRow,
-            renderActiveBranchSummaryContent,
-        }),
-        [
-            activeBranchSummary,
-            branchSummaries.length,
-            currentLang,
-            getBranchAccentClassName,
-            getShortTurnId,
-            handleExportWorkspaceSnapshot,
-            handleHistorySelect,
-            handleOpenWorkspaceImportPicker,
-            handleRenameBranch,
-            lineageRootGroups,
-            recentBranchSummaries,
-            renderActiveBranchSummaryContent,
-            renderHistoryTurnActionRow,
-            renderHistoryTurnBadges,
-            renderHistoryTurnSnapshotContent,
-            currentStageAsset?.sourceHistoryId,
-            selectedHistoryId,
-            sessionUpdatedLabel,
-            workspaceSession.sourceHistoryId,
-        ],
-    );
+
     const workspaceOverlayContent = (
         <WorkspaceDetailOverlays
             activeWorkspaceDetailModal={activeWorkspaceDetailModal}
             isQueuedBatchSpaceOpen={isQueuedBatchSpaceOpen}
             showClearWorkspaceConfirm={showClearWorkspaceConfirm}
             showExportResultsModal={showExportResultsModal}
-            onCloseExportResultsModal={() => setShowExportResultsModal(false)}
+            onCloseExportResultsModal={handleCloseExportResultsModal}
             showMetadataViewerDrawer={showMetadataViewerDrawer}
-            onCloseMetadataViewerDrawer={() => setShowMetadataViewerDrawer(false)}
+            onCloseMetadataViewerDrawer={handleCloseMetadataViewer}
             onApplyMetadataPrompt={handleApplyPromptFromViewer}
             onApplyMetadataSettings={handleApplySettingsFromViewer}
             onApplyMetadataBoth={handleApplyBothFromMetadataViewer}
@@ -2395,8 +489,8 @@ const App: React.FC = () => {
             provenanceContinuityMessage={provenanceContinuityMessage}
             groundingStateMessage={groundingStateMessage}
             groundingSupportMessage={groundingSupportMessage}
-            selectedSourcesCount={selectedSources.length}
-            selectedSupportBundlesCount={selectedSupportBundles.length}
+            selectedSourcesCount={selectedSourcesCount}
+            selectedSupportBundlesCount={selectedSupportBundlesCount}
             contextProvenanceDetailPanel={contextProvenanceDetailPanel}
             versionsDetailPanelProps={versionsDetailPanelProps}
             queueBatchConversationNotice={queueBatchConversationNotice}
@@ -2417,6 +511,7 @@ const App: React.FC = () => {
             onRecoverRecentQueuedJobs={handleRecoverRecentQueuedJobs}
         />
     );
+
     const focusSurface = useMemo(
         () => (
             <div className={stagePanelClassName}>
@@ -2436,195 +531,175 @@ const App: React.FC = () => {
     );
 
     return (
-        <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(180deg,_#fffaf2_0%,_#f8fafc_38%,_#eef3f8_100%)] text-gray-900 transition-colors duration-500 dark:bg-[linear-gradient(180deg,_#111315_0%,_#090b10_46%,_#030405_100%)] dark:text-gray-100">
-            <div
-                aria-hidden="true"
-                data-testid="workspace-ambient-backdrop"
-                className="pointer-events-none absolute inset-0 overflow-hidden"
-            >
+        <WorkspaceDomainStoreContext.Provider value={store}>
+            <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(180deg,_#fffaf2_0%,_#f8fafc_38%,_#eef3f8_100%)] text-gray-900 transition-colors duration-500 dark:bg-[linear-gradient(180deg,_#111315_0%,_#090b10_46%,_#030405_100%)] dark:text-gray-100">
                 <div
-                    data-testid="workspace-ambient-glow"
-                    className="absolute inset-0 bg-[radial-gradient(ellipse_38vw_560px_at_12%_58px,rgba(251,191,36,0.22)_0%,rgba(251,191,36,0.09)_38%,rgba(251,191,36,0.025)_68%,transparent_100%),radial-gradient(ellipse_34vw_480px_at_84%_36px,rgba(56,189,248,0.14)_0%,rgba(56,189,248,0.06)_38%,rgba(56,189,248,0.015)_68%,transparent_100%),radial-gradient(ellipse_48vw_420px_at_56%_0px,rgba(255,255,255,0.72)_0%,rgba(255,255,255,0.26)_44%,transparent_100%)] dark:bg-[radial-gradient(ellipse_38vw_560px_at_14%_56px,rgba(245,158,11,0.18)_0%,rgba(245,158,11,0.075)_38%,rgba(245,158,11,0.02)_68%,transparent_100%),radial-gradient(ellipse_34vw_480px_at_82%_48px,rgba(14,165,233,0.12)_0%,rgba(14,165,233,0.05)_38%,rgba(14,165,233,0.012)_68%,transparent_100%),radial-gradient(ellipse_48vw_420px_at_50%_0px,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.022)_44%,transparent_100%)]"
+                    aria-hidden="true"
+                    data-testid="workspace-ambient-backdrop"
+                    className="pointer-events-none absolute inset-0 overflow-hidden"
+                >
+                    <div
+                        data-testid="workspace-ambient-glow"
+                        className="absolute inset-0 bg-[radial-gradient(ellipse_38vw_560px_at_12%_58px,rgba(251,191,36,0.22)_0%,rgba(251,191,36,0.09)_38%,rgba(251,191,36,0.025)_68%,transparent_100%),radial-gradient(ellipse_34vw_480px_at_84%_36px,rgba(56,189,248,0.14)_0%,rgba(56,189,248,0.06)_38%,rgba(56,189,248,0.015)_68%,transparent_100%),radial-gradient(ellipse_48vw_420px_at_56%_0px,rgba(255,255,255,0.72)_0%,rgba(255,255,255,0.26)_44%,transparent_100%)] dark:bg-[radial-gradient(ellipse_38vw_560px_at_14%_56px,rgba(245,158,11,0.18)_0%,rgba(245,158,11,0.075)_38%,rgba(245,158,11,0.02)_68%,transparent_100%),radial-gradient(ellipse_34vw_480px_at_82%_48px,rgba(14,165,233,0.12)_0%,rgba(14,165,233,0.05)_38%,rgba(14,165,233,0.012)_68%,transparent_100%),radial-gradient(ellipse_48vw_420px_at_50%_0px,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.022)_44%,transparent_100%)]"
+                    />
+                    <div className="absolute left-[-8%] top-[20%] h-64 w-64 rounded-full bg-amber-200/20 blur-3xl dark:bg-amber-500/10" />
+                    <div className="absolute right-[-5%] top-[32%] h-72 w-72 rounded-full bg-sky-200/20 blur-3xl dark:bg-sky-500/10" />
+                </div>
+                <input
+                    id="global-upload-input"
+                    type="file"
+                    ref={uploadInputRef}
+                    onChange={handleUploadForEdit}
+                    className="hidden"
+                    accept="image/*"
                 />
-                <div className="absolute left-[-8%] top-[20%] h-64 w-64 rounded-full bg-amber-200/20 blur-3xl dark:bg-amber-500/10" />
-                <div className="absolute right-[-5%] top-[32%] h-72 w-72 rounded-full bg-sky-200/20 blur-3xl dark:bg-sky-500/10" />
-            </div>
-            <input
-                id="global-upload-input"
-                type="file"
-                ref={uploadInputRef}
-                onChange={handleUploadForEdit}
-                className="hidden"
-                accept="image/*"
-            />
-            <input
-                id="workspace-import-input"
-                type="file"
-                ref={workspaceImportInputRef}
-                onChange={handleImportWorkspaceSnapshot}
-                className="hidden"
-                accept="application/json,.json"
-            />
+                <input
+                    id="workspace-import-input"
+                    type="file"
+                    ref={workspaceImportInputRef}
+                    onChange={handleImportWorkspaceSnapshot}
+                    className="hidden"
+                    accept="application/json,.json"
+                />
 
-            <WorkspaceOverlayStack
-                notification={notification}
-                surfaceSharedControlsProps={surfaceSharedControlsProps}
-                importReviewProps={importReviewProps}
-                advancedSettingsDialogProps={advancedSettingsDialogProps}
-                extraOverlays={workspaceOverlayContent}
-                sketchPadSurface={
-                    isSketchPadOpen ? (
-                        <Suspense fallback={<SurfaceLoadingFallback label={t('loadingPrepareSketchPad')} />}>
-                            <SketchPad
-                                onSave={handleSketchPadSave}
-                                onClose={handleCloseSketchPad}
-                                currentLanguage={currentLang}
-                                imageModel={imageModel}
-                                currentRatio={aspectRatio}
-                            />
-                        </Suspense>
-                    ) : null
-                }
-                showSketchReplaceConfirm={showSketchReplaceConfirm}
-                sketchReplaceTitle={t('sketchReplaceTitle')}
-                sketchReplaceMessage={t('sketchReplaceMsg')}
-                sketchReplaceActionsTitle={t('workspaceRestoreActionsTitle')}
-                sketchReplaceCancelLabel={t('clearHistoryCancel')}
-                sketchReplaceConfirmLabel={t('sketchReplaceConfirm')}
-                onSketchReplaceCancel={handleSketchReplaceCancel}
-                onSketchReplaceConfirm={handleSketchReplaceConfirm}
-                branchRenameDialogProps={branchRenameDialogProps}
-                imageEditorSurface={
-                    isEditing ? (
-                        editingImageSource ? (
-                            <Suspense fallback={<SurfaceLoadingFallback label={t('loadingPrepareUltraEditor')} />}>
-                                <ImageEditor
-                                    initialImageUrl={editingImageSource}
-                                    initialPreparedSource={editorContextSnapshot?.editorPreparedSource ?? null}
-                                    initialPrompt={editorInitialState.prompt}
-                                    initialObjectImages={editorInitialState.objectImages}
-                                    initialCharacterImages={editorInitialState.characterImages}
-                                    initialRatio={editorInitialState.ratio}
-                                    initialSize={editorInitialState.size}
-                                    initialBatchSize={editorInitialState.batchSize}
-                                    prompt={editorPrompt}
-                                    onPromptChange={setEditorPrompt}
-                                    objectImages={editorObjectImages}
-                                    onObjectImagesChange={setEditorObjectImages}
-                                    characterImages={editorCharacterImages}
-                                    onCharacterImagesChange={setEditorCharacterImages}
-                                    mode={editorMode}
-                                    onModeChange={setEditorMode}
-                                    ratio={aspectRatio}
-                                    onRatioChange={setAspectRatio}
-                                    lockedAspectRatio={activeEditorLockedAspectRatio}
-                                    size={imageSize}
-                                    onSizeChange={setImageSize}
-                                    batchSize={batchSize}
-                                    onBatchSizeChange={setBatchSize}
-                                    onGenerate={handleEditorGenerate}
-                                    onQueueBatch={showEditorQueueBatch ? handleEditorQueueBatch : undefined}
-                                    queueBatchDisabledReason={showEditorQueueBatch ? null : editorQueueDisabledReason}
-                                    onCancel={closeEditor}
-                                    isGenerating={isGenerating}
+                <WorkspaceOverlayStack
+                    notification={notification}
+                    surfaceSharedControlsProps={surfaceSharedControlsProps}
+                    importReviewProps={importReviewProps}
+                    advancedSettingsDialogProps={advancedSettingsDialogProps}
+                    extraOverlays={workspaceOverlayContent}
+                    sketchPadSurface={
+                        isSketchPadOpen ? (
+                            <Suspense fallback={<SurfaceLoadingFallback label={t('loadingPrepareSketchPad')} />}>
+                                <SketchPad
+                                    onSave={handleSketchPadSave}
+                                    onClose={handleCloseSketchPad}
                                     currentLanguage={currentLang}
-                                    error={error?.summary || null}
-                                    onErrorClear={() => setError(null)}
                                     imageModel={imageModel}
-                                    leftDockTopOffset={
-                                        surfaceSharedControlsBottom === null ? null : surfaceSharedControlsBottom + 12
-                                    }
+                                    currentRatio={aspectRatio}
                                 />
                             </Suspense>
-                        ) : (
-                            <SurfaceLoadingFallback label={t('loadingPrepareUltraEditor')} />
-                        )
-                    ) : null
-                }
-                pickerSheetProps={workspacePickerSheetProps}
-                viewerOverlayProps={workspaceViewerOverlayProps}
-            />
-
-            <WorkspaceFloatingLayerContext.Provider value={workspaceFloatingLayerValue}>
-                <WorkspaceTopHeader {...workspaceTopHeaderProps} />
-
-                {isDebugTerminalOpen ? (
-                    <DebugTerminalPanel
-                        events={debugTerminal.events}
-                        filteredEvents={debugTerminal.filteredEvents}
-                        selectedEvent={debugTerminal.selectedEvent}
-                        selectedEventId={debugTerminal.selectedEventId}
-                        filter={debugTerminal.filter}
-                        sourceFilter={debugTerminal.sourceFilter}
-                        routeFilter={debugTerminal.routeFilter}
-                        searchQuery={debugTerminal.searchQuery}
-                        activeCorrelationId={debugTerminal.activeCorrelationId}
-                        autoScroll={debugTerminal.autoScroll}
-                        kindCounts={debugTerminal.kindCounts}
-                        sourceOptions={debugTerminal.sourceOptions}
-                        routeOptions={debugTerminal.routeOptions}
-                        t={t}
-                        onFilterChange={debugTerminal.setFilter}
-                        onSourceFilterChange={debugTerminal.setSourceFilter}
-                        onRouteFilterChange={debugTerminal.setRouteFilter}
-                        onSearchQueryChange={debugTerminal.setSearchQuery}
-                        onActiveCorrelationIdChange={debugTerminal.setActiveCorrelationId}
-                        onSelectEvent={(eventId) => debugTerminal.setSelectedEventId(eventId)}
-                        onAutoScrollChange={debugTerminal.setAutoScroll}
-                        onClear={debugTerminal.clearEvents}
-                        onClose={() => setIsDebugTerminalOpen(false)}
-                    />
-                ) : null}
-
-                <div className="relative z-10 mx-auto flex min-h-screen max-w-[1560px] flex-col px-4 pb-[50px] pt-[100px] lg:px-4 lg:pb-[54px] xl:min-h-0 xl:px-3 xl:pt-[58px]">
-                    <main className="mt-0 flex flex-1 flex-col gap-1.5 xl:min-h-0 xl:flex-none">
-                        <section
-                            data-testid="workspace-main-shell"
-                            className="grid min-w-0 gap-1.5 xl:min-h-0 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] xl:items-stretch"
-                        >
-                            <div
-                                data-testid="workspace-work-column"
-                                className="grid min-w-0 gap-1.5 xl:min-h-0 xl:flex xl:flex-col"
-                            >
-                                <section
-                                    data-testid="workspace-actions-composer-row"
-                                    className="min-w-0 xl:min-h-0 xl:flex xl:flex-1 xl:flex-col"
-                                >
-                                    <ComposerSettingsPanel
-                                        {...composerSettingsPanelProps}
-                                        imageToolsPanel={sideToolPanel}
-                                        onClearStyle={handleClearStyle}
+                        ) : null
+                    }
+                    showSketchReplaceConfirm={showSketchReplaceConfirm}
+                    sketchReplaceTitle={t('sketchReplaceTitle')}
+                    sketchReplaceMessage={t('sketchReplaceMsg')}
+                    sketchReplaceActionsTitle={t('workspaceRestoreActionsTitle')}
+                    sketchReplaceCancelLabel={t('clearHistoryCancel')}
+                    sketchReplaceConfirmLabel={t('sketchReplaceConfirm')}
+                    onSketchReplaceCancel={handleSketchReplaceCancel}
+                    onSketchReplaceConfirm={handleSketchReplaceConfirm}
+                    branchRenameDialogProps={branchRenameDialogProps}
+                    imageEditorSurface={
+                        isEditing ? (
+                            editingImageSource ? (
+                                <Suspense fallback={<SurfaceLoadingFallback label={t('loadingPrepareUltraEditor')} />}>
+                                    <ImageEditor
+                                        initialImageUrl={editingImageSource}
+                                        initialPreparedSource={editorContextSnapshot?.editorPreparedSource ?? null}
+                                        initialPrompt={editorInitialState.prompt}
+                                        initialObjectImages={editorInitialState.objectImages}
+                                        initialCharacterImages={editorInitialState.characterImages}
+                                        initialRatio={editorInitialState.ratio}
+                                        initialSize={editorInitialState.size}
+                                        initialBatchSize={editorInitialState.batchSize}
+                                        prompt={editorPrompt}
+                                        onPromptChange={setEditorPrompt}
+                                        objectImages={editorObjectImages}
+                                        onObjectImagesChange={setEditorObjectImages}
+                                        characterImages={editorCharacterImages}
+                                        onCharacterImagesChange={setEditorCharacterImages}
+                                        mode={editorMode}
+                                        onModeChange={setEditorMode}
+                                        ratio={aspectRatio}
+                                        onRatioChange={setAspectRatio}
+                                        lockedAspectRatio={activeEditorLockedAspectRatio}
+                                        size={imageSize}
+                                        onSizeChange={setImageSize}
+                                        batchSize={batchSize}
+                                        onBatchSizeChange={setBatchSize}
+                                        onGenerate={handleEditorGenerate}
+                                        onQueueBatch={showEditorQueueBatch ? handleEditorQueueBatch : undefined}
+                                        queueBatchDisabledReason={
+                                            showEditorQueueBatch ? null : editorQueueDisabledReason
+                                        }
+                                        onCancel={closeEditor}
+                                        isGenerating={isGenerating}
+                                        currentLanguage={currentLang}
+                                        error={error?.summary || null}
+                                        onErrorClear={() => setError(null)}
+                                        imageModel={imageModel}
+                                        leftDockTopOffset={
+                                            surfaceSharedControlsBottom === null
+                                                ? null
+                                                : surfaceSharedControlsBottom + 12
+                                        }
                                     />
-                                </section>
-                            </div>
-
-                            <div
-                                data-testid="workspace-stage-column"
-                                className="grid min-w-0 gap-1.5 xl:min-h-0 xl:flex xl:flex-col"
-                            >
-                                <div data-testid="workspace-history-column" className="min-w-0 xl:min-h-0">
-                                    {historySurface}
-                                </div>
-                                <div
-                                    data-testid="workspace-stage-surface"
-                                    className="min-w-0 xl:flex xl:min-h-0 xl:flex-1 xl:flex-col"
-                                >
-                                    {focusSurface}
-                                </div>
-                            </div>
-                        </section>
-                    </main>
-                </div>
-                <div
-                    ref={setWorkspaceFloatingHostElement}
-                    data-workspace-floating-layer="true"
-                    className="pointer-events-none fixed inset-0"
-                    style={{ zIndex: floatingControlsZIndex + 1 }}
+                                </Suspense>
+                            ) : (
+                                <SurfaceLoadingFallback label={t('loadingPrepareUltraEditor')} />
+                            )
+                        ) : null
+                    }
+                    pickerSheetProps={workspacePickerSheetProps}
+                    viewerOverlayProps={workspaceViewerOverlayProps}
                 />
-            </WorkspaceFloatingLayerContext.Provider>
 
-            <WorkspaceBottomFooter />
-        </div>
+                <WorkspaceFloatingLayerContext.Provider value={workspaceFloatingLayerValue}>
+                    <WorkspaceTopHeader {...workspaceTopHeaderProps} />
+
+                    <WorkspaceDebugTerminalHost store={store} t={t} />
+
+                    <div className="relative z-10 mx-auto flex min-h-screen max-w-[1560px] flex-col px-4 pb-[50px] pt-[100px] lg:px-4 lg:pb-[54px] xl:min-h-0 xl:px-3 xl:pt-[58px]">
+                        <main className="mt-0 flex flex-1 flex-col gap-1.5 xl:min-h-0 xl:flex-none">
+                            <section
+                                data-testid="workspace-main-shell"
+                                className="grid min-w-0 gap-1.5 xl:min-h-0 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] xl:items-stretch"
+                            >
+                                <div
+                                    data-testid="workspace-work-column"
+                                    className="grid min-w-0 gap-1.5 xl:min-h-0 xl:flex xl:flex-col"
+                                >
+                                    <section
+                                        data-testid="workspace-actions-composer-row"
+                                        className="min-w-0 xl:min-h-0 xl:flex xl:flex-1 xl:flex-col"
+                                    >
+                                        <ComposerSettingsPanel
+                                            {...composerSettingsPanelProps}
+                                            imageToolsPanel={sideToolPanel}
+                                            onClearStyle={handleClearStyle}
+                                        />
+                                    </section>
+                                </div>
+
+                                <div
+                                    data-testid="workspace-stage-column"
+                                    className="grid min-w-0 gap-1.5 xl:min-h-0 xl:flex xl:flex-col"
+                                >
+                                    <div data-testid="workspace-history-column" className="min-w-0 xl:min-h-0">
+                                        {historySurface}
+                                    </div>
+                                    <div
+                                        data-testid="workspace-stage-surface"
+                                        className="min-w-0 xl:flex xl:min-h-0 xl:flex-1 xl:flex-col"
+                                    >
+                                        {focusSurface}
+                                    </div>
+                                </div>
+                            </section>
+                        </main>
+                    </div>
+                    <div
+                        ref={setWorkspaceFloatingHostElement}
+                        data-workspace-floating-layer="true"
+                        className="pointer-events-none fixed inset-0"
+                        style={{ zIndex: floatingControlsZIndex + 1 }}
+                    />
+                </WorkspaceFloatingLayerContext.Provider>
+
+                <WorkspaceBottomFooter />
+            </div>
+        </WorkspaceDomainStoreContext.Provider>
     );
 };
 

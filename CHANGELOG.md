@@ -1,5 +1,22 @@
 # Changelog
 
+## v5.9.0 - 2026-11-11
+
+- Release title: Nano Banana Ultra 5.9.0 - Phase 2 Architectural Evolution: IndexedDB Binary Asset Offloading, Workspace Domain Store & Re-render Isolation
+- Release summary:
+    - **Phase 2A — IndexedDB Binary Asset Offloading (`types.ts`, `utils/workspaceBlobStore.ts`, `utils/workspacePersistence.ts`, `hooks/useWorkspaceSnapshotPersistence.ts`, `hooks/useWorkspaceBlobHydration.ts`, `tests/workspaceBlobStore.test.ts`, `tests/workspacePersistence.test.ts`)**:
+        - Native IndexedDB Storage Engine: Implemented a zero-dependency, transactional IndexedDB blob store (`nbu_workspace_blob_store`) with graceful in-memory fallback, automatically converting data URLs into raw binary `Blob` objects addressed by deterministic SHA-256 content hashes (`blobKey`).
+        - Hybrid Storage Strategy: Automatically offloads unsaved inline Base64 `stagedAssets` and large history thumbnails (`>= 32 KiB`) from `localStorage` into IndexedDB during snapshot saves, retaining only lightweight JSON indexes and `blobKey` pointers in `localStorage` to completely eliminate `QuotaExceededError` risks.
+        - Asynchronous Background Hydration & GC: Restores binary assets into memory/data URLs transparently via `useWorkspaceBlobHydration` upon app startup and snapshot recovery, automatically cleaning up orphaned blobs (`pruneUnreferencedWorkspaceBlobs`) on save and workspace reset.
+        - Self-Contained Export Compatibility: Guaranteed that exported `.json` documents (`exportWorkspaceSnapshotDocument`) and server snapshots (`saveSharedWorkspaceSnapshot`) remain 100% self-contained by re-hydrating binary data URLs and stripping internal `blobKey` attributes before serialization.
+    - **Phase 2B — `App.tsx` Domain State Convergence & Re-render Isolation (`state/workspaceDomainStore.ts`, `components/WorkspaceDebugTerminalHost.tsx`, `hooks/useDebugTerminal.ts`, `utils/debugTerminalEvents.ts`, `hooks/useVideoReferenceManager.ts`, `hooks/useStageHistorySynchronizer.ts`, `hooks/useViewerPromptAndMetadataApplyActions.ts`, `hooks/useWorkspaceOrchestrator.ts`, `App.tsx`, `tests/*`)**:
+        - Zero-Dependency Domain Store: Converged scattered top-level state variables in `App.tsx` into a centralized, selector-driven external store (`createWorkspaceDomainStore`) leveraging React 19's native `useSyncExternalStore` and `shallowEqual` across 6 decoupled domain slices (`runtime`, `composer`, `surface`, `sessionAndLineage`, `execution`, `historyAndStaged`).
+        - Background Telemetry Isolation: Encapsulated terminal telemetry events and logging within `<WorkspaceDebugTerminalHost />`, deferring `localStorage` synchronization when closed and reducing background API telemetry re-renders on the main app to **0**.
+        - Cohesive Domain Hooks & Declarative Shell: Extracted specialized orchestration hooks (`useVideoReferenceManager` with AbortController upload race guards, `useStageHistorySynchronizer` with stale turn metadata resolution guards, `useViewerPromptAndMetadataApplyActions`, and `useWorkspaceOrchestrator`), reducing `App.tsx` from 2,631 lines to 706 lines of clean declarative JSX.
+    - **Playwright E2E & Full Test Suite Alignment (`e2e/workspace-restore.spec.ts`, `tests/workspaceDomainStore.test.tsx`, `tests/workspaceBlobStore.test.ts`, `tests/phaseBRenderStability.test.tsx`)**:
+        - Fresh Workspace Model Spec Alignment: Aligned Playwright E2E tests with the default `gemini-nano-banana-2.1` model, eliminating transient `isEditing` overrides and verifying genuine model selection and batch queue execution.
+        - Full Test Suite Verification: 130 Vitest test files (1,205 unit/integration tests) and 79 Playwright E2E browser tests passing cleanly with zero errors.
+
 ## v5.8.0 - 2026-11-11
 
 - Release title: Nano Banana Ultra 5.8.0 - Architectural Hardening & Security Overhaul, State Generation Race Guards, Dead Code Elimination, and UI Lifecycle Accessibility

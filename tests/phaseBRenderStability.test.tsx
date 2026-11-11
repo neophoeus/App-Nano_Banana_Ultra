@@ -3,6 +3,7 @@
 import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { emitDebugTerminalEvent } from '../utils/debugTerminalEvents';
 import { WORKSPACE_SNAPSHOT_STORAGE_KEY } from '../utils/workspacePersistence';
 
 type RenderTracker = {
@@ -429,5 +430,47 @@ describe('Phase B render stability', () => {
         expect(sourceButton?.getAttribute('class')).toContain('hover:-translate-y-0.5');
         expect(queueButton?.getAttribute('class')).toContain('h-[40px]');
         expect(queueButton?.getAttribute('class')).toContain('hover:-translate-y-0.5');
+    });
+
+    it('causes zero re-renders on stage, history, composer, and side tools during background DebugTerminal telemetry and terminal toggle', async () => {
+        HTMLElement.prototype.scrollIntoView = vi.fn();
+        const initialGeneratedImageRenders = trackers.generatedImage.renders;
+        const initialHistoryPanelRenders = trackers.workspaceUnifiedHistoryPanel.renders;
+        const initialComposerRenders = trackers.composerSettingsPanel.renders;
+        const initialSideToolRenders = trackers.workspaceSideToolPanel.renders;
+
+        await act(async () => {
+            emitDebugTerminalEvent({
+                kind: 'request',
+                label: 'Background telemetry 1',
+                source: 'workspace',
+            });
+            emitDebugTerminalEvent({
+                kind: 'response',
+                label: 'Background telemetry 2',
+                source: 'generation',
+            });
+        });
+
+        assertNoAdditionalRenders(trackers.generatedImage, initialGeneratedImageRenders, 'GeneratedImage');
+        assertNoAdditionalRenders(
+            trackers.workspaceUnifiedHistoryPanel,
+            initialHistoryPanelRenders,
+            'WorkspaceUnifiedHistoryPanel',
+        );
+        assertNoAdditionalRenders(trackers.composerSettingsPanel, initialComposerRenders, 'ComposerSettingsPanel');
+        assertNoAdditionalRenders(trackers.workspaceSideToolPanel, initialSideToolRenders, 'WorkspaceSideToolPanel');
+
+        const debugToggleButton = await waitFor(() => document.querySelector('[data-testid="debug-terminal-toggle"]'));
+        await act(async () => {
+            (debugToggleButton as HTMLButtonElement).click();
+        });
+
+        assertNoAdditionalRenders(trackers.generatedImage, initialGeneratedImageRenders, 'GeneratedImage');
+        assertNoAdditionalRenders(
+            trackers.workspaceUnifiedHistoryPanel,
+            initialHistoryPanelRenders,
+            'WorkspaceUnifiedHistoryPanel',
+        );
     });
 });

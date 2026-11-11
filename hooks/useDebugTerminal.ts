@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-    DEBUG_TERMINAL_STORAGE_KEY,
     DebugTerminalEvent,
     DebugTerminalEventKind,
     DebugTerminalSource,
+    persistStoredDebugTerminalEvents,
+    readStoredDebugTerminalEvents,
     subscribeDebugTerminalEvents,
     trimDebugTerminalEvents,
     clearDebugTerminalEvents,
@@ -48,36 +49,6 @@ const EMPTY_KIND_COUNTS: DebugTerminalKindCounts = {
     log: 0,
 };
 
-const readStoredEvents = (): DebugTerminalEvent[] => {
-    if (typeof window === 'undefined') {
-        return [];
-    }
-
-    try {
-        const storedValue = window.localStorage.getItem(DEBUG_TERMINAL_STORAGE_KEY);
-        if (!storedValue) {
-            return [];
-        }
-
-        const parsedValue = JSON.parse(storedValue);
-        return Array.isArray(parsedValue) ? trimDebugTerminalEvents(parsedValue as DebugTerminalEvent[]) : [];
-    } catch {
-        return [];
-    }
-};
-
-const persistEvents = (events: DebugTerminalEvent[]): void => {
-    if (typeof window === 'undefined') {
-        return;
-    }
-
-    try {
-        window.localStorage.setItem(DEBUG_TERMINAL_STORAGE_KEY, JSON.stringify(events));
-    } catch {
-        // Diagnostic history must never block generation or UI interactions.
-    }
-};
-
 const eventMatchesSearch = (event: DebugTerminalEvent, searchQuery: string): boolean => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
     if (!normalizedQuery) {
@@ -111,7 +82,7 @@ const eventMatchesSearch = (event: DebugTerminalEvent, searchQuery: string): boo
 };
 
 export function useDebugTerminal(): UseDebugTerminalReturn {
-    const [events, setEvents] = useState<DebugTerminalEvent[]>(readStoredEvents);
+    const [events, setEvents] = useState<DebugTerminalEvent[]>(readStoredDebugTerminalEvents);
     const [filter, setFilter] = useState<DebugTerminalFilter>('all');
     const [sourceFilter, setSourceFilter] = useState<DebugTerminalSourceFilter>('all');
     const [routeFilter, setRouteFilter] = useState('all');
@@ -124,7 +95,7 @@ export function useDebugTerminal(): UseDebugTerminalReturn {
         return subscribeDebugTerminalEvents((event) => {
             setEvents((previousEvents) => {
                 const nextEvents = trimDebugTerminalEvents([...previousEvents, event]);
-                persistEvents(nextEvents);
+                persistStoredDebugTerminalEvents(nextEvents);
                 return nextEvents;
             });
             if (autoScroll) {

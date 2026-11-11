@@ -127,4 +127,29 @@ describe('useDebugTerminal', () => {
         });
         expect(latestHook?.filteredEvents.map((event) => event.label)).toEqual(['Batch failed']);
     });
+
+    it('records events emitted while useDebugTerminal is unmounted and hydrates them when later opened', () => {
+        emitDebugTerminalEvent({
+            kind: 'request',
+            label: 'Background generation request',
+            source: 'generation',
+            route: '/api/images/generate',
+            correlationId: 'bg-corr-1',
+        });
+        emitDebugTerminalEvent({
+            kind: 'response',
+            label: 'Background generation response',
+            source: 'generation',
+            route: '/api/images/generate',
+            correlationId: 'bg-corr-1',
+        });
+
+        renderHook();
+
+        expect(latestHook?.events.map((event) => event.label)).toEqual([
+            'Background generation request',
+            'Background generation response',
+        ]);
+        expect(latestHook?.selectedEvent?.label).toBe('Background generation response');
+    });
 });

@@ -142,13 +142,13 @@ Nano Banana Ultra provides two complementary ways to export and manage your crea
 
 ## Version Overview
 
-### Latest Release: 5.8.0
+### Latest Release: 5.9.0
 
 See [CHANGELOG.md](CHANGELOG.md) for full release history and version details.
 
 ### 5.x Series
 
-Version 5.x focuses on **architectural purification in alignment with Google AI Studio's official policy adjustments**. The platform converged onto a unified, high-performance local Node.js backend, completely excising legacy unreferenced components, direct-browser runtimes, compute pool monitors, and redundant storage alerts. Building on this clean foundation, 5.x delivers zero-dependency result extraction with embedded PNG iTXt and JPEG COM metadata (100% compatible with Workspace Extractor, A1111, and ComfyUI), an integrated **Dual-Mode Image Metadata Viewer**, role-aware per-part `MediaResolution` token optimization, multimodal video references (Gemini Files API & YouTube) across Nano Banana 2.1 / 2 / 2 Lite, **Quality/Eco optimization modes**, a **Dual Free/Paid API Key Smart Routing** engine with cascading fallback and live toast notifications, as well as comprehensive local network security isolation, CSRF origin verification, state generation race guards, and UI lifecycle accessibility.
+Version 5.x focuses on **architectural purification and robustness in alignment with Google AI Studio's official policy adjustments**. The platform converged onto a unified, high-performance local Node.js backend, completely excising legacy unreferenced components, direct-browser runtimes, compute pool monitors, and redundant storage alerts. Building on this clean foundation, 5.x delivers native **IndexedDB Binary Asset Offloading** (eliminating `localStorage` quota risks while maintaining 100% self-contained JSON exports), a zero-dependency **Workspace Domain Store (`useSyncExternalStore`)** with fine-grained slice re-render isolation, zero-dependency result extraction with embedded PNG iTXt and JPEG COM metadata (100% compatible with Workspace Extractor, A1111, and ComfyUI), an integrated **Dual-Mode Image Metadata Viewer**, role-aware per-part `MediaResolution` token optimization, multimodal video references (Gemini Files API & YouTube) across Nano Banana 2.1 / 2 / 2 Lite, **Quality/Eco optimization modes**, a **Dual Free/Paid API Key Smart Routing** engine with cascading fallback and live toast notifications, as well as comprehensive local network security isolation, CSRF origin verification, state generation race guards, and UI lifecycle accessibility.
 
 ### 4.x Series
 

@@ -8,6 +8,7 @@ import {
     WorkspaceConversationState,
     WorkspaceSessionState,
 } from '../types';
+import { collectSnapshotReferencedBlobKeys, pruneUnreferencedWorkspaceBlobs } from '../utils/workspaceBlobStore';
 import {
     sanitizeWorkspaceSnapshot,
     saveSharedWorkspaceSnapshot,
@@ -26,6 +27,7 @@ type UseWorkspaceSnapshotPersistenceArgs = {
     selectedHistoryId: string | null;
     composerState: WorkspaceComposerState;
     conversationState: WorkspaceConversationState;
+    isHydratingBlobs?: boolean;
 };
 
 export function useWorkspaceSnapshotPersistence({
@@ -40,6 +42,7 @@ export function useWorkspaceSnapshotPersistence({
     selectedHistoryId,
     composerState,
     conversationState,
+    isHydratingBlobs = false,
 }: UseWorkspaceSnapshotPersistenceArgs) {
     const composeCurrentWorkspaceSnapshot = useCallback(
         () =>
@@ -80,7 +83,20 @@ export function useWorkspaceSnapshotPersistence({
         const snapshot = composeCurrentWorkspaceSnapshot();
         saveWorkspaceSnapshot(snapshot);
         void saveSharedWorkspaceSnapshot(snapshot);
-    }, [composeCurrentWorkspaceSnapshot]);
+
+        if (isHydratingBlobs) {
+            return;
+        }
+
+        const pruneTimerId = window.setTimeout(() => {
+            const referencedKeys = collectSnapshotReferencedBlobKeys(snapshot);
+            void pruneUnreferencedWorkspaceBlobs(referencedKeys);
+        }, 750);
+
+        return () => {
+            window.clearTimeout(pruneTimerId);
+        };
+    }, [composeCurrentWorkspaceSnapshot, isHydratingBlobs]);
 
     return {
         composeCurrentWorkspaceSnapshot,

@@ -61,6 +61,7 @@ const BASE64ISH_PATTERN = /^[A-Za-z0-9+/]+={0,2}$/;
 type DebugTerminalListener = (event: DebugTerminalEvent) => void;
 
 const listeners = new Set<DebugTerminalListener>();
+let pendingUnpersistedEvents: DebugTerminalEvent[] = [];
 
 export const createDebugTerminalCorrelationId = (prefix = 'dbg'): string => {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -293,6 +294,46 @@ export const trimDebugTerminalEvents = (events: DebugTerminalEvent[]): DebugTerm
     return pruned.slice(-DEBUG_TERMINAL_MAX_EVENTS);
 };
 
+export const persistStoredDebugTerminalEvents = (events: DebugTerminalEvent[]): void => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    try {
+        window.localStorage.setItem(DEBUG_TERMINAL_STORAGE_KEY, JSON.stringify(events));
+    } catch {
+        // Diagnostic history must never block generation or UI interactions.
+    }
+};
+
+export const readStoredDebugTerminalEvents = (): DebugTerminalEvent[] => {
+    if (typeof window === 'undefined') {
+        return [];
+    }
+
+    let storedEvents: DebugTerminalEvent[] = [];
+    try {
+        const storedValue = window.localStorage.getItem(DEBUG_TERMINAL_STORAGE_KEY);
+        if (storedValue) {
+            const parsedValue = JSON.parse(storedValue);
+            if (Array.isArray(parsedValue)) {
+                storedEvents = parsedValue as DebugTerminalEvent[];
+            }
+        }
+    } catch {
+        storedEvents = [];
+    }
+
+    if (pendingUnpersistedEvents.length === 0) {
+        return trimDebugTerminalEvents(storedEvents);
+    }
+
+    const mergedEvents = trimDebugTerminalEvents([...storedEvents, ...pendingUnpersistedEvents]);
+    pendingUnpersistedEvents = [];
+    persistStoredDebugTerminalEvents(mergedEvents);
+    return mergedEvents;
+};
+
 export const emitDebugTerminalEvent = (input: DebugTerminalEventInput): DebugTerminalEvent => {
     const event: DebugTerminalEvent = {
         ...input,
@@ -303,7 +344,15 @@ export const emitDebugTerminalEvent = (input: DebugTerminalEventInput): DebugTer
         payload: sanitizeDebugTerminalPayload(input.payload),
     };
 
-    listeners.forEach((listener) => listener(event));
+    if (listeners.size === 0) {
+        pendingUnpersistedEvents.push(event);
+        if (pendingUnpersistedEvents.length > DEBUG_TERMINAL_MAX_EVENTS) {
+            pendingUnpersistedEvents = trimDebugTerminalEvents(pendingUnpersistedEvents);
+        }
+    } else {
+        listeners.forEach((listener) => listener(event));
+    }
+
     return event;
 };
 
@@ -313,6 +362,7 @@ export const subscribeDebugTerminalEvents = (listener: DebugTerminalListener): (
 };
 
 export const clearDebugTerminalEvents = () => {
+    pendingUnpersistedEvents = [];
     if (typeof window !== 'undefined') {
         try {
             window.localStorage.setItem(DEBUG_TERMINAL_STORAGE_KEY, '[]');

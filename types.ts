@@ -321,6 +321,7 @@ export interface StageAsset {
     id: string;
     url: string;
     savedFilename?: string;
+    blobKey?: string;
     role: StageAssetRole;
     origin: StageAssetOrigin;
     createdAt: number;
@@ -366,6 +367,7 @@ export interface ResultImagePart {
     imageUrl: string;
     mimeType: string;
     savedFilename?: string;
+    blobKey?: string;
 }
 
 export type ResultPart = ResultTextPart | ResultImagePart;
@@ -530,6 +532,7 @@ export interface GeneratedImage {
     id: string;
     url: string;
     savedFilename?: string;
+    blobKey?: string;
     thumbnailSavedFilename?: string;
     thumbnailInline?: boolean;
     prompt: string;

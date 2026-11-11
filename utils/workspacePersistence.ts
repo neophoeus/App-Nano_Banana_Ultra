@@ -36,6 +36,15 @@ import {
 import { normalizeImageStyle } from './styleRegistry';
 import { formatLocalTimestamp } from './savedImageFilename';
 import { DEFAULT_TEMPERATURE, normalizeTemperature } from './temperature';
+import {
+    clearAllWorkspaceBlobs,
+    computeWorkspaceBlobKey,
+    getWorkspaceMemoryBlobSync,
+    hydrateWorkspaceSnapshotBlobs,
+    INLINE_HISTORY_OFFLOAD_THRESHOLD_BYTES,
+    isIndexedDbAvailable,
+    putWorkspaceBlobs,
+} from './workspaceBlobStore';
 
 export const WORKSPACE_SNAPSHOT_STORAGE_KEY = 'nbu_workspaceSnapshot';
 export const SHARED_WORKSPACE_SNAPSHOT_ENDPOINT = '/api/workspace-snapshot';
@@ -344,6 +353,7 @@ const sanitizeResultParts = (value: unknown): ResultPart[] | undefined => {
             typeof part.imageUrl === 'string' &&
             typeof part.mimeType === 'string'
         ) {
+            const blobKey = normalizeOptionalString(part.blobKey);
             return [
                 {
                     sequence: part.sequence,
@@ -351,6 +361,7 @@ const sanitizeResultParts = (value: unknown): ResultPart[] | undefined => {
                     imageUrl: part.imageUrl,
                     mimeType: part.mimeType,
                     savedFilename: typeof part.savedFilename === 'string' ? part.savedFilename : undefined,
+                    ...(blobKey !== undefined ? { blobKey } : {}),
                 } satisfies ResultPart,
             ];
         }
@@ -393,6 +404,17 @@ const buildRuntimeResultPart = (part: ResultPart): ResultPart => {
         };
     }
 
+    if (!part.imageUrl && part.blobKey) {
+        const cachedDataUrl = getWorkspaceMemoryBlobSync(part.blobKey);
+        if (cachedDataUrl) {
+            return {
+                ...part,
+                imageUrl: cachedDataUrl,
+            };
+        }
+        return part;
+    }
+
     if (isInlineAssetUrl(part.imageUrl)) {
         return {
             ...part,
@@ -425,8 +447,9 @@ const buildPersistableHistoryItem = (item: GeneratedImage): GeneratedImage => {
     const thumbnailLoadUrl = getHistoryThumbnailLoadUrl(item);
 
     if (thumbnailLoadUrl) {
+        const { blobKey: _blobKey, ...restItem } = item;
         return {
-            ...item,
+            ...restItem,
             url: thumbnailLoadUrl,
             resultParts: item.resultParts?.map(buildPersistableResultPart),
         };
@@ -440,8 +463,9 @@ const buildPersistableHistoryItem = (item: GeneratedImage): GeneratedImage => {
     }
 
     if (isLegacyFullResolutionHistoryUrl(item) || isInlineAssetUrl(item.url)) {
+        const { blobKey: _blobKey, ...restItem } = item;
         return {
-            ...item,
+            ...restItem,
             url: '',
             resultParts: item.resultParts?.map(buildPersistableResultPart),
         };
@@ -455,15 +479,17 @@ const buildPersistableHistoryItem = (item: GeneratedImage): GeneratedImage => {
 
 const buildPersistableStageAsset = (asset: StageAsset): StageAsset => {
     if (asset.savedFilename && isInlineAssetUrl(asset.url)) {
+        const { blobKey: _blobKey, ...restAsset } = asset;
         return {
-            ...asset,
+            ...restAsset,
             url: buildLoadImageUrl(asset.savedFilename),
         };
     }
 
     if (shouldStripInlineGeneratedStageAssetForPersistence(asset)) {
+        const { blobKey: _blobKey, ...restAsset } = asset;
         return {
-            ...asset,
+            ...restAsset,
             url: '',
         };
     }
@@ -528,6 +554,15 @@ const buildRuntimeHistoryItem = (item: GeneratedImage, preservedInlineHistoryIds
         };
     }
 
+    if (!item.url && item.blobKey) {
+        const cachedDataUrl = getWorkspaceMemoryBlobSync(item.blobKey);
+        return {
+            ...item,
+            url: cachedDataUrl || '',
+            resultParts: item.resultParts?.map(buildRuntimeResultPart),
+        };
+    }
+
     if (hasPersistableInlineThumbnail(item)) {
         return {
             ...item,
@@ -565,6 +600,17 @@ const buildRuntimeStageAsset = (asset: StageAsset, preservedInlineHistoryIds: Se
         };
     }
 
+    if (!asset.url && asset.blobKey) {
+        const cachedDataUrl = getWorkspaceMemoryBlobSync(asset.blobKey);
+        if (cachedDataUrl) {
+            return {
+                ...asset,
+                url: cachedDataUrl,
+            };
+        }
+        return asset;
+    }
+
     if (
         shouldStripInlineGeneratedStageAssetForPersistence(asset) &&
         !shouldPreserveRuntimeStageAsset(asset, preservedInlineHistoryIds)
@@ -588,6 +634,7 @@ const buildRuntimeWorkspaceSnapshot = (snapshot: unknown): WorkspacePersistenceS
         (item) =>
             item.status === 'failed' ||
             isNonEmptyAssetUrl(item.url) ||
+            Boolean(item.blobKey) ||
             Boolean(item.savedFilename) ||
             Boolean(item.thumbnailSavedFilename) ||
             item.thumbnailInline === true ||
@@ -757,6 +804,7 @@ const sanitizeHistory = (value: unknown): GeneratedImage[] => {
                 : undefined;
         const resultParts = sanitizeResultParts(item.resultParts);
         const savedFilename = normalizeOptionalString(item.savedFilename);
+        const blobKey = normalizeOptionalString(item.blobKey);
         const thumbnailSavedFilename = normalizeOptionalString(item.thumbnailSavedFilename);
         const thumbnailInline = typeof item.thumbnailInline === 'boolean' ? item.thumbnailInline : undefined;
         const mode = normalizeOptionalString(item.mode);
@@ -793,6 +841,7 @@ const sanitizeHistory = (value: unknown): GeneratedImage[] => {
             model: normalizeSavedImageModel(item.model),
             createdAt: normalizeFiniteNumber(item.createdAt) ?? 0,
             ...(savedFilename !== undefined ? { savedFilename } : {}),
+            ...(blobKey !== undefined ? { blobKey } : {}),
             ...(thumbnailSavedFilename !== undefined ? { thumbnailSavedFilename } : {}),
             ...(thumbnailInline !== undefined ? { thumbnailInline } : {}),
             ...(mode !== undefined ? { mode } : {}),
@@ -845,6 +894,7 @@ const sanitizeStagedAssets = (value: unknown): StageAsset[] => {
         }
 
         const savedFilename = normalizeOptionalString(item.savedFilename);
+        const blobKey = normalizeOptionalString(item.blobKey);
         const aspectRatio = isAspectRatio(item.aspectRatio) ? item.aspectRatio : undefined;
         const sourceHistoryId = normalizeOptionalString(item.sourceHistoryId);
         const lineageAction = isLineageAction(item.lineageAction) ? item.lineageAction : undefined;
@@ -857,6 +907,7 @@ const sanitizeStagedAssets = (value: unknown): StageAsset[] => {
                 origin: item.origin,
                 createdAt: item.createdAt,
                 ...(savedFilename !== undefined ? { savedFilename } : {}),
+                ...(blobKey !== undefined ? { blobKey } : {}),
                 ...(item.isSketch === true ? { isSketch: true } : {}),
                 ...(aspectRatio !== undefined ? { aspectRatio } : {}),
                 ...(sourceHistoryId !== undefined ? { sourceHistoryId } : {}),
@@ -1414,10 +1465,129 @@ export const loadWorkspaceSnapshot = (): WorkspacePersistenceSnapshot => {
     }
 };
 
+const stripResultPartsBlobKeys = (parts: ResultPart[] | undefined): ResultPart[] | undefined => {
+    if (!Array.isArray(parts)) {
+        return parts;
+    }
+
+    return parts.map((part) => {
+        if (isImageResultPart(part) && part.blobKey !== undefined) {
+            const { blobKey: _blobKey, ...restPart } = part;
+            return restPart;
+        }
+        return part;
+    });
+};
+
+const stripSnapshotBlobKeys = (snapshot: WorkspacePersistenceSnapshot): WorkspacePersistenceSnapshot => {
+    const activeResult = snapshot.workspaceSession?.activeResult;
+    const strippedSessionParts = activeResult?.resultParts
+        ? stripResultPartsBlobKeys(activeResult.resultParts) || null
+        : activeResult?.resultParts;
+
+    return {
+        ...snapshot,
+        stagedAssets: snapshot.stagedAssets.map((asset) => {
+            if (asset.blobKey === undefined) {
+                return asset;
+            }
+            const { blobKey: _blobKey, ...restAsset } = asset;
+            return restAsset;
+        }),
+        history: snapshot.history.map((item) => {
+            const nextResultParts = stripResultPartsBlobKeys(item.resultParts);
+            if (item.blobKey === undefined && nextResultParts === item.resultParts) {
+                return item;
+            }
+            const { blobKey: _blobKey, ...restItem } = item;
+            return {
+                ...restItem,
+                ...(nextResultParts !== undefined ? { resultParts: nextResultParts } : {}),
+            };
+        }),
+        workspaceSession:
+            activeResult && strippedSessionParts !== activeResult.resultParts
+                ? {
+                      ...snapshot.workspaceSession,
+                      activeResult: {
+                          ...activeResult,
+                          resultParts: strippedSessionParts,
+                      },
+                  }
+                : snapshot.workspaceSession,
+    };
+};
+
+const offloadSnapshotInlineBlobsForLocalStorage = (
+    snapshot: WorkspacePersistenceSnapshot,
+): {
+    localSnapshot: WorkspacePersistenceSnapshot;
+    blobsToPersist: Array<{ key: string; dataUrl: string }>;
+} => {
+    if (!isIndexedDbAvailable()) {
+        return {
+            localSnapshot: snapshot,
+            blobsToPersist: [],
+        };
+    }
+
+    const blobsToPersist: Array<{ key: string; dataUrl: string }> = [];
+    let stagedAssetsChanged = false;
+    const nextStagedAssets = snapshot.stagedAssets.map((asset) => {
+        if (!asset.savedFilename && isInlineAssetUrl(asset.url)) {
+            const blobKey = computeWorkspaceBlobKey(asset.url);
+            blobsToPersist.push({ key: blobKey, dataUrl: asset.url });
+            stagedAssetsChanged = true;
+            return {
+                ...asset,
+                url: '',
+                blobKey,
+            };
+        }
+        return asset;
+    });
+
+    let historyChanged = false;
+    const nextHistory = snapshot.history.map((item) => {
+        if (isInlineAssetUrl(item.url) && item.url.length >= INLINE_HISTORY_OFFLOAD_THRESHOLD_BYTES) {
+            const blobKey = computeWorkspaceBlobKey(item.url);
+            blobsToPersist.push({ key: blobKey, dataUrl: item.url });
+            historyChanged = true;
+            return {
+                ...item,
+                url: '',
+                blobKey,
+            };
+        }
+        return item;
+    });
+
+    if (!stagedAssetsChanged && !historyChanged) {
+        return {
+            localSnapshot: snapshot,
+            blobsToPersist,
+        };
+    }
+
+    return {
+        localSnapshot: {
+            ...snapshot,
+            stagedAssets: stagedAssetsChanged ? nextStagedAssets : snapshot.stagedAssets,
+            history: historyChanged ? nextHistory : snapshot.history,
+        },
+        blobsToPersist,
+    };
+};
+
 export const saveWorkspaceSnapshot = (snapshot: WorkspacePersistenceSnapshot): void => {
     const correlationId = createDebugTerminalCorrelationId('workspace');
     const normalized = sanitizeWorkspaceSnapshot(snapshot);
-    const localSnapshot = buildPersistableWorkspaceSnapshot(normalized);
+    const baseLocalSnapshot = buildPersistableWorkspaceSnapshot(normalized);
+    const { localSnapshot, blobsToPersist } = offloadSnapshotInlineBlobsForLocalStorage(baseLocalSnapshot);
+
+    if (blobsToPersist.length > 0) {
+        void putWorkspaceBlobs(blobsToPersist);
+    }
 
     emitWorkspaceSnapshotDebugEvent({
         kind: 'request',
@@ -1460,7 +1630,9 @@ export const saveWorkspaceSnapshot = (snapshot: WorkspacePersistenceSnapshot): v
         }
     }
 
-    const compactSnapshot = buildPersistableWorkspaceSnapshot(normalized, { aggressive: true });
+    const compactSnapshot = offloadSnapshotInlineBlobsForLocalStorage(
+        buildPersistableWorkspaceSnapshot(normalized, { aggressive: true }),
+    ).localSnapshot;
 
     emitWorkspaceSnapshotDebugEvent({
         kind: 'retry',
@@ -1512,6 +1684,7 @@ export const clearStoredWorkspaceSnapshot = (): void => {
     } catch {
         // Ignore storage cleanup failures; runtime state is still reset in memory.
     }
+    void clearAllWorkspaceBlobs();
 };
 
 export const loadSharedWorkspaceSnapshot = async (): Promise<WorkspacePersistenceSnapshot | null> => {
@@ -1596,12 +1769,48 @@ export const resetSharedSnapshotOfflineState = (): void => {
     lastSharedSnapshotOfflineCheck = 0;
 };
 
+const hasUnhydratedResultPartsBlobs = (parts: ResultPart[] | null | undefined): boolean => {
+    if (!Array.isArray(parts)) {
+        return false;
+    }
+
+    return parts.some(
+        (part) =>
+            Boolean(part) &&
+            isImageResultPart(part) &&
+            typeof part.blobKey === 'string' &&
+            part.blobKey.length > 0 &&
+            !part.imageUrl,
+    );
+};
+
+const hasUnhydratedSnapshotBlobs = (snapshot: WorkspacePersistenceSnapshot): boolean => {
+    if (
+        snapshot.stagedAssets.some(
+            (asset) => typeof asset.blobKey === 'string' && asset.blobKey.length > 0 && !asset.url,
+        )
+    ) {
+        return true;
+    }
+
+    if (
+        snapshot.history.some(
+            (item) =>
+                (typeof item.blobKey === 'string' && item.blobKey.length > 0 && !item.url) ||
+                hasUnhydratedResultPartsBlobs(item.resultParts),
+        )
+    ) {
+        return true;
+    }
+
+    return hasUnhydratedResultPartsBlobs(snapshot.workspaceSession?.activeResult?.resultParts);
+};
+
 export const saveSharedWorkspaceSnapshot = async (
     snapshot: WorkspacePersistenceSnapshot,
     options?: { allowClearing?: boolean },
 ): Promise<void> => {
     const normalized = sanitizeWorkspaceSnapshot(snapshot);
-    const persistableSnapshot = buildPersistableWorkspaceSnapshot(normalized);
     const hasContent = Boolean(
         normalized.history.length ||
         normalized.stagedAssets.length ||
@@ -1636,6 +1845,11 @@ export const saveSharedWorkspaceSnapshot = async (
     ) {
         return;
     }
+
+    const hydratedSnapshot = hasUnhydratedSnapshotBlobs(normalized)
+        ? (await hydrateWorkspaceSnapshotBlobs(normalized)).snapshot
+        : normalized;
+    const persistableSnapshot = stripSnapshotBlobKeys(buildPersistableWorkspaceSnapshot(hydratedSnapshot));
 
     const correlationId = createDebugTerminalCorrelationId('workspace');
 
@@ -1742,9 +1956,11 @@ export const clearSharedWorkspaceSnapshot = async (): Promise<void> => {
 
 export const exportWorkspaceSnapshotDocument = async (snapshot: WorkspacePersistenceSnapshot): Promise<Blob> => {
     const normalizedSnapshot = sanitizeWorkspaceSnapshot(snapshot);
+    const { snapshot: hydratedSnapshot } = await hydrateWorkspaceSnapshotBlobs(normalizedSnapshot);
+    const selfContainedSnapshot = stripSnapshotBlobKeys(buildPersistableWorkspaceSnapshot(hydratedSnapshot));
     const chunks: (string | Blob)[] = [
         `{"format":${JSON.stringify(WORKSPACE_SNAPSHOT_EXPORT_FORMAT)},"version":${WORKSPACE_SNAPSHOT_EXPORT_VERSION},"exportedAt":${JSON.stringify(new Date().toISOString())},"snapshot":`,
-        JSON.stringify(buildPersistableWorkspaceSnapshot(normalizedSnapshot)),
+        JSON.stringify(selfContainedSnapshot),
         '}',
     ];
 

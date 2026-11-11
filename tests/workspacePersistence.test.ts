@@ -1398,4 +1398,47 @@ describe('workspacePersistence', () => {
         expect(restored.queuedJobs[0]?.model).toBe('gemini-3-pro-image');
         expect(restored.queuedJobs[0]?.imageSize).toBe('512');
     });
+
+    it('preserves blobKey pointers during cold-boot load and strips internal blobKey fields on self-contained export', async () => {
+        localStorage.setItem(
+            WORKSPACE_SNAPSHOT_STORAGE_KEY,
+            JSON.stringify({
+                ...EMPTY_WORKSPACE_SNAPSHOT,
+                stagedAssets: [
+                    {
+                        id: 'dehydrated-upload',
+                        url: '',
+                        blobKey: 'blob_0123456789abcdef_10',
+                        role: 'object',
+                        origin: 'upload',
+                        createdAt: 100,
+                    },
+                ],
+                history: [
+                    {
+                        id: 'dehydrated-history',
+                        url: '',
+                        blobKey: 'blob_fedcba9876543210_20',
+                        prompt: '',
+                        aspectRatio: '1:1',
+                        size: '1K',
+                        style: 'None',
+                        model: 'gemini-3.1-flash-image',
+                        createdAt: 200,
+                        status: 'success',
+                    },
+                ],
+            }),
+        );
+
+        const loaded = loadWorkspaceSnapshot();
+        expect(loaded.stagedAssets).toHaveLength(1);
+        expect(loaded.stagedAssets[0]?.blobKey).toBe('blob_0123456789abcdef_10');
+        expect(loaded.history).toHaveLength(1);
+        expect(loaded.history[0]?.blobKey).toBe('blob_fedcba9876543210_20');
+
+        const exportedBlob = await exportWorkspaceSnapshotDocument(loaded);
+        const exportedRaw = await exportedBlob.text();
+        expect(exportedRaw).not.toContain('blobKey');
+    });
 });
