@@ -143,7 +143,7 @@ export function useProvenanceContinuation({
                 return latestItem;
             }
 
-            if (!latestItem || item.createdAt >= latestItem.createdAt) {
+            if (!latestItem || item.createdAt > latestItem.createdAt) {
                 return item;
             }
 
@@ -207,7 +207,9 @@ export function useProvenanceContinuation({
               }
             : latestArtifacts;
 
-        const shouldPromoteContinuationSource = latestSuccessful.executionMode !== 'interactive-batch-variants';
+        const shouldPromoteContinuationSource =
+            latestSuccessful.executionMode !== 'interactive-batch-variants' &&
+            latestSuccessful.executionMode !== 'queued-batch-job';
         if (shouldRecordConversationTurn) {
             setConversationState(nextConversationState);
         }

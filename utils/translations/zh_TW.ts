@@ -1073,4 +1073,8 @@ export const zh_TW = {
     optimizationModeEcoUseCases: '適合前期發想、大量快速概念探索、靈感打樣與低成本批次實驗。',
     promptToolFallbackModelNotice: '因目前模型擁塞，系統已自動降級至高吞吐量的 gemini-3.5-flash-lite 完成生成。',
     promptToolFallbackPaidTierNotice: '免費 API 配額擁塞或暫時耗盡，系統已自動切換至付費 API 救援完成。',
+    queuedBatchJobsRecoverRecent: '復原近期工作',
+    metadataViewerApplyBothSuccessNotice: '已將提示詞與設定同時套用到編輯區。',
+    metadataViewerNoPrompt: '(無設定提示詞)',
+    metadataViewerModelResponse: '模型回應',
 } as const;

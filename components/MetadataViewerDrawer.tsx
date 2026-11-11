@@ -77,6 +77,10 @@ const DRAWER_LABELS: Record<
     Language,
     {
         title: string;
+        close: string;
+        promptLabel: string;
+        noPrompt: string;
+        modelResponse: string;
         applyBoth: string;
         bothAppliedNotice: string;
         dropPrompt: string;
@@ -95,6 +99,10 @@ const DRAWER_LABELS: Record<
 > = {
     zh_TW: {
         title: '圖片中繼資料檢視器 (Metadata Viewer)',
+        close: '關閉',
+        promptLabel: '提示詞',
+        noPrompt: '(無設定提示詞)',
+        modelResponse: '模型回應',
         applyBoth: '同時套用',
         bothAppliedNotice: '已將提示詞與設定同時套用到編輯區。',
         dropPrompt: '拖放圖片至此，或點擊選取檔案',
@@ -112,6 +120,10 @@ const DRAWER_LABELS: Record<
     },
     zh_CN: {
         title: '图片元数据查看器 (Metadata Viewer)',
+        close: '关闭',
+        promptLabel: '提示词',
+        noPrompt: '(未设置提示词)',
+        modelResponse: '模型响应',
         applyBoth: '同时应用',
         bothAppliedNotice: '已将提示词与设置同时应用到编辑区。',
         dropPrompt: '拖放图片至此，或点击选取文件',
@@ -129,6 +141,10 @@ const DRAWER_LABELS: Record<
     },
     en: {
         title: 'Image Metadata Viewer',
+        close: 'Close',
+        promptLabel: 'Prompt',
+        noPrompt: '(No prompt set)',
+        modelResponse: 'Model Response',
         applyBoth: 'Apply Both',
         bothAppliedNotice: 'Applied prompt and settings to composer.',
         dropPrompt: 'Drop images here, or click to browse',
@@ -146,6 +162,10 @@ const DRAWER_LABELS: Record<
     },
     ja: {
         title: '画像メタデータビューアー',
+        close: '閉じる',
+        promptLabel: 'プロンプト',
+        noPrompt: '(プロンプト未設定)',
+        modelResponse: 'モデルの応答',
         applyBoth: '両方を適用',
         bothAppliedNotice: 'プロンプトと設定をコンポーザーに適用しました。',
         dropPrompt: '画像をドラッグ＆ドロップ、またはクリックして選択',
@@ -163,6 +183,10 @@ const DRAWER_LABELS: Record<
     },
     ko: {
         title: '이미지 메타데이터 뷰어',
+        close: '닫기',
+        promptLabel: '프롬프트',
+        noPrompt: '(설정된 프롬프트 없음)',
+        modelResponse: '모델 응답',
         applyBoth: '동시 적용',
         bothAppliedNotice: '프롬프트와 설정을 컴포저에 적용했습니다.',
         dropPrompt: '이미지를 드래그하여 놓거나 클릭하여 선택',
@@ -180,6 +204,10 @@ const DRAWER_LABELS: Record<
     },
     de: {
         title: 'Bild-Metadaten-Betrachter',
+        close: 'Schließen',
+        promptLabel: 'Prompt',
+        noPrompt: '(Kein Prompt festgelegt)',
+        modelResponse: 'Modellantwort',
         applyBoth: 'Beides anwenden',
         bothAppliedNotice: 'Prompt und Einstellungen auf Composer angewendet.',
         dropPrompt: 'Bilder hier ablegen oder zum Auswählen klicken',
@@ -197,6 +225,10 @@ const DRAWER_LABELS: Record<
     },
     fr: {
         title: 'Visionneuse de métadonnées d’image',
+        close: 'Fermer',
+        promptLabel: 'Prompt',
+        noPrompt: '(Aucun prompt défini)',
+        modelResponse: 'Réponse du modèle',
         applyBoth: 'Appliquer les deux',
         bothAppliedNotice: 'Invite et paramètres appliqués au compositeur.',
         dropPrompt: 'Déposez des images ici, ou cliquez pour parcourir',
@@ -214,6 +246,10 @@ const DRAWER_LABELS: Record<
     },
     es: {
         title: 'Visor de metadatos de imágenes',
+        close: 'Cerrar',
+        promptLabel: 'Prompt',
+        noPrompt: '(Sin prompt configurado)',
+        modelResponse: 'Respuesta del modelo',
         applyBoth: 'Aplicar ambos',
         bothAppliedNotice: 'Indicación y configuración aplicadas al editor.',
         dropPrompt: 'Arrastre imágenes aquí o haga clic para examinar',
@@ -231,6 +267,10 @@ const DRAWER_LABELS: Record<
     },
     ru: {
         title: 'Просмотр метаданных изображений',
+        close: 'Закрыть',
+        promptLabel: 'Промпт',
+        noPrompt: '(Промпт не задан)',
+        modelResponse: 'Ответ модели',
         applyBoth: 'Применить оба',
         bothAppliedNotice: 'Промпт и параметры применены к редактору.',
         dropPrompt: 'Перетащите изображения сюда или нажмите для выбора',
@@ -539,11 +579,16 @@ export default function MetadataViewerDrawer({
         return null;
     }
 
+    const resolveLabel = (key: string, fallback: string) => {
+        const translated = t(key);
+        return translated && translated !== key ? translated : fallback;
+    };
+
     return (
         <WorkspaceSupportDetailSurface
             dataTestId="metadata-viewer-drawer"
             title={labels.title}
-            closeLabel={t('workspaceViewerClose') || '關閉'}
+            closeLabel={resolveLabel('workspaceViewerClose', labels.close)}
             onClose={onClose}
             desktopWidthClass="max-w-[920px]"
         >
@@ -672,7 +717,7 @@ export default function MetadataViewerDrawer({
                             <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
                                 <div className="mb-2 flex items-center justify-between">
                                     <span className="text-xs font-bold text-amber-500">
-                                        {t('workspaceViewerPrompt') || '提示詞'}
+                                        {resolveLabel('workspaceViewerPrompt', labels.promptLabel)}
                                     </span>
                                     <button
                                         type="button"
@@ -685,7 +730,7 @@ export default function MetadataViewerDrawer({
                                     </button>
                                 </div>
                                 <div className="max-h-36 overflow-y-auto whitespace-pre-wrap rounded-lg bg-slate-50 p-2 text-xs text-slate-800 dark:bg-slate-950/60 dark:text-slate-200">
-                                    {currentPrompt || '(無設定提示詞)'}
+                                    {currentPrompt || resolveLabel('metadataViewerNoPrompt', labels.noPrompt)}
                                 </div>
                             </div>
 
@@ -740,7 +785,7 @@ export default function MetadataViewerDrawer({
                             {currentMeta?.text && (
                                 <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
                                     <div className="mb-1 text-xs font-bold text-slate-600 dark:text-slate-300">
-                                        Model Response
+                                        {resolveLabel('metadataViewerModelResponse', labels.modelResponse)}
                                     </div>
                                     <div className="max-h-24 overflow-y-auto whitespace-pre-wrap rounded bg-slate-50 p-2 text-xs text-slate-700 dark:bg-slate-950/60 dark:text-slate-300">
                                         {currentMeta.text}

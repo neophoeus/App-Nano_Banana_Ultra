@@ -12,7 +12,6 @@ type RenderTracker = {
 
 type RenderTrackers = {
     generatedImage: RenderTracker;
-    recentHistoryFilmstrip: RenderTracker;
     workspaceUnifiedHistoryPanel: RenderTracker;
     composerSettingsPanel: RenderTracker;
     workspaceSideToolPanel: RenderTracker;
@@ -20,7 +19,6 @@ type RenderTrackers = {
 
 const trackers = vi.hoisted(() => ({
     generatedImage: { renders: 0, changedKeys: [] as string[][] },
-    recentHistoryFilmstrip: { renders: 0, changedKeys: [] as string[][] },
     workspaceUnifiedHistoryPanel: { renders: 0, changedKeys: [] as string[][] },
     composerSettingsPanel: { renders: 0, changedKeys: [] as string[][] },
     workspaceSideToolPanel: { renders: 0, changedKeys: [] as string[][] },
@@ -44,17 +42,6 @@ vi.mock('../components/GeneratedImage', async () => {
         recordRender(trackers.generatedImage, props, previousPropsRef.current);
         previousPropsRef.current = props;
         return <div data-testid="mock-generated-image" />;
-    });
-    return { default: Component };
-});
-
-vi.mock('../components/RecentHistoryFilmstrip', async () => {
-    const ReactModule = await vi.importActual<typeof import('react')>('react');
-    const Component = ReactModule.memo((props: Record<string, unknown>) => {
-        const previousPropsRef = ReactModule.useRef<Record<string, unknown> | undefined>(undefined);
-        recordRender(trackers.recentHistoryFilmstrip, props, previousPropsRef.current);
-        previousPropsRef.current = props;
-        return <div data-testid="mock-recent-history-filmstrip" />;
     });
     return { default: Component };
 });
@@ -325,17 +312,11 @@ describe('Phase B render stability', () => {
 
     it('does not rerender stage/history memo surfaces when toggling advanced settings', async () => {
         const initialGeneratedImageRenders = trackers.generatedImage.renders;
-        const initialRecentHistoryRenders = trackers.recentHistoryFilmstrip.renders;
         const initialHistoryPanelRenders = trackers.workspaceUnifiedHistoryPanel.renders;
 
         await clickButton('Advanced Settings');
 
         assertNoAdditionalRenders(trackers.generatedImage, initialGeneratedImageRenders, 'GeneratedImage');
-        assertNoAdditionalRenders(
-            trackers.recentHistoryFilmstrip,
-            initialRecentHistoryRenders,
-            'RecentHistoryFilmstrip',
-        );
         assertNoAdditionalRenders(
             trackers.workspaceUnifiedHistoryPanel,
             initialHistoryPanelRenders,
@@ -346,17 +327,11 @@ describe('Phase B render stability', () => {
 
     it('does not rerender stage/history memo surfaces when toggling theme', async () => {
         const initialGeneratedImageRenders = trackers.generatedImage.renders;
-        const initialRecentHistoryRenders = trackers.recentHistoryFilmstrip.renders;
         const initialHistoryPanelRenders = trackers.workspaceUnifiedHistoryPanel.renders;
 
         await clickButtonByAriaLabel('Switch to Dark Mode');
 
         assertNoAdditionalRenders(trackers.generatedImage, initialGeneratedImageRenders, 'GeneratedImage');
-        assertNoAdditionalRenders(
-            trackers.recentHistoryFilmstrip,
-            initialRecentHistoryRenders,
-            'RecentHistoryFilmstrip',
-        );
         assertNoAdditionalRenders(
             trackers.workspaceUnifiedHistoryPanel,
             initialHistoryPanelRenders,

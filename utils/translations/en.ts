@@ -771,7 +771,7 @@ export const en = {
     groundingProvenanceSources: 'Sources: {0}',
     groundingProvenanceReferenceSource: 'Reference source: {0} ({1})',
     groundingProvenanceReuseSupportBundle: 'support bundle {0}',
-    groundingProvenanceReuseSource: 'source reutilisee {0}',
+    groundingProvenanceReuseSource: 'reused source {0}',
     groundingProvenanceReuseDetail: 'grounding detail',
     groundingProvenanceSelectFirst: 'Select a source or support bundle first.',
     groundingProvenanceReferenceCue: 'Reference cue: {0}',
@@ -1117,4 +1117,8 @@ export const en = {
     promptToolFallbackModelNotice:
         'Primary model is experiencing high demand. Automatically switched to high-throughput gemini-3.5-flash-lite.',
     promptToolFallbackPaidTierNotice: 'Free API tier is congested or exhausted. Automatically rescued via Paid API.',
+    queuedBatchJobsRecoverRecent: 'Recover Recent',
+    metadataViewerApplyBothSuccessNotice: 'Applied prompt and settings to the composer.',
+    metadataViewerNoPrompt: '(No prompt set)',
+    metadataViewerModelResponse: 'Model Response',
 } as const;

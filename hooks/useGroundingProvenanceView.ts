@@ -8,7 +8,7 @@ import {
     sanitizeInlineImageDisplayValue,
     sanitizeSensitiveDisplayText,
 } from '../utils/inlineImageDisplay';
-import { MODEL_CAPABILITIES } from '../utils/modelCapabilities';
+import { MODEL_CAPABILITIES, normalizeSavedImageModel } from '../utils/modelCapabilities';
 import { GroundingSelection } from './useSelectedResultState';
 
 type UseGroundingProvenanceViewArgs = {
@@ -140,14 +140,7 @@ export function useGroundingProvenanceView({
     const normalizedSessionActualDimensions = normalizeOptionalDisplayString(
         effectiveSessionHints?.actualImageDimensions,
     );
-    const requestedSizeModel =
-        effectiveMetadata?.model === 'gemini-nano-banana-2.1' ||
-        effectiveMetadata?.model === 'gemini-3.1-flash-image' ||
-        effectiveMetadata?.model === 'gemini-3.1-flash-lite-image' ||
-        effectiveMetadata?.model === 'gemini-3-pro-image' ||
-        effectiveMetadata?.model === 'gemini-2.5-flash-image'
-            ? effectiveMetadata.model
-            : viewSettings.model;
+    const requestedSizeModel = normalizeSavedImageModel(effectiveMetadata?.model, viewSettings.model);
     const requestedSizeModelSupportsSizeControl = MODEL_CAPABILITIES[requestedSizeModel].supportedSizes.length > 0;
     const metadataRequestedImageSize = requestedSizeModelSupportsSizeControl
         ? normalizeOptionalDisplayString(effectiveMetadata?.requestedImageSize)

@@ -6,11 +6,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePromptTools } from '../hooks/usePromptTools';
 
 const {
+    abortActivePromptToolsMock,
     enhancePromptWithGeminiMock,
     generatePromptFromImageMock,
     generateRandomPromptMock,
     consumeLastPromptToolExecutionMetaMock,
 } = vi.hoisted(() => ({
+    abortActivePromptToolsMock: vi.fn(),
     enhancePromptWithGeminiMock: vi.fn(),
     generatePromptFromImageMock: vi.fn(),
     generateRandomPromptMock: vi.fn(),
@@ -22,6 +24,7 @@ const { prepareImageAssetFromFileMock } = vi.hoisted(() => ({
 }));
 
 vi.mock('../services/geminiService', () => ({
+    abortActivePromptTools: abortActivePromptToolsMock,
     enhancePromptWithGemini: enhancePromptWithGeminiMock,
     generatePromptFromImage: generatePromptFromImageMock,
     generateRandomPrompt: generateRandomPromptMock,
@@ -322,5 +325,40 @@ describe('usePromptTools', () => {
 
         expect(notifications).toEqual([]);
         expect(logs).toEqual(['Rewrite ok.']);
+    });
+
+    it('cancels an in-flight rewrite when cancelPromptTools is called and ignores late completion', async () => {
+        let resolveRewrite: ((value: string) => void) | null = null;
+        let pendingRewrite: Promise<void> | undefined;
+
+        prompt = 'original draft';
+        enhancePromptWithGeminiMock.mockImplementation(
+            () =>
+                new Promise<string>((resolve) => {
+                    resolveRewrite = resolve;
+                }),
+        );
+        renderHook();
+
+        act(() => {
+            pendingRewrite = latestHook!.handleSmartRewrite();
+        });
+        expect(latestHook?.isEnhancingPrompt).toBe(true);
+
+        act(() => {
+            latestHook?.cancelPromptTools();
+        });
+
+        expect(abortActivePromptToolsMock).toHaveBeenCalledTimes(1);
+        expect(latestHook?.isEnhancingPrompt).toBe(false);
+        expect(latestHook?.activePromptTool).toBeNull();
+
+        await act(async () => {
+            resolveRewrite?.('stale rewritten prompt');
+            await pendingRewrite;
+        });
+
+        expect(prompt).toBe('original draft');
+        expect(logs).toEqual([]);
     });
 });

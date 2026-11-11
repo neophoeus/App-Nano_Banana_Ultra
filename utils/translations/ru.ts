@@ -1097,10 +1097,10 @@ export const ru = {
     historyFilmstripSummary: '{0} ходов · {1} веток',
     historyFilmstripEmpty: 'Сгенерируйте или загрузите изображение, чтобы начать собирать ленту ходов.',
     composerAdvancedHighThinkingHighTempWarning:
-        'When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
-    generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
+        'Если включен высокий уровень размышления и температура установлена выше 1.0, модель может войти в бесконечный цикл рассуждений и не завершить генерацию. В этом случае рекомендуется вернуть температуру к значению 1.0.',
+    generationFailureSummaryThinkingLoop: 'Обнаружен цикл размышлений',
     generationFailureDetailThinkingLoop:
-        'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
+        'Модель превысила лимит размышлений, и генерация была прервана во избежание зависания. Попробуйте сбросить температуру до 1.0 или снизить уровень размышления.',
     generationFailureSummaryQuota: 'Превышен лимит запросов или квота Gemini API.',
     generationFailureDetailQuota:
         'Запрос ограничен по частоте или ваша квота временно исчерпана. Попробуйте увеличить интервал между запросами или подождать сброса скользящего окна.',
@@ -1139,4 +1139,8 @@ export const ru = {
     promptToolFallbackModelNotice:
         'Основная модель перегружена. Выполнен автоматический переход на высокопроизводительную модель gemini-3.5-flash-lite.',
     promptToolFallbackPaidTierNotice: 'Бесплатный уровень API перегружен. Запрос успешно выполнен через платный API.',
+    queuedBatchJobsRecoverRecent: 'Восстановить недавние',
+    metadataViewerApplyBothSuccessNotice: 'Промпт и параметры применены к редактору.',
+    metadataViewerNoPrompt: '(Промпт не задан)',
+    metadataViewerModelResponse: 'Ответ модели',
 } as const;

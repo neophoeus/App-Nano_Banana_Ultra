@@ -1,5 +1,6 @@
-import { Dispatch, SetStateAction, useCallback, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useRef, useState } from 'react';
 import {
+    abortActivePromptTools,
     consumeLastPromptToolExecutionMeta,
     enhancePromptWithGemini,
     generatePromptFromImage,
@@ -51,7 +52,12 @@ interface UsePromptToolsReturn {
     handleSmartRewrite: () => Promise<void>;
     handleSurpriseMe: () => Promise<void>;
     handleImageToPrompt: (file: File) => Promise<void>;
+    cancelPromptTools: () => void;
 }
+
+const isAbortPromptToolError = (error: unknown): boolean =>
+    (error instanceof DOMException && error.name === 'AbortError') ||
+    (error instanceof Error && (error.name === 'AbortError' || error.message === 'ABORTED'));
 
 /**
  * Custom hook for AI-powered prompt tools (rewrite and random generation).
@@ -71,6 +77,14 @@ export function usePromptTools({
 }: UsePromptToolsOptions): UsePromptToolsReturn {
     const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
     const [activePromptTool, setActivePromptTool] = useState<PromptToolId | null>(null);
+    const requestSequenceRef = useRef(0);
+
+    const cancelPromptTools = useCallback(() => {
+        requestSequenceRef.current += 1;
+        abortActivePromptTools?.();
+        setIsEnhancingPrompt(false);
+        setActivePromptTool(null);
+    }, []);
 
     const handleSmartRewrite = useCallback(async () => {
         if (!prompt.trim()) {
@@ -84,6 +98,7 @@ export function usePromptTools({
             }
         }
 
+        const requestId = ++requestSequenceRef.current;
         setActivePromptTool('rewrite');
         setIsEnhancingPrompt(true);
         try {
@@ -92,16 +107,24 @@ export function usePromptTools({
                 optimizationMode !== undefined
                     ? await enhancePromptWithGemini(prompt, currentLanguage, effectiveThinkingLevel, optimizationMode)
                     : await enhancePromptWithGemini(prompt, currentLanguage, effectiveThinkingLevel);
+            if (requestId !== requestSequenceRef.current) {
+                return;
+            }
             setPrompt(enhanced);
             addLog(t('logRewriteOk'));
             notifyPromptToolFallback(showNotification, addLog, t);
         } catch (e) {
+            if (requestId !== requestSequenceRef.current || isAbortPromptToolError(e)) {
+                return;
+            }
             console.error(e);
             showNotification(t('logRewriteFailed'), 'error');
             addLog(t('logRewriteFailed'));
         } finally {
-            setIsEnhancingPrompt(false);
-            setActivePromptTool(null);
+            if (requestId === requestSequenceRef.current) {
+                setIsEnhancingPrompt(false);
+                setActivePromptTool(null);
+            }
         }
     }, [
         apiKeyReady,
@@ -123,6 +146,7 @@ export function usePromptTools({
                 return;
             }
         }
+        const requestId = ++requestSequenceRef.current;
         setActivePromptTool('inspiration');
         setIsEnhancingPrompt(true);
         try {
@@ -131,16 +155,24 @@ export function usePromptTools({
                 optimizationMode !== undefined
                     ? await generateRandomPrompt(currentLanguage, effectiveThinkingLevel, optimizationMode)
                     : await generateRandomPrompt(currentLanguage, effectiveThinkingLevel);
+            if (requestId !== requestSequenceRef.current) {
+                return;
+            }
             setPrompt(randomPrompt);
             addLog(t('logRandomOk'));
             notifyPromptToolFallback(showNotification, addLog, t);
         } catch (e) {
+            if (requestId !== requestSequenceRef.current || isAbortPromptToolError(e)) {
+                return;
+            }
             console.error(e);
             showNotification(t('logRandomFailed'), 'error');
             addLog(t('logRandomFailed'));
         } finally {
-            setIsEnhancingPrompt(false);
-            setActivePromptTool(null);
+            if (requestId === requestSequenceRef.current) {
+                setIsEnhancingPrompt(false);
+                setActivePromptTool(null);
+            }
         }
     }, [
         apiKeyReady,
@@ -168,11 +200,15 @@ export function usePromptTools({
                 }
             }
 
+            const requestId = ++requestSequenceRef.current;
             setActivePromptTool('image-to-prompt');
             setIsEnhancingPrompt(true);
             try {
                 const maxDimension = resolveImageToPromptMaxDimension(optimizationMode);
                 const preparedImage = await prepareImageAssetFromFile(file, maxDimension);
+                if (requestId !== requestSequenceRef.current) {
+                    return;
+                }
                 const effectiveThinkingLevel = resolveEffectivePromptThinkingLevel(
                     promptThinkingLevel,
                     optimizationMode,
@@ -186,10 +222,16 @@ export function usePromptTools({
                               optimizationMode,
                           )
                         : await generatePromptFromImage(preparedImage.dataUrl, currentLanguage, effectiveThinkingLevel);
+                if (requestId !== requestSequenceRef.current) {
+                    return;
+                }
                 setPrompt(generatedPrompt);
                 addLog(t('logImageToPromptOk'));
                 notifyPromptToolFallback(showNotification, addLog, t);
             } catch (error) {
+                if (requestId !== requestSequenceRef.current || isAbortPromptToolError(error)) {
+                    return;
+                }
                 console.error(error);
                 if (error instanceof Error && /invalid image|failed to read|failed to load/i.test(error.message)) {
                     showNotification(t('errInvalidImage'), 'error');
@@ -198,8 +240,10 @@ export function usePromptTools({
                 }
                 addLog(t('logImageToPromptFailed'));
             } finally {
-                setIsEnhancingPrompt(false);
-                setActivePromptTool(null);
+                if (requestId === requestSequenceRef.current) {
+                    setIsEnhancingPrompt(false);
+                    setActivePromptTool(null);
+                }
             }
         },
         [
@@ -221,5 +265,6 @@ export function usePromptTools({
         handleSmartRewrite,
         handleSurpriseMe,
         handleImageToPrompt,
+        cancelPromptTools,
     };
 }

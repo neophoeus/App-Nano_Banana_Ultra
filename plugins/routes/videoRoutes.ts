@@ -73,6 +73,19 @@ export function registerVideoRoutes(server: any, { getAIClient }: RegisterVideoR
             return;
         }
 
+        const contentLengthHeader = req.headers?.['content-length'];
+        const declaredBytes =
+            typeof contentLengthHeader === 'string' ? Number.parseInt(contentLengthHeader, 10) : Number.NaN;
+        if (Number.isFinite(declaredBytes) && declaredBytes > MAX_VIDEO_UPLOAD_BYTES) {
+            sendJson(
+                res,
+                413,
+                { error: 'Video file exceeds maximum allowed upload size (200MB).' },
+                { requestContext, summary: 'Video upload exceeds size limit (Content-Length)' },
+            );
+            return;
+        }
+
         logApiRequest(requestContext, {
             displayName,
             mimeType: normalizedMime,
@@ -179,7 +192,7 @@ export function registerVideoRoutes(server: any, { getAIClient }: RegisterVideoR
                 req.pipe(writeStream);
             });
 
-            if (isClientAborted) {
+            if (isClientAborted || res.writableEnded || req.destroyed) {
                 return;
             }
 

@@ -9,6 +9,8 @@ const FOCUSABLE_SELECTOR = [
     '[tabindex]:not([tabindex="-1"])',
 ].join(',');
 
+const activeFocusTrapStack: symbol[] = [];
+
 type UseOverlayFocusTrapOptions = {
     isEnabled: boolean;
     initialFocusRef?: RefObject<HTMLElement | null>;
@@ -50,6 +52,9 @@ export function useOverlayFocusTrap(
             return;
         }
 
+        const trapToken = Symbol('overlay-focus-trap');
+        activeFocusTrapStack.push(trapToken);
+
         const previousActiveElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
         const getFocusableElements = () =>
@@ -75,6 +80,9 @@ export function useOverlayFocusTrap(
 
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key !== 'Tab') {
+                return;
+            }
+            if (activeFocusTrapStack[activeFocusTrapStack.length - 1] !== trapToken) {
                 return;
             }
 
@@ -108,6 +116,10 @@ export function useOverlayFocusTrap(
         return () => {
             window.cancelAnimationFrame(frameHandle);
             window.removeEventListener('keydown', handleKeyDown);
+            const trapIndex = activeFocusTrapStack.lastIndexOf(trapToken);
+            if (trapIndex !== -1) {
+                activeFocusTrapStack.splice(trapIndex, 1);
+            }
             if (restoreFocus && previousActiveElement && document.contains(previousActiveElement)) {
                 focusElement(previousActiveElement);
             }

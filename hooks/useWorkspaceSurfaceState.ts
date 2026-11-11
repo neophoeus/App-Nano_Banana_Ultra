@@ -1,6 +1,7 @@
-import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { type SurfaceSharedControlSheet } from '../components/SurfaceSharedControls';
 import { type PickerSheet } from '../components/WorkspacePickerSheet';
+import { useOverlayEscapeDismiss } from './useOverlayEscapeDismiss';
 
 export type BranchRenameDialogState = {
     branchOriginId: string;
@@ -59,20 +60,7 @@ export function useWorkspaceSurfaceState(): UseWorkspaceSurfaceStateReturn {
         setActivePickerSheet(sheet);
     }, []);
 
-    useEffect(() => {
-        if (!branchRenameDialog) {
-            return;
-        }
-
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
-                closeBranchRenameDialog();
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [branchRenameDialog, closeBranchRenameDialog]);
+    useOverlayEscapeDismiss(Boolean(branchRenameDialog), closeBranchRenameDialog);
 
     return {
         isSketchPadOpen,

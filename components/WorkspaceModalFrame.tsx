@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useId, useMemo, useRef, useState } from 'react';
 import { ModalFloatingLayerContext } from './ModalFloatingLayerContext';
 import { useOverlayEscapeDismiss } from '../hooks/useOverlayEscapeDismiss';
 import { useOverlayFocusTrap } from '../hooks/useOverlayFocusTrap';
@@ -50,6 +50,8 @@ export default function WorkspaceModalFrame({
     const modalRootRef = useRef<HTMLDivElement>(null);
     const dialogRef = useRef<HTMLDivElement>(null);
     const closeButtonRef = useRef<HTMLButtonElement>(null);
+    const titleId = useId();
+    const descriptionId = useId();
     const [floatingHostElement, setFloatingHostElement] = useState<HTMLDivElement | null>(null);
     const floatingLayerValue = useMemo(
         () => ({
@@ -83,6 +85,8 @@ export default function WorkspaceModalFrame({
                         className={`w-full overflow-hidden rounded-[28px] ${panelClassName}`}
                         role="dialog"
                         aria-modal="true"
+                        aria-labelledby={titleId}
+                        aria-describedby={description ? descriptionId : undefined}
                         tabIndex={-1}
                     >
                         <div className={`flex flex-wrap items-start justify-between gap-3 ${headerClassName}`}>
@@ -92,11 +96,17 @@ export default function WorkspaceModalFrame({
                                         {eyebrow}
                                     </div>
                                 )}
-                                <h3 className="mt-1 text-[17px] font-black text-gray-900 dark:text-gray-100">
+                                <h3
+                                    id={titleId}
+                                    className="mt-1 text-[17px] font-black text-gray-900 dark:text-gray-100"
+                                >
                                     {title}
                                 </h3>
                                 {description && (
-                                    <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-500 dark:text-gray-400">
+                                    <p
+                                        id={descriptionId}
+                                        className="mt-2 max-w-3xl text-sm leading-6 text-gray-500 dark:text-gray-400"
+                                    >
                                         {description}
                                     </p>
                                 )}

@@ -26,6 +26,7 @@ import {
 import {
     createGaussianPointCloudFromImage,
     renderGaussianSplatsToCanvas,
+    disposeWebGL2Resources,
     clampAngle,
     type GaussianPointCloud,
 } from '../utils/gaussianSplatting';
@@ -191,7 +192,6 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     // Enforce model constraints dynamically
     useEffect(() => {
         try {
-            console.log('ImageEditor Mount: ImageModel is', imageModel);
             const caps = MODEL_CAPABILITIES[imageModel];
             if (!caps) {
                 console.error('Missing model capabilities for:', imageModel);
@@ -360,8 +360,13 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
     useEffect(() => {
         if (mode !== 'inpaint' || retouchMode !== 'doodle' || activeTool !== 'text') {
             setShowTextToolFirstUseNotice(false);
+            setShowTextInput(null);
         }
     }, [activeTool, mode, retouchMode]);
+
+    useEffect(() => {
+        setInteractionState('idle');
+    }, [mode]);
 
     // --- Initialization ---
     useEffect(() => {
@@ -459,6 +464,14 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
             ctx.restore();
         }
     }, [mode, revolveTransform, originalDims, imgElement]);
+
+    useEffect(() => {
+        const canvas = revolveCanvasRef.current;
+        return () => {
+            disposeWebGL2Resources(canvas);
+            disposeWebGL2Resources();
+        };
+    }, []);
 
     // --- Geometry Helpers ---
     const getFrameDims = useCallback(() => {
@@ -747,7 +760,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
 
         if (mode === 'outpaint') {
             if (e.shiftKey || e.altKey) {
-                const step = isMagnetActive ? 45 : e.deltaY > 0 ? 5 : -5;
+                const step = isMagnetActive ? 45 : 5;
                 const delta = e.deltaY > 0 ? step : -step;
                 handleRotateStep(delta);
             } else {
@@ -880,6 +893,8 @@ const ImageEditor: React.FC<ImageEditorProps> = ({
         setImgTransform({ x: 0, y: 0, scale: 1, rotation: 0 });
         setRevolveTransform({ yaw: 0, pitch: 0, panX: 0, panY: 0, zoom: 1 });
         setRevolveTool('orbit');
+        setShowTextInput(null);
+        setInteractionState('idle');
 
         // Maintain current retouch mode, reset tool appropriate for that mode
         if (retouchMode === 'doodle') {

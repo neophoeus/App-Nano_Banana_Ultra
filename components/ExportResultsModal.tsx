@@ -17,7 +17,9 @@ export interface ExportResultsModalProps {
 function normalizeExportSourceKey(rawUrlOrFilename: string): string {
     const trimmed = (rawUrlOrFilename || '').trim();
     if (!trimmed) return '';
-    if (trimmed.startsWith('data:')) return trimmed.slice(0, 128);
+    if (trimmed.startsWith('data:')) {
+        return `data:${trimmed.length}:${trimmed.slice(0, 64)}:${trimmed.slice(-64)}`;
+    }
     const match = trimmed.match(/[?&]filename=([^&]+)/);
     if (match) return decodeURIComponent(match[1]).split(/[\\/]/).pop() || trimmed;
     return trimmed.split(/[\\/]/).pop() || trimmed;
@@ -101,6 +103,14 @@ export default function ExportResultsModal({ isOpen, onClose, history, t, showNo
             // 1. Main product image (exclude thumbnail)
             const mainUrl = turn.savedFilename || turn.url || turnAny.displayUrl;
             const mainKey = normalizeExportSourceKey(mainUrl);
+            const primaryTurnKeys = new Set<string>(
+                [turn.savedFilename, turn.url, turnAny.displayUrl]
+                    .filter(
+                        (val): val is string =>
+                            typeof val === 'string' && val.trim().length > 0 && !val.includes('-thumbnail'),
+                    )
+                    .map((val) => normalizeExportSourceKey(val)),
+            );
             const baseMainStem = resolveItemBaseFilename({
                 turn,
                 turnMeta,
@@ -109,7 +119,7 @@ export default function ExportResultsModal({ isOpen, onClose, history, t, showNo
             });
 
             if (mainUrl && !mainUrl.includes('-thumbnail') && !seenSources.has(mainKey)) {
-                seenSources.add(mainKey);
+                primaryTurnKeys.forEach((key) => seenSources.add(key));
                 items.push({
                     imageUrl: mainUrl,
                     baseFilename: baseMainStem,
@@ -146,15 +156,32 @@ export default function ExportResultsModal({ isOpen, onClose, history, t, showNo
             }
 
             // 2. Variants (either in turn.variants or turn.resultParts with kind === 'output-image', EXCLUDING main image!)
-            const rawVariantList: any[] = Array.isArray(turnAny.variants)
+            const hasExplicitVariants = Array.isArray(turnAny.variants);
+            const rawVariantList: any[] = hasExplicitVariants
                 ? turnAny.variants
                 : turn.resultParts?.filter((p) => p.kind === 'output-image') || [];
 
             let variantIndexCounter = 0;
-            rawVariantList.forEach((v: any) => {
+            rawVariantList.forEach((v: any, idx: number) => {
+                // When resultParts has a single output-image and mainUrl was already present, it represents the primary turn output
+                if (
+                    !hasExplicitVariants &&
+                    idx === 0 &&
+                    rawVariantList.length === 1 &&
+                    mainUrl &&
+                    !mainUrl.includes('-thumbnail')
+                ) {
+                    return;
+                }
                 const vUrl = v.savedFilename || v.imageUrl || v.url || v.displayUrl;
                 const vKey = normalizeExportSourceKey(vUrl);
-                if (vUrl && !vUrl.includes('-thumbnail') && vKey !== mainKey && !seenSources.has(vKey)) {
+                if (
+                    vUrl &&
+                    !vUrl.includes('-thumbnail') &&
+                    !primaryTurnKeys.has(vKey) &&
+                    vKey !== mainKey &&
+                    !seenSources.has(vKey)
+                ) {
                     seenSources.add(vKey);
                     variantIndexCounter += 1;
                     const vSequence = typeof v.sequence === 'number' ? v.sequence : variantIndexCounter;

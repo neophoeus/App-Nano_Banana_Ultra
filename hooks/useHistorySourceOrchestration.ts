@@ -187,6 +187,20 @@ export function useHistorySourceOrchestration({
     const selectedHistoryLineageActionRef = useRef<TurnLineageAction | undefined>(currentStageLineageAction);
     const pendingViewerSelectionRef = useRef<PendingViewerSelection>(null);
     const historyThumbnailRepairInFlightRef = useRef<Set<string>>(new Set());
+    const historyLoadSequenceRef = useRef(0);
+
+    const cancelPendingHistoryLoads = useCallback(() => {
+        historyLoadSequenceRef.current += 1;
+        pendingViewerSelectionRef.current = null;
+        setPendingImportedWorkspaceAction(null);
+    }, []);
+
+    useEffect(() => {
+        if (history.length === 0) {
+            historyLoadSequenceRef.current += 1;
+            pendingViewerSelectionRef.current = null;
+        }
+    }, [history.length]);
     const repairLegacyHistoryThumbnail = useCallback(
         async (item: GeneratedImageType, fullImageUrl?: string | null) => {
             if (
@@ -294,6 +308,7 @@ export function useHistorySourceOrchestration({
 
     const handleHistorySelect = useCallback(
         (item: GeneratedImageType, options?: { lineageAction?: TurnLineageAction; deferLineageCommit?: boolean }) => {
+            const loadId = ++historyLoadSequenceRef.current;
             const lineageAction =
                 options?.lineageAction ||
                 (item.status === 'success' ? resolveDefaultHistorySelectionLineageAction(item) : 'reopen');
@@ -415,6 +430,9 @@ export function useHistorySourceOrchestration({
             if (item.savedFilename) {
                 loadFullImage(item.savedFilename)
                     .then(async (fullUrl) => {
+                        if (loadId !== historyLoadSequenceRef.current) {
+                            return;
+                        }
                         if (fullUrl) {
                             setGeneratedImageUrls([fullUrl]);
                             upsertViewerStageSource({
@@ -501,8 +519,8 @@ export function useHistorySourceOrchestration({
 
     const handleImportReviewDirectAction = useCallback(
         (action: 'open' | 'continue' | 'branch', historyId: string) => {
-            setPendingImportedWorkspaceAction({ action, historyId });
             handleApplyImportedWorkspaceSnapshot({ announceRestoreToast: true });
+            setPendingImportedWorkspaceAction({ action, historyId });
         },
         [handleApplyImportedWorkspaceSnapshot],
     );
@@ -601,5 +619,6 @@ export function useHistorySourceOrchestration({
         handleBranchFromHistoryTurn,
         handleImportReviewDirectAction,
         commitPendingViewerSelection,
+        cancelPendingHistoryLoads,
     };
 }

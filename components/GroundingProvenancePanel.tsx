@@ -989,9 +989,9 @@ function GroundingProvenancePanel({
                                     </div>
                                     <div className="mt-3 flex flex-wrap gap-2">
                                         <a
-                                            href={activeSource.url}
+                                            href={/^https?:\/\//i.test(activeSource.url) ? activeSource.url : '#'}
                                             target="_blank"
-                                            rel="noreferrer"
+                                            rel="noopener noreferrer"
                                             className={detailSecondaryActionClassName}
                                         >
                                             {t('groundingPanelOpenSource')}

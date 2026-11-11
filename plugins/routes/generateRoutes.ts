@@ -176,6 +176,7 @@ type LiveProgressAccumulatorState = {
     preCompletionArtifactCount: number;
     firstPreCompletionArtifactKind: LiveProgressArtifactKind | null;
     thoughtSignatureObserved: boolean;
+    repeatedThoughtText?: string;
 };
 
 type ExtractedResponseSummary = {
@@ -345,7 +346,12 @@ function createRequestAbortState(req: any, res: any) {
     return {
         signal: controller.signal,
         cleanup,
-        isDisconnected: () => clientDisconnected || controller.signal.aborted,
+        abortUpstream: (reason = 'upstream-aborted') => {
+            if (!controller.signal.aborted) {
+                controller.abort(reason);
+            }
+        },
+        isDisconnected: () => clientDisconnected,
         isWritable: () => !clientDisconnected && !res.writableEnded && !res.destroyed,
     };
 }
@@ -485,10 +491,7 @@ const extractResponsePartsFromCandidates = (candidates: NormalizedGeneratedRespo
             if (typeof part.text === 'string' && part.text.trim()) {
                 extractedParts.push({
                     sequence,
-                    kind:
-                        part.thought === true || typeof part.thoughtSignature === 'string'
-                            ? 'thought-text'
-                            : 'output-text',
+                    kind: part.thought === true ? 'thought-text' : 'output-text',
                     text: part.text.trim(),
                     candidateIndex,
                     partIndex,
@@ -667,6 +670,16 @@ export const applyLiveProgressChunkToAccumulator = (
     }
 
     if (sharedPrefixLength === currentKeys.length && currentKeys.length <= aggregateKeys.length) {
+        const repeatedThoughts = extracted.extractedParts
+            .filter((part): part is ExtractedTextResultPart => part.kind === 'thought-text')
+            .map((part) => part.text)
+            .filter(Boolean);
+        if (repeatedThoughts.length > 0) {
+            nextState = {
+                ...nextState,
+                repeatedThoughtText: [state.repeatedThoughtText, ...repeatedThoughts].filter(Boolean).join('\n'),
+            };
+        }
         return { state: nextState, newParts };
     }
 
@@ -839,7 +852,8 @@ function validateInteractiveGenerateRequest(
     const { objectImageInputs, characterImageInputs, styleImageInputs, videoInput, videoMimeType } =
         normalizeReferenceImages(sanitizedBody);
     const totalReferenceImages = objectImageInputs.length + characterImageInputs.length + styleImageInputs.length;
-    if (model === 'gemini-2.5-flash-image' && totalReferenceImages > 3) {
+    const flash25MaxRefs = MODEL_CAPABILITIES['gemini-2.5-flash-image'].maxObjects;
+    if (model === 'gemini-2.5-flash-image' && totalReferenceImages > flash25MaxRefs) {
         logApiError(
             routePath,
             new Error('Too many reference images for gemini-2.5-flash-image'),
@@ -1535,21 +1549,26 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
                     });
                 });
 
-                const thoughts = liveState.aggregatedParts
-                    .filter((p): p is ExtractedTextResultPart => p.kind === 'thought-text')
-                    .map((p) => p.text || '')
-                    .join('');
+                const thoughts = [
+                    ...liveState.aggregatedParts
+                        .filter((p): p is ExtractedTextResultPart => p.kind === 'thought-text')
+                        .map((p) => p.text || ''),
+                    ...(liveState.repeatedThoughtText ? [liveState.repeatedThoughtText] : []),
+                ].join('\n');
 
                 const duration = Date.now() - startTime;
                 const hasImage = liveState.aggregatedParts.some((p) => p.kind === 'output-image');
 
                 if (detectThinkingLoop(thoughts)) {
+                    requestAbortState.abortUpstream('thinking-loop-detected');
                     throw new Error('Thinking loop detected: repetitive reasoning clauses observed 5 or more times.');
                 }
                 if (thoughts.length > 12000) {
+                    requestAbortState.abortUpstream('thinking-loop-length-exceeded');
                     throw new Error('Thinking loop detected: reasoning character limit exceeded 12000 characters.');
                 }
                 if (duration > 180000 && !hasImage) {
+                    requestAbortState.abortUpstream('thinking-loop-timeout');
                     throw new Error(
                         'Thinking loop detected: stream ran for over 180 seconds without generating an image.',
                     );
@@ -1721,9 +1740,30 @@ export function registerGenerateRoutes(server: any, { getAIClient, resolvedDir }
 
             const results: LiveProgressProbeResult[] = [];
             for (const cell of selectedCells) {
-                // Each probe cell targets its own image model, so resolve the key tier per cell.
-                const ai = getAIClient({ model: cell.model });
-                results.push(await runLiveProgressProbeCell(ai, resolvedDir, cell, prompt));
+                if (req.destroyed || res.writableEnded || res.destroyed) {
+                    return;
+                }
+                try {
+                    // Each probe cell targets its own image model, so resolve the key tier per cell.
+                    const ai = getAIClient({ model: cell.model });
+                    results.push(await runLiveProgressProbeCell(ai, resolvedDir, cell, prompt));
+                } catch (cellError: any) {
+                    results.push({
+                        cell,
+                        gatePassed: false,
+                        gateReason: cellError?.message || 'Probe cell execution failed',
+                        transportOpened: false,
+                        eventGatePassed: false,
+                        orderingGatePassed: false,
+                        truthfulnessGatePassed: false,
+                        firstPreCompletionArtifactKind: null,
+                        preCompletionArtifactCount: 0,
+                        thoughtSignatureObserved: false,
+                        finalRenderArrived: false,
+                        truthfulnessOutcome: 'final-only',
+                        error: cellError?.message || 'Probe cell execution failed',
+                    });
+                }
             }
 
             sendJson(res, 200, {

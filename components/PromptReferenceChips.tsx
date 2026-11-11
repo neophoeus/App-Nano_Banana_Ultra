@@ -348,7 +348,13 @@ export const PromptReferenceChips: React.FC<PromptReferenceChipsProps> = ({
                             className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-sky-600 hover:bg-sky-200/60 hover:text-sky-900 disabled:cursor-not-allowed disabled:opacity-40 dark:text-sky-400 dark:hover:bg-sky-900/60 dark:hover:text-sky-100"
                             aria-label="Remove video reference"
                         >
-                            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                            <svg
+                                className="h-3 w-3"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                            >
                                 <line x1="18" y1="6" x2="6" y2="18" />
                                 <line x1="6" y1="6" x2="18" y2="18" />
                             </svg>

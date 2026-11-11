@@ -2,6 +2,7 @@ import { AspectRatio, ImageSize } from '../types';
 
 const IMAGE_SIZE_MAX_DIMENSIONS: Record<ImageSize, number> = {
     '512': 512,
+    '512px': 512,
     '1K': 1024,
     '2K': 2048,
     '4K': 4096,

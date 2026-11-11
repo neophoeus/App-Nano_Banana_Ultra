@@ -207,4 +207,29 @@ describe('conversationState', () => {
         expect(nextState.byBranchOriginId['root-turn'].activeSourceHistoryId).toBe('follow-up-turn');
         expect(nextState.byBranchOriginId['root-turn'].turnIds).toEqual(['root-turn', 'follow-up-turn']);
     });
+
+    it('includes a root Text-to-Image turn with sourceImage null when promoted as conversation source', () => {
+        const promoted = promoteConversationSource(EMPTY_WORKSPACE_CONVERSATION_STATE, 'root-turn', 'root-turn');
+        const context = buildConversationRequestContext({
+            activeSourceHistoryId: 'root-turn',
+            branchOriginId: 'root-turn',
+            conversationState: promoted,
+            history: [rootTurn],
+        });
+
+        expect(context?.priorTurns).toEqual([
+            {
+                historyId: 'root-turn',
+                prompt: 'Root prompt',
+                sourceImage: null,
+                outputImage: {
+                    savedFilename: 'root.png',
+                    mimeType: 'image/png',
+                },
+                text: null,
+                thoughts: null,
+                thoughtSignature: null,
+            },
+        ]);
+    });
 });

@@ -13,7 +13,7 @@ import {
     ImageStyle,
     ViewerComposerSettingsSnapshot,
 } from '../types';
-import { IMAGE_MODELS } from './modelCapabilities';
+import { IMAGE_MODELS, normalizeImageSizeValue, normalizeSavedImageModel } from './modelCapabilities';
 import { buildViewerComposerSettingsSnapshot } from './viewerComposerSettings';
 
 export type RawImageEmbeddedMetadata = Record<string, string>;
@@ -123,9 +123,12 @@ export function parsePngMetadata(arrayBuffer: ArrayBuffer): RawImageEmbeddedMeta
                             if (compFlag === 0) {
                                 text = textDecoder.decode(textBytes);
                             } else {
-                                // Fallback decode if compressed
                                 try {
-                                    text = textDecoder.decode(textBytes);
+                                    const strictDecoder = new TextDecoder('utf-8', { fatal: true });
+                                    const candidate = strictDecoder.decode(textBytes);
+                                    if (!/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFD]/.test(candidate)) {
+                                        text = candidate;
+                                    }
                                 } catch {
                                     text = '';
                                 }
@@ -397,20 +400,21 @@ export function convertMetadataToViewerSnapshot(
     }
 
     const fallbackModel: ImageModel = IMAGE_MODELS[0] || 'gemini-3.1-flash-image';
-    const isModelValid = typeof meta.model === 'string' && (IMAGE_MODELS as readonly string[]).includes(meta.model);
-    const resolvedModel: ImageModel = isModelValid ? (meta.model as ImageModel) : fallbackModel;
+    const resolvedModel: ImageModel = normalizeSavedImageModel(meta.model, fallbackModel);
+    const resolvedSize: ImageSize = normalizeImageSizeValue(meta.size, '1K');
 
     const historyStub: Pick<GeneratedImage, 'aspectRatio' | 'size' | 'style' | 'model'> = {
         model: resolvedModel,
         aspectRatio:
             typeof meta.aspectRatio === 'string' && meta.aspectRatio.trim() ? (meta.aspectRatio as AspectRatio) : '1:1',
-        size: typeof meta.size === 'string' && meta.size.trim() ? (meta.size as ImageSize) : '1K',
+        size: resolvedSize,
         style: typeof meta.style === 'string' && meta.style.trim() ? (meta.style as ImageStyle) : 'None',
     };
 
     return buildViewerComposerSettingsSnapshot(historyStub, {
         ...meta,
         model: resolvedModel,
+        size: resolvedSize,
     });
 }
 

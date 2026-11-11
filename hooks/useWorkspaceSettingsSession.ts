@@ -29,7 +29,7 @@ type UseWorkspaceSettingsSessionArgs = {
     setActivePickerSheet: Dispatch<SetStateAction<PickerSheet>>;
     setIsAdvancedSettingsOpen: Dispatch<SetStateAction<boolean>>;
     setImageModel: Dispatch<SetStateAction<ImageModel>>;
-    setAspectRatio: Dispatch<SetStateAction<AspectRatio>>;
+    setAspectRatio: (value: SetStateAction<AspectRatio>, options?: { bypassLock?: boolean }) => void;
     setImageSize: Dispatch<SetStateAction<ImageSize>>;
     setBatchSize: Dispatch<SetStateAction<number>>;
     setOutputFormat: Dispatch<SetStateAction<OutputFormat>>;
@@ -38,6 +38,7 @@ type UseWorkspaceSettingsSessionArgs = {
     setGroundingMode: (mode: GroundingMode) => void;
     showNotification: (message: string, type?: 'info' | 'error') => void;
     t: (key: string) => string;
+    settingsLocked?: boolean;
 };
 
 export function useWorkspaceSettingsSession({
@@ -63,6 +64,7 @@ export function useWorkspaceSettingsSession({
     setGroundingMode,
     showNotification,
     t,
+    settingsLocked = false,
 }: UseWorkspaceSettingsSessionArgs) {
     const [settingsSessionDraft, setSettingsSessionDraft] = useState<WorkspaceSettingsDraft | null>(null);
     const [settingsSessionReturnToGeneration, setSettingsSessionReturnToGeneration] = useState(false);
@@ -239,6 +241,14 @@ export function useWorkspaceSettingsSession({
     }, [clearSettingsSession, setActivePickerSheet, setIsAdvancedSettingsOpen, settingsSessionReturnToGeneration]);
 
     const handleApplySettingsSessionDraft = useCallback(() => {
+        if (settingsLocked) {
+            setActivePickerSheet(null);
+            setIsAdvancedSettingsOpen(false);
+            clearSettingsSession();
+            showNotification(t('settingsLockedNotice'), 'info');
+            return;
+        }
+
         const nextDraft = normalizeSettingsSessionDraft(settingsSessionDraft ?? buildSettingsSessionDraft());
         const nextCapability = MODEL_CAPABILITIES[nextDraft.imageModel];
 
@@ -269,7 +279,10 @@ export function useWorkspaceSettingsSession({
         setOutputFormat,
         setTemperature,
         setThinkingLevel,
+        settingsLocked,
         settingsSessionDraft,
+        showNotification,
+        t,
     ]);
 
     const handleUpdateGenerationSettingsDraft = useCallback(

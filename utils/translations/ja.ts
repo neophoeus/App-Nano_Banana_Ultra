@@ -1080,10 +1080,10 @@ export const ja = {
     historyFilmstripSummary: '{0} ターン・{1} ブランチ',
     historyFilmstripEmpty: 'ターンストリップの蓄積を始めるには、まず画像を生成または読み込んでください。',
     composerAdvancedHighThinkingHighTempWarning:
-        'When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
-    generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
+        '「高レベル思考」を有効にし、「温度」を 1.0 より高く設定すると、モデルが推論の無限ループに陥り、生成を完了できない場合があります。この問題が発生した場合は、温度を 1.0 に戻すことをお勧めします。',
+    generationFailureSummaryThinkingLoop: '思考ループを検出しました',
     generationFailureDetailThinkingLoop:
-        'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
+        'モデルが思考の上限を超えました。フリーズを防ぐため生成を中断しました。温度を 1.0 に戻すか、思考レベルを下げて再試行してください。',
     generationFailureSummaryQuota: 'Gemini API のレート制限またはクォータ上限に達しました。',
     generationFailureDetailQuota:
         'リクエストがレート制限されたか、一時的にクォータが枯渇しました。リクエストの間隔を空けるか、ローリングウィンドウのリセットをお待ちください。',
@@ -1121,4 +1121,8 @@ export const ja = {
     promptToolFallbackModelNotice:
         'プライマリモデルが混雑しているため、高スループットな gemini-3.5-flash-lite に自動切り替えしました。',
     promptToolFallbackPaidTierNotice: '無料 API が混雑または一時的に枯渇したため、有料 API で自動救済しました。',
+    queuedBatchJobsRecoverRecent: '最近のジョブを復元',
+    metadataViewerApplyBothSuccessNotice: 'プロンプトと設定をコンポーザーに適用しました。',
+    metadataViewerNoPrompt: '(プロンプト未設定)',
+    metadataViewerModelResponse: 'モデルの応答',
 } as const;

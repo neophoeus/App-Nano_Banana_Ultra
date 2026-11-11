@@ -1069,10 +1069,10 @@ export const ko = {
     historyFilmstripSummary: '{0}개 턴 · {1}개 분기',
     historyFilmstripEmpty: '턴 스트립을 쌓기 시작하려면 먼저 이미지를 생성하거나 불러오세요.',
     composerAdvancedHighThinkingHighTempWarning:
-        'When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
-    generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
+        '‘높은 사고 수준’을 활성화하고 ‘온도’를 1.0보다 높게 설정하면 모델이 무한 추론 루프에 빠져 생성을 완료하지 못할 수 있습니다. 이 문제가 발생하면 온도를 1.0으로 되돌리는 것을 권장합니다.',
+    generationFailureSummaryThinkingLoop: '사고 루프 감지됨',
     generationFailureDetailThinkingLoop:
-        'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
+        '모델이 사고 한도를 초과하여 멈춤 현상을 방지하기 위해 생성이 중단되었습니다. 온도를 1.0으로 재설정하거나 사고 수준을 낮춰 다시 시도해 보세요.',
     generationFailureSummaryQuota: 'Gemini API 속도 제한 또는 할당량 초과.',
     generationFailureDetailQuota:
         '요청 속도가 제한되었거나 할당량이 일시적으로 소진되었습니다. 요청 간격을 늘리거나 롤링 윈도우가 재설정될 때까지 기다려 보십시오.',
@@ -1110,4 +1110,8 @@ export const ko = {
     promptToolFallbackModelNotice:
         '기본 모델의 트래픽이 많아 고처리량 모델인 gemini-3.5-flash-lite로 자동 전환되었습니다.',
     promptToolFallbackPaidTierNotice: '무료 API 대역폭이 혼잡하거나 소진되어 유료 API로 자동 전환되어 완료되었습니다.',
+    queuedBatchJobsRecoverRecent: '최근 작업 복구',
+    metadataViewerApplyBothSuccessNotice: '프롬프트와 설정을 컴포저에 적용했습니다.',
+    metadataViewerNoPrompt: '(설정된 프롬프트 없음)',
+    metadataViewerModelResponse: '모델 응답',
 } as const;

@@ -15,6 +15,7 @@ type UseWorkspaceResetActionsArgs = {
     setShowSketchReplaceConfirm: Dispatch<SetStateAction<boolean>>;
     clearSettingsSession: () => void;
     setSurfaceSharedControlsBottom: Dispatch<SetStateAction<number | null>>;
+    onAbortWorkspaceOperations?: () => void;
 };
 
 export function useWorkspaceResetActions({
@@ -29,6 +30,7 @@ export function useWorkspaceResetActions({
     setShowSketchReplaceConfirm,
     clearSettingsSession,
     setSurfaceSharedControlsBottom,
+    onAbortWorkspaceOperations,
 }: UseWorkspaceResetActionsArgs) {
     const handleClearCurrentStage = useCallback(() => {
         handleClearResults();
@@ -37,6 +39,7 @@ export function useWorkspaceResetActions({
 
     const handleClearGalleryHistory = useCallback(
         async (options?: { clearOutput?: boolean }) => {
+            onAbortWorkspaceOperations?.();
             if (options?.clearOutput) {
                 try {
                     await clearWorkspaceOutputFiles();
@@ -60,6 +63,7 @@ export function useWorkspaceResetActions({
             clearSettingsSession,
             clearSharedWorkspaceSnapshot,
             lastPromotedHistoryIdRef,
+            onAbortWorkspaceOperations,
             setActiveWorkspaceDetailModal,
             setIsAdvancedSettingsOpen,
             setIsSketchPadOpen,

@@ -29,6 +29,10 @@ import { normalizeGenerationFailureInfo, resolveDisplayGenerationFailureInfo } f
 import { buildSavedImageLoadUrl } from './imageSaveUtils';
 import { sanitizeSessionHintsForStorage } from './inlineImageDisplay';
 import { buildLineagePresentation } from './lineage';
+import {
+    normalizeImageSizeValue,
+    normalizeSavedImageModel as normalizeCapabilityImageModel,
+} from './modelCapabilities';
 import { normalizeImageStyle } from './styleRegistry';
 import { formatLocalTimestamp } from './savedImageFilename';
 import { DEFAULT_TEMPERATURE, normalizeTemperature } from './temperature';
@@ -244,29 +248,52 @@ const isImageSize = (value: unknown): value is GeneratedImage['size'] =>
 const isImageModel = (value: unknown): value is GeneratedImage['model'] =>
     typeof value === 'string' && IMAGE_MODEL_VALUES.has(value as GeneratedImage['model']);
 
-// 過期 preview 模型與當前正式模型的一對一映射關係表，用以處理 Session 舊狀態遷移
-const LEGACY_MODEL_MIGRATION_MAP: Record<string, ImageModel> = {
-    'gemini-nano-banana-2.1-preview': 'gemini-nano-banana-2.1',
-    'gemini-3.1-flash-image-preview': 'gemini-3.1-flash-image',
-    'gemini-3.1-flash-lite-image-preview': 'gemini-3.1-flash-lite-image',
-    'gemini-3-pro-image-preview': 'gemini-3-pro-image',
-};
-
 // 將已存檔或快照中讀取的舊模型名稱轉移正規化為有效的正式模型名稱
-const normalizeSavedImageModel = (value: unknown): ImageModel => {
-    if (typeof value !== 'string') {
-        return EMPTY_WORKSPACE_COMPOSER_STATE.imageModel;
+const normalizeSavedImageModel = (value: unknown): ImageModel =>
+    normalizeCapabilityImageModel(value, EMPTY_WORKSPACE_COMPOSER_STATE.imageModel);
+
+const normalizeSavedImageSize = (value: unknown): GeneratedImage['size'] =>
+    normalizeImageSizeValue(value, EMPTY_WORKSPACE_COMPOSER_STATE.imageSize);
+
+const isSafeHttpUrl = (value: unknown): value is string =>
+    typeof value === 'string' && /^https?:\/\//i.test(value.trim());
+
+const isSafeImageOrHttpUrl = (value: unknown): value is string =>
+    typeof value === 'string' && /^(https?:\/\/|data:image\/)/i.test(value.trim());
+
+const sanitizeGroundingMetadata = (value: unknown): GeneratedImage['grounding'] | undefined => {
+    if (!isRecord(value) || typeof value.enabled !== 'boolean') {
+        return undefined;
     }
-    // 檢查是否屬於已知的舊 preview 模型，若有則進行對應轉移
-    if (value in LEGACY_MODEL_MIGRATION_MAP) {
-        return LEGACY_MODEL_MIGRATION_MAP[value];
-    }
-    // 驗證是否屬於當前有效的正式模型
-    if (IMAGE_MODEL_VALUES.has(value as ImageModel)) {
-        return value as ImageModel;
-    }
-    // 其餘未知模型則優雅回退至預設的 Composer 模型
-    return EMPTY_WORKSPACE_COMPOSER_STATE.imageModel;
+
+    const sanitizedSources = Array.isArray(value.sources)
+        ? value.sources
+              .filter((source): source is Record<string, unknown> => isRecord(source) && isSafeHttpUrl(source.url))
+              .map((source) => ({
+                  ...source,
+                  title: typeof source.title === 'string' ? source.title : String(source.url).trim(),
+                  url: String(source.url).trim(),
+                  ...(source.imageUrl !== undefined
+                      ? {
+                            imageUrl: isSafeImageOrHttpUrl(source.imageUrl)
+                                ? String(source.imageUrl).trim()
+                                : undefined,
+                        }
+                      : {}),
+                  ...(source.sourceUrl !== undefined
+                      ? {
+                            sourceUrl: isSafeHttpUrl(source.sourceUrl) ? String(source.sourceUrl).trim() : undefined,
+                        }
+                      : {}),
+              }))
+        : undefined;
+
+    return {
+        ...(value as unknown as NonNullable<GeneratedImage['grounding']>),
+        ...(sanitizedSources !== undefined
+            ? { sources: sanitizedSources as NonNullable<GeneratedImage['grounding']>['sources'] }
+            : {}),
+    };
 };
 
 const isOutputFormat = (value: unknown): value is WorkspaceComposerState['outputFormat'] =>
@@ -740,10 +767,7 @@ const sanitizeHistory = (value: unknown): GeneratedImage[] => {
         const text = normalizeOptionalString(item.text);
         const thoughts = normalizeOptionalString(item.thoughts);
         const metadata = isRecord(item.metadata) ? item.metadata : undefined;
-        const grounding =
-            isRecord(item.grounding) && typeof item.grounding.enabled === 'boolean'
-                ? (item.grounding as unknown as GeneratedImage['grounding'])
-                : undefined;
+        const grounding = sanitizeGroundingMetadata(item.grounding);
         const conversationId = normalizeNullableString(item.conversationId);
         const conversationBranchOriginId = normalizeNullableString(item.conversationBranchOriginId);
         const conversationSourceHistoryId = normalizeNullableString(item.conversationSourceHistoryId);
@@ -764,7 +788,7 @@ const sanitizeHistory = (value: unknown): GeneratedImage[] => {
             aspectRatio: isAspectRatio(item.aspectRatio)
                 ? item.aspectRatio
                 : EMPTY_WORKSPACE_COMPOSER_STATE.aspectRatio,
-            size: isImageSize(item.size) ? item.size : EMPTY_WORKSPACE_COMPOSER_STATE.imageSize,
+            size: normalizeSavedImageSize(item.size),
             style: normalizeImageStyle(item.style),
             model: normalizeSavedImageModel(item.model),
             createdAt: normalizeFiniteNumber(item.createdAt) ?? 0,
@@ -939,13 +963,16 @@ export const sanitizeQueuedBatchJobs = (value: unknown): QueuedBatchJob[] => {
             return [];
         }
 
+        const normalizedBatchSize = Math.floor(item.batchSize);
         if (
             !Number.isFinite(item.submissionItemIndex) ||
             !Number.isFinite(item.submissionItemCount) ||
+            !Number.isFinite(item.batchSize) ||
             item.submissionItemCount < 1 ||
             item.submissionItemIndex < 0 ||
             item.submissionItemIndex >= item.submissionItemCount ||
-            Math.floor(item.batchSize) !== 1 ||
+            normalizedBatchSize < 1 ||
+            normalizedBatchSize > 10 ||
             item.submissionGroupId.trim().length === 0
         ) {
             return [];
@@ -994,6 +1021,10 @@ export const sanitizeQueuedBatchJobs = (value: unknown): QueuedBatchJob[] => {
         const sourceHistoryId = normalizeNullableString(item.sourceHistoryId);
         const lineageAction = isLineageAction(item.lineageAction) ? item.lineageAction : undefined;
         const lineageDepth = normalizeFiniteNumber(item.lineageDepth);
+        const styleImageCount =
+            typeof item.styleImageCount === 'number' && Number.isFinite(item.styleImageCount)
+                ? Math.max(0, Math.floor(item.styleImageCount))
+                : undefined;
 
         const sanitizedQueuedJob: QueuedBatchJob = {
             localId: item.localId,
@@ -1003,13 +1034,13 @@ export const sanitizeQueuedBatchJobs = (value: unknown): QueuedBatchJob[] => {
             submissionItemIndex: item.submissionItemIndex,
             submissionItemCount: item.submissionItemCount,
             state: item.state,
-            model: isImageModel(item.model) ? item.model : EMPTY_WORKSPACE_COMPOSER_STATE.imageModel,
+            model: normalizeSavedImageModel(item.model),
             prompt: item.prompt,
             ...(generationMode !== undefined ? { generationMode } : {}),
             aspectRatio: isAspectRatio(item.aspectRatio)
                 ? item.aspectRatio
                 : EMPTY_WORKSPACE_COMPOSER_STATE.aspectRatio,
-            imageSize: isImageSize(item.imageSize) ? item.imageSize : EMPTY_WORKSPACE_COMPOSER_STATE.imageSize,
+            imageSize: normalizeSavedImageSize(item.imageSize),
             style: normalizeImageStyle(item.style),
             outputFormat: isOutputFormat(item.outputFormat)
                 ? item.outputFormat
@@ -1021,10 +1052,11 @@ export const sanitizeQueuedBatchJobs = (value: unknown): QueuedBatchJob[] => {
             includeThoughts: item.includeThoughts,
             googleSearch: item.googleSearch,
             imageSearch: item.imageSearch,
-            batchSize: item.batchSize,
+            batchSize: normalizedBatchSize,
             ...(batchStats !== undefined ? { batchStats } : {}),
             objectImageCount: item.objectImageCount,
             characterImageCount: item.characterImageCount,
+            ...(styleImageCount !== undefined ? { styleImageCount } : {}),
             createdAt: item.createdAt,
             updatedAt: item.updatedAt,
             startedAt,
@@ -1099,6 +1131,7 @@ const sanitizeWorkspaceSession = (value: unknown): WorkspaceSessionState => {
     const activeResult = isRecord(value.activeResult)
         ? {
               ...value.activeResult,
+              grounding: sanitizeGroundingMetadata(value.activeResult.grounding) ?? null,
               resultParts: sanitizeResultParts(value.activeResult.resultParts) || null,
               sessionHints: sanitizeSessionHintsForStorage(
                   isRecord(value.activeResult.sessionHints)
@@ -1112,6 +1145,7 @@ const sanitizeWorkspaceSession = (value: unknown): WorkspaceSessionState => {
         ...EMPTY_WORKSPACE_SESSION,
         ...value,
         activeResult: activeResult as WorkspaceSessionState['activeResult'],
+        continuityGrounding: sanitizeGroundingMetadata(value.continuityGrounding) ?? null,
         continuitySessionHints: sanitizeSessionHintsForStorage(
             isRecord(value.continuitySessionHints) ? (value.continuitySessionHints as Record<string, unknown>) : null,
         ),
@@ -1206,6 +1240,7 @@ const sanitizeWorkspaceComposerState = (value: unknown): WorkspaceComposerState 
         ...EMPTY_WORKSPACE_COMPOSER_STATE,
         ...restValue,
         prompt: typeof value.prompt === 'string' ? value.prompt : EMPTY_WORKSPACE_COMPOSER_STATE.prompt,
+        imageSize: normalizeSavedImageSize(value.imageSize),
         imageModel: normalizeSavedImageModel(value.imageModel),
         imageStyle: normalizeImageStyle(value.imageStyle),
         batchSize:
@@ -1293,7 +1328,12 @@ export const sanitizeWorkspaceSnapshot = (value: unknown): WorkspacePersistenceS
 
 export const loadWorkspaceSnapshot = (): WorkspacePersistenceSnapshot => {
     const correlationId = createDebugTerminalCorrelationId('workspace');
-    const raw = localStorage.getItem(WORKSPACE_SNAPSHOT_STORAGE_KEY);
+    let raw: string | null = null;
+    try {
+        raw = localStorage.getItem(WORKSPACE_SNAPSHOT_STORAGE_KEY);
+    } catch {
+        return EMPTY_WORKSPACE_SNAPSHOT;
+    }
 
     if (!raw) {
         const emptySnapshot = {
@@ -1301,12 +1341,11 @@ export const loadWorkspaceSnapshot = (): WorkspacePersistenceSnapshot => {
             branchState: {
                 nameOverrides: sanitizeBranchNameOverrides(
                     (() => {
-                        const legacyRaw = localStorage.getItem(LEGACY_BRANCH_NAME_OVERRIDES_STORAGE_KEY);
-                        if (!legacyRaw) {
-                            return undefined;
-                        }
-
                         try {
+                            const legacyRaw = localStorage.getItem(LEGACY_BRANCH_NAME_OVERRIDES_STORAGE_KEY);
+                            if (!legacyRaw) {
+                                return undefined;
+                            }
                             return JSON.parse(legacyRaw);
                         } catch {
                             return undefined;
@@ -1379,7 +1418,6 @@ export const saveWorkspaceSnapshot = (snapshot: WorkspacePersistenceSnapshot): v
     const correlationId = createDebugTerminalCorrelationId('workspace');
     const normalized = sanitizeWorkspaceSnapshot(snapshot);
     const localSnapshot = buildPersistableWorkspaceSnapshot(normalized);
-    const compactSnapshot = buildPersistableWorkspaceSnapshot(normalized, { aggressive: true });
 
     emitWorkspaceSnapshotDebugEvent({
         kind: 'request',
@@ -1421,6 +1459,8 @@ export const saveWorkspaceSnapshot = (snapshot: WorkspacePersistenceSnapshot): v
             return;
         }
     }
+
+    const compactSnapshot = buildPersistableWorkspaceSnapshot(normalized, { aggressive: true });
 
     emitWorkspaceSnapshotDebugEvent({
         kind: 'retry',
@@ -1612,6 +1652,8 @@ export const saveSharedWorkspaceSnapshot = async (
     });
 
     try {
+        const serializedBody = JSON.stringify(persistableSnapshot);
+        const bodyByteLength = new TextEncoder().encode(serializedBody).byteLength;
         const response = await fetch(SHARED_WORKSPACE_SNAPSHOT_ENDPOINT, {
             method: 'POST',
             headers: withWorkspaceDebugHeaders(
@@ -1620,11 +1662,23 @@ export const saveSharedWorkspaceSnapshot = async (
                 },
                 correlationId,
             ),
-            body: JSON.stringify(persistableSnapshot),
-            keepalive: true,
+            body: serializedBody,
+            keepalive: bodyByteLength < 60 * 1024,
         });
 
-        if (response.ok) {
+        let payloadSuccess = true;
+        if (response.ok && typeof response.json === 'function') {
+            try {
+                const payload = await response.json();
+                if (isRecord(payload) && payload.success === false) {
+                    payloadSuccess = false;
+                }
+            } catch {
+                // Non-JSON or empty 200 response is still treated as ok
+            }
+        }
+
+        if (response.ok && payloadSuccess) {
             sharedSnapshotOffline = false;
             emitWorkspaceSnapshotDebugEvent({
                 kind: 'response',

@@ -187,8 +187,11 @@ const App: React.FC = () => {
     const composerPromptTextareaRef = useRef<HTMLTextAreaElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
     const languageChangeRequestRef = useRef(0);
-    const lastPromotedHistoryIdRef = useRef<string | null>(null);
+    const lastPromotedHistoryIdRef = useRef<string | null>(
+        initialWorkspaceSnapshot.history.find((item) => item.status === 'success')?.id ?? null,
+    );
     const queuedBatchHistorySelectRef = useRef<((item: import('./types').GeneratedImage) => void) | null>(null);
+    const cancelPendingHistoryLoadsRef = useRef<(() => void) | null>(null);
 
     const {
         generatedImageUrls,
@@ -756,6 +759,7 @@ const App: React.FC = () => {
         setGroundingMode,
         showNotification,
         t,
+        settingsLocked,
     });
 
     useEffect(() => {
@@ -773,7 +777,7 @@ const App: React.FC = () => {
         }
 
         if (aspectRatio !== activeEditorLockedAspectRatio) {
-            setAspectRatio(activeEditorLockedAspectRatio);
+            setAspectRatio(activeEditorLockedAspectRatio, { bypassLock: true });
             return;
         }
 
@@ -986,6 +990,7 @@ const App: React.FC = () => {
         handleSmartRewrite: handleComposerSmartRewrite,
         handleSurpriseMe: handleComposerSurpriseMe,
         handleImageToPrompt: handleComposerImageToPrompt,
+        cancelPromptTools: cancelComposerPromptTools,
     } = usePromptTools({
         currentLanguage: currentLang,
         prompt,
@@ -998,18 +1003,16 @@ const App: React.FC = () => {
         apiKeyReady,
         handleApiKeyConnect,
     });
-    const { isEnhancingPrompt: isEnhancingEditorPrompt } = usePromptTools({
-        currentLanguage: currentLang,
-        prompt: editorPrompt,
-        promptThinkingLevel,
-        optimizationMode,
-        setPrompt: setEditorPrompt,
-        addLog,
-        showNotification,
-        t,
-        apiKeyReady,
-        handleApiKeyConnect,
-    });
+
+    const handleAbortWorkspaceOperations = useCallback(() => {
+        abortControllerRef.current?.abort('workspace-reset');
+        abortControllerRef.current = null;
+        setIsCancelFinalizing(false);
+        cancelActiveVideoUpload();
+        setVideoReference(null);
+        cancelComposerPromptTools();
+        cancelPendingHistoryLoadsRef.current?.();
+    }, [cancelActiveVideoUpload, cancelComposerPromptTools]);
 
     useWorkspaceAppLifecycle({
         historyCount: history.length,
@@ -1238,22 +1241,21 @@ const App: React.FC = () => {
         setActivePickerSheet,
         setBranchRenameDialog,
         setBranchRenameDraft,
+        onAbortWorkspaceOperations: handleAbortWorkspaceOperations,
     });
     const handleApplyImportedWorkspaceSnapshot = useCallback(
         (...args: Parameters<typeof rawHandleApplyImportedWorkspaceSnapshot>) => {
-            cancelActiveVideoUpload();
-            setVideoReference(null);
+            handleAbortWorkspaceOperations();
             return rawHandleApplyImportedWorkspaceSnapshot(...args);
         },
-        [cancelActiveVideoUpload, rawHandleApplyImportedWorkspaceSnapshot],
+        [handleAbortWorkspaceOperations, rawHandleApplyImportedWorkspaceSnapshot],
     );
     const applyEmptyWorkspaceSnapshot = useCallback(() => {
+        handleAbortWorkspaceOperations();
         clearStoredWorkspaceSnapshot();
         saveWorkspaceSnapshot(EMPTY_WORKSPACE_SNAPSHOT);
         applyWorkspaceSnapshot(EMPTY_WORKSPACE_SNAPSHOT);
-        cancelActiveVideoUpload();
-        setVideoReference(null);
-    }, [applyWorkspaceSnapshot, cancelActiveVideoUpload]);
+    }, [applyWorkspaceSnapshot, handleAbortWorkspaceOperations]);
 
     useLegacyWorkspaceSnapshotMigration({
         composeCurrentWorkspaceSnapshot,
@@ -1377,6 +1379,7 @@ const App: React.FC = () => {
         setShowSketchReplaceConfirm,
         clearSettingsSession,
         setSurfaceSharedControlsBottom,
+        onAbortWorkspaceOperations: handleAbortWorkspaceOperations,
     });
 
     const {
@@ -1386,6 +1389,7 @@ const App: React.FC = () => {
         handleBranchFromHistoryTurn,
         handleImportReviewDirectAction,
         commitPendingViewerSelection,
+        cancelPendingHistoryLoads,
     } = useHistorySourceOrchestration({
         history,
         generatedImageUrls,
@@ -1425,6 +1429,7 @@ const App: React.FC = () => {
         onHistorySelectWhileGenerating: handleHistorySelectionDuringGeneration,
     });
     queuedBatchHistorySelectRef.current = handleHistorySelect;
+    cancelPendingHistoryLoadsRef.current = cancelPendingHistoryLoads;
     const {
         importedBranchSummaries,
         importedLatestTurn,
@@ -1893,7 +1898,11 @@ const App: React.FC = () => {
     );
     const handleApplySettingsFromViewer = useCallback(
         (snapshot: ViewerComposerSettingsSnapshot) => {
-            applyViewerComposerSettingsSnapshot(snapshot);
+            const applied = applyViewerComposerSettingsSnapshot(snapshot);
+            if (!applied) {
+                showNotification(t('settingsLockedNotice'), 'info');
+                return;
+            }
             showNotification(t('workspaceViewerSettingsAppliedNotice'), 'info');
             focusComposerPromptTextarea({
                 delayFrames: 2,
@@ -1904,35 +1913,26 @@ const App: React.FC = () => {
     );
     const handleApplyBothFromMetadataViewer = useCallback(
         (promptText: string, snapshot: ViewerComposerSettingsSnapshot) => {
-            if (settingsLocked) {
+            const applied = applyViewerComposerSettingsSnapshot(snapshot);
+            if (!applied) {
                 showNotification(t('settingsLockedNotice'), 'info');
                 handleApplyPromptFromViewer(promptText);
                 setShowMetadataViewerDrawer(false);
                 return;
             }
-            applyViewerComposerSettingsSnapshot(snapshot);
             setPrompt(promptText.trim());
             focusComposerPromptTextarea({
                 delayFrames: 2,
                 ensureVisible: true,
             });
-            showNotification(
-                currentLang === 'zh_TW'
-                    ? '已將提示詞與設定同時套用到編輯區。'
-                    : currentLang === 'zh_CN'
-                      ? '已将提示词与设置同时应用到编辑区。'
-                      : 'Applied prompt and settings to composer.',
-                'info',
-            );
+            showNotification(t('metadataViewerApplyBothSuccessNotice'), 'info');
             setShowMetadataViewerDrawer(false);
         },
         [
             applyViewerComposerSettingsSnapshot,
-            currentLang,
             focusComposerPromptTextarea,
             handleApplyPromptFromViewer,
             setPrompt,
-            settingsLocked,
             showNotification,
             t,
         ],
@@ -2101,7 +2101,7 @@ const App: React.FC = () => {
         pickerSheetZIndex,
         prompt: isEditing ? editorPrompt : prompt,
         setPrompt: isEditing ? setEditorPrompt : setPrompt,
-        isEnhancingPrompt: isEditing ? isEnhancingEditorPrompt : isEnhancingComposerPrompt,
+        isEnhancingPrompt: isEditing ? false : isEnhancingComposerPrompt,
         closePickerSheet: handleCloseWorkspacePickerSheet,
         openAdvancedSettings: openAdvancedSettingsFromGeneration,
         currentLanguage: currentLang,

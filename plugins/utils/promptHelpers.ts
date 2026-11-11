@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai/node';
-import type { ApiClientLookupOptions, ApiKeyTier } from './apiKeyRouter';
+import { getRegisteredClientSelection, type ApiClientLookupOptions, type ApiKeyTier } from './apiKeyRouter';
 import { cleanResponseText } from './apiHelpers';
 import { toPromptGeminiThinkingLevel } from './geminiApiConfig';
 import type { OptimizationMode } from '../../types';
@@ -125,8 +125,17 @@ export async function executePromptToolWithFallback<T>(
     const triedClientKeys = new Set<string>();
     const triedClientObjects = new Map<GoogleGenAI, Set<PromptToolModel>>();
 
+    const extractClientApiKey = (client: GoogleGenAI): string | undefined => {
+        const registered = getRegisteredClientSelection(client);
+        if (registered?.apiKey) {
+            return registered.apiKey;
+        }
+        const reflected = client && typeof client === 'object' ? Reflect.get(client as object, 'apiKey') : undefined;
+        return typeof reflected === 'string' && reflected.length > 0 ? reflected : undefined;
+    };
+
     const hasTriedClientForModel = (client: GoogleGenAI, model: PromptToolModel): boolean => {
-        const explicitApiKey = (client as { apiKey?: unknown })?.apiKey;
+        const explicitApiKey = extractClientApiKey(client);
         if (typeof explicitApiKey === 'string' && explicitApiKey.length > 0) {
             return triedClientKeys.has(`${explicitApiKey}:${model}`);
         }
@@ -134,7 +143,7 @@ export async function executePromptToolWithFallback<T>(
     };
 
     const markClientTriedForModel = (client: GoogleGenAI, model: PromptToolModel): void => {
-        const explicitApiKey = (client as { apiKey?: unknown })?.apiKey;
+        const explicitApiKey = extractClientApiKey(client);
         if (typeof explicitApiKey === 'string' && explicitApiKey.length > 0) {
             triedClientKeys.add(`${explicitApiKey}:${model}`);
             return;
@@ -181,6 +190,8 @@ export async function executePromptToolWithFallback<T>(
             const value = await operation(client, target);
             congestionCooldownMap.delete(key);
 
+            const registeredSelection = getRegisteredClientSelection(client);
+            const effectiveTier: ApiKeyTier = registeredSelection?.effectiveTier ?? target.tier;
             const isModelDowngrade = target.model !== PROMPT_TOOL_PRIMARY_MODEL;
             const isTierSwitch = target.tier !== requestedTier;
             const usedFallback = isModelDowngrade || isTierSwitch;
@@ -195,7 +206,7 @@ export async function executePromptToolWithFallback<T>(
             const executionMeta: PromptToolExecutionMeta = {
                 optimizationMode: mode,
                 model: target.model,
-                effectiveTier: target.tier,
+                effectiveTier,
                 requestedTier,
                 isFallback: usedFallback,
                 fallbackReason,
@@ -204,7 +215,7 @@ export async function executePromptToolWithFallback<T>(
             return {
                 value,
                 model: target.model,
-                tier: target.tier,
+                tier: effectiveTier,
                 usedFallback,
                 executionMeta,
                 attempts,

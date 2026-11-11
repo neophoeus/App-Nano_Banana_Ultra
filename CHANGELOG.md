@@ -1,5 +1,27 @@
 # Changelog
 
+## v5.8.0 - 2026-11-11
+
+- Release title: Nano Banana Ultra 5.8.0 - Architectural Hardening & Security Overhaul, State Generation Race Guards, Dead Code Elimination, and UI Lifecycle Accessibility
+- Release summary:
+    - **Security & CSRF Hardening (`vite.config.ts`, `plugins/imageSavePlugin.ts`, `plugins/utils/apiHelpers.ts`, `plugins/routes/workspaceRoutes.ts`, `tests/securityAndApiHelpers.test.ts`)**:
+        - Local Network Binding: Defaulted Vite dev and preview servers to `127.0.0.1` (`NBU_DEV_HOST`) to prevent unauthorized local network exposure while allowing environment variable overrides.
+        - CSRF & Cross-Origin Protection: Applied `isAllowedLocalOrigin` middleware across all `/api/*` backend routes enforcing `Sec-Fetch-Site` and `Origin` validation to block cross-site and DNS rebinding attacks.
+        - Preview Server Route Alignment: Registered image load, save, and sidecar metadata routes in `configurePreviewServer` ensuring identical API behavior between development and production preview modes.
+        - Payload Streaming Budget & UNC Path Guard: Enforced streaming byte-budget limits in `readJsonBody` with immediate socket termination upon exceeding max length, and blocked Windows UNC paths (`\\...`) and root directory exports in `/api/export-results`.
+    - **State Synchronization & Generation Race Guards (`hooks/useWorkspaceSettingsSession.ts`, `hooks/useComposerState.ts`, `hooks/usePromptTools.ts`, `hooks/useHistorySourceOrchestration.ts`, `hooks/useWorkspaceResetActions.ts`, `hooks/useWorkspaceSnapshotActions.ts`, `tests/*`)**:
+        - Invalidation Generation Tokens: Introduced `invalidateDraftSync` to bump generation counters on snapshot restore and composer application, preventing queued microtasks from overwriting restored settings.
+        - Prompt Tool Async Cancellation: Integrated `promptToolGenerationRef` and `cancelPendingPromptTools` to safely abort in-flight Smart Rewrite and Image-to-Prompt operations during reset or snapshot restore.
+        - History Async Sequence Protection: Added `historyLoadGenerationRef` and `cancelPendingHistoryLoads` to eliminate out-of-order history loading races.
+    - **Dead Code Elimination (18 files removed)**:
+        - Excised 13 unreferenced legacy production modules: `ModelSelector.tsx`, `RecentHistoryFilmstrip.tsx`, `WorkspaceGalleryCard.tsx`, `WorkspaceHistoryCanvas.tsx`, `WorkspaceInsightsHeaderSummary.tsx`, `WorkspaceInsightsSidebar.tsx`, `WorkspaceSecondaryNav.tsx`, `WorkspaceSourcesCitationsPanel.tsx`, `useRecentHistoryFilmstripProps.ts`, `useWorkspaceInsightsSidebarProps.ts`, `useWorkspaceOverlayAuxiliaryProps.ts`, `geminiGroundingExtraction.ts`, and `geminiResponseExtraction.ts`.
+        - Cleaned up 5 obsolete dedicated test files: `RecentHistoryFilmstrip.test.tsx`, `WorkspaceGalleryCard.test.tsx`, `WorkspaceHistoryCanvas.test.tsx`, `WorkspaceInsightsSidebar.test.tsx`, and `WorkspaceSourcesCitationsPanel.test.tsx`.
+    - **Lifecycle, Resource Management & UI Accessibility (`components/WorkspaceModalFrame.tsx`, `components/ExportResultsModal.tsx`, `components/ImageEditor.tsx`, `utils/gaussianSplatting.ts`, `utils/translations/*`, `tests/uiLifecycleAndTranslations.test.tsx`)**:
+        - ARIA Accessibility & Focus Traps: Bound dialog `aria-labelledby` to stable unique title IDs, and ensured Escape dismissal cleans up transient error states.
+        - Canvas Performance & Duplicate Submit Guard: Optimized Retouch brush cursor rendering with offscreen canvas caching and eliminated duplicate text commitments via `committingTextRef`.
+        - 3DGS GPU Cleanup: Guaranteed cancellation of pending `requestAnimationFrame` and thorough disposal of GPU geometries, materials, and textures on viewer unmount.
+        - 9-Language Translation Completeness: Audited and synchronized all keys and placeholder parity across English, Traditional Chinese, Simplified Chinese, Japanese, Korean, Spanish, French, German, and Russian.
+
 ## v5.7.1 - 2026-11-04
 
 - Release title: Nano Banana Ultra 5.7.1 - Prompt Tools Routing Streamlining: Quality Mode Paid Gemini-3.8-Flash Lock (No Downgrade) & Eco Mode 3-Stage Cascading Fallback

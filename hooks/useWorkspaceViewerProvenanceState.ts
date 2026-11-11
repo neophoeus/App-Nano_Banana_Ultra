@@ -157,29 +157,32 @@ export function useWorkspaceViewerProvenanceState({
         (value: boolean) => t(value ? 'composerVisibilityVisible' : 'composerVisibilityHidden'),
         [t],
     );
-    const getMetadataGroundingModeLabel = useCallback((metadata: Record<string, unknown> | null | undefined) => {
-        if (typeof metadata?.groundingMode === 'string') {
-            switch (metadata.groundingMode) {
-                case 'off':
-                case 'google-search':
-                case 'image-search':
-                case 'google-search-plus-image-search':
-                    return t(getGroundingModeTranslationKey(metadata.groundingMode as GroundingMode));
-                default:
-                    return metadata.groundingMode;
+    const getMetadataGroundingModeLabel = useCallback(
+        (metadata: Record<string, unknown> | null | undefined) => {
+            if (typeof metadata?.groundingMode === 'string') {
+                switch (metadata.groundingMode) {
+                    case 'off':
+                    case 'google-search':
+                    case 'image-search':
+                    case 'google-search-plus-image-search':
+                        return t(getGroundingModeTranslationKey(metadata.groundingMode as GroundingMode));
+                    default:
+                        return metadata.groundingMode;
+                }
             }
-        }
 
-        if (typeof metadata?.googleSearch === 'boolean' || typeof metadata?.imageSearch === 'boolean') {
-            return t(
-                getGroundingModeTranslationKey(
-                    deriveGroundingMode(Boolean(metadata?.googleSearch), Boolean(metadata?.imageSearch)),
-                ),
-            );
-        }
+            if (typeof metadata?.googleSearch === 'boolean' || typeof metadata?.imageSearch === 'boolean') {
+                return t(
+                    getGroundingModeTranslationKey(
+                        deriveGroundingMode(Boolean(metadata?.googleSearch), Boolean(metadata?.imageSearch)),
+                    ),
+                );
+            }
 
-        return null;
-    }, []);
+            return null;
+        },
+        [t],
+    );
 
     const viewerMetadataSidecarState = getImageSidecarMetadataState(selectedMetadata);
     const viewerHasPersistedSidecarMetadata =

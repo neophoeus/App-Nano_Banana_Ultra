@@ -332,6 +332,9 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
 
             const controller = new AbortController();
             abortControllerRef.current = controller;
+            const isWorkspaceAborted = () =>
+                controller.signal.aborted &&
+                (controller.signal.reason === 'workspace-reset' || abortControllerRef.current !== controller);
 
             let finalObjectInputs: string[] = [];
             let finalCharacterInputs: string[] = [];
@@ -535,7 +538,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                     const committedSlotIndices = new Set<number>();
                     const batchHistoryItems: GeneratedImageType[] = [];
                     const handleLiveSlotResultCallback = (res: GenerationResult) => {
-                        if (controller.signal.aborted && isCancelledGenerationResult(res)) {
+                        if (isWorkspaceAborted() || (controller.signal.aborted && isCancelledGenerationResult(res))) {
                             return;
                         }
 
@@ -553,7 +556,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                         }
                     };
                     const handleResultCallback = async (res: GenerationResult) => {
-                        if (controller.signal.aborted && isCancelledGenerationResult(res)) {
+                        if (isWorkspaceAborted() || (controller.signal.aborted && isCancelledGenerationResult(res))) {
                             return;
                         }
 
@@ -643,6 +646,10 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                             thumbnailUrl = persistedThumbnail.url;
                             thumbnailSavedFilename = persistedThumbnail.thumbnailSavedFilename;
                             thumbnailInline = persistedThumbnail.thumbnailInline;
+                        }
+
+                        if (isWorkspaceAborted()) {
+                            return;
                         }
 
                         const historyItem: GeneratedImageType = {
@@ -758,6 +765,9 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                         handleSlotStart,
                     );
                     const wasCancelled = controller.signal.aborted;
+                    if (isWorkspaceAborted()) {
+                        break;
+                    }
 
                     const historyResults = wasCancelled
                         ? results.filter((result) => result.status === 'success')
@@ -769,6 +779,10 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                         if (!committedSlotIndices.has(slotIndex)) {
                             await handleResultCallback(res);
                         }
+                    }
+
+                    if (isWorkspaceAborted()) {
+                        break;
                     }
 
                     const orderedHistoryItems = sortBatchHistoryItemsByVisualOrder(batchHistoryItems);
@@ -803,32 +817,36 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
                     );
                 }
             } catch (err: any) {
-                console.error(err);
-                const errorMessage = err.message || 'Unknown error';
-                if (errorMessage === 'API_KEY_INVALID' || errorMessage.includes('API key')) {
-                    addLog(t('logFatalError').replace('{0}', errorMessage));
-                    setError({
-                        summary: t('errorApiKey'),
-                        detail: null,
-                        failure: null,
-                    });
-                    setApiKeyReady(false);
-                    await promptForApiKey();
-                } else if (controller.signal.aborted && isAbortGenerationMessage(errorMessage)) {
-                    addLog(t('logCancelled'));
-                } else {
-                    setError(buildStageErrorState(t, getGenerationFailure(err), errorMessage));
-                    showNotification(t('statusFailed'), 'error');
+                if (!isWorkspaceAborted()) {
+                    console.error(err);
+                    const errorMessage = err.message || 'Unknown error';
+                    if (errorMessage === 'API_KEY_INVALID' || errorMessage.includes('API key')) {
+                        addLog(t('logFatalError').replace('{0}', errorMessage));
+                        setError({
+                            summary: t('errorApiKey'),
+                            detail: null,
+                            failure: null,
+                        });
+                        setApiKeyReady(false);
+                        await promptForApiKey();
+                    } else if (controller.signal.aborted && isAbortGenerationMessage(errorMessage)) {
+                        addLog(t('logCancelled'));
+                    } else {
+                        setError(buildStageErrorState(t, getGenerationFailure(err), errorMessage));
+                        showNotification(t('statusFailed'), 'error');
+                    }
                 }
             } finally {
                 if (!completedSessionIds.has(activeBatchSessionId)) {
                     onBatchPreviewClear?.({ sessionId: activeBatchSessionId });
                 }
                 onLiveProgressReset?.();
-                setIsCancelFinalizing?.(false);
-                setIsGenerating(false);
-                abortControllerRef.current = null;
-                setBatchProgress({ completed: 0, total: 0 });
+                if (abortControllerRef.current === controller || abortControllerRef.current === null) {
+                    setIsCancelFinalizing?.(false);
+                    setIsGenerating(false);
+                    abortControllerRef.current = null;
+                    setBatchProgress({ completed: 0, total: 0 });
+                }
             }
         },
         [
@@ -854,6 +872,7 @@ export function usePerformGeneration(options: UsePerformGenerationProps) {
             onBatchPreviewTileUpdate,
             onLiveProgressEvent,
             onLiveProgressReset,
+            optimizationMode,
             outputFormat,
             roundCount,
             setApiKeyReady,

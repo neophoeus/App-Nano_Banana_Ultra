@@ -13,11 +13,17 @@ export default defineConfig(({ mode }) => {
     const resolvedPaidApiKey = process.env.GEMINI_PAID_API_KEY || env.GEMINI_PAID_API_KEY || '';
     const resolvedFreeApiKey = process.env.GEMINI_FREE_API_KEY || env.GEMINI_FREE_API_KEY || '';
     const resolvedFreeTierModels = process.env.GEMINI_FREE_TIER_MODELS || env.GEMINI_FREE_TIER_MODELS || '';
+    const resolvedHost = process.env.NBU_DEV_HOST || env.NBU_DEV_HOST || '127.0.0.1';
+    const resolvedPort = Number.isNaN(devPort) ? 22287 : devPort;
 
     return {
         server: {
-            port: Number.isNaN(devPort) ? 22287 : devPort,
-            host: '0.0.0.0',
+            port: resolvedPort,
+            host: resolvedHost,
+        },
+        preview: {
+            port: resolvedPort,
+            host: resolvedHost,
         },
         plugins: [
             react(),

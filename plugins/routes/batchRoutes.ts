@@ -286,8 +286,12 @@ function writeBatchJsonlManifest(
 }
 
 async function downloadBatchResultJsonl(ai: GoogleGenAI, responseFileName: string, tempDir: string): Promise<string> {
-    const safeFilename = responseFileName.replace(/[^a-zA-Z0-9_-]+/g, '_');
-    const downloadPath = path.join(tempDir, `${safeFilename}.jsonl`);
+    const safeFilename = responseFileName.replace(/[^a-zA-Z0-9_-]+/g, '_') || 'batch_results';
+    const resolvedTempDir = path.resolve(tempDir);
+    const downloadPath = path.resolve(resolvedTempDir, `${safeFilename}.jsonl`);
+    if (!downloadPath.startsWith(`${resolvedTempDir}${path.sep}`)) {
+        throw new Error('Invalid batch result download path.');
+    }
     await ai.files.download({ file: responseFileName, downloadPath });
     return fs.readFileSync(downloadPath, 'utf8');
 }
@@ -388,12 +392,13 @@ export function registerBatchRoutes(server: any, { getAIClient, resolvedDir }: R
                 styleImageInputs.length +
                 (sanitizedBody.editingInput ? 1 : 0) +
                 (sanitizedBody.sourceImageInput ? 1 : 0);
-            if (model === 'gemini-2.5-flash-image' && totalReferenceImages > 3) {
+            const maxFlash25References = MODEL_CAPABILITIES['gemini-2.5-flash-image'].maxObjects;
+            if (model === 'gemini-2.5-flash-image' && totalReferenceImages > maxFlash25References) {
                 sendJson(
                     res,
                     400,
                     {
-                        error: 'gemini-2.5-flash-image works best with up to 3 input images according to current docs.',
+                        error: `gemini-2.5-flash-image works best with up to ${maxFlash25References} input images according to current docs.`,
                     },
                     {
                         requestContext,

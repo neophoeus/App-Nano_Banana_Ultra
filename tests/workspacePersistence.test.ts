@@ -1272,6 +1272,7 @@ describe('workspacePersistence', () => {
                     kind: 'thought-image' as const,
                     imageUrl: `/api/load-image?filename=img-${i}-thought.png`,
                     savedFilename: `img-${i}-thought.png`,
+                    mimeType: 'image/png',
                     sequence: 1,
                 },
             ],
@@ -1328,5 +1329,73 @@ describe('workspacePersistence', () => {
         expect(fetchMock).toHaveBeenCalledTimes(1);
 
         resetSharedSnapshotOfflineState();
+    });
+
+    it('preserves multi-item batchSize, styleImageCount, and normalizes legacy model/size in queued jobs and grounding sources', () => {
+        const restored = sanitizeWorkspaceSnapshot({
+            ...EMPTY_WORKSPACE_SNAPSHOT,
+            history: [
+                {
+                    id: 'grounding-turn',
+                    url: 'https://example.com/grounding.png',
+                    prompt: 'Grounded turn',
+                    aspectRatio: '1:1',
+                    size: '512px',
+                    style: 'None',
+                    model: 'gemini-3.1-flash-image-preview',
+                    createdAt: 100,
+                    grounding: {
+                        enabled: true,
+                        sources: [
+                            { title: 'Safe HTTP', url: 'https://example.com/safe', imageUrl: 'javascript:alert(1)' },
+                            { title: 'Unsafe JS', url: 'javascript:alert(2)' },
+                        ],
+                    },
+                },
+            ],
+            queuedJobs: [
+                {
+                    localId: 'multi-batch-job',
+                    name: 'batches/multi-batch-job',
+                    displayName: 'Multi batch job',
+                    submissionGroupId: 'group-multi-batch',
+                    submissionItemIndex: 0,
+                    submissionItemCount: 1,
+                    state: 'JOB_STATE_PENDING',
+                    model: 'gemini-3-pro-image-preview',
+                    prompt: 'Batch prompt',
+                    aspectRatio: '1:1',
+                    imageSize: '512px',
+                    style: 'None',
+                    outputFormat: 'images-only',
+                    temperature: 1,
+                    thinkingLevel: 'minimal',
+                    includeThoughts: false,
+                    googleSearch: false,
+                    imageSearch: false,
+                    batchSize: 4,
+                    objectImageCount: 1,
+                    characterImageCount: 0,
+                    styleImageCount: 2,
+                    createdAt: 10,
+                    updatedAt: 11,
+                },
+            ],
+        } as any);
+
+        expect(restored.history[0]?.size).toBe('512');
+        expect(restored.history[0]?.model).toBe('gemini-3.1-flash-image');
+        expect(restored.history[0]?.grounding?.sources).toEqual([
+            {
+                title: 'Safe HTTP',
+                url: 'https://example.com/safe',
+                imageUrl: undefined,
+            },
+        ]);
+        expect(restored.queuedJobs).toHaveLength(1);
+        expect(restored.queuedJobs[0]?.batchSize).toBe(4);
+        expect(restored.queuedJobs[0]?.styleImageCount).toBe(2);
+        expect(restored.queuedJobs[0]?.model).toBe('gemini-3-pro-image');
+        expect(restored.queuedJobs[0]?.imageSize).toBe('512');
     });
 });

@@ -35,7 +35,7 @@ export function buildConversationHistoryWithMetadata(
 
     type ValidTurn = {
         turn: NonNullable<ConversationRequestContext['priorTurns']>[number];
-        sourceImage: ResolvedInlineImage;
+        sourceImage: ResolvedInlineImage | null;
         outputImage: ResolvedInlineImage;
         hasPrecedingGap: boolean;
     };
@@ -44,9 +44,10 @@ export function buildConversationHistoryWithMetadata(
     let hasGap = false;
 
     for (const turn of conversationContext.priorTurns) {
-        const sourceImage = readInlineImageFromReference(turn.sourceImage, resolvedDir);
+        const expectsSourceImage = turn.sourceImage !== null && turn.sourceImage !== undefined;
+        const sourceImage = expectsSourceImage ? readInlineImageFromReference(turn.sourceImage, resolvedDir) : null;
         const outputImage = readInlineImageFromReference(turn.outputImage, resolvedDir);
-        if (sourceImage && outputImage) {
+        if (outputImage && (!expectsSourceImage || sourceImage)) {
             validTurns.push({ turn, sourceImage, outputImage, hasPrecedingGap: hasGap });
             hasGap = false;
         } else {
@@ -88,20 +89,24 @@ export function buildConversationHistoryWithMetadata(
         const replayThoughtSignature = turn.thoughtSignature || THOUGHT_SIGNATURE_VALIDATOR_BYPASS;
         const userParts: Array<Record<string, unknown>> = [];
 
-        // Check if the current turn's sourceImage is identical to the adjacent previous turn's outputImage
-        const isDuplicateOfPreviousModelOutput =
-            index > 0 && !hasPrecedingGap && isSameInlineImage(sourceImage, selectedTurns[index - 1].outputImage);
-
-        if (isDuplicateOfPreviousModelOutput) {
-            deduplicatedSourceImageCount += 1;
-            // Omit the redundant duplicate image, ensuring non-empty text part for Gemini API validity
-            userParts.push({ text: turn.prompt?.trim() ? turn.prompt : 'Continue editing.' });
+        if (!sourceImage) {
+            userParts.push({ text: turn.prompt?.trim() ? turn.prompt : 'Generate an image.' });
         } else {
-            userParts.push({
-                inlineData: sourceImage,
-                ...(mediaResolution ? { mediaResolution } : {}),
-            });
-            userParts.push({ text: turn.prompt });
+            // Check if the current turn's sourceImage is identical to the adjacent previous turn's outputImage
+            const isDuplicateOfPreviousModelOutput =
+                index > 0 && !hasPrecedingGap && isSameInlineImage(sourceImage, selectedTurns[index - 1].outputImage);
+
+            if (isDuplicateOfPreviousModelOutput) {
+                deduplicatedSourceImageCount += 1;
+                // Omit the redundant duplicate image, ensuring non-empty text part for Gemini API validity
+                userParts.push({ text: turn.prompt?.trim() ? turn.prompt : 'Continue editing.' });
+            } else {
+                userParts.push({
+                    inlineData: sourceImage,
+                    ...(mediaResolution ? { mediaResolution } : {}),
+                });
+                userParts.push({ text: turn.prompt });
+            }
         }
 
         const modelParts: Array<Record<string, unknown>> = [

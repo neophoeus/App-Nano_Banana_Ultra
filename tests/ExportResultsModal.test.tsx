@@ -255,7 +255,9 @@ describe('ExportResultsModal', () => {
         });
 
         expect(exportWorkspaceResultsMock).toHaveBeenCalledTimes(1);
-        const [, callArg] = exportWorkspaceResultsMock.mock.calls[0] ? [null, exportWorkspaceResultsMock.mock.calls[0][0]] : [];
+        const [, callArg] = exportWorkspaceResultsMock.mock.calls[0]
+            ? [null, exportWorkspaceResultsMock.mock.calls[0][0]]
+            : [];
         expect(callArg.items.length).toBe(2);
         expect(callArg.items).toEqual(
             expect.arrayContaining([

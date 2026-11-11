@@ -17,12 +17,7 @@ export const SUPPORTED_VIDEO_MIME_TYPES: readonly SupportedVideoMimeType[] = [
 export const VIDEO_FILE_ACCEPT_ATTR =
     'video/mp4,video/webm,video/quicktime,video/mpeg,video/avi,video/x-msvideo,video/x-ms-wmv,video/3gpp,video/x-flv,.mp4,.mov,.webm,.mpeg,.mpg,.avi,.wmv,.3gp,.flv';
 
-const YOUTUBE_HOSTS = new Set([
-    'youtube.com',
-    'www.youtube.com',
-    'm.youtube.com',
-    'youtu.be',
-]);
+const YOUTUBE_HOSTS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be']);
 
 const YOUTUBE_VIDEO_ID_REGEX = /^[A-Za-z0-9_-]{11}$/;
 
@@ -85,11 +80,7 @@ export type LocalVideoValidationResult =
 /**
  * Validates a local video file before uploading.
  */
-export function validateLocalVideoFile(file: {
-    name: string;
-    size: number;
-    type: string;
-}): LocalVideoValidationResult {
+export function validateLocalVideoFile(file: { name: string; size: number; type: string }): LocalVideoValidationResult {
     if (!file || typeof file.size !== 'number' || file.size <= 0) {
         return { ok: false, errorCode: 'empty_file' };
     }

@@ -1106,10 +1106,10 @@ export const es = {
     historyFilmstripSummary: '{0} turnos · {1} ramas',
     historyFilmstripEmpty: 'Genera o carga una imagen para empezar a construir la tira de turnos.',
     composerAdvancedHighThinkingHighTempWarning:
-        'When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
-    generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
+        'Cuando se activa el modo de pensamiento alto y la temperatura supera 1.0, el modelo puede entrar en un bucle infinito de razonamiento y no completar la generación. Si esto ocurre, recomendamos volver a ajustar la temperatura a 1.0.',
+    generationFailureSummaryThinkingLoop: 'Bucle de razonamiento detectado',
     generationFailureDetailThinkingLoop:
-        'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
+        'El modelo superó los límites de razonamiento y la generación se canceló para evitar bloqueos. Prueba a restablecer la temperatura a 1.0 o reducir el nivel de pensamiento.',
     generationFailureSummaryQuota: 'Límite de velocidad o cuota de Gemini API superada.',
     generationFailureDetailQuota:
         'La solicitud fue limitada por velocidad o su cuota se agotó temporalmente. Ampliar el intervalo entre solicitudes o esperar a que se restablezca la ventana móvil puede ayudar.',
@@ -1148,4 +1148,8 @@ export const es = {
         'El modelo principal experimenta alta demanda. Se cambio automaticamente al modelo de alto rendimiento gemini-3.5-flash-lite.',
     promptToolFallbackPaidTierNotice:
         'El nivel de API gratuito esta congestionado. Se rescato automaticamente mediante la API de pago.',
+    queuedBatchJobsRecoverRecent: 'Recuperar recientes',
+    metadataViewerApplyBothSuccessNotice: 'Indicación y configuración aplicadas al editor.',
+    metadataViewerNoPrompt: '(Sin prompt configurado)',
+    metadataViewerModelResponse: 'Respuesta del modelo',
 } as const;

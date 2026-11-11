@@ -88,8 +88,9 @@ export const buildConversationTurnReference = (
 ): ConversationTurnReference | null => {
     const sourceImage = buildImageAssetReference(sourceTurn);
     const outputImage = buildImageAssetReference(turn);
+    const expectsSourceImage = Boolean(turn.conversationSourceHistoryId || turn.sourceHistoryId);
 
-    if (!sourceImage || !outputImage) {
+    if (!outputImage || (expectsSourceImage && !sourceImage)) {
         return null;
     }
 

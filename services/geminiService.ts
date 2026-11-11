@@ -610,7 +610,10 @@ type StreamRouteFailureEvent = {
 };
 
 type StreamRouteEvent =
-    StreamRouteStartEvent | StreamRouteResultPartEvent | StreamRouteCompleteEvent | StreamRouteFailureEvent;
+    | StreamRouteStartEvent
+    | StreamRouteResultPartEvent
+    | StreamRouteCompleteEvent
+    | StreamRouteFailureEvent;
 
 export type GenerationLiveProgressEvent =
     | {
@@ -1397,6 +1400,32 @@ export type PromptToolExecutionMeta = {
 
 let lastPromptToolExecutionMeta: PromptToolExecutionMeta | null = null;
 
+let activePromptToolAbortController: AbortController | null = null;
+
+export const abortActivePromptTools = (): void => {
+    if (activePromptToolAbortController) {
+        activePromptToolAbortController.abort();
+        activePromptToolAbortController = null;
+    }
+    lastPromptToolExecutionMeta = null;
+};
+
+const createPromptToolAbortSignal = (externalSignal?: AbortSignal): AbortSignal => {
+    if (activePromptToolAbortController) {
+        activePromptToolAbortController.abort();
+    }
+    const controller = new AbortController();
+    activePromptToolAbortController = controller;
+    if (externalSignal) {
+        if (externalSignal.aborted) {
+            controller.abort();
+        } else {
+            externalSignal.addEventListener('abort', () => controller.abort(), { once: true });
+        }
+    }
+    return controller.signal;
+};
+
 export const setLastPromptToolExecutionMeta = (meta: PromptToolExecutionMeta | null): void => {
     lastPromptToolExecutionMeta = meta;
 };
@@ -1412,12 +1441,14 @@ export const enhancePromptWithGemini = async (
     lang: Language,
     thinkingLevel: PromptThinkingLevel = 'low',
     optimizationMode?: OptimizationMode,
+    abortSignal?: AbortSignal,
 ): Promise<string> => {
     const testOverride = getBrowserOnlyTestGeminiServiceOverrides()?.enhancePromptWithGemini;
     if (testOverride) {
         return await testOverride(currentPrompt, lang, thinkingLevel, optimizationMode);
     }
 
+    const effectiveAbortSignal = createPromptToolAbortSignal(abortSignal);
     const correlationId = createDebugTerminalCorrelationId('prompt');
     const requestPayload = {
         currentPrompt,
@@ -1432,6 +1463,7 @@ export const enhancePromptWithGemini = async (
                 {
                     method: 'POST',
                     headers: jsonHeaders,
+                    signal: effectiveAbortSignal,
                     body: JSON.stringify(requestPayload),
                 },
                 {
@@ -1458,6 +1490,7 @@ export const enhancePromptWithGemini = async (
         {
             backoffMultiplier: 2,
             maxDelay: 8000,
+            abortSignal: effectiveAbortSignal,
             correlationId,
             route: '/api/prompt/enhance',
             source: 'prompt-tools',
@@ -1513,12 +1546,14 @@ export const generateRandomPrompt = async (
     lang: Language,
     thinkingLevel: PromptThinkingLevel = 'low',
     optimizationMode?: OptimizationMode,
+    abortSignal?: AbortSignal,
 ): Promise<string> => {
     const testOverride = getBrowserOnlyTestGeminiServiceOverrides()?.generateRandomPrompt;
     if (testOverride) {
         return await testOverride(lang, thinkingLevel, optimizationMode);
     }
 
+    const effectiveAbortSignal = createPromptToolAbortSignal(abortSignal);
     const correlationId = createDebugTerminalCorrelationId('prompt');
     const requestPayload = {
         lang,
@@ -1532,6 +1567,7 @@ export const generateRandomPrompt = async (
                 {
                     method: 'POST',
                     headers: jsonHeaders,
+                    signal: effectiveAbortSignal,
                     body: JSON.stringify(requestPayload),
                 },
                 {
@@ -1558,6 +1594,7 @@ export const generateRandomPrompt = async (
         {
             backoffMultiplier: 2,
             maxDelay: 8000,
+            abortSignal: effectiveAbortSignal,
             correlationId,
             route: '/api/prompt/random',
             source: 'prompt-tools',
@@ -1614,12 +1651,14 @@ export const generatePromptFromImage = async (
     lang: Language,
     thinkingLevel: PromptThinkingLevel = 'low',
     optimizationMode?: OptimizationMode,
+    abortSignal?: AbortSignal,
 ): Promise<string> => {
     const testOverride = getBrowserOnlyTestGeminiServiceOverrides()?.generatePromptFromImage;
     if (testOverride) {
         return await testOverride(imageDataUrl, lang, thinkingLevel, optimizationMode);
     }
 
+    const effectiveAbortSignal = createPromptToolAbortSignal(abortSignal);
     const correlationId = createDebugTerminalCorrelationId('prompt');
     const requestPayload = {
         imageDataUrl,
@@ -1634,6 +1673,7 @@ export const generatePromptFromImage = async (
                 {
                     method: 'POST',
                     headers: jsonHeaders,
+                    signal: effectiveAbortSignal,
                     body: JSON.stringify(requestPayload),
                 },
                 {
@@ -1660,6 +1700,7 @@ export const generatePromptFromImage = async (
         {
             backoffMultiplier: 2,
             maxDelay: 8000,
+            abortSignal: effectiveAbortSignal,
             correlationId,
             route: '/api/prompt/image-to-prompt',
             source: 'prompt-tools',

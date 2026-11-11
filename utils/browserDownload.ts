@@ -15,7 +15,13 @@ const triggerObjectUrlDownload = (objectUrl: string, filename: string) => {
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
-    URL.revokeObjectURL(objectUrl);
+    if (typeof setTimeout === 'function') {
+        setTimeout(() => {
+            URL.revokeObjectURL(objectUrl);
+        }, 1000);
+    } else {
+        URL.revokeObjectURL(objectUrl);
+    }
 };
 
 const getFilenameExtension = (value: string): string | null => {

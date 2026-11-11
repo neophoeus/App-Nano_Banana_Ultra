@@ -156,8 +156,7 @@ export function useWorkspaceShellViewModel({
     const surfacePromptPreview = surfacePrompt.trim()
         ? surfacePrompt.trim().slice(0, 64)
         : t('workspaceSurfacePromptEmpty');
-    const totalReferenceCount =
-        objectImageCount + characterImageCount + styleImageCount + (hasVideoInput ? 1 : 0);
+    const totalReferenceCount = objectImageCount + characterImageCount + styleImageCount + (hasVideoInput ? 1 : 0);
 
     return {
         viewSettings,

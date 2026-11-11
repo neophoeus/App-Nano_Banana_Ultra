@@ -189,6 +189,7 @@ describe('Official Gemini Nano Banana Spec Alignment', () => {
 
         it('buildGenerateFileParts includes style files and video files', async () => {
             const mockResolveFile = async () => ({
+                fileUri: 'https://generativelanguage.googleapis.com/v1beta/files/dummy',
                 filePath: '/tmp/dummy.png',
                 mimeType: 'image/png',
                 cleanup: () => {},

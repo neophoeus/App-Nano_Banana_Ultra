@@ -49,12 +49,7 @@ function FilmIcon({ className = 'h-4 w-4' }: { className?: string }) {
 
 function YouTubeIcon({ className = 'h-4 w-4' }: { className?: string }) {
     return (
-        <svg
-            className={className}
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            aria-hidden="true"
-        >
+        <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
         </svg>
     );
@@ -199,11 +194,7 @@ export const VideoReferenceUploader: React.FC<VideoReferenceUploaderProps> = ({
                 setThumbnailError(false);
             }
         } catch (err: any) {
-            if (
-                controller.signal.aborted ||
-                err?.name === 'AbortError' ||
-                err?.message === 'ABORTED'
-            ) {
+            if (controller.signal.aborted || err?.name === 'AbortError' || err?.message === 'ABORTED') {
                 return;
             }
             const msg = err?.message || t('videoRefErrorUploadFailed');
@@ -460,9 +451,7 @@ export const VideoReferenceUploader: React.FC<VideoReferenceUploaderProps> = ({
                             {t('videoRefYoutubeApply')}
                         </button>
                     </div>
-                    <p className="px-1 text-[10px] text-slate-400 dark:text-slate-500">
-                        {t('videoRefYoutubeHint')}
-                    </p>
+                    <p className="px-1 text-[10px] text-slate-400 dark:text-slate-500">{t('videoRefYoutubeHint')}</p>
                 </div>
             )}
 
@@ -472,4 +461,3 @@ export const VideoReferenceUploader: React.FC<VideoReferenceUploaderProps> = ({
 };
 
 export default VideoReferenceUploader;
-

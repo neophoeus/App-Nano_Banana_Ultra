@@ -951,7 +951,7 @@ export default function QueuedBatchJobsPanel({
                                     onClick={onRecoverRecentQueuedJobs}
                                     className={neutralActionButtonClassName}
                                 >
-                                    {t('queuedBatchJobsRecoverRecent') || 'Recover Recent'}
+                                    {t('queuedBatchJobsRecoverRecent')}
                                 </button>
                             )}
                             <span data-testid="queued-batch-tracked-count" className="nbu-quiet-pill px-3 py-1 text-xs">

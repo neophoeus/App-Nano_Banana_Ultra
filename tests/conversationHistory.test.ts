@@ -312,4 +312,53 @@ describe('buildConversationHistory', () => {
         // Trailing skipped turn resets lastModelOutputImage to null so current live turn won't deduplicate across gap
         expect(result.lastModelOutputImage).toBeNull();
     });
+
+    it('replays a root Text-to-Image turn with sourceImage null and deduplicates the following turn sourceImage', () => {
+        const rootOutput = 'IMAGE_DATA_ROOT';
+        const followUpOutput = 'IMAGE_DATA_FOLLOW_UP';
+
+        const result = buildConversationHistoryWithMetadata(
+            {
+                conversationId: 'conversation-root-continuity',
+                branchOriginId: 'root-turn',
+                activeSourceHistoryId: 'follow-up-turn',
+                priorTurns: [
+                    {
+                        historyId: 'root-turn',
+                        prompt: 'Create a mascot character',
+                        sourceImage: null,
+                        outputImage: { dataUrl: `data:image/gif;base64,${rootOutput}`, mimeType: 'image/gif' },
+                        text: 'Mascot created',
+                        thoughts: null,
+                        thoughtSignature: 'sig-root',
+                    },
+                    {
+                        historyId: 'follow-up-turn',
+                        prompt: 'Add a blue hat to the mascot',
+                        sourceImage: { dataUrl: `data:image/gif;base64,${rootOutput}`, mimeType: 'image/gif' },
+                        outputImage: { dataUrl: `data:image/gif;base64,${followUpOutput}`, mimeType: 'image/gif' },
+                        text: 'Added hat',
+                        thoughts: null,
+                        thoughtSignature: 'sig-follow',
+                    },
+                ],
+            },
+            RESOLVED_DIR,
+        );
+
+        expect(result.history).toHaveLength(4);
+        expect(result.history[0]).toEqual({
+            role: 'user',
+            parts: [{ text: 'Create a mascot character' }],
+        });
+        expect(result.history[1].parts[0]).toMatchObject({
+            inlineData: { data: rootOutput },
+            thoughtSignature: 'sig-root',
+        });
+        expect(result.history[2]).toEqual({
+            role: 'user',
+            parts: [{ text: 'Add a blue hat to the mascot' }],
+        });
+        expect(result.deduplicatedSourceImageCount).toBe(1);
+    });
 });

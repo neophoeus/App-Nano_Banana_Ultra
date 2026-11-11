@@ -1073,4 +1073,8 @@ export const zh_CN = {
     optimizationModeEcoUseCases: '适合前期发想、大量快速概念探索、灵感打样与低成本批次实验。',
     promptToolFallbackModelNotice: '因当前模型拥塞，系统已自动降级至高吞吐量的 gemini-3.5-flash-lite 完成生成。',
     promptToolFallbackPaidTierNotice: '免费 API 配额拥塞或暂时耗尽，系统已自动切换至付费 API 救援完成。',
+    queuedBatchJobsRecoverRecent: '恢复近期任务',
+    metadataViewerApplyBothSuccessNotice: '已将提示词与设置同时应用到编辑区。',
+    metadataViewerNoPrompt: '(未设置提示词)',
+    metadataViewerModelResponse: '模型响应',
 } as const;

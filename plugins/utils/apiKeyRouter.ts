@@ -179,6 +179,16 @@ export function resolveApiKeySelection(
     throw new Error(MISSING_API_KEY_ERROR_MESSAGE);
 }
 
+const clientSelectionRegistry = new WeakMap<object, ResolvedApiKeySelection>();
+
+export function getRegisteredClientSelection(client: unknown): ResolvedApiKeySelection | undefined {
+    if (!client || (typeof client !== 'object' && typeof client !== 'function')) {
+        return undefined;
+    }
+
+    return clientSelectionRegistry.get(client as object);
+}
+
 export function createApiClientRouter(
     input?: ApiKeyRouterConfigInput,
     clientFactory: (apiKey: string) => GoogleGenAI = (apiKey) => new GoogleGenAI({ apiKey }),
@@ -196,14 +206,21 @@ export function createApiClientRouter(
     const getSelection = (options?: ApiClientLookupOptions | string) => resolveApiKeySelection(getConfig(), options);
 
     const getAIClient: GetAIClient = (options) => {
-        const { apiKey } = getSelection(options);
+        const selection = getSelection(options);
+        const { apiKey } = selection;
         const cachedClient = clientCache.get(apiKey);
         if (cachedClient) {
+            if (typeof cachedClient === 'object' && cachedClient !== null) {
+                clientSelectionRegistry.set(cachedClient as object, selection);
+            }
             return cachedClient;
         }
 
         const client = clientFactory(apiKey);
         clientCache.set(apiKey, client);
+        if (typeof client === 'object' && client !== null) {
+            clientSelectionRegistry.set(client as object, selection);
+        }
         return client;
     };
 

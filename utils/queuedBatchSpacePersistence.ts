@@ -119,7 +119,12 @@ export const sanitizeQueuedBatchSpaceSnapshot = (value: unknown): QueuedBatchSpa
 
 export const loadQueuedBatchSpaceSnapshot = (): QueuedBatchSpaceSnapshot => {
     const correlationId = createDebugTerminalCorrelationId('batchspace');
-    const raw = localStorage.getItem(QUEUED_BATCH_SPACE_STORAGE_KEY);
+    let raw: string | null = null;
+    try {
+        raw = localStorage.getItem(QUEUED_BATCH_SPACE_STORAGE_KEY);
+    } catch {
+        return EMPTY_QUEUED_BATCH_SPACE_SNAPSHOT;
+    }
     let persistedSnapshot = EMPTY_QUEUED_BATCH_SPACE_SNAPSHOT;
 
     if (raw) {
@@ -245,7 +250,11 @@ export const saveQueuedBatchSpaceSnapshot = (snapshot: QueuedBatchSpaceSnapshot)
     const normalized = sanitizeQueuedBatchSpaceSnapshot(snapshot);
 
     if (normalized.queuedJobs.length === 0) {
-        localStorage.removeItem(QUEUED_BATCH_SPACE_STORAGE_KEY);
+        try {
+            localStorage.removeItem(QUEUED_BATCH_SPACE_STORAGE_KEY);
+        } catch {
+            // Ignore storage removal errors
+        }
         emitQueuedBatchSpaceDebugEvent({
             kind: 'response',
             label: 'Local queued batch space cleared',
@@ -271,7 +280,26 @@ export const saveQueuedBatchSpaceSnapshot = (snapshot: QueuedBatchSpaceSnapshot)
         correlationId,
     });
 
-    localStorage.setItem(QUEUED_BATCH_SPACE_STORAGE_KEY, JSON.stringify(normalized));
+    try {
+        localStorage.setItem(QUEUED_BATCH_SPACE_STORAGE_KEY, JSON.stringify(normalized));
+    } catch (error) {
+        try {
+            const compactJobs = normalized.queuedJobs.map(({ importIssues: _issues, ...rest }) => rest);
+            localStorage.setItem(QUEUED_BATCH_SPACE_STORAGE_KEY, JSON.stringify({ queuedJobs: compactJobs }));
+        } catch {
+            emitQueuedBatchSpaceDebugEvent({
+                kind: 'error',
+                label: 'Local queued batch space save failed',
+                summary: error instanceof Error ? error.message : 'Unknown storage error',
+                payload: buildQueuedBatchSpaceDebugPayload(normalized),
+                route: LOCAL_QUEUED_BATCH_SPACE_ROUTE,
+                endpoint: QUEUED_BATCH_SPACE_STORAGE_KEY,
+                method: 'SET',
+                correlationId,
+            });
+            return;
+        }
+    }
 
     emitQueuedBatchSpaceDebugEvent({
         kind: 'response',
@@ -321,6 +349,8 @@ export const saveSharedQueuedBatchSpaceSnapshot = async (
     });
 
     try {
+        const serializedBody = JSON.stringify(normalized);
+        const bodyByteLength = new TextEncoder().encode(serializedBody).byteLength;
         const response = await fetch(SHARED_QUEUED_BATCH_SPACE_ENDPOINT, {
             method: 'POST',
             headers: withQueuedBatchSpaceDebugHeaders(
@@ -329,11 +359,23 @@ export const saveSharedQueuedBatchSpaceSnapshot = async (
                 },
                 correlationId,
             ),
-            body: JSON.stringify(normalized),
-            keepalive: true,
+            body: serializedBody,
+            keepalive: bodyByteLength < 60 * 1024,
         });
 
-        if (response.ok) {
+        let payloadSuccess = true;
+        if (response.ok && typeof response.json === 'function') {
+            try {
+                const payload = await response.json();
+                if (isRecord(payload) && payload.success === false) {
+                    payloadSuccess = false;
+                }
+            } catch {
+                // Non-JSON or empty 200 response is still treated as ok
+            }
+        }
+
+        if (response.ok && payloadSuccess) {
             emitQueuedBatchSpaceDebugEvent({
                 kind: 'response',
                 label: options?.allowClearing ? 'Shared queued batch space cleared' : 'Shared queued batch space saved',

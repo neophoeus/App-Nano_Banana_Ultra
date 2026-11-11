@@ -63,12 +63,17 @@ export const ensureLanguageLoaded = async (language: Language): Promise<Translat
         return existingPromise;
     }
 
-    const loadPromise = languageLoaders[language]().then((dictionary) => {
-        translations[language] = dictionary;
-        loadedLanguages.add(language);
-        languageLoadPromises.delete(language);
-        return dictionary;
-    });
+    const loadPromise = languageLoaders[language]()
+        .then((dictionary) => {
+            translations[language] = dictionary;
+            loadedLanguages.add(language);
+            languageLoadPromises.delete(language);
+            return dictionary;
+        })
+        .catch((error) => {
+            languageLoadPromises.delete(language);
+            throw error;
+        });
 
     languageLoadPromises.set(language, loadPromise);
     return loadPromise;

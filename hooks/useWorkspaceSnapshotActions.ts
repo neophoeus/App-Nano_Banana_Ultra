@@ -67,6 +67,7 @@ type UseWorkspaceSnapshotActionsArgs = {
     setActivePickerSheet: Dispatch<SetStateAction<any>>;
     setBranchRenameDialog: Dispatch<SetStateAction<any>>;
     setBranchRenameDraft: Dispatch<SetStateAction<string>>;
+    onAbortWorkspaceOperations?: () => void;
 };
 
 export const useWorkspaceSnapshotActions = ({
@@ -100,6 +101,7 @@ export const useWorkspaceSnapshotActions = ({
     setActivePickerSheet,
     setBranchRenameDialog,
     setBranchRenameDraft,
+    onAbortWorkspaceOperations,
 }: UseWorkspaceSnapshotActionsArgs) => {
     const t = useCallback((key: string) => getTranslation(currentLanguage, key), [currentLanguage]);
     const [workspaceImportReview, setWorkspaceImportReview] = useState<WorkspaceImportReviewState | null>(null);
@@ -124,6 +126,7 @@ export const useWorkspaceSnapshotActions = ({
 
     const applyWorkspaceSnapshot = useCallback(
         (incomingSnapshot: unknown, options?: { announceRestoreToast?: boolean }) => {
+            onAbortWorkspaceOperations?.();
             const appliedSnapshot = deriveAppliedWorkspaceSnapshotState(incomingSnapshot, options);
             const {
                 snapshot,
@@ -166,6 +169,7 @@ export const useWorkspaceSnapshotActions = ({
             applyComposerState,
             applySelectedResultArtifacts,
             lastPromotedHistoryIdRef,
+            onAbortWorkspaceOperations,
             setActivePickerSheet,
             setBatchProgress,
             setBranchContinuationSourceByBranchOriginId,

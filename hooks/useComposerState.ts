@@ -31,7 +31,7 @@ type UseComposerStateReturn = {
     prompt: string;
     setPrompt: Dispatch<SetStateAction<string>>;
     aspectRatio: AspectRatio;
-    setAspectRatio: Dispatch<SetStateAction<AspectRatio>>;
+    setAspectRatio: (value: SetStateAction<AspectRatio>, options?: { bypassLock?: boolean }) => void;
     imageSize: ImageSize;
     setImageSize: Dispatch<SetStateAction<ImageSize>>;
     imageStyle: ImageStyle;
@@ -58,7 +58,7 @@ type UseComposerStateReturn = {
     setRoundCount: Dispatch<SetStateAction<number>>;
     composerState: WorkspaceComposerState;
     applyComposerState: (nextComposerState: WorkspaceComposerState) => void;
-    applyViewerComposerSettingsSnapshot: (snapshot: ViewerComposerSettingsSnapshot) => void;
+    applyViewerComposerSettingsSnapshot: (snapshot: ViewerComposerSettingsSnapshot) => boolean;
     setGroundingMode: (mode: GroundingMode) => void;
     restoreEditorComposerState: (
         snapshot: {
@@ -88,13 +88,21 @@ export function useComposerState({
     setDisplaySettings,
 }: UseComposerStateArgs): UseComposerStateReturn {
     const [settingsLocked, setSettingsLockedState] = useState(() => {
-        return localStorage.getItem('nbu_settings_locked') === 'true';
+        try {
+            return localStorage.getItem('nbu_settings_locked') === 'true';
+        } catch {
+            return false;
+        }
     });
 
     const setSettingsLocked = useCallback((locked: boolean | ((prev: boolean) => boolean)) => {
         setSettingsLockedState((prev) => {
             const next = typeof locked === 'function' ? locked(prev) : locked;
-            localStorage.setItem('nbu_settings_locked', String(next));
+            try {
+                localStorage.setItem('nbu_settings_locked', String(next));
+            } catch {
+                // Ignore localStorage quota or security errors
+            }
             return next;
         });
     }, []);
@@ -117,8 +125,8 @@ export function useComposerState({
     const [roundCount, setRoundCount] = useState<number>(initialComposerState.roundCount ?? 1);
 
     const setAspectRatio = useCallback(
-        (value: SetStateAction<AspectRatio>) => {
-            if (settingsLocked) return;
+        (value: SetStateAction<AspectRatio>, options?: { bypassLock?: boolean }) => {
+            if (settingsLocked && !options?.bypassLock) return;
             setAspectRatioState(value);
         },
         [settingsLocked],
@@ -308,8 +316,8 @@ export function useComposerState({
     );
 
     const applyViewerComposerSettingsSnapshot = useCallback(
-        (snapshot: ViewerComposerSettingsSnapshot) => {
-            if (settingsLocked) return;
+        (snapshot: ViewerComposerSettingsSnapshot): boolean => {
+            if (settingsLocked) return false;
             const normalizedSettings = normalizeViewerComposerSettingsSnapshot(snapshot, composerState.imageSize);
             const nextComposerState: WorkspaceComposerState = {
                 ...composerState,
@@ -328,6 +336,7 @@ export function useComposerState({
             setGoogleSearchState(normalizedSettings.googleSearch);
             setImageSearchState(normalizedSettings.imageSearch);
             setDisplaySettings(buildDisplaySettingsFromComposerState(nextComposerState));
+            return true;
         },
         [composerState, setDisplaySettings, settingsLocked],
     );

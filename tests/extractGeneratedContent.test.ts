@@ -250,4 +250,63 @@ describe('extractGeneratedContent', () => {
             },
         ]);
     });
+
+    it('classifies non-thought text parts carrying thoughtSignature as output-text rather than thought-text', () => {
+        const extracted = extractGeneratedContent(
+            createResponse([
+                {
+                    text: 'Internal reasoning step',
+                    thought: true,
+                    thoughtSignature: 'sig-thought',
+                },
+                {
+                    text: 'Visible response carrying signature',
+                    thoughtSignature: 'sig-output',
+                },
+                {
+                    inlineData: {
+                        mimeType: 'image/png',
+                        data: ONE_BY_ONE_PNG_BASE64,
+                    },
+                },
+            ]),
+        );
+
+        expect(extracted.text).toBe('Visible response carrying signature');
+        expect(extracted.thoughts).toBe('Internal reasoning step');
+        expect(extracted.resultParts).toEqual([
+            {
+                sequence: 0,
+                kind: 'thought-text',
+                text: 'Internal reasoning step',
+            },
+            {
+                sequence: 1,
+                kind: 'output-text',
+                text: 'Visible response carrying signature',
+            },
+            {
+                sequence: 2,
+                kind: 'output-image',
+                imageUrl: `data:image/png;base64,${ONE_BY_ONE_PNG_BASE64}`,
+                mimeType: 'image/png',
+            },
+        ]);
+    });
+
+    it('records repeatedThoughtText when identical single-part thought chunks repeat across stream events', () => {
+        let state = createLiveProgressAccumulatorState();
+        const repeatedChunk = createResponse([
+            {
+                text: 'Repetitive reasoning clause that loops forever.',
+                thought: true,
+            },
+        ]);
+
+        state = applyLiveProgressChunkToAccumulator(state, repeatedChunk).state;
+        state = applyLiveProgressChunkToAccumulator(state, repeatedChunk).state;
+
+        expect(state.aggregatedParts).toHaveLength(1);
+        expect(state.repeatedThoughtText).toContain('Repetitive reasoning clause that loops forever.');
+    });
 });

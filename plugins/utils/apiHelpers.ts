@@ -74,20 +74,145 @@ export function logApiResponse(
     });
 }
 
-export function readJsonBody<T>(req: NodeJS.ReadableStream): Promise<T> {
+export const DEFAULT_MAX_JSON_BODY_BYTES = 50 * 1024 * 1024;
+
+const isLoopbackHostname = (hostname: string): boolean => {
+    const normalized = hostname.trim().toLowerCase();
+    return normalized === 'localhost' || normalized === '127.0.0.1' || normalized === '[::1]' || normalized === '::1';
+};
+
+const parseHostAndPort = (rawHost: string): { hostname: string; port: string } => {
+    try {
+        const parsed = new URL(`http://${rawHost}`);
+        return {
+            hostname: parsed.hostname.toLowerCase(),
+            port: parsed.port || '80',
+        };
+    } catch {
+        return {
+            hostname: rawHost.trim().toLowerCase(),
+            port: '',
+        };
+    }
+};
+
+export function isAllowedLocalOrigin(originHeader?: string, hostHeader?: string): boolean {
+    if (!originHeader) {
+        return true;
+    }
+
+    try {
+        const parsedOrigin = new URL(originHeader);
+        if (parsedOrigin.protocol !== 'http:' && parsedOrigin.protocol !== 'https:') {
+            return false;
+        }
+
+        if (!hostHeader) {
+            return isLoopbackHostname(parsedOrigin.hostname);
+        }
+
+        const originHost = parsedOrigin.host.toLowerCase();
+        const targetHost = hostHeader.trim().toLowerCase();
+        if (originHost === targetHost) {
+            return true;
+        }
+
+        const parsedTarget = parseHostAndPort(targetHost);
+        const originPort = parsedOrigin.port || (parsedOrigin.protocol === 'https:' ? '443' : '80');
+        if (
+            isLoopbackHostname(parsedOrigin.hostname) &&
+            isLoopbackHostname(parsedTarget.hostname) &&
+            originPort === parsedTarget.port
+        ) {
+            return true;
+        }
+
+        return false;
+    } catch {
+        return false;
+    }
+}
+
+export function enforceSameOriginRequest(req: any, res: any, requestContext?: ApiRequestContext): boolean {
+    const secFetchSite = getRequestHeader(req, 'sec-fetch-site')?.toLowerCase();
+    if (secFetchSite === 'cross-site') {
+        sendJson(
+            res,
+            403,
+            { error: 'Cross-origin requests are not allowed.' },
+            {
+                requestContext,
+                summary: 'Blocked cross-site request (Sec-Fetch-Site)',
+            },
+        );
+        return false;
+    }
+
+    const originHeader = getRequestHeader(req, 'origin');
+    const hostHeader = getRequestHeader(req, 'host');
+    if (originHeader && !isAllowedLocalOrigin(originHeader, hostHeader)) {
+        sendJson(
+            res,
+            403,
+            { error: 'Cross-origin requests are not allowed.' },
+            {
+                requestContext,
+                summary: 'Blocked cross-origin request (Origin mismatch)',
+            },
+        );
+        return false;
+    }
+
+    return true;
+}
+
+export function readJsonBody<T>(
+    req: NodeJS.ReadableStream,
+    maxBytes: number = DEFAULT_MAX_JSON_BODY_BYTES,
+): Promise<T> {
     return new Promise((resolve, reject) => {
-        let body = '';
-        req.on('data', (chunk: Buffer) => {
-            body += chunk.toString();
+        const chunks: Buffer[] = [];
+        let receivedBytes = 0;
+        let settled = false;
+
+        req.on('data', (chunk: Buffer | string) => {
+            if (settled) {
+                return;
+            }
+
+            const bufferChunk = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk), 'utf8');
+            receivedBytes += bufferChunk.length;
+            if (receivedBytes > maxBytes) {
+                settled = true;
+                const payloadTooLargeError = new Error(
+                    `JSON request body exceeds maximum allowed size (${maxBytes} bytes).`,
+                );
+                (payloadTooLargeError as any).statusCode = 413;
+                reject(payloadTooLargeError);
+                return;
+            }
+
+            chunks.push(bufferChunk);
         });
         req.on('end', () => {
+            if (settled) {
+                return;
+            }
+            settled = true;
             try {
+                const body = chunks.length > 0 ? Buffer.concat(chunks).toString('utf8') : '';
                 resolve(JSON.parse(body || '{}') as T);
             } catch (error) {
                 reject(error);
             }
         });
-        req.on('error', reject);
+        req.on('error', (error) => {
+            if (settled) {
+                return;
+            }
+            settled = true;
+            reject(error);
+        });
     });
 }
 

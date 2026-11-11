@@ -723,7 +723,10 @@ void main() {
 
 interface WebGLResources {
     program: WebGLProgram;
+    vs: WebGLShader;
+    fs: WebGLShader;
     vao: WebGLVertexArrayObject;
+    quadVBO: WebGLBuffer;
     instanceVBO: WebGLBuffer;
     uniforms: {
         yaw: WebGLUniformLocation;
@@ -778,6 +781,7 @@ const initWebGL2Resources = (gl: WebGL2RenderingContext): WebGLResources | null 
 
     // 1. Quad Vertex Buffer (attribute 0)
     const quadVBO = gl.createBuffer();
+    if (!quadVBO) return null;
     gl.bindBuffer(gl.ARRAY_BUFFER, quadVBO);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
     gl.enableVertexAttribArray(0);
@@ -828,11 +832,56 @@ const initWebGL2Resources = (gl: WebGL2RenderingContext): WebGLResources | null 
 
     return {
         program,
+        vs,
+        fs,
         vao,
+        quadVBO,
         instanceVBO,
         uniforms,
         capacity: 0,
     };
+};
+
+const releaseWebGLContextResources = (gl: WebGL2RenderingContext | null | undefined): void => {
+    if (!gl) return;
+    const resources = webglCache.get(gl);
+    if (!resources) return;
+    try {
+        gl.deleteVertexArray(resources.vao);
+        gl.deleteBuffer(resources.quadVBO);
+        gl.deleteBuffer(resources.instanceVBO);
+        gl.deleteProgram(resources.program);
+        gl.deleteShader(resources.vs);
+        gl.deleteShader(resources.fs);
+    } catch {
+        // Ignore errors if context is already lost
+    }
+    webglCache.delete(gl);
+};
+
+export const disposeWebGL2Resources = (target?: WebGL2RenderingContext | HTMLCanvasElement | null): void => {
+    if (target) {
+        if ('getContext' in target && typeof target.getContext === 'function') {
+            try {
+                const gl = target.getContext('webgl2') as WebGL2RenderingContext | null;
+                releaseWebGLContextResources(gl);
+            } catch {
+                // Ignore
+            }
+        } else {
+            releaseWebGLContextResources(target as WebGL2RenderingContext);
+        }
+    }
+
+    if (!target && offscreenCanvasSingleton) {
+        try {
+            const offscreenGl = offscreenCanvasSingleton.getContext('webgl2') as WebGL2RenderingContext | null;
+            releaseWebGLContextResources(offscreenGl);
+        } catch {
+            // Ignore
+        }
+        offscreenCanvasSingleton = null;
+    }
 };
 
 /**

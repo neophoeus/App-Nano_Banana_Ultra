@@ -21,7 +21,7 @@ type UseWorkspaceAppLifecycleArgs = {
     setApiKeyReady: Dispatch<SetStateAction<boolean>>;
     setCurrentLang: Dispatch<SetStateAction<Language>>;
     setInitialPreferencesReady: Dispatch<SetStateAction<boolean>>;
-    setAspectRatio: Dispatch<SetStateAction<AspectRatio>>;
+    setAspectRatio: (value: SetStateAction<AspectRatio>, options?: { bypassLock?: boolean }) => void;
     addLog: (message: string) => void;
     showNotification: (message: string, type?: 'info' | 'error') => void;
     t: (key: string) => string;
@@ -134,19 +134,20 @@ export function useWorkspaceAppLifecycle({
     useEffect(() => {
         if (orderedReferenceAssets.length === 0) {
             leadingReferenceKeyRef.current = null;
-            return;
+            return undefined;
         }
 
         const leadingAsset = orderedReferenceAssets[0];
         const leadingKey = `${leadingAsset.id}:${leadingAsset.url}:${leadingAsset.aspectRatio ?? ''}`;
         if (leadingKey === leadingReferenceKeyRef.current) {
-            return;
+            return undefined;
         }
 
         leadingReferenceKeyRef.current = leadingKey;
+        let cancelled = false;
 
         const applyAutoRatio = (nextRatio: AspectRatio) => {
-            if (settingsLocked) {
+            if (cancelled || settingsLocked) {
                 return;
             }
             if (nextRatio === currentAspectRatioRef.current) {
@@ -161,13 +162,24 @@ export function useWorkspaceAppLifecycle({
 
         if (leadingAsset.isSketch && leadingAsset.aspectRatio) {
             applyAutoRatio(leadingAsset.aspectRatio);
-            return;
+            return () => {
+                cancelled = true;
+            };
         }
 
         const img = new Image();
-        img.src = leadingAsset.url;
         img.onload = () => {
+            if (cancelled) {
+                return;
+            }
             applyAutoRatio(findClosestAspectRatio(img.width, img.height, ASPECT_RATIOS));
+        };
+        img.src = leadingAsset.url;
+
+        return () => {
+            cancelled = true;
+            img.onload = null;
+            img.onerror = null;
         };
     }, [addLog, orderedReferenceAssets, setAspectRatio, showNotification, t, settingsLocked]);
 }

@@ -1109,10 +1109,10 @@ export const de = {
     historyFilmstripSummary: '{0} Zuge · {1} Zweige',
     historyFilmstripEmpty: 'Erzeugen oder laden Sie ein Bild, um den Zugstreifen aufzubauen.',
     composerAdvancedHighThinkingHighTempWarning:
-        'When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
-    generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
+        'Wenn „Hohe Denkstufe“ aktiviert und die „Temperatur“ über 1.0 eingestellt ist, kann das Modell in eine endlose Denkschleife geraten und die Generierung nicht abschließen. In diesem Fall empfehlen wir, die Temperatur wieder auf 1.0 zurückzusetzen.',
+    generationFailureSummaryThinkingLoop: 'Denkschleife erkannt',
     generationFailureDetailThinkingLoop:
-        'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
+        'Das Modell hat das Denklimit überschritten. Die Generierung wurde abgebrochen, um ein Einfrieren zu verhindern. Versuchen Sie, die Temperatur auf 1.0 zurückzusetzen oder die Denkstufe zu verringern.',
     generationFailureSummaryQuota: 'Gemini API-Ratenbegrenzung oder -Kontingent überschritten.',
     generationFailureDetailQuota:
         'Die Anfrage wurde ratenbegrenzt oder Ihr Kontingent ist vorübergehend erschöpft. Das Vergrößern der Abstände zwischen Anfragen oder Warten auf das Zurücksetzen des Zeitfensters kann helfen.',
@@ -1151,4 +1151,8 @@ export const de = {
         'Das Primaermodell ist derzeit stark ausgelastet. Automatisch auf das Modell gemini-3.5-flash-lite umgeschaltet.',
     promptToolFallbackPaidTierNotice:
         'Das kostenlose API-Kontingent ist ausgelastet. Automatisch ueber die kostenpflichtige API ausgefuehrt.',
+    queuedBatchJobsRecoverRecent: 'Kürzliche wiederherstellen',
+    metadataViewerApplyBothSuccessNotice: 'Prompt und Einstellungen auf Composer angewendet.',
+    metadataViewerNoPrompt: '(Kein Prompt festgelegt)',
+    metadataViewerModelResponse: 'Modellantwort',
 } as const;

@@ -28,6 +28,46 @@ export const VALID_IMAGE_MODELS = new Set<ImageModel>(IMAGE_MODELS);
 
 export const VALID_IMAGE_SIZES = new Set<ImageSize>(['512', '512px', '1K', '2K', '4K']);
 
+export const normalizeSavedImageModel = (
+    value: unknown,
+    fallback: ImageModel = 'gemini-3.1-flash-image',
+): ImageModel => {
+    if (typeof value !== 'string') {
+        return fallback;
+    }
+
+    const trimmed = value.trim();
+    if (!trimmed) {
+        return fallback;
+    }
+
+    const normalized = trimmed.replace(/-preview$/i, '') as ImageModel;
+    if (VALID_IMAGE_MODELS.has(normalized)) {
+        return normalized;
+    }
+
+    return fallback;
+};
+
+export function normalizeImageSizeValue(value: unknown): ImageSize | null;
+export function normalizeImageSizeValue(value: unknown, fallback: ImageSize): ImageSize;
+export function normalizeImageSizeValue(value: unknown, fallback: ImageSize | null = null): ImageSize | null {
+    if (typeof value !== 'string') {
+        return fallback;
+    }
+
+    const trimmed = value.trim();
+    if (trimmed === '512px') {
+        return '512';
+    }
+
+    if (trimmed === '512' || trimmed === '1K' || trimmed === '2K' || trimmed === '4K') {
+        return trimmed;
+    }
+
+    return fallback;
+}
+
 export const MODEL_CAPABILITIES: Record<ImageModel, ModelCapability> = {
     'gemini-nano-banana-2.1': {
         supportedSizes: ['1K', '2K', '4K'],

@@ -32,6 +32,7 @@ describe('useWorkspaceResetActions', () => {
         const setShowSketchReplaceConfirm = vi.fn() as any;
         const clearSettingsSession = vi.fn();
         const setSurfaceSharedControlsBottom = vi.fn() as any;
+        const onAbortWorkspaceOperations = vi.fn();
 
         function TestComponent() {
             latestHook = useWorkspaceResetActions({
@@ -46,6 +47,7 @@ describe('useWorkspaceResetActions', () => {
                 setShowSketchReplaceConfirm,
                 clearSettingsSession,
                 setSurfaceSharedControlsBottom,
+                onAbortWorkspaceOperations,
             });
 
             return null;
@@ -67,6 +69,7 @@ describe('useWorkspaceResetActions', () => {
             setShowSketchReplaceConfirm,
             clearSettingsSession,
             setSurfaceSharedControlsBottom,
+            onAbortWorkspaceOperations,
         };
     };
 
@@ -104,6 +107,7 @@ describe('useWorkspaceResetActions', () => {
             latestHook!.handleClearGalleryHistory();
         });
 
+        expect(context.onAbortWorkspaceOperations).toHaveBeenCalledTimes(1);
         expect(context.applyEmptyWorkspaceSnapshot).toHaveBeenCalledTimes(1);
         expect(context.clearSharedWorkspaceSnapshot).toHaveBeenCalledTimes(1);
         expect(context.setActiveWorkspaceDetailModal).toHaveBeenCalledWith(null);

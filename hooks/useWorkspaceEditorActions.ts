@@ -126,10 +126,15 @@ type UseWorkspaceEditorActionsArgs = {
         objectImageInputs?: string[],
         characterImageInputs?: string[],
         sourceOverride?: GenerationSourceOverride | null,
+        sourceImageInput?: string,
+        extraStyleImages?: string[],
+        extraVideoInput?: string,
+        extraVideoMimeType?: string,
     ) => Promise<void> | void;
     queueBatchJobFromEditor: (submission: {
         prompt: string;
         editingInput: string;
+        sourceImageInput?: string;
         batchSize: number;
         imageSize: ImageSize;
         aspectRatio: AspectRatio;
@@ -567,7 +572,7 @@ export function useWorkspaceEditorActions({
             imageBase64: string,
             editBatchSize: number,
             editSize: ImageSize,
-            _mode: string,
+            mode: string,
             extraObjectImages?: string[],
             extraCharacterImages?: string[],
             targetRatio?: AspectRatio,

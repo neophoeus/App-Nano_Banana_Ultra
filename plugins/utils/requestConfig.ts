@@ -78,6 +78,17 @@ export function validateCapabilityRequest(model: string, body: ImageGenerateBody
         return `${model} does not support grounded image search.`;
     }
 
+    if (
+        body.temperature !== undefined &&
+        body.temperature !== null &&
+        (typeof body.temperature !== 'number' ||
+            !Number.isFinite(body.temperature) ||
+            body.temperature < 0 ||
+            body.temperature > 2)
+    ) {
+        return 'Temperature must be a finite number between 0 and 2.';
+    }
+
     return null;
 }
 

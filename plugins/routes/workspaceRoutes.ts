@@ -42,6 +42,16 @@ export function registerWorkspaceRoutes(
         writeErrorMessage,
     }: FileBackedSnapshotRouteArgs<T>) => {
         const snapshotTempPath = `${snapshotPath}.tmp`;
+        let writeQueue = Promise.resolve();
+
+        const runSerializedWrite = <R>(task: () => Promise<R>): Promise<R> => {
+            const next = writeQueue.then(task, task);
+            writeQueue = next.then(
+                () => undefined,
+                () => undefined,
+            );
+            return next;
+        };
 
         const isRetryableSnapshotWriteError = (error: unknown) => {
             const code = (error as NodeJS.ErrnoException)?.code;
@@ -116,7 +126,7 @@ export function registerWorkspaceRoutes(
             cleanupSnapshotTempFile();
         };
 
-        const writeSnapshotWithRetry = (snapshot: T) => {
+        const writeSnapshotWithRetry = async (snapshot: T) => {
             const payload = JSON.stringify(snapshot, null, 2);
             let lastError: unknown = null;
 
@@ -152,7 +162,7 @@ export function registerWorkspaceRoutes(
                         throw error;
                     }
 
-                    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50 * (attempt + 1));
+                    await new Promise((resolve) => setTimeout(resolve, 50 * (attempt + 1)));
                 }
             }
 
@@ -258,41 +268,43 @@ export function registerWorkspaceRoutes(
                     hasContent: hasContent(normalizedSnapshot),
                 });
 
-                if (!hasContent(normalizedSnapshot)) {
-                    clearSnapshotFiles();
+                await runSerializedWrite(async () => {
+                    if (!hasContent(normalizedSnapshot)) {
+                        clearSnapshotFiles();
+                        sendJson(
+                            res,
+                            200,
+                            { success: true, path: snapshotPath, cleared: true },
+                            {
+                                requestContext,
+                                summary: 'Snapshot backup cleared',
+                                details: {
+                                    source: 'workspace',
+                                    snapshotPath,
+                                    phase: 'save',
+                                    cleared: true,
+                                },
+                            },
+                        );
+                        return;
+                    }
+
+                    await writeSnapshotWithRetry(normalizedSnapshot);
                     sendJson(
                         res,
                         200,
-                        { success: true, path: snapshotPath, cleared: true },
+                        { success: true, path: snapshotPath },
                         {
                             requestContext,
-                            summary: 'Snapshot backup cleared',
+                            summary: 'Snapshot backup saved',
                             details: {
                                 source: 'workspace',
                                 snapshotPath,
                                 phase: 'save',
-                                cleared: true,
                             },
                         },
                     );
-                    return;
-                }
-
-                writeSnapshotWithRetry(normalizedSnapshot);
-                sendJson(
-                    res,
-                    200,
-                    { success: true, path: snapshotPath },
-                    {
-                        requestContext,
-                        summary: 'Snapshot backup saved',
-                        details: {
-                            source: 'workspace',
-                            snapshotPath,
-                            phase: 'save',
-                        },
-                    },
-                );
+                });
             } catch (error: any) {
                 logApiError(route, error, { method: 'POST', snapshotPath, phase: 'save' }, requestContext);
                 sendJson(
@@ -410,6 +422,15 @@ export function registerWorkspaceRoutes(
                 .trim()
                 .replace(/^["']+|["']+$/g, '')
                 .trim();
+            if (rawTargetDir.startsWith('\\\\') || rawTargetDir.startsWith('//')) {
+                sendJson(
+                    res,
+                    400,
+                    { success: false, error: 'Invalid target directory path.' },
+                    { requestContext, summary: 'UNC/network target directory rejected' },
+                );
+                return;
+            }
             const pathWithoutDrive = rawTargetDir.replace(/^[a-zA-Z]:/, '');
             if (/[<>:"|?*\x00-\x1F]/.test(pathWithoutDrive)) {
                 sendJson(
@@ -427,7 +448,18 @@ export function registerWorkspaceRoutes(
                     : path.resolve(process.cwd(), rawTargetDir)
                 : path.resolve(process.cwd(), 'export');
 
-            if (path.resolve(outputDir).toLowerCase() === path.resolve(resolvedDir).toLowerCase()) {
+            const resolvedOutputDir = path.resolve(outputDir);
+            if (path.parse(resolvedOutputDir).root.toLowerCase() === resolvedOutputDir.toLowerCase()) {
+                sendJson(
+                    res,
+                    400,
+                    { success: false, error: 'Invalid target directory path.' },
+                    { requestContext, summary: 'Root directory export rejected' },
+                );
+                return;
+            }
+
+            if (resolvedOutputDir.toLowerCase() === path.resolve(resolvedDir).toLowerCase()) {
                 sendJson(
                     res,
                     400,
@@ -623,7 +655,7 @@ export function registerWorkspaceRoutes(
             const { exec } = await import('child_process');
             const psCommand = `powershell -NoProfile -Command "Add-Type -AssemblyName System.Windows.Forms; $f = New-Object System.Windows.Forms.FolderBrowserDialog; $f.Description = 'Select Export Directory'; $f.ShowNewFolderButton = $true; if ($f.ShowDialog() -eq 'OK') { [Console]::WriteLine($f.SelectedPath) }"`;
 
-            exec(psCommand, { windowsHide: true }, (err, stdout) => {
+            exec(psCommand, { windowsHide: true, timeout: 60000 }, (err, stdout) => {
                 if (err) {
                     sendJson(
                         res,

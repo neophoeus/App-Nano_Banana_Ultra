@@ -3,8 +3,10 @@ import path from 'path';
 import type { Plugin } from 'vite';
 import {
     createApiRequestContext,
+    enforceSameOriginRequest,
     logApiRequest,
     logApiResponse,
+    readJsonBody,
     sendClassifiedApiError,
     sendJson,
 } from './utils/apiHelpers';
@@ -66,11 +68,384 @@ function registerMiddlewares(server: any, resolvedDir: string, options?: ImageSa
         fs.mkdirSync(resolvedDir, { recursive: true });
     }
 
-    registerWorkspaceRoutes(server, { geminiApiKey: options?.geminiApiKey, resolvedDir, getApiKeyConfig: getConfig });
-    registerPromptRoutes(server, { getAIClient });
-    registerGenerateRoutes(server, { getAIClient, resolvedDir });
-    registerBatchRoutes(server, { getAIClient, resolvedDir });
-    registerVideoRoutes(server, { getAIClient });
+    const guardedServer = {
+        ...server,
+        use(route: string, handler: (req: any, res: any, next?: any) => void | Promise<void>) {
+            server.use(route, (req: any, res: any, next?: any) => {
+                const requestContext = createApiRequestContext(req, route);
+                if (!enforceSameOriginRequest(req, res, requestContext)) {
+                    return;
+                }
+                return handler(req, res, next);
+            });
+        },
+    };
+
+    registerWorkspaceRoutes(guardedServer, {
+        geminiApiKey: options?.geminiApiKey,
+        resolvedDir,
+        getApiKeyConfig: getConfig,
+    });
+    registerPromptRoutes(guardedServer, { getAIClient });
+    registerGenerateRoutes(guardedServer, { getAIClient, resolvedDir });
+    registerBatchRoutes(guardedServer, { getAIClient, resolvedDir });
+    registerVideoRoutes(guardedServer, { getAIClient });
+
+    guardedServer.use('/api/save-image', async (req: any, res: any) => {
+        const requestContext = createApiRequestContext(req, '/api/save-image');
+
+        if (req.method !== 'POST') {
+            sendJson(
+                res,
+                405,
+                { success: false, error: 'Method not allowed' },
+                {
+                    requestContext,
+                    summary: 'Method not allowed',
+                },
+            );
+            return;
+        }
+
+        try {
+            const { data, filename, metadata, dedupe } = await readJsonBody<{
+                data?: string;
+                filename?: string;
+                metadata?: Record<string, any>;
+                dedupe?: boolean;
+            }>(req);
+            logApiRequest(requestContext, {
+                source: 'image-file',
+                filename: typeof filename === 'string' ? path.basename(filename) : null,
+                dedupe: dedupe === true,
+                hasMetadata: Boolean(metadata && typeof metadata === 'object'),
+            });
+
+            if (!data || !filename) {
+                sendJson(
+                    res,
+                    400,
+                    { success: false, error: 'Missing data or filename' },
+                    {
+                        requestContext,
+                        summary: 'Missing data or filename',
+                        details: { source: 'image-file' },
+                    },
+                );
+                return;
+            }
+
+            // Extract raw base64 from data URL
+            const match = data.match(/^data:image\/([\w+]+);base64,(.+)$/);
+            if (!match) {
+                sendJson(
+                    res,
+                    400,
+                    { success: false, error: 'Invalid data URL format' },
+                    {
+                        requestContext,
+                        summary: 'Invalid data URL format',
+                        details: { source: 'image-file', filename: path.basename(filename) },
+                    },
+                );
+                return;
+            }
+
+            const buffer = Buffer.from(match[2], 'base64');
+            const imageDetails = extractImageDetailsFromDataUrl(data);
+            // Prevent directory traversal attacks
+            const requestedFilename = path.basename(filename);
+            const safeFilename =
+                dedupe === true ? resolveAvailableOutputFilename(resolvedDir, requestedFilename) : requestedFilename;
+            const filePath = resolveSafeOutputFilePath(resolvedDir, safeFilename);
+
+            let finalBuffer = buffer;
+            if (metadata && typeof metadata === 'object' && !safeFilename.includes('-thumbnail')) {
+                try {
+                    finalBuffer = embedImageMetadata(buffer, {
+                        id: metadata.id || safeFilename,
+                        prompt: metadata.prompt || '',
+                        model: metadata.model || '',
+                        aspectRatio: metadata.aspectRatio || '',
+                        size: metadata.size || metadata.requestedImageSize || '',
+                        style: metadata.style || '',
+                        mode: metadata.mode || metadata.generationMode || '',
+                        executionMode: metadata.executionMode,
+                        lineageAction: metadata.lineageAction,
+                        outputFormat: metadata.outputFormat,
+                        actualOutput: imageDetails?.dimensions
+                            ? `${imageDetails.dimensions.width}x${imageDetails.dimensions.height}`
+                            : undefined,
+                        groundingMode: metadata.groundingMode,
+                        groundingSources: metadata.groundingSources,
+                        temperature: metadata.temperature,
+                        thinkingLevel: metadata.thinkingLevel,
+                        includeThoughts: metadata.includeThoughts,
+                        googleSearch: metadata.googleSearch,
+                        imageSearch: metadata.imageSearch,
+                        status: metadata.status || 'success',
+                        text: metadata.text,
+                        thoughts: metadata.thoughts,
+                        createdAt: metadata.createdAt || metadata.timestamp || new Date().toISOString(),
+                        exportSourceType: metadata.kind === 'thought-image' ? 'thought' : 'product',
+                        parentHistoryId: metadata.parentHistoryId,
+                    });
+                } catch {
+                    finalBuffer = buffer;
+                }
+            }
+
+            fs.writeFileSync(filePath, finalBuffer);
+
+            // F5: Write metadata sidecar JSON if provided
+            if (metadata && typeof metadata === 'object') {
+                const jsonPath = resolveSidecarPath(filePath);
+                const sidecar = normalizeImageSidecarMetadata({
+                    ...metadata,
+                    actualOutput: imageDetails?.dimensions
+                        ? {
+                              width: imageDetails.dimensions.width,
+                              height: imageDetails.dimensions.height,
+                              mimeType: imageDetails.mimeType,
+                          }
+                        : null,
+                    filename: safeFilename,
+                    timestamp: new Date().toISOString(),
+                }) || {
+                    ...metadata,
+                    actualOutput: imageDetails?.dimensions
+                        ? {
+                              width: imageDetails.dimensions.width,
+                              height: imageDetails.dimensions.height,
+                              mimeType: imageDetails.mimeType,
+                          }
+                        : null,
+                    filename: safeFilename,
+                    timestamp: new Date().toISOString(),
+                };
+                fs.writeFileSync(jsonPath, JSON.stringify(sidecar, null, 2), 'utf-8');
+            }
+
+            sendJson(
+                res,
+                200,
+                { success: true, path: filePath, filename: safeFilename },
+                {
+                    requestContext,
+                    summary: safeFilename,
+                    details: {
+                        source: 'image-file',
+                        filename: safeFilename,
+                        size: buffer.length,
+                        hasMetadata: Boolean(metadata && typeof metadata === 'object'),
+                    },
+                },
+            );
+        } catch (err: any) {
+            sendClassifiedApiError(res, '/api/save-image', err, 'Failed to save image', {
+                basePayload: { success: false },
+                defaultStatus: 500,
+                requestContext,
+                details: {
+                    source: 'image-file',
+                },
+            });
+        }
+    });
+
+    // F8: Load full image endpoint
+    guardedServer.use('/api/load-image', (req: any, res: any) => {
+        const requestContext = createApiRequestContext(req, '/api/load-image');
+
+        if (req.method !== 'GET') {
+            sendJson(
+                res,
+                405,
+                { success: false, error: 'Method not allowed' },
+                {
+                    requestContext,
+                    summary: 'Method not allowed',
+                },
+            );
+            return;
+        }
+
+        const url = new URL(req.url!, `http://${req.headers.host}`);
+        const filename = url.searchParams.get('filename');
+        logApiRequest(requestContext, {
+            source: 'image-file',
+            filename,
+        });
+
+        if (!filename) {
+            sendJson(
+                res,
+                400,
+                { success: false, error: 'Missing filename' },
+                {
+                    requestContext,
+                    summary: 'Missing filename',
+                    details: { source: 'image-file' },
+                },
+            );
+            return;
+        }
+
+        // Security: Prevent directory traversal
+        const safeFilename = path.basename(filename);
+        const filePath = resolveSafeOutputFilePath(resolvedDir, safeFilename);
+
+        // Ensure file exists and is within output dir
+        if (!fs.existsSync(filePath) || !filePath.startsWith(resolvedDir)) {
+            sendJson(
+                res,
+                404,
+                { success: false, error: 'File not found' },
+                {
+                    requestContext,
+                    summary: 'File not found',
+                    details: { source: 'image-file', filename: safeFilename },
+                },
+            );
+            return;
+        }
+
+        try {
+            const ext = path.extname(filePath).toLowerCase().replace('.', '');
+            const mimeType =
+                ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/webp';
+            const fileBuffer = fs.readFileSync(filePath);
+
+            res.writeHead(200, {
+                'Content-Type': mimeType,
+                'Content-Length': fileBuffer.length,
+                ...(requestContext.requestId ? { 'X-NBU-Debug-Request-ID': requestContext.requestId } : {}),
+            });
+            res.end(fileBuffer);
+            logApiResponse(requestContext, 200, {
+                source: 'image-file',
+                filename: safeFilename,
+                mimeType,
+                size: fileBuffer.length,
+            });
+        } catch (err: any) {
+            sendClassifiedApiError(res, '/api/load-image', err, 'Failed to load image', {
+                basePayload: { success: false },
+                defaultStatus: 500,
+                requestContext,
+                details: {
+                    source: 'image-file',
+                    filename: safeFilename,
+                },
+            });
+        }
+    });
+
+    guardedServer.use('/api/load-image-metadata', (req: any, res: any) => {
+        const requestContext = createApiRequestContext(req, '/api/load-image-metadata');
+
+        if (req.method !== 'GET') {
+            sendJson(
+                res,
+                405,
+                { success: false, error: 'Method not allowed' },
+                {
+                    requestContext,
+                    summary: 'Method not allowed',
+                },
+            );
+            return;
+        }
+
+        const url = new URL(req.url!, `http://${req.headers.host}`);
+        const filename = url.searchParams.get('filename');
+        logApiRequest(requestContext, {
+            source: 'image-file',
+            filename,
+        });
+
+        if (!filename) {
+            sendJson(
+                res,
+                400,
+                { success: false, error: 'Missing filename' },
+                {
+                    requestContext,
+                    summary: 'Missing filename',
+                    details: { source: 'image-file' },
+                },
+            );
+            return;
+        }
+
+        const safeFilename = path.basename(filename);
+        const filePath = resolveSafeOutputFilePath(resolvedDir, safeFilename);
+        let sidecarPath = resolveSidecarPath(filePath);
+        if (!fs.existsSync(sidecarPath) && safeFilename.endsWith('.json')) {
+            sidecarPath = filePath;
+        }
+
+        if (!fs.existsSync(sidecarPath) || !sidecarPath.startsWith(resolvedDir)) {
+            sendJson(
+                res,
+                404,
+                { success: false, error: 'Metadata not found' },
+                {
+                    requestContext,
+                    summary: 'Metadata not found',
+                    details: { source: 'image-file', filename: safeFilename },
+                },
+            );
+            return;
+        }
+
+        try {
+            let sidecar = JSON.parse(fs.readFileSync(sidecarPath, 'utf-8'));
+            const stem = path.parse(safeFilename).name;
+            const partMatch = stem.match(/^(.+)-part-\d+$/);
+            if (partMatch) {
+                const parentPath = path.join(resolvedDir, `${partMatch[1]}.json`);
+                if (fs.existsSync(parentPath)) {
+                    try {
+                        const parentSidecar = JSON.parse(fs.readFileSync(parentPath, 'utf-8'));
+                        if (parentSidecar && typeof parentSidecar === 'object') {
+                            sidecar = {
+                                ...parentSidecar,
+                                ...sidecar,
+                                actualOutput: sidecar.actualOutput || parentSidecar.actualOutput,
+                                kind: sidecar.kind || parentSidecar.kind,
+                                sequence: sidecar.sequence !== undefined ? sidecar.sequence : parentSidecar.sequence,
+                                slotIndex:
+                                    sidecar.slotIndex !== undefined ? sidecar.slotIndex : parentSidecar.slotIndex,
+                                filename: sidecar.filename || safeFilename,
+                            };
+                        }
+                    } catch {
+                        // ignore parent read error
+                    }
+                }
+            }
+            sendJson(res, 200, sidecar, {
+                requestContext,
+                summary: safeFilename,
+                details: {
+                    source: 'image-file',
+                    filename: safeFilename,
+                    metadataKeys: sidecar && typeof sidecar === 'object' ? Object.keys(sidecar).slice(0, 8) : [],
+                },
+            });
+        } catch (err: any) {
+            sendClassifiedApiError(res, '/api/load-image-metadata', err, 'Failed to load image metadata', {
+                basePayload: { success: false },
+                defaultStatus: 500,
+                requestContext,
+                details: {
+                    source: 'image-file',
+                    filename: safeFilename,
+                },
+            });
+        }
+    });
 }
 
 /**
@@ -88,369 +463,6 @@ export function imageSavePlugin(options?: ImageSavePluginOptions): Plugin {
         name: 'vite-plugin-image-save',
         configureServer(server) {
             registerMiddlewares(server.middlewares, resolvedDir, options);
-
-            server.middlewares.use('/api/save-image', (req, res) => {
-                const requestContext = createApiRequestContext(req, '/api/save-image');
-
-                if (req.method !== 'POST') {
-                    sendJson(
-                        res,
-                        405,
-                        { success: false, error: 'Method not allowed' },
-                        {
-                            requestContext,
-                            summary: 'Method not allowed',
-                        },
-                    );
-                    return;
-                }
-
-                let body = '';
-                req.on('data', (chunk: Buffer) => {
-                    body += chunk.toString();
-                });
-                req.on('end', () => {
-                    try {
-                        const { data, filename, metadata, dedupe } = JSON.parse(body);
-                        logApiRequest(requestContext, {
-                            source: 'image-file',
-                            filename: typeof filename === 'string' ? path.basename(filename) : null,
-                            dedupe: dedupe === true,
-                            hasMetadata: Boolean(metadata && typeof metadata === 'object'),
-                        });
-
-                        if (!data || !filename) {
-                            sendJson(
-                                res,
-                                400,
-                                { success: false, error: 'Missing data or filename' },
-                                {
-                                    requestContext,
-                                    summary: 'Missing data or filename',
-                                    details: { source: 'image-file' },
-                                },
-                            );
-                            return;
-                        }
-
-                        // Extract raw base64 from data URL
-                        const match = data.match(/^data:image\/([\w+]+);base64,(.+)$/);
-                        if (!match) {
-                            sendJson(
-                                res,
-                                400,
-                                { success: false, error: 'Invalid data URL format' },
-                                {
-                                    requestContext,
-                                    summary: 'Invalid data URL format',
-                                    details: { source: 'image-file', filename: path.basename(filename) },
-                                },
-                            );
-                            return;
-                        }
-
-                        const buffer = Buffer.from(match[2], 'base64');
-                        const imageDetails = extractImageDetailsFromDataUrl(data);
-                        // Prevent directory traversal attacks
-                        const requestedFilename = path.basename(filename);
-                        const safeFilename =
-                            dedupe === true
-                                ? resolveAvailableOutputFilename(resolvedDir, requestedFilename)
-                                : requestedFilename;
-                        const filePath = resolveSafeOutputFilePath(resolvedDir, safeFilename);
-
-                        let finalBuffer = buffer;
-                        if (metadata && typeof metadata === 'object' && !safeFilename.includes('-thumbnail')) {
-                            try {
-                                finalBuffer = embedImageMetadata(buffer, {
-                                    id: metadata.id || safeFilename,
-                                    prompt: metadata.prompt || '',
-                                    model: metadata.model || '',
-                                    aspectRatio: metadata.aspectRatio || '',
-                                    size: metadata.size || metadata.requestedImageSize || '',
-                                    style: metadata.style || '',
-                                    mode: metadata.mode || metadata.generationMode || '',
-                                    executionMode: metadata.executionMode,
-                                    lineageAction: metadata.lineageAction,
-                                    outputFormat: metadata.outputFormat,
-                                    actualOutput: imageDetails?.dimensions
-                                        ? `${imageDetails.dimensions.width}x${imageDetails.dimensions.height}`
-                                        : undefined,
-                                    groundingMode: metadata.groundingMode,
-                                    groundingSources: metadata.groundingSources,
-                                    temperature: metadata.temperature,
-                                    thinkingLevel: metadata.thinkingLevel,
-                                    includeThoughts: metadata.includeThoughts,
-                                    googleSearch: metadata.googleSearch,
-                                    imageSearch: metadata.imageSearch,
-                                    status: metadata.status || 'success',
-                                    text: metadata.text,
-                                    thoughts: metadata.thoughts,
-                                    createdAt: metadata.createdAt || metadata.timestamp || new Date().toISOString(),
-                                    exportSourceType: metadata.kind === 'thought-image' ? 'thought' : 'product',
-                                    parentHistoryId: metadata.parentHistoryId,
-                                });
-                            } catch {
-                                finalBuffer = buffer;
-                            }
-                        }
-
-                        fs.writeFileSync(filePath, finalBuffer);
-
-                        // F5: Write metadata sidecar JSON if provided
-                        if (metadata && typeof metadata === 'object') {
-                            const jsonPath = resolveSidecarPath(filePath);
-                            const sidecar = normalizeImageSidecarMetadata({
-                                ...metadata,
-                                actualOutput: imageDetails?.dimensions
-                                    ? {
-                                          width: imageDetails.dimensions.width,
-                                          height: imageDetails.dimensions.height,
-                                          mimeType: imageDetails.mimeType,
-                                      }
-                                    : null,
-                                filename: safeFilename,
-                                timestamp: new Date().toISOString(),
-                            }) || {
-                                ...metadata,
-                                actualOutput: imageDetails?.dimensions
-                                    ? {
-                                          width: imageDetails.dimensions.width,
-                                          height: imageDetails.dimensions.height,
-                                          mimeType: imageDetails.mimeType,
-                                      }
-                                    : null,
-                                filename: safeFilename,
-                                timestamp: new Date().toISOString(),
-                            };
-                            fs.writeFileSync(jsonPath, JSON.stringify(sidecar, null, 2), 'utf-8');
-                        }
-
-                        sendJson(
-                            res,
-                            200,
-                            { success: true, path: filePath, filename: safeFilename },
-                            {
-                                requestContext,
-                                summary: safeFilename,
-                                details: {
-                                    source: 'image-file',
-                                    filename: safeFilename,
-                                    size: buffer.length,
-                                    hasMetadata: Boolean(metadata && typeof metadata === 'object'),
-                                },
-                            },
-                        );
-                    } catch (err: any) {
-                        sendClassifiedApiError(res, '/api/save-image', err, 'Failed to save image', {
-                            basePayload: { success: false },
-                            defaultStatus: 500,
-                            requestContext,
-                            details: {
-                                source: 'image-file',
-                            },
-                        });
-                    }
-                });
-            });
-
-            // F8: Load full image endpoint
-            server.middlewares.use('/api/load-image', (req, res) => {
-                const requestContext = createApiRequestContext(req, '/api/load-image');
-
-                if (req.method !== 'GET') {
-                    sendJson(
-                        res,
-                        405,
-                        { success: false, error: 'Method not allowed' },
-                        {
-                            requestContext,
-                            summary: 'Method not allowed',
-                        },
-                    );
-                    return;
-                }
-
-                const url = new URL(req.url!, `http://${req.headers.host}`);
-                const filename = url.searchParams.get('filename');
-                logApiRequest(requestContext, {
-                    source: 'image-file',
-                    filename,
-                });
-
-                if (!filename) {
-                    sendJson(
-                        res,
-                        400,
-                        { success: false, error: 'Missing filename' },
-                        {
-                            requestContext,
-                            summary: 'Missing filename',
-                            details: { source: 'image-file' },
-                        },
-                    );
-                    return;
-                }
-
-                // Security: Prevent directory traversal
-                const safeFilename = path.basename(filename);
-                const filePath = resolveSafeOutputFilePath(resolvedDir, safeFilename);
-
-                // Ensure file exists and is within output dir
-                if (!fs.existsSync(filePath) || !filePath.startsWith(resolvedDir)) {
-                    sendJson(
-                        res,
-                        404,
-                        { success: false, error: 'File not found' },
-                        {
-                            requestContext,
-                            summary: 'File not found',
-                            details: { source: 'image-file', filename: safeFilename },
-                        },
-                    );
-                    return;
-                }
-
-                try {
-                    const ext = path.extname(filePath).toLowerCase().replace('.', '');
-                    const mimeType =
-                        ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/webp';
-                    const fileBuffer = fs.readFileSync(filePath);
-
-                    res.writeHead(200, {
-                        'Content-Type': mimeType,
-                        'Content-Length': fileBuffer.length,
-                        ...(requestContext.requestId ? { 'X-NBU-Debug-Request-ID': requestContext.requestId } : {}),
-                    });
-                    res.end(fileBuffer);
-                    logApiResponse(requestContext, 200, {
-                        source: 'image-file',
-                        filename: safeFilename,
-                        mimeType,
-                        size: fileBuffer.length,
-                    });
-                } catch (err: any) {
-                    sendClassifiedApiError(res, '/api/load-image', err, 'Failed to load image', {
-                        basePayload: { success: false },
-                        defaultStatus: 500,
-                        requestContext,
-                        details: {
-                            source: 'image-file',
-                            filename: safeFilename,
-                        },
-                    });
-                }
-            });
-
-            server.middlewares.use('/api/load-image-metadata', (req, res) => {
-                const requestContext = createApiRequestContext(req, '/api/load-image-metadata');
-
-                if (req.method !== 'GET') {
-                    sendJson(
-                        res,
-                        405,
-                        { success: false, error: 'Method not allowed' },
-                        {
-                            requestContext,
-                            summary: 'Method not allowed',
-                        },
-                    );
-                    return;
-                }
-
-                const url = new URL(req.url!, `http://${req.headers.host}`);
-                const filename = url.searchParams.get('filename');
-                logApiRequest(requestContext, {
-                    source: 'image-file',
-                    filename,
-                });
-
-                if (!filename) {
-                    sendJson(
-                        res,
-                        400,
-                        { success: false, error: 'Missing filename' },
-                        {
-                            requestContext,
-                            summary: 'Missing filename',
-                            details: { source: 'image-file' },
-                        },
-                    );
-                    return;
-                }
-
-                const safeFilename = path.basename(filename);
-                const filePath = resolveSafeOutputFilePath(resolvedDir, safeFilename);
-                let sidecarPath = resolveSidecarPath(filePath);
-                if (!fs.existsSync(sidecarPath) && safeFilename.endsWith('.json')) {
-                    sidecarPath = filePath;
-                }
-
-                if (!fs.existsSync(sidecarPath) || !sidecarPath.startsWith(resolvedDir)) {
-                    sendJson(
-                        res,
-                        404,
-                        { success: false, error: 'Metadata not found' },
-                        {
-                            requestContext,
-                            summary: 'Metadata not found',
-                            details: { source: 'image-file', filename: safeFilename },
-                        },
-                    );
-                    return;
-                }
-
-                try {
-                    let sidecar = JSON.parse(fs.readFileSync(sidecarPath, 'utf-8'));
-                    const stem = path.parse(safeFilename).name;
-                    const partMatch = stem.match(/^(.+)-part-\d+$/);
-                    if (partMatch) {
-                        const parentPath = path.join(resolvedDir, `${partMatch[1]}.json`);
-                        if (fs.existsSync(parentPath)) {
-                            try {
-                                const parentSidecar = JSON.parse(fs.readFileSync(parentPath, 'utf-8'));
-                                if (parentSidecar && typeof parentSidecar === 'object') {
-                                    sidecar = {
-                                        ...parentSidecar,
-                                        ...sidecar,
-                                        actualOutput: sidecar.actualOutput || parentSidecar.actualOutput,
-                                        kind: sidecar.kind || parentSidecar.kind,
-                                        sequence:
-                                            sidecar.sequence !== undefined ? sidecar.sequence : parentSidecar.sequence,
-                                        slotIndex:
-                                            sidecar.slotIndex !== undefined
-                                                ? sidecar.slotIndex
-                                                : parentSidecar.slotIndex,
-                                        filename: sidecar.filename || safeFilename,
-                                    };
-                                }
-                            } catch {
-                                // ignore parent read error
-                            }
-                        }
-                    }
-                    sendJson(res, 200, sidecar, {
-                        requestContext,
-                        summary: safeFilename,
-                        details: {
-                            source: 'image-file',
-                            filename: safeFilename,
-                            metadataKeys:
-                                sidecar && typeof sidecar === 'object' ? Object.keys(sidecar).slice(0, 8) : [],
-                        },
-                    });
-                } catch (err: any) {
-                    sendClassifiedApiError(res, '/api/load-image-metadata', err, 'Failed to load image metadata', {
-                        basePayload: { success: false },
-                        defaultStatus: 500,
-                        requestContext,
-                        details: {
-                            source: 'image-file',
-                            filename: safeFilename,
-                        },
-                    });
-                }
-            });
 
             console.log(`\n  🍌 Image auto-save enabled → ${resolvedDir}\n`);
             console.log('  🍌 Health check → /api/health');

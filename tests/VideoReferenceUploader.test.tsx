@@ -599,7 +599,7 @@ describe('VideoReferenceUploader', () => {
 
         // 2. Attached / Card state
         const videoItem: VideoReferenceItem = {
-            sourceType: 'files-api',
+            sourceType: 'upload',
             uri: 'https://generativelanguage.googleapis.com/v1beta/files/test-video',
             mimeType: 'video/mp4',
             displayName: 'sample.mp4',
@@ -670,6 +670,7 @@ describe('VideoReferenceUploader', () => {
         const videoItem: VideoReferenceItem = {
             sourceType: 'youtube',
             uri: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            mimeType: 'video/mp4',
             displayName: 'YouTube Video',
             youtubeVideoId: 'dQw4w9WgXcQ',
             createdAt: Date.now(),

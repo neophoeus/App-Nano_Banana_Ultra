@@ -411,6 +411,7 @@ export function useQueuedBatchWorkflow({
         initialQueuedJobs,
     });
     const queuedJobRefreshInFlightRef = useRef<Set<string>>(new Set());
+    const queuedJobImportInFlightRef = useRef<Set<string>>(new Set());
 
     const getImportedQueuedHistoryItemsForJob = useCallback(
         (job: QueuedBatchJob | null | undefined) => {
@@ -443,7 +444,8 @@ export function useQueuedBatchWorkflow({
     );
 
     const buildQueuedJobGenerationDraft = useCallback((): QueuedBatchJobGenerationDraft | null => {
-        const isStyleTransfer = (objectImages.length > 0 || characterImages.length > 0) && imageStyle !== 'None';
+        const isStyleTransfer =
+            (objectImages.length > 0 || characterImages.length > 0 || styleImages.length > 0) && imageStyle !== 'None';
         if (!prompt.trim() && !isStyleTransfer) {
             return null;
         }
@@ -865,6 +867,7 @@ export function useQueuedBatchWorkflow({
             formatMessage,
             handleApiKeyConnect,
             mapRemoteQueuedJobToLocal,
+            optimizationMode,
             setApiKeyReady,
             showNotification,
             t,
@@ -1091,7 +1094,17 @@ export function useQueuedBatchWorkflow({
                 queuedJobRefreshInFlightRef.current.delete(localId);
             }
         },
-        [addLog, formatMessage, mapRemoteQueuedJobToLocal, queuedJobs, showNotification, upsertQueuedJob],
+        [
+            addLog,
+            formatMessage,
+            hasImportedQueuedResultsInCurrentWorkspace,
+            isQueuedBatchJobReadyForCurrentWorkspaceImport,
+            mapRemoteQueuedJobToLocal,
+            queuedJobs,
+            showNotification,
+            t,
+            upsertQueuedJob,
+        ],
     );
 
     const handlePollQueuedJob = useCallback(
@@ -1153,6 +1166,9 @@ export function useQueuedBatchWorkflow({
 
     const importQueuedJob = useCallback(
         async (localId: string, options?: { silent?: boolean }) => {
+            if (queuedJobImportInFlightRef.current.has(localId)) {
+                return 0;
+            }
             const job = queuedJobs.find((candidate) => candidate.localId === localId);
             if (!job) {
                 return 0;
@@ -1165,6 +1181,8 @@ export function useQueuedBatchWorkflow({
                 }
                 return 0;
             }
+
+            queuedJobImportInFlightRef.current.add(localId);
 
             try {
                 const { job: remoteJob, results } = await importQueuedBatchJobResults(job.name);
@@ -1329,6 +1347,8 @@ export function useQueuedBatchWorkflow({
                     showNotification(message, 'error');
                 }
                 return 0;
+            } finally {
+                queuedJobImportInFlightRef.current.delete(localId);
             }
         },
         [
@@ -1524,7 +1544,7 @@ export function useQueuedBatchWorkflow({
             });
 
             if (recoveredCount > 0) {
-                showNotification(`Recovered ${recoveredCount} recent batch job(s).`, 'info');
+                showNotification(formatMessage('recoveredRecentBatchJobsNotice', String(recoveredCount)), 'info');
                 addLog(`Recovered ${recoveredCount} recent batch job(s) from Gemini Batch API.`);
             } else {
                 showNotification(
@@ -1536,7 +1556,7 @@ export function useQueuedBatchWorkflow({
             const message = error?.message || 'Failed to recover recent batch jobs.';
             showNotification(message, 'error');
         }
-    }, [addLog, mapRemoteQueuedJobToLocal, queuedJobs, showNotification, t, upsertQueuedJob]);
+    }, [addLog, formatMessage, mapRemoteQueuedJobToLocal, queuedJobs, showNotification, t, upsertQueuedJob]);
 
     useEffect(() => {
         const refreshableJobs = queuedJobs.filter(isQueuedBatchJobRefreshable);

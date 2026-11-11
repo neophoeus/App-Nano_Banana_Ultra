@@ -1105,10 +1105,10 @@ export const fr = {
     historyFilmstripSummary: '{0} tours · {1} branches',
     historyFilmstripEmpty: 'Generez ou chargez une image pour commencer a construire la bande de tours.',
     composerAdvancedHighThinkingHighTempWarning:
-        'When "High Thinking" is enabled and "Temperature" is set above 1.0, the model may enter an infinite reasoning loop and fail to complete generation. If you encounter this, we recommend setting the temperature back to 1.0.',
-    generationFailureSummaryThinkingLoop: 'Thinking Loop Detected',
+        'Lorsque le niveau de réflexion élevé est activé et que la température est supérieure à 1.0, le modèle peut entrer dans une boucle de raisonnement infinie et échouer à terminer la génération. Si cela se produit, nous recommandons de ramener la température à 1.0.',
+    generationFailureSummaryThinkingLoop: 'Boucle de raisonnement détectée',
     generationFailureDetailThinkingLoop:
-        'The model exceeded thinking limits. Generation was aborted to prevent freezing. Try resetting the temperature to 1.0 or reducing the thinking level.',
+        'Le modèle a dépassé les limites de raisonnement et la génération a été interrompue pour éviter un blocage. Essayez de réinitialiser la température à 1.0 ou de réduire le niveau de réflexion.',
     generationFailureSummaryQuota: 'Limite de taux ou quota Gemini API dépassé.',
     generationFailureDetailQuota:
         'La requête a été limitée par le taux ou votre quota est temporairement épuisé. Espacer les requêtes ou attendre la réinitialisation de la fenêtre glissante peut aider.',
@@ -1148,4 +1148,8 @@ export const fr = {
         'Le modele principal est tres sollicite. Basculement automatique vers le modele a haut debit gemini-3.5-flash-lite.',
     promptToolFallbackPaidTierNotice:
         'Le niveau d’API gratuit est sature. Sauvegarde automatique effectuee via l’API payante.',
+    queuedBatchJobsRecoverRecent: 'Récupérer les récents',
+    metadataViewerApplyBothSuccessNotice: 'Invite et paramètres appliqués au compositeur.',
+    metadataViewerNoPrompt: '(Aucun prompt défini)',
+    metadataViewerModelResponse: 'Réponse du modèle',
 } as const;

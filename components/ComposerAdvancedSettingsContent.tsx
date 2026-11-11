@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
     getOutputFormatLabelKey,
     getThinkingLevelLabelKey,
@@ -60,6 +61,12 @@ export default function ComposerAdvancedSettingsContent({
     onGroundingModeChange,
 }: ComposerAdvancedSettingsContentProps) {
     const t = (key: string) => getTranslation(currentLanguage, key);
+    const [temperatureDraft, setTemperatureDraft] = useState(() => formatTemperature(temperature));
+
+    useEffect(() => {
+        setTemperatureDraft(formatTemperature(temperature));
+    }, [temperature]);
+
     const supportsThinkingLevelControl = capability.thinkingLevels.some((level) => level !== 'disabled');
     const hasImageSearchGroundingOption = availableGroundingModes.some(
         (mode) => mode === 'image-search' || mode === 'google-search-plus-image-search',
@@ -175,10 +182,27 @@ export default function ComposerAdvancedSettingsContent({
                                     min="0"
                                     max="2"
                                     step={TEMPERATURE_STEP}
-                                    value={formatTemperature(temperature)}
-                                    onChange={(event) =>
-                                        onTemperatureChange(normalizeTemperature(Number(event.target.value) || 0))
-                                    }
+                                    value={temperatureDraft}
+                                    onChange={(event) => {
+                                        const rawValue = event.target.value;
+                                        setTemperatureDraft(rawValue);
+                                        if (rawValue.trim() === '' || rawValue.endsWith('.')) {
+                                            return;
+                                        }
+                                        const parsed = Number(rawValue);
+                                        if (Number.isFinite(parsed)) {
+                                            onTemperatureChange(normalizeTemperature(parsed));
+                                        }
+                                    }}
+                                    onBlur={() => {
+                                        const parsed = Number(temperatureDraft);
+                                        const normalized =
+                                            Number.isFinite(parsed) && temperatureDraft.trim() !== ''
+                                                ? normalizeTemperature(parsed)
+                                                : normalizeTemperature(temperature);
+                                        onTemperatureChange(normalized);
+                                        setTemperatureDraft(formatTemperature(normalized));
+                                    }}
                                     className="nbu-input-surface w-20 rounded-xl px-2 py-1.5 text-right"
                                 />
                             </div>
