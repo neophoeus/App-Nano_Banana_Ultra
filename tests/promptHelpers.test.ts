@@ -157,6 +157,11 @@ describe('isTransientPromptToolAvailabilityError', () => {
 });
 
 describe('resolvePromptToolAttemptChain', () => {
+    it('uses gemini-4-hydrogen as primary model and gemini-3.5-flash-lite as fallback model', () => {
+        expect(PROMPT_TOOL_PRIMARY_MODEL).toBe('gemini-4-hydrogen');
+        expect(PROMPT_TOOL_FALLBACK_MODEL).toBe('gemini-3.5-flash-lite');
+    });
+
     it('returns paid primary exclusively for quality mode', () => {
         const qualityChain = resolvePromptToolAttemptChain('quality');
         expect(qualityChain).toEqual([{ tier: 'paid', model: PROMPT_TOOL_PRIMARY_MODEL }]);
@@ -237,7 +242,7 @@ describe('executePromptToolWithFallback', () => {
 
         const error503 = { status: 503, message: 'high demand' };
 
-        // Test stage 2: free:3.8 fails -> free:3.5-flash-lite succeeds (model-fallback)
+        // Test stage 2: free:4-hydrogen fails -> free:3.5-flash-lite succeeds (model-fallback)
         const op1 = vi.fn().mockRejectedValueOnce(error503).mockResolvedValueOnce({ text: 'eco lite prompt' });
         const res1 = await executePromptToolWithFallback(getAIClient, op1, { optimizationMode: 'eco' });
         expect(res1.executionMeta.isFallback).toBe(true);
@@ -247,7 +252,7 @@ describe('executePromptToolWithFallback', () => {
 
         clearPromptToolCongestionCooldowns();
 
-        // Test stage 3: free:3.8 fails -> free:3.5 fails -> paid:3.8 rescue succeeds (tier-fallback)
+        // Test stage 3: free:4-hydrogen fails -> free:3.5 fails -> paid:4-hydrogen rescue succeeds (tier-fallback)
         const op2 = vi
             .fn()
             .mockRejectedValueOnce(error503)

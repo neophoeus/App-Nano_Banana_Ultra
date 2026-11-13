@@ -288,7 +288,7 @@ describe('usePromptTools', () => {
         generateRandomPromptMock.mockResolvedValue('random prompt idea');
         consumeLastPromptToolExecutionMetaMock.mockReturnValue({
             optimizationMode: 'eco',
-            model: 'gemini-3.8-flash',
+            model: 'gemini-4-hydrogen',
             effectiveTier: 'paid',
             requestedTier: 'free',
             isFallback: true,
@@ -311,7 +311,7 @@ describe('usePromptTools', () => {
         enhancePromptWithGeminiMock.mockResolvedValue('enhanced clean idea');
         consumeLastPromptToolExecutionMetaMock.mockReturnValue({
             optimizationMode: 'quality',
-            model: 'gemini-3.8-flash',
+            model: 'gemini-4-hydrogen',
             effectiveTier: 'paid',
             requestedTier: 'paid',
             isFallback: false,

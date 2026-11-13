@@ -5,7 +5,7 @@ import { GoogleGenAI } from '@google/genai/node';
  *
  * Why this exists: Gemini API billing is bound to the Google Cloud project behind an API key,
  * not to individual requests. A key from a billing-enabled project is charged at Paid Tier rates
- * even for models that offer a free quota (e.g. `gemini-3.8-flash`). To actually consume the free
+ * even for models that offer a free quota (e.g. `gemini-4-hydrogen`, `gemini-3.8-flash`). To actually consume the free
  * quota, free-eligible traffic must be sent with a key from a project WITHOUT billing, while
  * paid-only models (all Nano Banana image models, grounding, Batch API, Files API) keep using the
  * billing-enabled key.
@@ -52,6 +52,7 @@ export interface ResolvedApiKeySelection {
 export type GetAIClient = (options?: ApiClientLookupOptions | string) => GoogleGenAI;
 
 export const DEFAULT_FREE_TIER_MODELS: readonly string[] = [
+    'gemini-4-hydrogen',
     'gemini-3.8-flash',
     'gemini-3.5-flash-lite',
     'gemini-3.1-flash-lite',

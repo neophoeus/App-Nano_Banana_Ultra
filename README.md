@@ -23,7 +23,7 @@ The workspace runs on a high-performance local backend architecture powered by N
 
 - text-to-image, image-to-image, and style-guided generation
 - character, object, style, and multimodal video references (local video upload via Gemini Files API & public YouTube URLs on supported models) inside the same workspace flow
-- prompt tools such as Smart Rewrite, Surprise Me, and Image to Prompt (powered by `gemini-3.8-flash`)
+- prompt tools such as Smart Rewrite, Surprise Me, and Image to Prompt (powered by `gemini-4-hydrogen`)
 - single-result generation or batch exploration when you want to compare directions
 
 ### Iterate
@@ -142,7 +142,7 @@ Nano Banana Ultra provides two complementary ways to export and manage your crea
 
 ## Version Overview
 
-### Latest Release: 5.9.0
+### Latest Release: 5.10.0
 
 See [CHANGELOG.md](CHANGELOG.md) for full release history and version details.
 

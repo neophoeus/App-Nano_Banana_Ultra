@@ -1302,7 +1302,7 @@ describe('imageSavePlugin official conversation integration', () => {
         expect(generateContentMock).toHaveBeenNthCalledWith(
             1,
             expect.objectContaining({
-                model: 'gemini-3.8-flash',
+                model: 'gemini-4-hydrogen',
                 config: expect.objectContaining({
                     systemInstruction: expect.stringContaining('2-4 short prompt-only blocks separated by line breaks'),
                     thinkingConfig: {
@@ -1316,7 +1316,7 @@ describe('imageSavePlugin official conversation integration', () => {
 
         expect(randomCall).toEqual(
             expect.objectContaining({
-                model: 'gemini-3.8-flash',
+                model: 'gemini-4-hydrogen',
                 config: expect.objectContaining({
                     systemInstruction: expect.stringContaining(
                         'Treat the scaffold as structure only and invent every subject, environment, prop, mood, style blend, and twist yourself.',
@@ -1371,7 +1371,7 @@ describe('imageSavePlugin official conversation integration', () => {
 
         expect(imageToPromptCall).toEqual(
             expect.objectContaining({
-                model: 'gemini-3.8-flash',
+                model: 'gemini-4-hydrogen',
                 config: expect.objectContaining({
                     systemInstruction: expect.stringContaining(
                         'translate every visible element into a highly comprehensive, extremely detailed, and generation-ready image prompt',
@@ -1669,7 +1669,7 @@ describe('imageSavePlugin official conversation integration', () => {
         expect(qualityResponse.body.text).toBe('Enhanced quality prompt');
         expect(qualityResponse.body.executionMeta).toEqual({
             optimizationMode: 'quality',
-            model: 'gemini-3.8-flash',
+            model: 'gemini-4-hydrogen',
             effectiveTier: 'paid',
             requestedTier: 'paid',
             isFallback: false,

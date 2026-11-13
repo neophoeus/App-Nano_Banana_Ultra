@@ -10,11 +10,12 @@ import {
 
 describe('mediaResolution utility', () => {
     describe('supportsModelPerPartMediaResolution', () => {
-        it('returns true for Gemini 3 and Gemini 4 family image models', () => {
+        it('returns true for Gemini 3 and Gemini 4 family image and prompt models', () => {
             expect(supportsModelPerPartMediaResolution('gemini-nano-banana-2.1')).toBe(true);
             expect(supportsModelPerPartMediaResolution('gemini-3.1-flash-image')).toBe(true);
             expect(supportsModelPerPartMediaResolution('gemini-3.1-flash-lite-image')).toBe(true);
             expect(supportsModelPerPartMediaResolution('gemini-3-pro-image')).toBe(true);
+            expect(supportsModelPerPartMediaResolution('gemini-4-hydrogen')).toBe(true);
             expect(supportsModelPerPartMediaResolution('gemini-3.8-flash')).toBe(true);
         });
 
@@ -59,12 +60,25 @@ describe('mediaResolution utility', () => {
             expect(resolution).toEqual({ level: PART_MEDIA_RESOLUTION_LEVEL.ULTRA_HIGH });
         });
 
-        it('resolves forensic prompt analysis to ULTRA_HIGH', () => {
-            const resolution = resolveRoleMediaResolution({
+        it('resolves forensic prompt analysis to ULTRA_HIGH in quality mode and HIGH in eco mode', () => {
+            const hydrogenResolution = resolveRoleMediaResolution({
+                model: 'gemini-4-hydrogen',
+                role: 'forensic-prompt',
+            });
+            expect(hydrogenResolution).toEqual({ level: PART_MEDIA_RESOLUTION_LEVEL.ULTRA_HIGH });
+
+            const hydrogenEcoResolution = resolveRoleMediaResolution({
+                model: 'gemini-4-hydrogen',
+                role: 'forensic-prompt',
+                optimizationMode: 'eco',
+            });
+            expect(hydrogenEcoResolution).toEqual({ level: PART_MEDIA_RESOLUTION_LEVEL.HIGH });
+
+            const legacyResolution = resolveRoleMediaResolution({
                 model: 'gemini-3.8-flash',
                 role: 'forensic-prompt',
             });
-            expect(resolution).toEqual({ level: PART_MEDIA_RESOLUTION_LEVEL.ULTRA_HIGH });
+            expect(legacyResolution).toEqual({ level: PART_MEDIA_RESOLUTION_LEVEL.ULTRA_HIGH });
         });
 
         it('resolves edit and source inputs to ULTRA_HIGH when requested imageSize is 4K, otherwise HIGH', () => {

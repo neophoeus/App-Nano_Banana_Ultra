@@ -23,10 +23,11 @@ export const PART_MEDIA_RESOLUTION_LEVEL: Record<string, PartMediaResolutionLeve
 };
 
 const EXTRA_SUPPORTED_PER_PART_MODELS = new Set<string>([
+    'gemini-4-hydrogen',
+    'gemini-4-argon',
     'gemini-3.8-flash',
     'gemini-3.5-flash-lite',
     'gemini-3.1-flash-lite',
-    'gemini-4-argon',
 ]);
 
 export function supportsModelPerPartMediaResolution(model?: string | null): boolean {

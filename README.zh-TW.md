@@ -23,7 +23,7 @@ Nano Banana Ultra 是一個以 Google Gemini 影像模型為核心的影像創�
 
 - 支援文字生圖、圖生圖、與風格導向生成
 - 可在同一工作區內加入角色、物件、風格參考圖，以及多模態視訊參考（支援模型可透過 Gemini Files API 上傳本機影片或貼上公開 YouTube 網址）
-- 內建 Smart Rewrite、Surprise Me、Image to Prompt 等提示工具（由 `gemini-3.8-flash` 驅動）
+- 內建 Smart Rewrite、Surprise Me、Image to Prompt 等提示工具（由 `gemini-4-hydrogen` 驅動）
 - 可單張生成，也可用批次探索快速比較方向
 
 ### 延伸
@@ -141,7 +141,7 @@ Nano Banana Ultra 提供兩種靈活互補的成果匯出與歸檔管道：
 
 ## 版本總覽
 
-### 最新版本：5.9.0
+### 最新版本：5.10.0
 
 完整歷史版本紀錄與更新細節請見 [CHANGELOG.md](CHANGELOG.md)。
 

@@ -5,7 +5,7 @@ import { toPromptGeminiThinkingLevel } from './geminiApiConfig';
 import type { OptimizationMode } from '../../types';
 import { normalizeOptimizationMode } from '../../utils/optimizationMode';
 
-export const PROMPT_TOOL_PRIMARY_MODEL = 'gemini-3.8-flash';
+export const PROMPT_TOOL_PRIMARY_MODEL = 'gemini-4-hydrogen';
 export const PROMPT_TOOL_FALLBACK_MODEL = 'gemini-3.5-flash-lite';
 export const PROMPT_TOOL_CONGESTION_COOLDOWN_MS = 60_000;
 

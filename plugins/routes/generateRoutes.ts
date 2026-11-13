@@ -49,7 +49,7 @@ import {
 import { extractGroundingDetails } from '../utils/groundingExtraction';
 import { extractImageDimensionsFromBase64, getImageArea, type ImageDimensions } from '../utils/imageDimensions';
 import { buildGenerateParts, normalizeReferenceImages, resolveInlineImageInput } from '../utils/imageReferences';
-import { identifyBlockKeywords } from '../utils/promptHelpers';
+import { PROMPT_TOOL_PRIMARY_MODEL, identifyBlockKeywords } from '../utils/promptHelpers';
 import { buildImageRequestConfig, validateCapabilityRequest } from '../utils/requestConfig';
 
 type ImageGenerateBody = {
@@ -98,8 +98,8 @@ type RegisterGenerateRoutesArgs = {
     resolvedDir: string;
 };
 
-// Safety keyword analysis runs on gemini-3.8-flash, which is free of charge on the Free Tier.
-const SAFETY_ANALYZER_CLIENT_OPTIONS: ApiClientLookupOptions = { model: 'gemini-3.8-flash', tier: 'free' };
+// Safety keyword analysis runs on gemini-4-hydrogen, which is free of charge on the Free Tier.
+const SAFETY_ANALYZER_CLIENT_OPTIONS: ApiClientLookupOptions = { model: PROMPT_TOOL_PRIMARY_MODEL, tier: 'free' };
 
 /**
  * Image models are Paid Tier only. Grounding is unavailable on the Free Tier, and Files API video URIs
@@ -125,7 +125,7 @@ function resolveSafetyAnalyzerClient(
 ): GoogleGenAI {
     try {
         if (optimizationMode === 'quality') {
-            return getAIClient({ model: 'gemini-3.8-flash', tier: 'paid' });
+            return getAIClient({ model: PROMPT_TOOL_PRIMARY_MODEL, tier: 'paid' });
         }
         return getAIClient(SAFETY_ANALYZER_CLIENT_OPTIONS);
     } catch {

@@ -1,5 +1,21 @@
 # Changelog
 
+## v5.10.0 - 2026-11-13
+
+- Release title: Nano Banana Ultra 5.10.0 - Prompt Tools & Safety Keyword Analyzer Upgrade to `gemini-4-hydrogen`
+- Release summary:
+    - **Primary Auxiliary Model Upgrade to `gemini-4-hydrogen` (`plugins/utils/promptHelpers.ts`, `plugins/routes/generateRoutes.ts`)**:
+        - Upgraded `PROMPT_TOOL_PRIMARY_MODEL` from `'gemini-3.8-flash'` to `'gemini-4-hydrogen'`, powering Smart Rewrite (`/api/prompt/enhance`), Surprise Me (`/api/prompt/random`), Image to Prompt (`/api/prompt/image-to-prompt`), and the Safety Block Keyword Analyzer (`identifyBlockKeywords`).
+        - Consolidated `SAFETY_ANALYZER_CLIENT_OPTIONS` and `resolveSafetyAnalyzerClient` in `plugins/routes/generateRoutes.ts` to import `PROMPT_TOOL_PRIMARY_MODEL` from `plugins/utils/promptHelpers.ts`, eliminating hardcoded model string duplication.
+        - Preserved explicit `thinkingConfig.thinkingLevel` (`low` default, forced `low` in Eco mode) across all prompt tool routes and safety analysis so requests never unintentionally trigger `gemini-4-hydrogen`'s default `high` thinking level.
+        - Maintained the Quality Mode paid primary lock (`paid:gemini-4-hydrogen`) and Eco Mode 3-stage cascading fallback (`free:gemini-4-hydrogen` -> `free:gemini-3.5-flash-lite` -> `paid:gemini-4-hydrogen`) with 60-second anti-congestion cooldown and single-key client deduplication.
+    - **Free-Tier Routing, Per-Part MediaResolution & Backward Compatibility (`plugins/utils/apiKeyRouter.ts`, `plugins/utils/mediaResolution.ts`, `.env.example`)**:
+        - Added `'gemini-4-hydrogen'` as the lead entry in `DEFAULT_FREE_TIER_MODELS` while retaining `'gemini-3.8-flash'`, `'gemini-3.5-flash-lite'`, and `'gemini-3.1-flash-lite'` for seamless backward compatibility, and updated `.env.example` routing documentation.
+        - Explicitly registered `'gemini-4-hydrogen'` in `EXTRA_SUPPORTED_PER_PART_MODELS` inside `plugins/utils/mediaResolution.ts` (preserving `'gemini-3.8-flash'`) so Image-to-Prompt continues mapping to `MEDIA_RESOLUTION_ULTRA_HIGH` in Quality mode and `MEDIA_RESOLUTION_HIGH` in Eco mode.
+    - **Automated Test Suite Alignment (`tests/promptHelpers.test.ts`, `tests/apiKeyRouter.test.ts`, `tests/mediaResolution.test.ts`, `tests/pluginOfficialConversationIntegration.test.ts`, `tests/usePromptTools.test.tsx`)**:
+        - Added explicit assertions for `PROMPT_TOOL_PRIMARY_MODEL === 'gemini-4-hydrogen'`, Quality/Eco fallback chains, dual-key routing, `forensic-prompt` per-part `MediaResolution` mapping, route integration `executionMeta`, and fallback toast notifications while retaining backward-compatibility coverage for `'gemini-3.8-flash'`.
+        - Verified full type safety and test stability across `npm run typecheck` (0 errors), 130 Vitest test files (1,206 unit/integration tests), and 79 Playwright Chromium E2E tests.
+
 ## v5.9.0 - 2026-11-11
 
 - Release title: Nano Banana Ultra 5.9.0 - Phase 2 Architectural Evolution: IndexedDB Binary Asset Offloading, Workspace Domain Store & Re-render Isolation

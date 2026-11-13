@@ -119,14 +119,15 @@ const EMPTY_ENV: Record<string, string | undefined> = {};
 
 describe('apiKeyRouter', () => {
     describe('parseFreeTierModels', () => {
-        it('defaults to free-tier models (gemini-3.8-flash, gemini-3.5-flash-lite, gemini-3.1-flash-lite) when nothing is configured', () => {
+        it('defaults to free-tier models (gemini-4-hydrogen, gemini-3.8-flash, gemini-3.5-flash-lite, gemini-3.1-flash-lite) when nothing is configured', () => {
             expect([...parseFreeTierModels()]).toEqual([...DEFAULT_FREE_TIER_MODELS]);
             expect([...parseFreeTierModels('  , ,')]).toEqual([...DEFAULT_FREE_TIER_MODELS]);
             expect([...parseFreeTierModels([])]).toEqual([...DEFAULT_FREE_TIER_MODELS]);
         });
 
         it('parses comma-separated strings and arrays with trimming', () => {
-            expect([...parseFreeTierModels(' gemini-3.8-flash , gemini-3.5-flash-lite ')]).toEqual([
+            expect([...parseFreeTierModels(' gemini-4-hydrogen , gemini-3.8-flash , gemini-3.5-flash-lite ')]).toEqual([
+                'gemini-4-hydrogen',
                 'gemini-3.8-flash',
                 'gemini-3.5-flash-lite',
             ]);
@@ -167,12 +168,13 @@ describe('apiKeyRouter', () => {
                 env: {
                     GEMINI_PAID_API_KEY: 'env-paid',
                     GEMINI_FREE_API_KEY: 'env-free',
-                    GEMINI_FREE_TIER_MODELS: 'gemini-3.8-flash,gemini-3.5-flash-lite',
+                    GEMINI_FREE_TIER_MODELS: 'gemini-4-hydrogen,gemini-3.5-flash-lite',
                 },
             });
 
             expect(config.paidApiKey).toBe('env-paid');
             expect(config.freeApiKey).toBe('env-free');
+            expect(config.freeTierModels.has('gemini-4-hydrogen')).toBe(true);
             expect(config.freeTierModels.has('gemini-3.5-flash-lite')).toBe(true);
         });
 
@@ -198,6 +200,8 @@ describe('apiKeyRouter', () => {
 
     describe('resolveTargetApiKeyTier', () => {
         it('routes free-tier models to free and everything else to paid', () => {
+            expect(resolveTargetApiKeyTier({ model: 'gemini-4-hydrogen' })).toBe('free');
+            expect(resolveTargetApiKeyTier('gemini-4-hydrogen')).toBe('free');
             expect(resolveTargetApiKeyTier({ model: 'gemini-3.8-flash' })).toBe('free');
             expect(resolveTargetApiKeyTier('gemini-3.8-flash')).toBe('free');
             expect(resolveTargetApiKeyTier({ model: 'gemini-3.5-flash-lite' })).toBe('free');
@@ -209,13 +213,15 @@ describe('apiKeyRouter', () => {
 
         it('honours an explicit tier request', () => {
             expect(resolveTargetApiKeyTier({ model: 'gemini-nano-banana-2.1', tier: 'free' })).toBe('free');
-            expect(resolveTargetApiKeyTier({ model: 'gemini-3.8-flash', tier: 'paid' })).toBe('paid');
+            expect(resolveTargetApiKeyTier({ model: 'gemini-4-hydrogen', tier: 'paid' })).toBe('paid');
         });
 
         it('forces paid for grounding, batch, and files API even when free is requested', () => {
-            const freeModels = new Set(['gemini-3.8-flash', 'gemini-3.1-flash-lite-image']);
+            const freeModels = new Set(['gemini-4-hydrogen', 'gemini-3.1-flash-lite-image']);
 
-            expect(resolveTargetApiKeyTier({ model: 'gemini-3.8-flash', googleSearch: true }, freeModels)).toBe('paid');
+            expect(resolveTargetApiKeyTier({ model: 'gemini-4-hydrogen', googleSearch: true }, freeModels)).toBe(
+                'paid',
+            );
             expect(
                 resolveTargetApiKeyTier({ model: 'gemini-3.1-flash-lite-image', imageSearch: true }, freeModels),
             ).toBe('paid');
@@ -226,7 +232,7 @@ describe('apiKeyRouter', () => {
         it('lets custom free tier models route to free', () => {
             const freeModels = new Set(['gemini-3.1-flash-lite-image']);
             expect(resolveTargetApiKeyTier({ model: 'gemini-3.1-flash-lite-image' }, freeModels)).toBe('free');
-            expect(resolveTargetApiKeyTier({ model: 'gemini-3.8-flash' }, freeModels)).toBe('paid');
+            expect(resolveTargetApiKeyTier({ model: 'gemini-4-hydrogen' }, freeModels)).toBe('paid');
         });
     });
 
@@ -238,7 +244,7 @@ describe('apiKeyRouter', () => {
         });
 
         it('selects the matching key in dual mode without fallback', () => {
-            expect(resolveApiKeySelection(dualConfig, { model: 'gemini-3.8-flash' })).toEqual({
+            expect(resolveApiKeySelection(dualConfig, { model: 'gemini-4-hydrogen' })).toEqual({
                 apiKey: 'free-key',
                 effectiveTier: 'free',
                 requestedTier: 'free',
@@ -255,7 +261,7 @@ describe('apiKeyRouter', () => {
         it('falls back to the paid key when only a paid/legacy key exists', () => {
             const config = resolveApiKeyConfig({ geminiApiKey: 'legacy-key', env: EMPTY_ENV });
 
-            expect(resolveApiKeySelection(config, { model: 'gemini-3.8-flash' })).toEqual({
+            expect(resolveApiKeySelection(config, { model: 'gemini-4-hydrogen' })).toEqual({
                 apiKey: 'legacy-key',
                 effectiveTier: 'paid',
                 requestedTier: 'free',
@@ -279,7 +285,7 @@ describe('apiKeyRouter', () => {
             let caught: unknown;
 
             try {
-                resolveApiKeySelection(config, { model: 'gemini-3.8-flash' });
+                resolveApiKeySelection(config, { model: 'gemini-4-hydrogen' });
             } catch (error) {
                 caught = error;
             }
@@ -298,8 +304,8 @@ describe('apiKeyRouter', () => {
                 clientFactory,
             );
 
-            const freeClientA = router.getAIClient({ model: 'gemini-3.8-flash', tier: 'free' });
-            const freeClientB = router.getAIClient('gemini-3.8-flash');
+            const freeClientA = router.getAIClient({ model: 'gemini-4-hydrogen', tier: 'free' });
+            const freeClientB = router.getAIClient('gemini-4-hydrogen');
             const paidClientA = router.getAIClient({ model: 'gemini-nano-banana-2.1' });
             const paidClientB = router.getAIClient({ tier: 'paid', requiresBatch: true });
 
@@ -315,7 +321,7 @@ describe('apiKeyRouter', () => {
             const clientFactory = vi.fn((apiKey: string) => ({ apiKey }) as any);
             const router = createApiClientRouter({ geminiApiKey: 'legacy-key', env: EMPTY_ENV }, clientFactory);
 
-            expect(router.getAIClient('gemini-3.8-flash')).toBe(router.getAIClient('gemini-3-pro-image'));
+            expect(router.getAIClient('gemini-4-hydrogen')).toBe(router.getAIClient('gemini-3-pro-image'));
             expect(clientFactory).toHaveBeenCalledTimes(1);
         });
 
@@ -324,12 +330,12 @@ describe('apiKeyRouter', () => {
             const clientFactory = vi.fn((apiKey: string) => ({ apiKey }) as any);
             const router = createApiClientRouter({ env }, clientFactory);
 
-            expect(() => router.getAIClient('gemini-3.8-flash')).toThrow(MISSING_API_KEY_ERROR_MESSAGE);
+            expect(() => router.getAIClient('gemini-4-hydrogen')).toThrow(MISSING_API_KEY_ERROR_MESSAGE);
             env.GEMINI_FREE_API_KEY = 'late-free-key';
 
-            expect((router.getAIClient('gemini-3.8-flash') as any).apiKey).toBe('late-free-key');
+            expect((router.getAIClient('gemini-4-hydrogen') as any).apiKey).toBe('late-free-key');
             expect(router.getConfig().apiKeyTierMode).toBe('free-only');
-            expect(router.getSelection('gemini-3.8-flash').effectiveTier).toBe('free');
+            expect(router.getSelection('gemini-4-hydrogen').effectiveTier).toBe('free');
         });
     });
 });
@@ -369,7 +375,7 @@ describe('dual API key routing through backend routes', () => {
         expect(enhanceResponse.status).toBe(200);
         expect(generateResponse.status).toBe(200);
         expect(generateContentCalls).toEqual([
-            { apiKey: 'free-key', model: 'gemini-3.8-flash' },
+            { apiKey: 'free-key', model: 'gemini-4-hydrogen' },
             { apiKey: 'paid-key', model: 'gemini-nano-banana-2.1' },
         ]);
     });
@@ -385,7 +391,7 @@ describe('dual API key routing through backend routes', () => {
         });
 
         expect(enhanceResponse.status).toBe(200);
-        expect(generateContentCalls).toEqual([{ apiKey: 'paid-key', model: 'gemini-3.8-flash' }]);
+        expect(generateContentCalls).toEqual([{ apiKey: 'paid-key', model: 'gemini-4-hydrogen' }]);
     });
 
     it('routes a custom free-tier image model to the free key unless grounding is enabled', async () => {
@@ -393,7 +399,7 @@ describe('dual API key routing through backend routes', () => {
         const handlers = await configurePluginHandlers({
             geminiPaidApiKey: 'paid-key',
             geminiFreeApiKey: 'free-key',
-            freeTierModels: 'gemini-3.8-flash,gemini-nano-banana-2.1',
+            freeTierModels: 'gemini-4-hydrogen,gemini-nano-banana-2.1',
         });
         const generateHandler = handlers.get('/api/images/generate')!;
         const baseBody = {
@@ -437,7 +443,7 @@ describe('dual API key routing through backend routes', () => {
         expect(response.body.failure?.code).toBe('safety-blocked');
         expect(generateContentCalls).toEqual([
             { apiKey: 'paid-key', model: 'gemini-nano-banana-2.1' },
-            { apiKey: 'free-key', model: 'gemini-3.8-flash' },
+            { apiKey: 'free-key', model: 'gemini-4-hydrogen' },
         ]);
     });
 
@@ -448,7 +454,7 @@ describe('dual API key routing through backend routes', () => {
         const response = await invokeRoute(handlers.get('/api/prompt/random')!, { lang: 'en' });
 
         expect(response.status).toBe(200);
-        expect(generateContentCalls).toEqual([{ apiKey: 'legacy-key', model: 'gemini-3.8-flash' }]);
+        expect(generateContentCalls).toEqual([{ apiKey: 'legacy-key', model: 'gemini-4-hydrogen' }]);
     });
 
     it('returns 503 from prompt tools when no key is configured at all', async () => {
